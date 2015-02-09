@@ -35,22 +35,15 @@ class EE_DMS_4_7_0_answer_question_group extends EE_Data_Migration_Script_Stage_
 	 * @return null
 	 */
 	protected function _migrate_old_row( $answer ) {
+		global $wpdb;
 		$QSG_ID = 0;
 		$success = false;
 		if ( ! empty( $answer['QST_ID'] )) {
-			/** @type EEM_Question $EEM_Question */
-			$EEM_Question = EE_Registry::instance()->load_model( 'Question' );
-			$question = $EEM_Question->get_one_by_ID( $answer['QST_ID'] );
-			if ( $question instanceof EE_Question ) {
-				$question_groups = $question->question_groups();
-				$question_group = is_array( $question_groups ) ? reset(
-					$question_groups ) : null;
-				if ( $question_group instanceof EE_Question_Group ) {
-					$QSG_ID = $question_group->ID();
-				}
-			}
+			$question_group_question_table = $wpdb->prefix . 'esp_question_group_question';
+			$SQL = "SELECT QSG_ID FROM $question_group_question_table WHERE QST_ID = %d";
+			$QSG_ID = $wpdb->get_results( $wpdb->prepare( $SQL, $answer['QST_ID'] ));
+			$QSG_ID = is_array( $QSG_ID ) ? reset( $QSG_ID ) : null;
 		}
-		global $wpdb;
 		if ( $QSG_ID ) {
 			$success = $wpdb->update(
 				$this->_old_table,
