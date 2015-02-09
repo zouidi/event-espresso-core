@@ -2,22 +2,6 @@
 	exit( 'No direct script access allowed' );
 }
 /**
- * Event Espresso
- *
- * Event Registration and Management Plugin for WordPress
- *
- * @ package 		Event Espresso
- * @ author 		Event Espresso
- * @ copyright 	(c) 2008-2011 Event Espresso  All Rights Reserved.
- * @ license 		{@link http://eventespresso.com/support/terms-conditions/}   * see Plugin Licensing *
- * @ link 				{@link http://www.eventespresso.com}
- * @ since 			4.0
- *
- */
-
-
-
-/**
  * EE_Answer class
  *
  * @package 			Event Espresso
@@ -62,6 +46,18 @@ class EE_Answer extends EE_Base_Class {
 
 
 	/**
+	 *    Set EE_Question_Group ID
+	 *
+	 * @access        public
+	 * @param int $QSG_ID
+	 */
+	public function set_question_group( $QSG_ID = 0 ) {
+		$this->set( 'QSG_ID', $QSG_ID );
+	}
+
+
+
+	/**
 	 *    Set Registration ID
 	 *
 	 * @access        public
@@ -98,13 +94,25 @@ class EE_Answer extends EE_Base_Class {
 
 
 	/**
-	 *    get Attendee Last Name
+	 *    get ID for related EE_Question
 	 *
 	 * @access        public
 	 * @return        int
 	 */
 	public function question_ID() {
 		return $this->get( 'QST_ID' );
+	}
+
+
+
+	/**
+	 *    get ID for related EE_Question_Group
+	 *
+	 * @access        public
+	 * @return        int
+	 */
+	public function question_group_ID() {
+		return $this->get( 'QSG_ID' );
 	}
 
 
@@ -148,6 +156,16 @@ class EE_Answer extends EE_Base_Class {
 	 */
 	public function question() {
 		return $this->get_first_related( 'Question' );
+	}
+
+
+
+	/**
+	 * Gets the related EE_Question_Group to this EE_Answer
+	 * @return EE_Question_Group
+	 */
+	public function question_group() {
+		return $this->get_first_related( 'Question_Group' );
 	}
 
 
