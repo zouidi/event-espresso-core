@@ -565,7 +565,7 @@ class EEH_Activation {
 		// check the response
 		$question_groups = is_array( $question_groups ) ? $question_groups : array();
 		// what we should have
-		$QSG_systems = array( 1, 2 );
+		$QSG_systems = array( EEM_Question_Group::system_personal, EEM_Question_Group::system_address );
 		// loop thru what we should have and compare to what we have
 		foreach ( $QSG_systems as $QSG_system ) {
 			// reset values array
@@ -575,7 +575,7 @@ class EEH_Activation {
 				// add it
 				switch ( $QSG_system ) {
 
-					case 1:
+					case EEM_Question_Group::system_personal :
 							$QSG_values = array(
 									'QSG_name' => __( 'Personal Information', 'event_espresso' ),
 									'QSG_identifier' => 'personal-information-' . time(),
@@ -583,12 +583,12 @@ class EEH_Activation {
 									'QSG_order' => 1,
 									'QSG_show_group_name' => 1,
 									'QSG_show_group_desc' => 1,
-									'QSG_system' => 1,
+									'QSG_system' => EEM_Question_Group::system_personal,
 									'QSG_deleted' => 0
 								);
 						break;
 
-					case 2:
+					case EEM_Question_Group::system_address :
 							$QSG_values = array(
 									'QSG_name' => __( 'Address Information','event_espresso' ),
 									'QSG_identifier' => 'address-information-' . time(),
@@ -596,7 +596,7 @@ class EEH_Activation {
 									'QSG_order' => 2,
 									'QSG_show_group_name' => 1,
 									'QSG_show_group_desc' => 1,
-									'QSG_system' => 2,
+									'QSG_system' => EEM_Question_Group::system_address,
 									'QSG_deleted' => 0
 								);
 						break;
@@ -807,11 +807,15 @@ class EEH_Activation {
 					$QST_ID = $wpdb->insert_id;
 
 					// QUESTION GROUP QUESTIONS
-					$QSG_ID = in_array( $QST_system, array('fname','lname','email')) ? 1 : 2;
+					$QSG_ID = in_array( $QST_system, array('fname','lname','email')) ? EEM_Question_Group::system_personal : EEM_Question_Group::system_address;
 					// add system questions to groups
 					$wpdb->insert(
 						$wpdb->prefix . 'esp_question_group_question',
-						array( 'QSG_ID' => $QSG_ID , 'QST_ID' => $QST_ID, 'QGQ_order'=>($QSG_ID==1)? $order_for_group_1++ : $order_for_group_2++ ),
+						array(
+							'QSG_ID' => $QSG_ID ,
+							'QST_ID' => $QST_ID,
+							'QGQ_order'=>( $QSG_ID== EEM_Question_Group::system_personal ) ? $order_for_group_1++ : $order_for_group_2++
+						),
 						array( '%d', '%d','%d' )
 					);
 				}
