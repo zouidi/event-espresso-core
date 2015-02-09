@@ -60,7 +60,7 @@ class EE_DMS_4_7_0_answer_question_group extends EE_Data_Migration_Script_Stage_
 				array( '%d' )  // where format
 			);
 		}
-		if ( ! $success && $QSG_ID ) {
+		if ( ! $success && $QSG_ID != 0  ) {
 			$this->add_error(
 				sprintf(
 					__( 'Could not update Answer Question Group
@@ -69,7 +69,7 @@ class EE_DMS_4_7_0_answer_question_group extends EE_Data_Migration_Script_Stage_
 					$wpdb->last_error
 				)
 			);
-		} else if ( ! $success ) {
+		} else if ( ! $success && ! empty( $answer['QST_ID'] ) ) {
 			$this->add_error(
 				sprintf(
 					__( 'Could not update Answer for Answer ID=%1$d because
@@ -77,6 +77,11 @@ class EE_DMS_4_7_0_answer_question_group extends EE_Data_Migration_Script_Stage_
 						'event_espresso' ),
 					$answer['QST_ID']
 				)
+			);
+		} else {
+			$this->add_error(
+				__( 'Could not update Answer because a valid row ID was not
+				received.', 'event_espresso' )
 			);
 		}
 	}
