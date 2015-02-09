@@ -36,47 +36,45 @@ class EE_DMS_4_7_0_answer_question_group extends EE_Data_Migration_Script_Stage_
 	 */
 	protected function _migrate_old_row( $answer ) {
 		global $wpdb;
-		$QSG_ID = 0;
-		$success = false;
 		if ( ! empty( $answer['QST_ID'] )) {
 			$question_group_question_table = $wpdb->prefix . 'esp_question_group_question';
 			$SQL = "SELECT QSG_ID FROM $question_group_question_table WHERE QST_ID = %d";
 			$QSG_ID = $wpdb->get_results( $wpdb->prepare( $SQL, $answer['QST_ID'] ));
-			$QSG_ID = is_array( $QSG_ID ) ? reset( $QSG_ID ) : null;
-		}
-		if ( $QSG_ID ) {
-			$success = $wpdb->update(
-				$this->_old_table,
-				array( 'QSG_ID' => $QSG_ID ),  // data
-				array( 'QST_ID' => $answer['QST_ID'] ),  // where
-				array( '%d' ),   // data format
-				array( '%d' )  // where format
-			);
-		}
-		if ( ! $success && $QSG_ID != 0  ) {
-			$this->add_error(
-				sprintf(
-					__( 'Could not update Answer Question Group
+			$QSG_ID = is_array( $QSG_ID ) ? reset( $QSG_ID ) : $QSG_ID;
+			if ( $QSG_ID != 0 ) {
+				$success = $wpdb->update(
+					$this->_old_table,
+					array( 'QSG_ID' => $QSG_ID ),  // data
+					array( 'QST_ID' => $answer['QST_ID'] ),  // where
+					array( '%d' ),   // data format
+					array( '%d' )  // where format
+				);
+				if ( ! $success && $QSG_ID != 0  ) {
+					$this->add_error(
+						sprintf(
+							__( 'Could not update Answer Question Group
 						for Answer ID=%1$d because "%2$s"', 'event_espresso' ),
-					$answer['QST_ID'],
-					$wpdb->last_error
-				)
-			);
-		} else if ( ! $success && ! empty( $answer['QST_ID'] ) ) {
-			$this->add_error(
-				sprintf(
-					__( 'Could not update Answer for Answer ID=%1$d because
+							$answer['QST_ID'],
+							$wpdb->last_error
+						)
+					);
+				}
+			} else {
+				$this->add_error(
+					sprintf(
+						__( 'Could not update Answer for Answer ID=%1$d because
 					the the Question Group could not be determined',
-						'event_espresso' ),
-					$answer['QST_ID']
-				)
-			);
+							'event_espresso' ),
+						$answer['QST_ID']
+					)
+				);			}
 		} else {
 			$this->add_error(
 				__( 'Could not update Answer because a valid row ID was not
 				received.', 'event_espresso' )
 			);
 		}
+		$this->add_error( $wpdb->last_query );
 	}
 
 
