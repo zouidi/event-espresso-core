@@ -140,7 +140,7 @@ class EE_DMS_Core_4_7_0 extends EE_Data_Migration_Script_Base{
 				CUR_dec_plc VARCHAR(1) COLLATE utf8_bin NOT NULL DEFAULT '2',
 				CUR_active TINYINT(1) DEFAULT '0',
 				PRIMARY KEY  (CUR_code)";
-		$this->_table_is_new_in_this_version($table_name, $sql, 'ENGINE=InnoDB' );
+		$this->_table_should_exist_previously($table_name, $sql, 'ENGINE=InnoDB' );
 
 
 		$table_name = 'esp_currency_payment_method';
@@ -148,7 +148,7 @@ class EE_DMS_Core_4_7_0 extends EE_Data_Migration_Script_Base{
 				CUR_code  VARCHAR(6) COLLATE utf8_bin NOT NULL,
 				PMD_ID INT(11) NOT NULL,
 				PRIMARY KEY  (CPM_ID)";
-		$this->_table_is_new_in_this_version($table_name, $sql, 'ENGINE=InnoDB ');
+		$this->_table_should_exist_previously($table_name, $sql, 'ENGINE=InnoDB ');
 
 
 		$table_name = 'esp_datetime';
@@ -248,7 +248,7 @@ class EE_DMS_Core_4_7_0 extends EE_Data_Migration_Script_Base{
 				LOG_message TEXT,
 				LOG_wp_user INT(11) DEFAULT NULL,
 				PRIMARY KEY  (LOG_ID)";
-		$this->_table_is_new_in_this_version($table_name, $sql, 'ENGINE=InnoDB');
+		$this->_table_should_exist_previously($table_name, $sql, 'ENGINE=InnoDB');
 
 		$table_name = 'esp_message_template';
 		$sql = "MTP_ID INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -323,7 +323,7 @@ class EE_DMS_Core_4_7_0 extends EE_Data_Migration_Script_Base{
 				PMD_scope VARCHAR(255) NULL DEFAULT 'frontend',
 				PRIMARY KEY  (PMD_ID),
 				UNIQUE KEY PMD_slug_UNIQUE (PMD_slug)";
-		$this->_table_is_new_in_this_version($table_name, $sql, 'ENGINE=InnoDB ');
+		$this->_table_should_exist_previously($table_name, $sql, 'ENGINE=InnoDB ');
 
 
 		$table_name = "esp_ticket_price";
