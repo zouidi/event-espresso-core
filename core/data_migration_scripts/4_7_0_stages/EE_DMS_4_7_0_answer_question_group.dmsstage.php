@@ -39,7 +39,7 @@ class EE_DMS_4_7_0_answer_question_group extends EE_Data_Migration_Script_Stage_
 		if ( ! empty( $answer['QST_ID'] )) {
 			$question_group_question_table = $wpdb->prefix . 'esp_question_group_question';
 			$SQL = "SELECT QSG_ID FROM $question_group_question_table WHERE QST_ID = %d";
-			$QSG_ID = $wpdb->get_results( $wpdb->prepare( $SQL, $answer['QST_ID'] ));
+			$QSG_ID = $wpdb->get_col( $wpdb->prepare( $SQL, $answer['QST_ID'] ));
 			$QSG_ID = is_array( $QSG_ID ) ? reset( $QSG_ID ) : $QSG_ID;
 			if ( $QSG_ID != 0 ) {
 				$success = $wpdb->update(
