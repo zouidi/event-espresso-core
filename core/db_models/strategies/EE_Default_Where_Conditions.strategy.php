@@ -18,7 +18,29 @@ class EE_Default_Where_Conditions{
 	function _finalize_construct(EEM_Base $model){
 		$this->_model = $model;
 	}
-	function get_default_where_conditions(){
+	function get_default_where_conditions(  $model_relation_chain = null  ){
 		return array();
+	}
+	/**
+	 * Gets the bare minimum where conditions. Usually this is NOTHING,
+	 * but if the data for this model shares a table with another table,
+	 * this is the bare minimum to differentiate between this model's data
+	 * and the other model's data
+	 * @param string $model_relation_chain
+	 */
+	function get_minimum_where_conditions( $model_relation_chain = null ){
+		return array();
+	}
+
+	/**
+	 *
+	 * @param string $model_relation_chain
+	 * @return string
+	 */
+	protected function _ensure_model_relation_chain_ends_in_period( $model_relation_chain ){
+		if($model_relation_chain != '' && $model_relation_chain[strlen($model_relation_chain)-1] !='.'){
+			$model_relation_chain=$model_relation_chain.".";
+		}
+		return $model_relation_chain;
 	}
 }

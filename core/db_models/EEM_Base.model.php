@@ -532,8 +532,9 @@ abstract class EEM_Base extends EE_Base{
 	 *		(ie, the current model has a foreign key to them, like how Registration belongs to Attendee) can be cached in order
 	 *		to avoid future queries
 	 *
-	 *	@var string $default_where_conditions can be set to 'none', 'this_model_only', 'other_models_only', or 'all'. set this to 'none' to disable all default where conditions. Eg, usually soft-deleted objects are filtered-out
-	 *		if you want to include them, set this query param to 'none'. If you want to ONLY disable THIS model's default where conditions
+	 *	@var string $default_where_conditions can be set to 'none', 'minimum',  'this_model_only', 'other_models_only', or 'all'. set this to 'none' to disable all default where conditions. Eg, usually trashed Custom Post Types objects are filtered-out
+	 *		if you want to include them, set this query param to 'minimum'. If you want to provide a different argument for the 'post_type', use 'none'.
+	 *		If you want to ONLY disable THIS model's default where conditions
 	 *		set it to 'other_models_only'. If you only want this model's default where conditions added to the query, use 'this_model_only'.
 	 *		If you want to use all default where conditions (default), set to 'all'.
 	 * }
@@ -1995,20 +1996,26 @@ abstract class EEM_Base extends EE_Base{
 	 * @return array like $query_params[0], see EEM_Base::get_all for documentation
 	 */
 	private function _get_default_where_conditions_for_models_in_query(EE_Model_Query_Info_Carrier $query_info_carrier,$use_default_where_conditions = 'all',$where_query_params = array()){
-		$allowed_used_default_where_conditions_values = array('all','this_model_only', 'other_models_only','none');
+		$allowed_used_default_where_conditions_values = array('all', 'minimum', 'this_model_only', 'other_models_only','none');
 		if( ! in_array($use_default_where_conditions,$allowed_used_default_where_conditions_values)){
 			throw new EE_Error(sprintf(__("You passed an invalid value to the query parameter 'default_where_conditions' of '%s'. Allowed values are %s", "event_espresso"),$use_default_where_conditions,implode(", ",$allowed_used_default_where_conditions_values)));
 		}
 		if( in_array($use_default_where_conditions, array('all','this_model_only')) ){
 			$universal_query_params = $this->_get_default_where_conditions();
+		}elseif( $use_default_where_conditions == 'minimum' ) {
+			$universal_query_params = $this->_get_minimum_where_conditions();
 		}else{
 			$universal_query_params = array();
 		}
 
-		if(in_array($use_default_where_conditions,array('all','other_models_only'))){
+		if(in_array($use_default_where_conditions,array('all', 'minimum',  'other_models_only'))){
 			foreach($query_info_carrier->get_model_names_included() as $model_relation_path => $model_name){
 				$related_model = $this->get_related_model_obj($model_name);
-				$related_model_universal_where_params = $related_model->_get_default_where_conditions($model_relation_path);
+				if( $use_default_where_conditions == 'minimum' ) {
+					$related_model_universal_where_params = $related_model->_get_minimum_where_conditions($model_relation_path);
+				}else{
+					$related_model_universal_where_params = $related_model->_get_default_where_conditions($model_relation_path);
+				}
 
 				$universal_query_params = array_merge($universal_query_params,
 						$this->_override_defaults_or_make_null_friendly(
@@ -2063,11 +2070,26 @@ abstract class EEM_Base extends EE_Base{
 	 * @param string $model_relation_path eg, path from Event to Payment is "Registration.Transaction.Payment."
 	 * @return array like EEM_Base::get_all's $query_params[0] (where conditions)
 	 */
-	private function _get_default_where_conditions($model_relation_path = null){
+	protected function _get_default_where_conditions($model_relation_path = null){
 		if ( $this->_ignore_where_strategy )
 			return array();
 
 		return $this->_default_where_conditions_strategy->get_default_where_conditions($model_relation_path);
+	}
+
+	/**
+	 * Uses the _default_where_conditions_strategy set during __construct() to get
+	 * default where conditions on all get_all, update, and delete queries done by this model.
+	 * Use the same syntax as client code. Eg on the Event model, use array('Event.EVT_post_type'=>'esp_event'),
+	 * NOT array('Event_CPT.post_type'=>'esp_event').
+	 * @param string $model_relation_path eg, path from Event to Payment is "Registration.Transaction.Payment."
+	 * @return array like EEM_Base::get_all's $query_params[0] (where conditions)
+	 */
+	private function _get_minimum_where_conditions($model_relation_path = null){
+		if ( $this->_ignore_where_strategy )
+			return array();
+
+		return $this->_default_where_conditions_strategy->get_minimum_where_conditions($model_relation_path);
 	}
 	/**
 	 * Creates the string of SQL for the select part of a select query, everything behind SELECT and before FROM.

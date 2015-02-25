@@ -29,6 +29,15 @@ class EE_Soft_Delete_Where_Conditions extends EE_Default_Where_Conditions{
 			$model_relation_chain.$trashed_field_name => false,
 		);
 	}
+
+	/**
+	 * We are ok with getting soft deleted items here too
+	 * @param type $model_relation_chain
+	 * @return type
+	 */
+	function get_minimum_where_conditions( $model_relation_chain = null ){
+		return array();
+	}
 	/**
 	 * Searches for field on the model of type 'deleted_flag'. if it is found,
 	 * returns it's name.

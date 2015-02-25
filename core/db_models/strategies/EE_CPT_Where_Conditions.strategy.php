@@ -32,35 +32,30 @@ class EE_CPT_Where_Conditions extends EE_Default_Where_Conditions{
 	 */
 	function get_default_where_conditions($model_relation_chain = null){
 		//make sure there's a period at the end of $model_relation_chain
-		if($model_relation_chain != '' && $model_relation_chain[strlen($model_relation_chain)-1] !='.'){
-			$model_relation_chain=$model_relation_chain.".";
-		}
+		$model_relation_chain = $this->_ensure_model_relation_chain_ends_in_period( $model_relation_chain );
 
+		$status_field = $this->_get_field_on_column('post_status');
+		$status_field_name = $model_relation_chain.$status_field->get_name();
+		return array_replace_recursive(
+				$this->get_minimum_where_conditions( $model_relation_chain ),
+				array(	$status_field_name => array('NOT IN',array('auto-draft','trash') ) )
+		);
+	}
+
+	/**
+	 * At a minimum, we pretty well ALWAYS want to include the post type where querying
+	 * CPT models, otherwise we could get rows which aren't of this post type
+	 * @param string $model_relation_chain
+	 * @return array
+	 */
+	function get_minimum_where_conditions( $model_relation_chain = null ){
+		$model_relation_chain = $this->_ensure_model_relation_chain_ends_in_period( $model_relation_chain );
 		//find post_type field
 		$post_type_field = $this->_get_field_on_column('post_type');
-		$status_field = $this->_get_field_on_column('post_status');
+
 		$post_type_field_name = $model_relation_chain.$post_type_field->get_name();
-		$status_field_name = $model_relation_chain.$status_field->get_name();
-//		$or_param_name = 'OR*'.get_class($this->_model);
-//		$and_param_name = 'AND';
-//		$default_where_conditions = array(
-//			$or_param_name=>array(
-//				$and_param_name=>array(
-//					$model_relation_chain.$this->_meta_field => array( 'IS NOT NULL')
-//				),
-//				$model_relation_chain.$this->_model->primary_key_name()=>array('IS NULL')
-//			)
-//		);
-//		if( ! isset($provided_where_query_params[$post_type_field_name])){
-//			$default_where_conditions[$or_param_name][$and_param_name][$post_type_field_name] =$this->_post_type;
-//		}
-//		if( ! isset($provided_where_query_params[$status_field_name])){
-//			$default_where_conditions[$or_param_name][$and_param_name][$status_field_name] = array('NOT IN',array('auto-draft','trash'));
-//		}
-//		return $default_where_conditions;
 		return array(
-				$post_type_field_name => $this->_post_type,
-				$status_field_name => array('NOT IN',array('auto-draft','trash'))
+			$post_type_field_name => $this->_post_type,
 		);
 	}
 }

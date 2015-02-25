@@ -238,6 +238,10 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 			);
 
+		//because we're using the event IDs in teh query parameters,
+		//and won't get any non-events; also
+		//we can forego the default query params
+
 		$model_data = $this->_get_export_data_for_models( $models_to_export );
 
 		$filename = $this->generate_filename ( $filename );
@@ -535,8 +539,12 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 					$model_name = $query_params;
 					$query_params = array();
 				}
+				if( ! isset( $query_params[ 'default_where_conditions'] ) ) {
+					$query_params[ 'default_where_conditions' ] = 'minimum';
+				}
 				$model = EE_Registry::instance()->load_model($model_name);
 				$model_objects = $model->get_all($query_params);
+
 
 				$table_data[$model_name] = array();
 				foreach($model_objects as $model_object){
