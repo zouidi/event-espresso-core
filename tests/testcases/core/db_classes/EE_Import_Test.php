@@ -374,10 +374,100 @@ class EE_Import_Test extends EE_UnitTestCase {
 		EE_Import::instance()->save_data_rows_to_db( $csv_data, false, array() );
 		$this->assertTrue( true );
 	}
-	//@todo: test state which have int PKs, but should haev an unique index according to state abbrev and country
-	//@todo: test more regarding things with NO pks
 	//@todo: I suspect people will want to avoid duplicate states. This could be achieved by having the state abbrev and country ISO be a unique key
-	//@todo: add unit tests for inserting and updating models with no pks
+	/**
+	 * Tests normal re-importing
+	 */
+	public function test_save_data_array_to_db__from_this_site(){
+		//create some data
+		$e1 = $this->new_model_obj_with_dependencies( 'Event' );
+		$e1_name = $e1->get( 'EVT_name' );
+		$dtt1 = $this->new_model_obj_with_dependencies( 'Datetime', array( 'EVT_ID' => $e1->ID() ) );
+		$dtt1_name = $dtt1->get( 'DTT_name' );
+		$tkt1 = $this->new_model_obj_with_dependencies( 'Ticket' );
+		$tkt1_name = $tkt1->get( 'TKT_name' );
+		$tkt1->_add_relation_to( $dtt1, 'Datetime' );
+		$dtttkt1 = $tkt1->get_first_related( 'Datetime_Ticket' );
+		$csv_data = array(
+			'Event' => array(
+				$e1->model_field_array(),
+			),
+			'Datetime' => array(
+				$dtt1->model_field_array()
+			),
+			'Ticket' => array(
+				$tkt1->model_field_array()
+			),
+			'Datetime_Ticket' => array(
+				$dtttkt1->model_field_array()
+			)
+		);
+		$e1->save( array('EVT_name' => 'monkey' ));
+		$dtt1->save( array( 'DTT_name' => 'baboon' ) );
+		$tkt1->save( array( 'TKT_name' => 'gorilla' ) );
+
+		$this->assertNotEquals( $e1_name, $e1->get( 'EVT_name' ) );
+		$this->assertNotEquals( $dtt1_name, $dtt1->get( 'DTT_name' ) );
+		$this->assertNotEquals( $tkt1_name, $tkt1->get( 'TKT_name' ) );
+
+		EE_Import::instance()->save_data_rows_to_db( $csv_data, false, array() );
+
+		//when it gets re-imported, it should be overwriting any changes made since the import
+		//the model objects should have been automatically updated because the importer uses the models
+		$this->assertEquals( $e1_name, $e1->get( 'EVT_name' ) );
+		$this->assertEquals( $dtt1_name, $dtt1->get( 'DTT_name' ) );
+		$this->assertEquals( $tkt1_name, $tkt1->get( 'TKT_name' ) );
+	}
+
+	/**
+	 * test re-importing from same site but data was deleted from db
+	 * @group 7567
+	 */
+	function test_save_data_array_to_db__from_same_site__deleted_data(){
+		$e1 = $this->new_model_obj_with_dependencies( 'Event' );
+		$dtt1 = $this->new_model_obj_with_dependencies( 'Datetime', array( 'EVT_ID' => $e1->ID() ) );
+		$tkt1 = $this->new_model_obj_with_dependencies( 'Ticket' );
+		$tkt1->_add_relation_to( $dtt1, 'Datetime' );
+		$dtttkt1 = $tkt1->get_first_related( 'Datetime_Ticket' );
+		$csv_data = array(
+			'Event' => array(
+				$e1->model_field_array(),
+			),
+			'Datetime' => array(
+				$dtt1->model_field_array()
+			),
+			'Ticket' => array(
+				$tkt1->model_field_array()
+			),
+			'Datetime_Ticket' => array(
+				$dtttkt1->model_field_array()
+			)
+		);
+		//ok now let's wreak havoc on those model objects
+		//completely delete one
+		//and remove some relations too
+		$e1->_remove_relation_to( $dtt1, 'Datetime');
+		$e1->delete_permanently();
+		$tkt1->_remove_relation_to( $dtt1, 'Datetime' );
+
+		$mapping = EE_Import::instance()->save_data_rows_to_db( $csv_data, false, array() );
+
+		//the old event should map to the new event
+		$this->assertTrue( isset( $mapping[ 'Event' ] ) );
+		$this->assertTrue( isset( $mapping[ 'Event' ][$e1->ID() ] ) );
+		$new_event_id = $mapping[ 'Event' ][$e1->ID() ];
+		$this->assertNotEquals( $e1->ID(), $new_event_id );
+		//so we should create a new event
+		$this->assertInstanceOf( 'EE_Event', EEM_Event::instance()->get_one_by_ID( $new_event_id  ) );
+		// ...and it should be related to the existing datetime
+		$this->assertEquals( $new_event_id, $dtt1->get('EVT_ID' ) );
+		//and the existing ticket should be related to the existing datetime again
+		$tkt1->clear_cache('Datetime');
+		$datetimes_related_to_tkt1 = $tkt1->get_many_related( 'Datetime' );
+		$this->assertEquals( 1, count( $datetimes_related_to_tkt1 ) );
+		$first_related_datetime = reset( $datetimes_related_to_tkt1 );
+		$this->assertEquals( $dtt1, $first_related_datetime );
+	}
 
 //	public function test_save_data_array_to_db__from_other_site_second_time(){
 //		//test that things in the mapping are remembered
