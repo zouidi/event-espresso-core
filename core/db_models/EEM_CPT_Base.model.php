@@ -52,6 +52,7 @@ abstract class EEM_CPT_Base extends EEM_Soft_Delete_Base{
 		//with key equalling the subclassing model's model name (eg 'Event' or 'Venue'), and the value
 		//must also be new EE_HABTM_Relation('Term_Relationship');
 		$this->_model_relations['Term_Taxonomy'] =new EE_HABTM_Relation('Term_Relationship');
+		$this->_model_relations[ 'Post_Meta' ] = new EE_Has_Many_Relation( false );
 		$primary_table_name = NULL;
 		//add  the common _status field to all CPT primary tables.
 		foreach ( $this->_tables as $alias => $table_obj ) {

@@ -223,6 +223,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				'Term'=>$term_query_params,
 				'Term_Taxonomy'=>$related_models_query_params,
 				'Term_Relationship'=>$related_models_query_params, //model has NO primary key...
+				'Post_Meta' => $related_models_query_params,
 				'Country'=>$state_country_query_params,
 				'State'=>$state_country_query_params,
 				'Venue'=>$related_models_query_params,
