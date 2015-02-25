@@ -361,6 +361,10 @@ class EED_Add_New_State  extends EED_Module {
 		if ( ! empty( $existing_state )) {
 			return array_pop( $existing_state );
 		}
+		$duplicate_state = EEM_State::instance()->get_one_conflicting( $props_n_values, false );
+		if( $duplicate_state instanceof EE_State ){
+			return $duplicate_state;
+		}
 		$new_state = EE_State::new_instance( $props_n_values );
 		if ( $new_state instanceof EE_State ) {
 			// if not non-ajax admin
