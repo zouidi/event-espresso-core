@@ -54,6 +54,9 @@ class EEM_State extends EEM_Base {
 			'Country' => new EE_Belongs_To_Relation(),
 			'Venue'=>new EE_Has_Many_Relation(),
 		);
+		$this->_indexes = array(
+			'identifier' => new EE_Unique_Index( array( 'STA_abbrev', 'CNT_ISO' ) )
+		);
 		parent::__construct( $timezone );
 	}
 

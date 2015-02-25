@@ -105,6 +105,9 @@ class EEM_Price_Type extends EEM_Soft_Delete_Base {
 		$this->_model_relations = array(
 			'Price'=>new EE_Has_Many_Relation(),
 		);
+		$this->_indexes = array(
+			'name' => new EE_Unique_Index( array( 'PRT_name' ) )
+		);
 
 		parent::__construct( $timezone );
 

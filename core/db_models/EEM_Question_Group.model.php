@@ -56,6 +56,9 @@ class EEM_Question_Group extends EEM_Soft_Delete_Base {
 			'Event'=>new EE_HABTM_Relation('Event_Question_Group'),
 			'Event_Question_Group'=>new EE_Has_Many_Relation()
 		);
+		$this->_indexes = array(
+			'identifier' => new EE_Unique_Index( array( 'QSG_identifier') )
+		);
 		parent::__construct( $timezone );
 	}
 

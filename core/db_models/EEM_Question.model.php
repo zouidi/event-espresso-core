@@ -112,6 +112,9 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 			//for QST_order column
 			'Question_Group_Question'=>new EE_Has_Many_Relation()
 		);
+		$this->_indexes = array(
+			'admin_label' => new EE_Unique_Index( array( 'QST_admin_label') )
+		);
 
 		parent::__construct( $timezone );
 	}
