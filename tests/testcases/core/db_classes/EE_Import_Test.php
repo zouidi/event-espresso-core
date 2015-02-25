@@ -420,7 +420,11 @@ class EE_Import_Test extends EE_UnitTestCase {
 	}
 
 	/**
-	 * test re-importing from same site but data was deleted from db
+	 * test re-importing from same site but data was deleted from db.
+	 * In this case, we should re-insert the deleted data and setup the relations to
+	 * the newly-inserted data to data that already exists.
+	 * We also test what would happen if AGAIN delete the data and import from the
+	 * old CSV again.
 	 * @group 7567
 	 */
 	function test_save_data_array_to_db__from_same_site__deleted_data(){
@@ -449,16 +453,19 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$e1->_remove_relation_to( $dtt1, 'Datetime');
 		$e1->delete_permanently();
 		$tkt1->_remove_relation_to( $dtt1, 'Datetime' );
+		$datetimes_related_to_tkt1 = $tkt1->get_many_related( 'Datetime' );
+		$this->assertEquals( 0, count( $datetimes_related_to_tkt1 ) );
 
-		$mapping = EE_Import::instance()->save_data_rows_to_db( $csv_data, false, array() );
+		$first_mapping = EE_Import::instance()->save_data_rows_to_db( $csv_data, false, array() );
 
 		//the old event should map to the new event
-		$this->assertTrue( isset( $mapping[ 'Event' ] ) );
-		$this->assertTrue( isset( $mapping[ 'Event' ][$e1->ID() ] ) );
-		$new_event_id = $mapping[ 'Event' ][$e1->ID() ];
+		$this->assertTrue( isset( $first_mapping[ 'Event' ] ) );
+		$this->assertTrue( isset( $first_mapping[ 'Event' ][$e1->ID() ] ) );
+		$new_event_id = $first_mapping[ 'Event' ][$e1->ID() ];
 		$this->assertNotEquals( $e1->ID(), $new_event_id );
 		//so we should create a new event
-		$this->assertInstanceOf( 'EE_Event', EEM_Event::instance()->get_one_by_ID( $new_event_id  ) );
+		$e2 = EEM_Event::instance()->get_one_by_ID( $new_event_id  );
+		$this->assertInstanceOf( 'EE_Event', $e2 );
 		// ...and it should be related to the existing datetime
 		$this->assertEquals( $new_event_id, $dtt1->get('EVT_ID' ) );
 		//and the existing ticket should be related to the existing datetime again
@@ -467,20 +474,99 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$this->assertEquals( 1, count( $datetimes_related_to_tkt1 ) );
 		$first_related_datetime = reset( $datetimes_related_to_tkt1 );
 		$this->assertEquals( $dtt1, $first_related_datetime );
+
+
+
+
+
+		//ok great; now let's delete the newly created event AGAIN
+		//and then re-import it AGAIN. Will that cause errors, or
+		//will it correctly re-add the CSV data?
+		//also let's
+		$e2->_remove_relation_to( $dtt1, 'Datetime');
+		$e2->delete_permanently();
+		$tkt1->_remove_relation_to( $dtt1, 'Datetime' );
+		$datetimes_related_to_tkt1 = $tkt1->get_many_related( 'Datetime' );
+		$this->assertEquals( 0, count( $datetimes_related_to_tkt1 ) );
+
+		$second_mapping = EE_Import::instance()->save_data_rows_to_db( $csv_data, false, $first_mapping );
+
+		//the old event should map to the new event
+		$this->assertTrue( isset( $second_mapping[ 'Event' ] ) );
+		$this->assertTrue( isset( $second_mapping[ 'Event' ][$e1->ID() ] ) );
+		$new_new_event_id = $second_mapping[ 'Event' ][$e1->ID() ];
+		$this->assertNotEquals( $e1->ID(), $new_new_event_id );
+		//so we should create a new event
+		$e2 = EEM_Event::instance()->get_one_by_ID( $new_new_event_id  );
+		$this->assertInstanceOf( 'EE_Event', $e2 );
+		// ...and it should be related to the existing datetime
+		$this->assertEquals( $new_new_event_id, $dtt1->get('EVT_ID' ) );
+		//and the existing ticket should be related to the existing datetime again
+		$tkt1->clear_cache('Datetime');
+		$datetimes_related_to_tkt1 = $tkt1->get_many_related( 'Datetime' );
+		$this->assertEquals( 1, count( $datetimes_related_to_tkt1 ) );
+		$first_related_datetime = reset( $datetimes_related_to_tkt1 );
+		$this->assertEquals( $dtt1, $first_related_datetime );
 	}
 
-//	public function test_save_data_array_to_db__from_other_site_second_time(){
-//		//test that things in the mapping are remembered
-//	}
-//
-//	public function test_save_data_array_to_db__from_same_site_first_time(){
-//		//check for deleted things
-//		//should update old thing
-//
-//	}
-//	public function test_save_data_array_to_db__from_same_site_second_time(){
-//		//check
-//	}
+	/**
+	 * Tests that importing from the same site also uses mapping data.
+	 * An example when there is mapping data for an import from the same site:
+	 * 1. Data is exported to a CSV
+	 * 2. Some data is deleted locally
+	 * 3. The CSV export is IMPORTED. We can't update the deleted data so we
+	 *		need to re-insert it. But we want to maintain relations
+	 */
+	function test_save_data_to_array__from_same_site__mappings_exist(){
+		$e1 = $this->new_model_obj_with_dependencies( 'Event' );
+		$original_e1_data = $e1->model_field_array();
+		$e2 = $this->new_model_obj_with_dependencies( 'Event' );
+		$original_e2_id = $e2->ID();
+		$dtt1 = $this->new_model_obj_with_dependencies( 'Datetime', array( 'EVT_ID' => $e1->ID() ) );
+		$tkt1 = $this->new_model_obj_with_dependencies( 'Ticket' );
+		$tkt1->_add_relation_to( $dtt1, 'Datetime' );
+		$dtttkt1 = $tkt1->get_first_related( 'Datetime_Ticket' );
+		$csv_data = array(
+			'Event' => array(
+				$e1->model_field_array(),
+			),
+			'Datetime' => array(
+				$dtt1->model_field_array()
+			),
+			'Ticket' => array(
+				$tkt1->model_field_array()
+			),
+			'Datetime_Ticket' => array(
+				$dtttkt1->model_field_array()
+			)
+		);
+
+		//ok let's make some contrived data that states event 1 in teh CSV
+		//should actually map to event 2 in the database.
+		$mapping_data = array(
+			'Event' => array(
+				$e1->ID() => $e2->ID()
+			)
+		);
+
+		//change e1 so that we'll know if we incorrectly wrote the csv data to that
+		//event, or if we correctly overwrote e2 with the csv data
+		$e1_name_after_export = 'monkey';
+		$e1->set( 'EVT_name', $e1_name_after_export );
+		$e1->save();
+		//so let's re-import the data
+		$new_mapping_data = EE_Import::instance()->save_data_rows_to_db( $csv_data, false, $mapping_data );
+
+		//we should have only updated data, no inserts
+		$this->assertEquals( 4, EE_Import::instance()->get_total_updates() );
+		$this->assertEquals( 0, EE_Import::instance()->get_total_inserts() );
+		//e1 in teh database should have been unaffected
+		$this->assertNotEquals( $original_e1_data['EVT_name'], $e1->get( 'EVT_name' ) );
+		//we should have overwritten e2 with the csv event (which was actually from e1)
+		$new_e2_data = $original_e1_data;
+		$new_e2_data[ 'EVT_ID' ] = $original_e2_id;
+		$this->assertEquals( $new_e2_data,  $e2->model_field_array() );
+	}
 
 	public function setUp(){
 		parent::setUp();
