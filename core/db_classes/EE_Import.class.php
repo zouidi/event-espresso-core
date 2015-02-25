@@ -285,6 +285,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		if($model_name){
 			$csv_data_array = array($csv_data_array);
 		}
+		//what models we want to update
+		//there might be other model data in the CSV, but we only want to either insert
+		//those or do nothing. Eg, a csv file for importing attendees might have state
+		//info, but we only want to update the attendees; states and countries we'd
+		//rather leave as-is: ie, if there is a matching state in the db already we
+		//leave it alone; if there is no matching state in the database, only then do we insert one
+		$models_to_update = NULL;
 		// begin looking through the $csv_data_array, expecting the toplevel key to be the model's name...
 		$old_site_url = 'none-specified';
 
@@ -299,6 +306,9 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				$old_site_url = isset( $csv_metadata['site_url']) ? $csv_metadata['site_url'] : $old_site_url;
 				EE_Error::add_attention(sprintf(__("CSV Data appears to be from a different database (%s instead of %s), so we assume IDs in the CSV data DO NOT correspond to IDs in this database", "event_espresso"),$old_site_url,site_url()));
 			};
+			if( ! empty( $csv_metadata['models_to_update'] )){
+				$models_to_update = explode(",", $csv_metadata['models_to_update' ] );
+			}
 			unset($csv_data_array[EE_CSV::metadata_header]);
 		}
 		/**
@@ -310,7 +320,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	   if( $old_db_to_new_db_mapping){
 		   EE_Error::add_attention(sprintf(__("We noticed you have imported data via CSV from %s before. Because of this, IDs in your CSV have been mapped to their new IDs in %s", "event_espresso"),$old_site_url,site_url()));
 	   }
-	   $old_db_to_new_db_mapping = $this->save_data_rows_to_db($csv_data_array, $export_from_site_a_to_b, $old_db_to_new_db_mapping);
+	   $old_db_to_new_db_mapping = $this->save_data_rows_to_db($csv_data_array, $export_from_site_a_to_b, $old_db_to_new_db_mapping, $models_to_update );
 
 		//save the mapping from old db to new db in case they try re-importing the same data from the same website again
 		update_option('ee_id_mapping_from'.sanitize_title($old_site_url),$old_db_to_new_db_mapping);
@@ -369,9 +379,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	 * @param type $csv_data_array
 	 * @param type $export_from_site_a_to_b
 	 * @param type $old_db_to_new_db_mapping
+	 * @param boolean $models_to_update array of model names that we're allowed to update
+	 *	(we can insert any we want). If null, then we can only assume we ought to update all models specified.
+	 *	This exists because often there is the primary data we want to import, and then there is
+	 *	related data needed for its integrity, but we don't really want to import it unless we absolutely need to.
 	 * @return array updated $old_db_to_new_db_mapping
 	 */
-	public function save_data_rows_to_db( $csv_data_array, $export_from_site_a_to_b, $old_db_to_new_db_mapping ) {
+	public function save_data_rows_to_db( $csv_data_array, $export_from_site_a_to_b, $old_db_to_new_db_mapping, $models_to_update = NULL ) {
 		foreach ( $csv_data_array as $model_name_in_csv_data => $model_data_from_import ) {
 			//now check that assumption was correct. If
 			if ( EE_Registry::instance()->is_model_name($model_name_in_csv_data)) {
@@ -443,7 +457,11 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				if( $what_to_do == self::do_insert ) {
 					$old_db_to_new_db_mapping = $this->_insert_from_data_array( $id_in_csv, $model_object_data, $model, $old_db_to_new_db_mapping );
 				}elseif( $what_to_do == self::do_update ) {
-					$old_db_to_new_db_mapping = $this->_update_from_data_array( $id_in_csv, $model_object_data, $model, $old_db_to_new_db_mapping );
+					if( in_array( $model_name_in_csv_data, $models_to_update ) || $models_to_update === null ){
+						$old_db_to_new_db_mapping = $this->_update_from_data_array( $id_in_csv, $model_object_data, $model, $old_db_to_new_db_mapping );
+					}else{
+						//we would have updated this, but the export data indicated we ought not
+					}
 				}else{
 					throw new EE_Error( sprintf( __( 'Programming error. We shoudl be inserting or updating, but instead we are being told to "%s", whifh is invalid', 'event_espresso' ), $what_to_do ) );
 				}

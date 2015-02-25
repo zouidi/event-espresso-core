@@ -237,6 +237,22 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 //				'Line_Item'=>
 
 			);
+		//and we want to specify what things we want to update (because some of that data we'd rather
+		//not update, just insert if it doesn't exist
+		$models_to_update = $models_to_export;
+		unset( $models_to_update['Ticket_Template'] );
+		unset( $models_to_update['Price_Type'] );
+		unset( $models_to_update['Term'] );
+		unset( $models_to_update['Country'] );
+		unset( $models_to_update['State'] );
+		unset( $models_to_update['Question_Group'] );
+		unset( $models_to_update['Event_Question_Group'] );
+		unset( $models_to_update['Question'] );
+		unset( $models_to_update['Question_Group_Question'] );
+		$models_to_update = array_keys( $models_to_update );
+
+
+
 
 		//because we're using the event IDs in teh query parameters,
 		//and won't get any non-events; also
@@ -246,7 +262,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 		$filename = $this->generate_filename ( $filename );
 
-		if ( ! $this->EE_CSV->export_multiple_model_data_to_csv( $filename, $model_data )) {
+		if ( ! $this->EE_CSV->export_multiple_model_data_to_csv( $filename, $model_data, $models_to_update )) {
 			EE_Error::add_error(__("'An error occurred and the Event details could not be exported from the database.'", "event_espresso"), __FILE__, __FUNCTION__, __LINE__ );
 		}
 	}
@@ -267,13 +283,14 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 			'State'=>array(array('STA_ID'=>array('IN',array_keys($states_that_have_an_attendee)))),
 			'Attendee'=>array(),
 		);
+		$models_to_update = array( 'Attendee' );
 
 
 
 		$model_data = $this->_get_export_data_for_models( $models_to_export );
 		$filename = $this->generate_filename ( 'all-attendees' );
 
-		if ( ! $this->EE_CSV->export_multiple_model_data_to_csv( $filename, $model_data )) {
+		if ( ! $this->EE_CSV->export_multiple_model_data_to_csv( $filename, $model_data, $models_to_update )) {
 			EE_Error::add_error(__('An error occurred and the Attendee data could not be exported from the database.','event_espresso'), __FILE__, __FUNCTION__, __LINE__ );
 		}
 	}

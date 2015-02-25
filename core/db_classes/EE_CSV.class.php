@@ -324,8 +324,11 @@
 	 * Writes some meta data to the CSV as a bunch of columns. Initially we're only
 	 * mentioning the version and timezone
 	 * @param resource $filehandle
+	 * @param array $models_to_update array of models we want to update (ones not in this list
+	 *	shouldn't be updated - only inserted if they don't exist in the database)
+	 * @return void
 	 */
-	public function write_metadata_to_csv($filehandle){
+	public function write_metadata_to_csv( $filehandle, $models_to_update = array() ){
 		EE_Registry::instance()->load_helper('DTT_Helper');
 		$data_row = array(EE_CSV::metadata_header);//do NOT translate because this exact string is used when importing
 		$this->fputcsv2($filehandle, $data_row);
@@ -334,7 +337,8 @@
 			'version'=>espresso_version(),
 			'timezone'=>  EEH_DTT_Helper::get_timezone(),
 			'time_of_export'=>current_time('mysql'),
-			'site_url'=>site_url()));
+			'site_url'=>site_url(),
+			'models_to_update' => is_array( $models_to_update) ? implode(',', $models_to_update ) : '' ) );
 		$this->write_data_array_to_csv($filehandle, $meta_data);
 	}
 
@@ -427,10 +431,12 @@
 	 * @param array $model_data_array is assumed to be a 3d array: 1st layer has keys of model names (eg 'Event'),
 	 * next layer is numerically indexed to represent each model object (eg, each individual event), and the last layer
 	 * has all the attributes o fthat model object (eg, the event's id, name, etc)
+	 * @param array $models_to_update array of models we want to update (ones not in this list
+	 *	shouldn't be updated - only inserted if they don't exist in the database)
 	 * @return boolean success
 	 */
-	public function write_model_data_to_csv($filehandle,$model_data_array){
-		$this->write_metadata_to_csv($filehandle);
+	public function write_model_data_to_csv( $filehandle, $model_data_array, $models_to_update ){
+		$this->write_metadata_to_csv($filehandle, $models_to_update );
 		foreach($model_data_array as $model_name => $model_instance_arrays){
 			//first: output a special row stating the model
 			echo $this->fputcsv2($filehandle,array('MODEL',$model_name));
@@ -457,11 +463,13 @@
 	 * and dies (in order to avoid other plugins from messing up the csv output)
 	 * @param string $filename the filename you want to give the file
 	 * @param array $model_data_array 3d array, as described in EE_CSV::write_model_data_to_csv()
+	 * @param array $models_to_update array of models we want to update (ones not in this list
+	 *	shouldn't be updated - only inserted if they don't exist in the database)
 	 * @return bool | void writes CSV file to output and dies
 	 */
-	public function export_multiple_model_data_to_csv($filename,$model_data_array){
-		$filehandle = $this->begin_sending_csv($filename);
-		$this->write_model_data_to_csv($filehandle, $model_data_array);
+	public function export_multiple_model_data_to_csv($filename,$model_data_array, $models_to_update = NULL ){
+		$filehandle = $this->begin_sending_csv( $filename);
+		$this->write_model_data_to_csv($filehandle, $model_data_array, $models_to_update);
 		$this->end_sending_csv($filehandle);
 	}
 	/**

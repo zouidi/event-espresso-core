@@ -568,6 +568,69 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$this->assertEquals( $new_e2_data,  $e2->model_field_array() );
 	}
 
+	/**
+	 * Verifies that when we specify specific rows to update, only those ones are updated.
+	 * Other rows only INSERT data when it doesn't already exist
+	 * @group tres
+	 */
+	function test_save_data_rows_to_db__models_to_update(){
+		//create some data
+		$state = $this->new_model_obj_with_dependencies( 'State' );
+		$original_attendee_name = 'original attendee fname';
+		$att = $this->new_model_obj_with_dependencies( 'Attendee', array( 'STA_ID' => $state->ID(), 'ATT_fname' => $original_attendee_name ) );
+		$reg = $this->new_model_obj_with_dependencies( 'Registration' );
+		$qst = $this->new_model_obj_with_dependencies( 'Question' );
+		$ans = $this->new_model_obj_with_dependencies( 'Answer', array( 'REG_ID' => $reg->ID(), 'QST_ID' => $qst->ID() ) );
+		//export it
+		$csv_data = array(
+			'State' => array(
+				$state->model_field_array()
+			),
+			'Attendee' => array(
+				$att->model_field_array()
+			),
+			'Registration' => array(
+				$reg->model_field_array()
+			),
+			'Question' => array(
+				$qst->model_field_array()
+			),
+			'Answer' => array(
+				$ans->model_field_array()
+			)
+		);
+
+		$models_to_update = array(
+			'Attendee', 'Registration', 'Answer'
+			//ie we DON'T want to update states or questions; we only insert them if they no longer exist
+		);
+
+		//change some of it
+		$new_state_name = 'changed-name';
+		$state->save( array( 'STA_name' => $new_state_name ) );
+		$att->save( array( 'ATT_fname' => 'changed-name' ) );
+		$reg->delete();
+		$qst->delete();
+
+		//re-import it, but only update some of it
+		$new_mappings = EE_Import::instance()->save_data_rows_to_db( $csv_data, false, array(), $models_to_update );
+
+		//all the models we indicated to update should be updated
+		//and because the improter uses the models, the model objects updated automatically
+		$this->assertEquals( $original_attendee_name, $att->get( 'ATT_fname' ) );
+		$this->assertTrue( isset( $new_mappings[ 'Registration' ][ $reg->ID() ] ) );
+		$new_reg = EEM_Registration::instance()->get_one_by_ID(  $new_mappings[ 'Registration' ][ $reg->ID() ]  );
+		$this->assertInstanceOf( 'EE_Registration', $new_reg );
+
+		//models that we didn't indicate to update should NOT have updated;
+		$this->assertEquals( $new_state_name, $state->get( 'STA_name' ) );
+
+		//but they should have inserted data that doesn't exist int he DB (because other data depends on it)
+		$this->assertTrue( isset( $new_mappings[ 'Question' ][ $qst->ID() ] ) );
+		$new_question = EEM_Question::instance()->get_one_by_ID( $qst->ID() );
+		$this->assertInstanceOf( 'EE_Question', $new_question);
+	}
+
 	public function setUp(){
 		parent::setUp();
 		EE_Import::reset();
