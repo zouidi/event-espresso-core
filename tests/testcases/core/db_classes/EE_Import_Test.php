@@ -157,9 +157,9 @@ class EE_Import_Test extends EE_UnitTestCase {
 		//ok give it a whirl (keep the term-taxonomy's "term_id" the same by having it map to itself, obviously super unlikely but helps testing)
 		EE_Import::instance()->save_data_rows_to_db($csv_data_rows, true, array( 'Term' => array( $term_taxonomy->get( 'term_id' ) => $term_taxonomy->get( 'term_id' ) ) ) );
 
-		$this->assertEmpty( EE_Import::instance()->get_total_update_errors() );
-		$this->assertEmpty( EE_Import::instance()->get_total_inserts() );
-		$this->assertEmpty( EE_Import::instance()->get_total_insert_errors() );
+		$this->assertEmpty( EE_Import::instance()->get_update_errors() );
+		$this->assertEmpty( EE_Import::instance()->get_inserts() );
+		$this->assertEmpty( EE_Import::instance()->get_insert_errors() );
 		$this->assertEquals( 2, EE_Import::instance()->get_total_updates() );
 		//there shouldn't be any new term taxonomies or countries
 		$this->assertEquals( $term_taxonomy_count, EEM_Term_Taxonomy::instance()->count() );
@@ -659,14 +659,40 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$this->assertEquals( 1, EE_Import::instance()->get_total_updates() );
 	}
 
+	/**
+	 * if the data was exported from a site with other addons, it might have data in it
+	 * that we don't recognize. We should probably give warnings but no errors
+	 * @group what
+	 */
+	public function test_save_data_rows_to_db__unrecognize_rows(){
+		$original_event_name = 'original event name';
+		$regular_event = $this->new_model_obj_with_dependencies( 'Event', array( 'EVT_name' => $original_event_name ) );
+		$wack_event_data = $regular_event->model_field_array();
+		$wack_event_data[ 'UNRECOGNIZE_FIELD' ] = 'data from an addon we dont have installed';
+		$borked_csv_data = array(
+			'Event' => array(
+				$wack_event_data
+			),
+			'UNRECOGNIZED_MODEL' => array(
+				array( 'something' => 'whatever', 'foo' => 'bar' )
+			)
+		);
+		$regular_event->set( 'EVT_name', 'changed name' );
+
+		$mapping_data = EE_Import::instance()->save_data_rows_to_db( $borked_csv_data, false, array(), array( 'Event', 'UNRECOGNIZED_MODEL' ) );
+		//we should have just udpated the one event
+		$this->assertEquals( 1, EE_Import::instance()->get_total_updates() );
+		$this->assertEquals( $original_event_name, $regular_event->get( 'EVT_name' ) );
+
+	}
+
 	public function setUp(){
 		parent::setUp();
 		EE_Import::reset();
 	}
 	protected function _assertNoImportErrors(){
-		$notices = EE_Error::get_notices(false, false, true);
-		$this->assertEmpty( EE_Import::instance()->get_total_update_errors(), isset( $notices['errors'] ) ? $notices['errors'] : '');
-		$this->assertEmpty( EE_Import::instance()->get_total_insert_errors(), isset( $notices['errors'] ) ? $notices['errors'] : '' );
+		$this->assertEmpty( EE_Import::instance()->get_update_errors() );
+		$this->assertEmpty( EE_Import::instance()->get_insert_errors() ) ;
 	}
 }
 //in case this is run on WP 4.1, we'd still like to be able to test this WP 4.2 feature

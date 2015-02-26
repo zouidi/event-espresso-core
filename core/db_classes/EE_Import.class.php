@@ -3,6 +3,9 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 /**
  * EE_Import class
  *
+ * Works on data put into a file with EE_Export.class.php.
+ * Extracts data from the CSV file and puts it into the database
+ *
  * @package				Event Espresso
  * @subpackage		includes/functions
  * @author					Brent Christensen
@@ -19,20 +22,20 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
   // instance of the EE_Import object
 	private static $_instance = NULL;
 
-	private static $_csv_array = array();
-
 	/**
-	 *
-	 * @var array of model names
+	 * arrays of strings describing what was inserted or updated etc.
+	 * We store these temporarily on the EE_Import singleton because
+	 * we don't necessarily want to add them all as normal EE_Errors right away
+	 * (we might be unit testing where we purposefully add errors; or we
+	 * could even be doing a dry run in which case all those normal EE_Errors
+	 * will get rolled back at the end of the database transaction)
+	 * @var array
 	 */
-	private static $_model_list = array();
-
-	private static $_columns_to_save = array();
-
-	protected $_total_inserts = 0;
-	protected $_total_updates = 0;
-	protected $_total_insert_errors = 0;
-	protected $_total_update_errors = 0;
+	protected $_inserts = array();
+	protected $_updates = array();
+	protected $_insert_errors = array();
+	protected $_update_errors = array();
+	protected $_general_errors = array();
 
 
 	/**
@@ -41,11 +44,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	 *		@access private
 	 *		@return void
 	 */
-  private function __construct() {
-		$this->_total_inserts = 0;
-		$this->_total_updates = 0;
-		$this->_total_insert_errors = 0;
-		$this->_total_update_errors = 0;
+	protected function __construct() {
 	}
 
 
@@ -212,27 +211,27 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 									}
 								} else {
 									// no array? must be an error
-									EE_Error::add_error(sprintf(__("No file seems to have been uploaded", "event_espresso")), __FILE__, __FUNCTION__, __LINE__ );
+									$this->_add_general_error( sprintf(__("No file seems to have been uploaded", "event_espresso")), __FILE__, __FUNCTION__, __LINE__ );
 									return FALSE;
 								}
 
 							} else {
-								EE_Error::add_error(sprintf(__("%s was not successfully uploaded", "event_espresso"),$filename), __FILE__, __FUNCTION__, __LINE__ );
+								$this->_add_general_error(sprintf(__("%s was not successfully uploaded", "event_espresso"),$filename), __FILE__, __FUNCTION__, __LINE__ );
 								return FALSE;
 							}
 
 						} else {
-							EE_Error::add_error( sprintf(__("%s was too large of a file and could not be uploaded. The max filesize is %s' KB.", "event_espresso"),$filename,$max_upload), __FILE__, __FUNCTION__, __LINE__ );
+							$this->_add_general_error( sprintf(__("%s was too large of a file and could not be uploaded. The max filesize is %s' KB.", "event_espresso"),$filename,$max_upload), __FILE__, __FUNCTION__, __LINE__ );
 							return FALSE;
 						}
 
 					} else {
-						EE_Error::add_error( sprintf(__("%s  had an invalid file extension, not uploaded", "event_espresso"),$filename), __FILE__, __FUNCTION__, __LINE__ );
+						$this->_add_general_error( sprintf(__("%s  had an invalid file extension, not uploaded", "event_espresso"),$filename), __FILE__, __FUNCTION__, __LINE__ );
 						return FALSE;
 					}
 
 				} else {
-					EE_Error::add_error( $error_msg, __FILE__, __FUNCTION__, __LINE__ );
+					$this->_add_general_error( $error_msg, __FILE__, __FUNCTION__, __LINE__ );
 					return FALSE;
 				}
 
@@ -275,9 +274,6 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	 */
 	public function save_csv_data_array_to_db( $csv_data_array, $model_name = FALSE ) {
 
-
-		$success = FALSE;
-		$error = FALSE;
 		//whther to treat this import as if it's data froma different database or not
 		//ie, if it IS from a different database, ignore foreign keys whihf
 		$export_from_site_a_to_b = true;
@@ -326,23 +322,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		//save the mapping from old db to new db in case they try re-importing the same data from the same website again
 		update_option('ee_id_mapping_from'.sanitize_title($old_site_url),$old_db_to_new_db_mapping);
 
-		if ( $this->_total_updates > 0 ) {
-			EE_Error::add_success( sprintf(__("%s existing records in the database were updated.", "event_espresso"),$this->_total_updates));
-			$success = true;
-		}
-		if ( $this->_total_inserts > 0 ) {
-			EE_Error::add_success(sprintf(__("%s new records were added to the database.", "event_espresso"),$this->_total_inserts));
-			$success = true;
-		}
-
-		if ( $this->_total_update_errors > 0 ) {
-			EE_Error::add_error(sprintf(__("'One or more errors occurred, and a total of %s existing records in the database were <strong>not</strong> updated.'", "event_espresso"),$this->_total_update_errors), __FILE__, __FUNCTION__, __LINE__ );
-			$error = true;
-		}
-		if ( $this->_total_insert_errors > 0 ) {
-			EE_Error::add_error(sprintf(__("One or more errors occurred, and a total of %s new records were <strong>not</strong> added to the database.'", "event_espresso"),$this->_total_insert_errors), __FILE__, __FUNCTION__, __LINE__ );
-			$error = true;
-		}
+		$all_good = $this->report_successes_and_errors();
 
 		//lastly, we need to update the datetime and ticket sold amounts
 		//as those may ahve been affected by this
@@ -350,7 +330,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		EEM_Ticket::instance()->update_tickets_sold(EEM_Ticket::instance()->get_all());
 
 		// if there was at least one success and absolutely no errors
-		if ( $success && ! $error ) {
+		if ( $all_good ) {
 			return TRUE;
 		} else {
 			return FALSE;
@@ -391,10 +371,15 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 			//now check that assumption was correct. If
 			if ( EE_Registry::instance()->is_model_name($model_name_in_csv_data)) {
 				$model_name = $model_name_in_csv_data;
-			}else {
+			}elseif( empty( $model_name_in_csv_data ) ) {
 				// no table info in the array and no table name passed to the function?? FAIL
-				EE_Error::add_error( __('No table information was specified and/or found, therefore the import could not be completed','event_espresso'), __FILE__, __FUNCTION__, __LINE__ );
+				$this->_add_general_error( __('No table information was specified and/or found, therefore the import could not be completed','event_espresso'), __FILE__, __FUNCTION__, __LINE__ );
 				return FALSE;
+			}else{
+				//what is this model name??
+				$this->_add_general_error( sprintf( __( 'The model "%s" is not recognized so its data cannot be imported', 'event_espresso' ), $model_name_in_csv_data ), __FILE__, __FUNCTION__, __LINE__  );
+				//but maybe other models have valid data in them?
+				continue;
 			}
 			/* @var $model EEM_Base */
 			$model = EE_Registry::instance()->load_model($model_name);
@@ -411,6 +396,8 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				if($row_is_completely_empty){
 					continue;
 				}
+				//make sure there is no data for fields we don't recognize
+				$model_object_data = array_intersect_key( $model_object_data, $model->field_settings() );
 				//find the PK in the row of data (or a combined key if
 				//there is no primary key)
 				if($model->has_primary_key_field()){
@@ -657,22 +644,19 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 			$new_id = $model->insert($model_object_data);
 			if( $new_id ){
 				$old_db_to_new_db_mapping[$model->get_this_model_name()][$id_in_csv] = $new_id;
-				$this->_total_inserts++;
-				EE_Error::add_success( sprintf(__("Successfully added new %s (with id %s) with csv data %s", "event_espresso"),$model->get_this_model_name(),$new_id, implode(",",$model_object_data)));
+				$this->_add_insert_success( sprintf(__("Successfully added new %s (with id %s) with csv data %s", "event_espresso"),$model->get_this_model_name(),$new_id, implode(",",$model_object_data)));
 			}else{
-				$this->_total_insert_errors++;
 				//put the ID used back in there for the error message
 				if($model->has_primary_key_field()){
 					$model_object_data[$model->primary_key_name()] = $effective_id;
 				}
-				EE_Error::add_error( sprintf(__("Could not insert new %s with the csv data: %s", "event_espresso"),$model->get_this_model_name(),http_build_query($model_object_data)), __FILE__, __FUNCTION__, __LINE__ );
+				$this->_add_insert_error( sprintf(__("Could not insert new %s with the csv data: %s", "event_espresso"),$model->get_this_model_name(),http_build_query($model_object_data)), __FILE__, __FUNCTION__, __LINE__ );
 			}
 		}catch(EE_Error $e){
-			$this->_total_insert_errors++;
 			if($model->has_primary_key_field()){
 				$model_object_data[$model->primary_key_name()] = $effective_id;
 			}
-			EE_Error::add_error( sprintf(__("Could not insert new %s with the csv data: %s because %s", "event_espresso"),$model->get_this_model_name(),implode(",",$model_object_data),$e->getMessage()), __FILE__, __FUNCTION__, __LINE__ );
+			$this->_add_insert_error( sprintf(__("Could not insert new %s with the csv data: %s because %s", "event_espresso"),$model->get_this_model_name(),implode(",",$model_object_data),$e->getMessage()), __FILE__, __FUNCTION__, __LINE__ );
 		}
 		return $old_db_to_new_db_mapping;
 	}
@@ -715,8 +699,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 			$success = $model->update($model_object_data_for_update,array($conditions));
 			if($success){
-				$this->_total_updates++;
-				EE_Error::add_success( sprintf(__("Successfully updated %s with csv data %s", "event_espresso"),$model->get_this_model_name(),implode(",",$model_object_data_for_update)));
+				$this->_add_update_success( sprintf(__("Successfully updated %s with csv data %s", "event_espresso"),$model->get_this_model_name(),implode(",",$model_object_data_for_update)));
 				//we should still record the mapping even though it was an update
 				//because if we were going to insert somethign but it was going to conflict
 				//we would have last-minute decided to update. So we'd like to know what we updated
@@ -726,18 +709,15 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				$matched_items = $model->get_all(array($conditions));
 				if( ! $matched_items){
 					//no items were matched (so we shouldn't have updated)... but then we should have inserted? what the heck?
-					$this->_total_update_errors++;
-					EE_Error::add_error( sprintf(__("Could not update %s with the csv data: '%s' for an unknown reason (using WHERE conditions %s)", "event_espresso"),$model->get_this_model_name(),http_build_query($original_model_object_data),http_build_query($conditions)), __FILE__, __FUNCTION__, __LINE__ );
+					$this->_add_update_error( sprintf(__("Could not update %s with the csv data: '%s' for an unknown reason (using WHERE conditions %s)", "event_espresso"),$model->get_this_model_name(),http_build_query($original_model_object_data),http_build_query($conditions)), __FILE__, __FUNCTION__, __LINE__ );
 				}else{
-					$this->_total_updates++;
-					EE_Error::add_success( sprintf(__("%s with csv data '%s' was found in the database and didn't need updating because all the data is identical.", "event_espresso"),$model->get_this_model_name(),implode(",",$original_model_object_data)));
+					$this->_add_update_success( sprintf(__("%s with csv data '%s' was found in the database and didn't need updating because all the data is identical.", "event_espresso"),$model->get_this_model_name(),implode(",",$original_model_object_data)));
 				}
 			}
 		}catch(EE_Error $e){
-			$this->_total_update_errors++;
 			$basic_message = sprintf(__("Could not update %s with the csv data: %s because %s", "event_espresso"),$model->get_this_model_name(),implode(",",$original_model_object_data),$e->getMessage());
 			$debug_message = $basic_message . ' Stack trace: ' . $e->getTraceAsString();
-			EE_Error::add_error( "$basic_message | $debug_message", __FILE__, __FUNCTION__, __LINE__ );
+			$this->_add_general_error( "$basic_message | $debug_message", __FILE__, __FUNCTION__, __LINE__ );
 		}
 		return $old_db_to_new_db_mapping;
 	}
@@ -747,30 +727,139 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	 * @return int
 	 */
 	public function get_total_inserts(){
-		return $this->_total_inserts;
+		return count( $this->_inserts );
 	}
 	/**
 	 *  Gets the number of insert errors since importer was instantiated or reset
 	 * @return int
 	 */
 	public function get_total_insert_errors(){
-		return $this->_total_insert_errors;
+		return count( $this->_insert_errors );
 	}
 	/**
 	 *  Gets the number of updates performed since importer was instantiated or reset
 	 * @return int
 	 */
 	public function get_total_updates(){
-		return $this->_total_updates;
+		return count( $this->_updates );
 	}
 	/**
 	 *  Gets the number of update errors since importer was instantiated or reset
 	 * @return int
 	 */
 	public function get_total_update_errors(){
-		return $this->_total_update_errors;
+		return count( $this->_updates );
 	}
 
+	/**
+	 * Gets count of general errors during import
+	 * @return int
+	 */
+	public function get_total_general_errors(){
+		return count( $this->_general_errors );
+	}
+	protected function _add_update_success( $message ){
+		$this->_updates[] = $message;
+	}
+	protected function _add_insert_success( $message ){
+		$this->_inserts[] = $message;
+	}
+	protected function _add_update_error( $message, $file, $function, $line ){
+		$this->_update_errors[] = array( $message, $file, $function, $line );
+	}
+	protected function _add_insert_error( $message, $file, $function, $line ){
+		$this->_insert_errors[] = array( $message, $file, $function, $line );
+	}
+	protected function _add_general_error( $message, $file, $function, $line ){
+		$this->_general_errors[] = array( $message, $file, $function, $line );
+	}
+
+	/**
+	 * Returns an array of arrays, where each sub-array has 4 items:
+	 * the string describing the error, the file name that originally had the error,
+	 * the function that originally had the error, and the line where the error originally
+	 * happened.
+	 * @return array
+	 */
+	public function get_update_errors(){
+		return $this->_update_errors;
+	}
+	/**
+	 * Returns an array of arrays, where each sub-array has 4 items:
+	 * the string describing the error, the file name that originally had the error,
+	 * the function that originally had the error, and the line where the error originally
+	 * happened.
+	 * @return array
+	 */
+	public function get_insert_errors(){
+		return $this->_insert_errors;
+	}
+	/**
+	 * Returns an array of arrays, where each sub-array has 4 items:
+	 * the string describing the error, the file name that originally had the error,
+	 * the function that originally had the error, and the line where the error originally
+	 * happened.
+	 * @return array
+	 */
+	public function get_general_errors(){
+		return $this->_general_errors;
+	}
+	/**
+	 * Gets a simple array where each item in the array is a string describing what was inserted
+	 * @return array
+	 */
+	public function get_inserts(){
+		return $this->_inserts;
+	}
+	/**
+	 * Gets a simple array where each item in the array is a string describing what was updated
+	 * @return array
+	 */
+	public function get_updates(){
+		return $this->_updates;
+	}
+	/**
+	 * Converts all the errors and success messages stored on this class into
+	 * normal EE_Error success and error messages.
+	 * @return boolean there were no errors and we successfully did something
+	 */
+	public function report_successes_and_errors(){
+		$success = false;
+		$error = false;
+		if ( $this->get_total_updates() ) {
+			EE_Error::add_success( sprintf(__("%s existing records in the database were updated.", "event_espresso"),$this->get_total_updates()));
+			$success = true;
+		}
+		if ( $this->get_total_inserts() ) {
+			EE_Error::add_success(sprintf(__("%s new records were added to the database.", "event_espresso"),$this->get_total_inserts()));
+			$success = true;
+		}
+
+		if ( $this->get_total_update_errors()) {
+			EE_Error::add_error(sprintf(__("'One or more errors occurred, and a total of %s existing records in the database were <strong>not</strong> updated.'", "event_espresso"),$this->get_total_update_errors() ), __FILE__, __FUNCTION__, __LINE__ );
+			$error = true;
+		}
+		if ( $this->get_total_insert_errors() ) {
+			EE_Error::add_error(sprintf(__("One or more errors occurred, and a total of %s new records were <strong>not</strong> added to the database.'", "event_espresso"),$this->get_total_insert_errors() ), __FILE__, __FUNCTION__, __LINE__ );
+			$error = true;
+		}
+		foreach( $this->_general_errors as $message_data ){
+			EE_Error::add_error( $message_data[0], $message_data[1], $message_data[2], $message_data[3]);
+		}
+		foreach( $this->_inserts as $insert ){
+			EE_Error::add_success( $insert );
+		}
+		foreach( $this->_updates as $update ){
+			EE_Error::add_success( $update );
+		}
+		foreach( $this->_insert_errors as $message_data ){
+			EE_Error::add_error( $message_data[0], $message_data[1], $message_data[2], $message_data[3]);
+		}
+		foreach( $this->_update_errors as $message_data ){
+			EE_Error::add_error( $message_data[0], $message_data[1], $message_data[2], $message_data[3]);
+		}
+		return $success && ! $error;
+	}
 
 
 
