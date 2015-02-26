@@ -178,6 +178,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		$state_country_query_params = array();
 		$question_group_query_params = array();
 		$question_query_params = array();
+		$related_through_mtg_params = array();
 		if ( isset( $this->_req_data['EVT_ID'] )) {
 			// do we have an array of IDs ?
 
@@ -204,6 +205,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 			$state_country_query_params[0]['Venue.Event.EVT_ID'] = $value_to_equal;
 			$question_group_query_params[0]['Event.EVT_ID'] = $value_to_equal;
 			$question_query_params[0]['Question_Group.Event.EVT_ID'] = $value_to_equal;
+			$related_through_mtg_params[0]['Message_Template_Group.Event.EVT_ID' ] = $value_to_equal;
 
 		} else {
 			$filename = 'all-events';
@@ -232,6 +234,9 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				'Event_Question_Group'=>$question_group_query_params,
 				'Question'=>$question_query_params,
 				'Question_Group_Question'=>$question_query_params,
+				'Message_Template_Group' => $related_models_query_params,
+				'Event_Message_Template' => $related_models_query_params,
+				'Message_Template' => $related_through_mtg_params,
 //				'Transaction'=>$related_through_reg_query_params,
 //				'Registration'=>$related_models_query_params,
 //				'Attendee'=>$related_through_reg_query_params,
@@ -250,6 +255,8 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		unset( $models_to_update['Event_Question_Group'] );
 		unset( $models_to_update['Question'] );
 		unset( $models_to_update['Question_Group_Question'] );
+		unset( $models_to_update['Message_Template_Group'] );
+		unset( $models_to_update['Message_Template'] );
 		$models_to_update = array_keys( $models_to_update );
 
 
