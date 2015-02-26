@@ -425,7 +425,7 @@ class EE_Import_Test extends EE_UnitTestCase {
 	 * the newly-inserted data to data that already exists.
 	 * We also test what would happen if AGAIN delete the data and import from the
 	 * old CSV again.
-	 * @group 7567
+	 * @group 7124
 	 */
 	function test_save_data_array_to_db__from_same_site__deleted_data(){
 		$e1 = $this->new_model_obj_with_dependencies( 'Event' );
@@ -629,6 +629,34 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$this->assertTrue( isset( $new_mappings[ 'Question' ][ $qst->ID() ] ) );
 		$new_question = EEM_Question::instance()->get_one_by_ID( $qst->ID() );
 		$this->assertInstanceOf( 'EE_Question', $new_question);
+	}
+	/**
+	 * Test to make sure that before we update too, that we verify the update won't
+	 * create conflicting data (ie we're pretty sure we won't conflict based on the primary key,
+	 * but there might be other uniqueness requirements that it woudl break)
+	 * @group 7567
+	 */
+	public function test_save_data_rows_to_db__duplicate_on_update(){
+		//create a term-taxonomy
+		$original_term_rel = $this->new_model_obj_with_dependencies( 'Term_Taxonomy', array( 'description' => 'original description' ) );
+		$term_rel_csv_data = $original_term_rel->model_field_array();
+		$term_rel_csv_data[ 'term_taxonomy_id' ] = $original_term_rel->ID() + 1;
+		$new_desc = 'new description';
+		$term_rel_csv_data[ 'description' ] = $new_desc;
+		$this->assertNotEquals( $original_term_rel->ID(), $term_rel_csv_data[ 'term_taxonomy_id'] );
+		$this->assertNotEquals( $original_term_rel->get( 'description' ), $term_rel_csv_data[ 'description' ] );
+		//the exported data has a different ID, but same term and same taxonomy
+		$csv_data = array(
+			'Term_Taxonomy' => array(
+				$term_rel_csv_data
+			)
+		);
+		EE_Import::instance()->save_data_rows_to_db( $csv_data, false, array() );
+		//because we favour the CSV's term-relationship data, we ought to update
+		//the conflicting term-reltaionship, instead of having an error or favouring the DB
+		//and remember because the importer uses the models, this model obejct is automatically updated
+		$this->assertEquals( $new_desc, $original_term_rel->get( 'description' ) );
+		$this->assertEquals( 1, EE_Import::instance()->get_total_updates() );
 	}
 
 	public function setUp(){

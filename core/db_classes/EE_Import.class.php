@@ -457,7 +457,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				if( $what_to_do == self::do_insert ) {
 					$old_db_to_new_db_mapping = $this->_insert_from_data_array( $id_in_csv, $model_object_data, $model, $old_db_to_new_db_mapping );
 				}elseif( $what_to_do == self::do_update ) {
-					if( in_array( $model_name_in_csv_data, $models_to_update ) || $models_to_update === null ){
+					if( $models_to_update === null || in_array( $model_name_in_csv_data, $models_to_update ) ){
 						$old_db_to_new_db_mapping = $this->_update_from_data_array( $id_in_csv, $model_object_data, $model, $old_db_to_new_db_mapping );
 					}else{
 						//we would have updated this, but the export data indicated we ought not
@@ -678,25 +678,35 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	/**
 	 * Given the model object data, finds the row to update and updates it
 	 * @param string|int $id_in_csv
-	 * @param array $model_object_data
+	 * @param array $original_model_object_data
 	 * @param EEM_Base $model
 	 * @param array $old_db_to_new_db_mapping
 	 * @return array updated $old_db_to_new_db_mapping
 	 */
-	protected function _update_from_data_array( $id_in_csv,  $model_object_data, $model, $old_db_to_new_db_mapping ) {
+	protected function _update_from_data_array( $id_in_csv,  $original_model_object_data, $model, $old_db_to_new_db_mapping ) {
 		try{
 			//let's keep two copies of the model object data:
 			//one for performing an update, one for everthing else
-			$model_object_data_for_update = $model_object_data;
+			$model_object_data_for_update = $original_model_object_data;
+
 			if($model->has_primary_key_field()){
-				$conditions = array($model->primary_key_name() => $model_object_data[$model->primary_key_name()]);
+				//wait- will this update cause a conflict with other data?
+				$conflicting = $model->get_one_conflicting($original_model_object_data, false );
+				if( $conflicting ){
+					//if so, just update the thing it woudl conflict with, dont cause a conflict
+					$pk_value = $conflicting->ID();
+				}else{
+					$pk_value = $model_object_data_for_update[$model->primary_key_name()];
+				}
+				$conditions = array($model->primary_key_name() => $pk_value);
 				//remove the primary key because we shouldn't use it for updating
 				unset($model_object_data_for_update[$model->primary_key_name()]);
 			}elseif($model->get_combined_primary_key_fields() > 1 ){
 				$conditions = array();
 				foreach($model->get_combined_primary_key_fields() as $key_field){
-					$conditions[$key_field->get_name()] = $model_object_data[$key_field->get_name()];
+					$conditions[$key_field->get_name()] = $model_object_data_for_update[$key_field->get_name()];
 				}
+				$pk_value = $model->get_index_primary_key_string( $original_model_object_data ) ;
 			}else{
 				$model->primary_key_name();//this shoudl just throw an exception, explaining that we dont have a primary key (or a combine dkey)
 			}
@@ -709,27 +719,21 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				//because if we were going to insert somethign but it was going to conflict
 				//we would have last-minute decided to update. So we'd like to know what we updated
 				//and so we record what record ended up being updated using the mapping
-				if( $model->has_primary_key_field() ){
-					$new_key_for_mapping = $model_object_data[ $model->primary_key_name() ];
-				}else{
-					//no primary key just a combined key
-					$new_key_for_mapping = $model->get_index_primary_key_string( $model_object_data );
-				}
-				$old_db_to_new_db_mapping[ $model->get_this_model_name() ][ $id_in_csv ] = $new_key_for_mapping;
+				$old_db_to_new_db_mapping[ $model->get_this_model_name() ][ $id_in_csv ] = $pk_value;
 			}else{
 				$matched_items = $model->get_all(array($conditions));
 				if( ! $matched_items){
 					//no items were matched (so we shouldn't have updated)... but then we should have inserted? what the heck?
 					$this->_total_update_errors++;
-					EE_Error::add_error( sprintf(__("Could not update %s with the csv data: '%s' for an unknown reason (using WHERE conditions %s)", "event_espresso"),$model->get_this_model_name(),http_build_query($model_object_data),http_build_query($conditions)), __FILE__, __FUNCTION__, __LINE__ );
+					EE_Error::add_error( sprintf(__("Could not update %s with the csv data: '%s' for an unknown reason (using WHERE conditions %s)", "event_espresso"),$model->get_this_model_name(),http_build_query($original_model_object_data),http_build_query($conditions)), __FILE__, __FUNCTION__, __LINE__ );
 				}else{
 					$this->_total_updates++;
-					EE_Error::add_success( sprintf(__("%s with csv data '%s' was found in the database and didn't need updating because all the data is identical.", "event_espresso"),$model->get_this_model_name(),implode(",",$model_object_data)));
+					EE_Error::add_success( sprintf(__("%s with csv data '%s' was found in the database and didn't need updating because all the data is identical.", "event_espresso"),$model->get_this_model_name(),implode(",",$original_model_object_data)));
 				}
 			}
 		}catch(EE_Error $e){
 			$this->_total_update_errors++;
-			$basic_message = sprintf(__("Could not update %s with the csv data: %s because %s", "event_espresso"),$model->get_this_model_name(),implode(",",$model_object_data),$e->getMessage());
+			$basic_message = sprintf(__("Could not update %s with the csv data: %s because %s", "event_espresso"),$model->get_this_model_name(),implode(",",$original_model_object_data),$e->getMessage());
 			$debug_message = $basic_message . ' Stack trace: ' . $e->getTraceAsString();
 			EE_Error::add_error( "$basic_message | $debug_message", __FILE__, __FUNCTION__, __LINE__ );
 		}
