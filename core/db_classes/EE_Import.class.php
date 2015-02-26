@@ -59,6 +59,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		if ( self::$_instance === NULL  or ! is_object( self::$_instance ) or ! ( self::$_instance instanceof EE_Import )) {
 			self::$_instance = new self();
 		}
+		add_filter( 'FHEE__EE_Import___replace_temp_ids_with_mappings__model_object_data__end', array( self::$_instance, 'handle_split_term_ids' ), 10, 2 );
 		return self::$_instance;
 	}
 
@@ -583,22 +584,23 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				//or it's just a regular value that ought to be replaced
 			}
 		}
-		//
-		if( $model instanceof EEM_Term_Taxonomy ){
-			$model_object_data = $this->_handle_split_term_ids( $model_object_data );
-		}
-		return $model_object_data;
+		//allow for any other value replacement
+		return apply_filters( 'FHEE__EE_Import___replace_temp_ids_with_mappings__model_object_data__end', $model_object_data, $model );
 	}
 
 	/**
 	 * If the data was exported PRE-4.2, but then imported POST-4.2, then the term_id
 	 * this term-taxonomy refers to may be out-of-date so we need to update it.
 	 * see https://make.wordpress.org/core/2015/02/16/taxonomy-term-splitting-in-4-2-a-developer-guide/
-	 * @param type $model_object_data
+	 * @param array $model_object_data
+	 * @param EEM_Base $model
 	 * @return array new model object data
 	 */
-	protected function _handle_split_term_ids( $model_object_data ){
-		if( isset( $model_object_data['term_id'] ) && isset( $model_object_data[ 'taxonomy' ]) && apply_filters( 'FHEE__EE_Import__handle_split_term_ids__function_exists', function_exists( 'wp_get_split_term' ), $model_object_data ) ) {
+	public function handle_split_term_ids( $model_object_data, $model ){
+		if( $model instanceof EEM_Term_Taxonomy &&
+				isset( $model_object_data['term_id'] ) &&
+				isset( $model_object_data[ 'taxonomy' ]) &&
+				apply_filters( 'FHEE__EE_Import__handle_split_term_ids__function_exists', function_exists( 'wp_get_split_term' ), $model_object_data ) ) {
 			$new_term_id = wp_get_split_term( $model_object_data[ 'term_id' ], $model_object_data[ 'taxonomy' ] );
 			if( $new_term_id ){
 				$model_object_data[ 'term_id' ] = $new_term_id;
