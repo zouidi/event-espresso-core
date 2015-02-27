@@ -748,7 +748,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	 * @return int
 	 */
 	public function get_total_update_errors(){
-		return count( $this->_updates );
+		return count( $this->_update_errors );
 	}
 
 	/**
