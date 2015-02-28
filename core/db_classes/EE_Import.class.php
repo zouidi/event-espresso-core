@@ -19,6 +19,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	const do_nothing = 'nothing';
 
 
+  // instance of the EE_CSV object
+	public $EE_CSV = NULL;
+
+  // imported CSV data as array
+	 protected $csv_array = array();
+
+
   // instance of the EE_Import object
 	private static $_instance = NULL;
 
@@ -41,8 +48,8 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	/**
 	 *		private constructor to prevent direct creation
 	 *		@Constructor
-	 *		@access private
-	 *		@return void
+	 *		@access protected
+	 *		@return EE_Import
 	 */
 	protected function __construct() {
 	}
@@ -73,17 +80,18 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 
 
-
-	/**
-	 *	@ generates HTML for a file upload input and form
-	 *	@ access 	public
-	 * 	@param 	string 		$title - heading for the form
-	 * 	@param 	string 		$intro - additional text explaing what to do
-	 * 	@param 	string 		$page - EE Admin page to direct form to - in the form "espresso_{pageslug}"
-	 * 	@param 	string 		$action - EE Admin page route array "action" that form will direct to
-	 * 	@param 	string 		$type - type of file to import
-	 *	@ return 	string
-	 */
+	 /**
+	  *    @ generates HTML for a file upload input and form
+	  *    @ access    public
+	  *
+	  * @param    string $title  - heading for the form
+	  * @param    string $intro  - additional text explaining what to do
+	  * @param    string $form_url - EE Admin page to direct form to - in the form "espresso_{pageslug}"
+	  * @param    string $action - EE Admin page route array "action" that form will direct to
+	  * @param    string $type   - type of file to import
+	  *
+*@return string
+	  */
 	public function upload_form ( $title, $intro, $form_url, $action, $type  ) {
 
 		$form_url = EE_Admin_Page::add_query_args_and_nonce( array( 'action' => $action ), $form_url );
@@ -165,7 +173,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 				    $filename	= $_FILES['file']['name'][0];
 					$file_ext 		= substr( strrchr( $filename, '.' ), 1 );
-				    $file_type 	= $_FILES['file']['type'][0];
+				    //$file_type 	= $_FILES['file']['type'][0];
 				    $temp_file	= $_FILES['file']['tmp_name'][0];
 				    $filesize    	= $_FILES['file']['size'][0] / 1024;//convert from bytes to KB
 
@@ -178,36 +186,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 							$path_to_file = $wp_upload_dir['basedir'] . DS . 'espresso' . DS . $filename;
 
 							if( move_uploaded_file( $temp_file, $path_to_file )) {
-
 								// convert csv to array
 								$this->csv_array = $this->EE_CSV->import_csv_to_model_data_array( $path_to_file );
-
 								// was data successfully stored in an array?
 								if ( is_array( $this->csv_array ) ) {
-
-									$import_what = str_replace( 'csv_import_', '', $_REQUEST['action'] );
-									$import_what = str_replace( '_', ' ', ucwords( $import_what ));
-									$processed_data = $this->csv_array;
-									$this->columns_to_save = FALSE;
-
-									// if any imports require funcky processing, we'll catch them in the switch
-									switch ($_REQUEST['action']) {
-
-										case "import_events";
-										case "event_list";
-												$import_what = 'Event Details';
-										break;
-
-										case 'groupon_import_csv':
-											$import_what = 'Groupon Codes';
-											$processed_data = $this->process_groupon_codes();
-										break;
-
-									}
 									// save processed codes to db
-									if ( $this->save_csv_data_array_to_db( $processed_data, $this->columns_to_save ) ) {
+									if ( $this->save_csv_data_array_to_db( $this->csv_array, false ) ) {
 										return TRUE;
-
 									}
 								} else {
 									// no array? must be an error
@@ -237,12 +222,12 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 			}
 		}
-		return;
+		return false;
 	}
 
 	/**
 	 *	Given an array of data (usually from a CSV import) attempts to save that data to the db.
-	 *	If $model_name ISN'T provided, assumes that this is a 3d array, with toplevel keys being model names,
+	 *	If $model_name ISN'T provided, assumes that this is a 3d array, with top level keys being model names,
 	 *	next level being numeric indexes adn each value representing a model object, and the last layer down
 	 *	being keys of model fields and their proposed values.
 	 *	If $model_name IS provided, assumes a 2d array of the bottom two layers previously mentioned.
@@ -268,14 +253,15 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	 * temporary ID, from the same site, we know that it's real ID is 123, and will
 	 * update that event, instead of adding a new event).
 	 *		  @access public
-	 *			@param array $csv_data_array - the array containing the csv data produced from EE_CSV::import_csv_to_model_data_array()
-	 *			@param array $fields_to_save - an array containing the csv column names as keys with the corresponding db table fields they will be saved to
-	 *			@return TRUE on success, FALSE on fail
+	 *
+	 * @param array         $csv_data_array - the array containing the csv data produced from EE_CSV::import_csv_to_model_data_array()
+	 * @param bool | string $model_name - an array containing the csv column names as keys with the corresponding db table fields they will be saved to
+	 * @return TRUE on success, FALSE on fail
 	 */
 	public function save_csv_data_array_to_db( $csv_data_array, $model_name = FALSE ) {
 
-		//whther to treat this import as if it's data froma different database or not
-		//ie, if it IS from a different database, ignore foreign keys whihf
+		//whether to treat this import as if it's data from a different database or not
+		//ie, if it IS from a different database, ignore foreign keys
 		$export_from_site_a_to_b = true;
 		// first level of array is not table information but a table name was passed to the function
 		// array is only two levels deep, so let's fix that by adding a level, else the next steps will fail
@@ -289,13 +275,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		//rather leave as-is: ie, if there is a matching state in the db already we
 		//leave it alone; if there is no matching state in the database, only then do we insert one
 		$models_to_update = NULL;
-		// begin looking through the $csv_data_array, expecting the toplevel key to be the model's name...
+		// begin looking through the $csv_data_array, expecting the top level key to be the model's name...
 		$old_site_url = 'none-specified';
 
-		//hanlde metadata
+		//handle metadata
 		if(isset($csv_data_array[EE_CSV::metadata_header]) ){
 			$csv_metadata = array_shift($csv_data_array[EE_CSV::metadata_header]);
-			//ok so its metadata, dont try to save it to ehte db obviously...
+			//ok so its metadata, dont try to save it to the db obviously...
 			if(isset($csv_metadata['site_url']) && $csv_metadata['site_url'] == site_url()){
 				EE_Error::add_attention(sprintf(__("CSV Data appears to be from the same database, so attempting to update data", "event_espresso")));
 				$export_from_site_a_to_b = false;
@@ -309,9 +295,9 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 			unset($csv_data_array[EE_CSV::metadata_header]);
 		}
 		/**
-		* @var $old_db_to_new_db_mapping 2d array: toplevel keys being model names, bottom-level keys being the original key, and
+		* @var $old_db_to_new_db_mapping 2d array: top level keys being model names, bottom-level keys being the original key, and
 		* the value will be the newly-inserted ID.
-		* If we have already imported data from the same website via CSV, it shoudl be kept in this wp option
+		* If we have already imported data from the same website via CSV, it should be kept in this wp option
 		*/
 	   $old_db_to_new_db_mapping = get_option('ee_id_mapping_from'.sanitize_title($old_site_url),array());
 	   if( $old_db_to_new_db_mapping){
@@ -325,7 +311,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		$all_good = $this->report_successes_and_errors();
 
 		//lastly, we need to update the datetime and ticket sold amounts
-		//as those may ahve been affected by this
+		//as those may have been affected by this
 		EEM_Datetime::instance()->update_sold( EEM_Datetime::instance()->get_all() );
 		EEM_Ticket::instance()->update_tickets_sold(EEM_Ticket::instance()->get_all());
 
@@ -339,33 +325,37 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	}
 
 
-	/**
-	 * Processes the array of data, given the knowledge that it's from the same database or a different one,
-	 * and the mapping from temporary IDs to real IDs.
-	 * If the data is from a different database, we treat the primary keys and their corresponding
-	 * foreign keys as "temp Ids", basically identifiers that get mapped to real primary keys
-	 * in the real target database. As items are inserted, their temporary primary keys
-	 * are mapped to the real IDs in the target database. Also, before doing any update or
-	 * insert, we replace all the temp ID which are foreign keys with their mapped real IDs.
-	 * An exception: string primary keys are treated as real IDs, or else we'd need to
-	 * dynamically generate new string primary keys which would be very awkard for the country table etc.
-	 * Also, models with no primary key are strange too. We combine use their primar key INDEX (a
-	 * combination of fields) to create a unique string identifying the row and store
-	 * those in the mapping.
-	 *
-	 * If the data is from the same database, we usually treat primary keys as real IDs.
-	 * An exception is if there is nothing in the database for that ID. If that's the case,
-	 * we need to insert a new row for that ID, and then map from the non-existent ID
-	 * to the newly-inserted real ID.
-	 * @param type $csv_data_array
-	 * @param type $export_from_site_a_to_b
-	 * @param type $old_db_to_new_db_mapping
-	 * @param boolean $models_to_update array of model names that we're allowed to update
-	 *	(we can insert any we want). If null, then we can only assume we ought to update all models specified.
-	 *	This exists because often there is the primary data we want to import, and then there is
-	 *	related data needed for its integrity, but we don't really want to import it unless we absolutely need to.
-	 * @return array updated $old_db_to_new_db_mapping
-	 */
+
+	 /**
+	  * Processes the array of data, given the knowledge that it's from the same database or a different one,
+	  * and the mapping from temporary IDs to real IDs.
+	  * If the data is from a different database, we treat the primary keys and their corresponding
+	  * foreign keys as "temp Ids", basically identifiers that get mapped to real primary keys
+	  * in the real target database. As items are inserted, their temporary primary keys
+	  * are mapped to the real IDs in the target database. Also, before doing any update or
+	  * insert, we replace all the temp ID which are foreign keys with their mapped real IDs.
+	  * An exception: string primary keys are treated as real IDs, or else we'd need to
+	  * dynamically generate new string primary keys which would be very awkward for the country table etc.
+	  * Also, models with no primary key are strange too. We combine use their primary key INDEX (a
+	  * combination of fields) to create a unique string identifying the row and store
+	  * those in the mapping.
+	  *
+	  * If the data is from the same database, we usually treat primary keys as real IDs.
+	  * An exception is if there is nothing in the database for that ID. If that's the case,
+	  * we need to insert a new row for that ID, and then map from the non-existent ID
+	  * to the newly-inserted real ID.
+	  *
+	  * @param array $csv_data_array
+	  * @param bool $export_from_site_a_to_b
+	  * @param array $old_db_to_new_db_mapping
+	  * @param null | array $models_to_update array of model names that we're allowed to update
+	  *    (we can insert any we want). If null, then we can only assume we ought to update all models specified.
+	  *    This exists because often there is the primary data we want to import, and then there is
+	  *    related data needed for its integrity, but we don't really want to import it unless we absolutely need to.
+	  *
+	  * @return array updated $old_db_to_new_db_mapping
+	  * @throws \EE_Error
+	  */
 	public function save_data_rows_to_db( $csv_data_array, $export_from_site_a_to_b, $old_db_to_new_db_mapping, $models_to_update = NULL ) {
 		foreach ( $csv_data_array as $model_name_in_csv_data => $model_data_from_import ) {
 			//now check that assumption was correct. If
@@ -451,7 +441,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 						//we would have updated this, but the export data indicated we ought not
 					}
 				}else{
-					throw new EE_Error( sprintf( __( 'Programming error. We shoudl be inserting or updating, but instead we are being told to "%s", whifh is invalid', 'event_espresso' ), $what_to_do ) );
+					throw new EE_Error( sprintf( __( 'Programming error. We should be inserting or updating, but instead we are being told to "%s", whifh is invalid', 'event_espresso' ), $what_to_do ) );
 				}
 			}
 		}
@@ -470,11 +460,11 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	 * @param array $model_object_data by reference so it can be modified
 	 * @param EEM_Base $model
 	 * @param array $old_db_to_new_db_mapping by reference so it can be modified
-	 * @return string one of the consts on this class that starts with do_*
+	 * @return string one of the constants on this class that starts with do_*
 	 */
 	protected function _decide_whether_to_insert_or_update_given_data_from_other_db( $id_in_csv, $model_object_data, $model, $old_db_to_new_db_mapping ) {
 		$model_name = $model->get_this_model_name();
-		//if it's a site-to-site export-and-import, see if this modelobject's id
+		//if it's a site-to-site export-and-import, see if this model object's id
 		//in the old data that we know of
 		if( isset($old_db_to_new_db_mapping[$model_name][$id_in_csv]) ){
 			return self::do_update;
@@ -483,16 +473,21 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		}
 	}
 
-	/**
-	 * If this thing basically already exists in the database, we want to update it;
-	 * otherwise insert it (ie, someone tweaked the CSV file, or the item was
-	 * deleted in the database so it should be re-inserted)
-	 * @param type $id_in_csv
-	 * @param type $model_object_data
-	 * @param EEM_Base $model
-	 * @param type $old_db_to_new_db_mapping
-	 * @return
-	 */
+
+
+	 /**
+	  * If this thing basically already exists in the database, we want to update it;
+	  * otherwise insert it (ie, someone tweaked the CSV file, or the item was
+	  * deleted in the database so it should be re-inserted)
+	  *
+	  * @param int $id_in_csv
+	  * @param array $model_object_data
+	  * @param EEM_Base $model
+	  *
+	  * @return string
+	  * @throws \EE_Error
+	  * @internal param \type $old_db_to_new_db_mapping
+	  */
 	protected function _decide_whether_to_insert_or_update_given_data_from_same_db( $id_in_csv, $model_object_data, $model ) {
 		//in this case, check if this thing ACTUALLY exists in the database
 		if( $model->get_one_conflicting( $model_object_data ) ){
@@ -510,11 +505,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	 * replaces them with 123.
 	 * Also, if there is no temp ID for the INT foreign keys from another database,
 	 * replaces them with 0 or the field's default.
-	 * @param type $model_object_data
+	 *
+	 * @param array $model_object_data
 	 * @param EEM_Base $model
-	 * @param type $old_db_to_new_db_mapping
+	 * @param array $old_db_to_new_db_mapping
 	 * @param boolean $export_from_site_a_to_b
-	 * @return array updated model object data with temp IDs removed
+	 *
+*@return array updated model object data with temp IDs removed
 	 */
 	protected function _replace_temp_ids_with_mappings( $model_object_data, $model, $old_db_to_new_db_mapping, $export_from_site_a_to_b ) {
 		//if this model object's primary key is in the mapping, replace it
@@ -527,42 +524,38 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 		try{
 			$model_name_field = $model->get_field_containing_related_model_name();
-			$models_pointed_to_by_model_name_field = $model_name_field->get_model_names_pointed_to();
+			//$models_pointed_to_by_model_name_field = $model_name_field->get_model_names_pointed_to();
 		}catch( EE_Error $e ){
 			$model_name_field = NULL;
-			$models_pointed_to_by_model_name_field = array();
+			//$models_pointed_to_by_model_name_field = array();
 		}
 		foreach( $model->field_settings( true )  as $field_obj ){
 			if( $field_obj instanceof EE_Foreign_Key_Int_Field ) {
 				$models_pointed_to = $field_obj->get_model_names_pointed_to();
-				$found_a_mapping = false;
 				foreach( $models_pointed_to as $model_pointed_to_by_fk ) {
 
 					if( $model_name_field ){
 						$value_of_model_name_field = $model_object_data[ $model_name_field->get_name() ];
 						if( $value_of_model_name_field == $model_pointed_to_by_fk ) {
 							$model_object_data[ $field_obj->get_name() ] = $this->_find_mapping_in(
-									$model_object_data[ $field_obj->get_name() ],
-									$model_pointed_to_by_fk,
-									$old_db_to_new_db_mapping,
-									$export_from_site_a_to_b );
-								$found_a_mapping = true;
-								break;
-						}
-					}else{
-						$model_object_data[ $field_obj->get_name() ] = $this->_find_mapping_in(
 								$model_object_data[ $field_obj->get_name() ],
 								$model_pointed_to_by_fk,
 								$old_db_to_new_db_mapping,
-								$export_from_site_a_to_b );
-						$found_a_mapping = true;
-					}
-					//once we've found a mapping for this field no need to continue
-					if( $found_a_mapping ) {
+								$export_from_site_a_to_b
+							);
+							//once we've found a mapping for this field no need to continue
+							break;
+						}
+					}else{
+						$model_object_data[ $field_obj->get_name() ] = $this->_find_mapping_in(
+							$model_object_data[ $field_obj->get_name() ],
+							$model_pointed_to_by_fk,
+							$old_db_to_new_db_mapping,
+							$export_from_site_a_to_b
+						);
+						//once we've found a mapping for this field no need to continue
 						break;
 					}
-
-
 				}
 			}else{
 				//it's a string foreign key (which we leave alone, because those are things
@@ -598,36 +591,36 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	/**
 	 * Given the object's ID and its model's name, find it int he mapping data,
 	 * bearing in mind where it came from
-	 * @param type $object_id
+	 * @param int $object_id
 	 * @param string $model_name
 	 * @param array $old_db_to_new_db_mapping
-	 * @param type $export_from_site_a_to_b
+	 * @param bool $export_from_site_a_to_b
 	 * @return int
 	 */
 	protected function _find_mapping_in( $object_id, $model_name, $old_db_to_new_db_mapping, $export_from_site_a_to_b) {
 		if(	isset( $old_db_to_new_db_mapping[ $model_name ][ $object_id ] ) ){
-
-				return $old_db_to_new_db_mapping[ $model_name ][ $object_id ];
-			}elseif( $object_id == '0' || $object_id == '' ) {
-				//leave as-is
-				return $object_id;
-			}elseif( $export_from_site_a_to_b ){
-				//we couldn't find a mapping for this, and it's from a different site,
-				//so blank it out
-				return NULL;
-			}elseif( ! $export_from_site_a_to_b ) {
-				//we coudln't find a mapping for this, but it's from thsi DB anyway
-				//so let's just leave it as-is
-				return $object_id;
-			}
+			return $old_db_to_new_db_mapping[ $model_name ][ $object_id ];
+		}elseif( $object_id == '0' || $object_id == '' ) {
+			//leave as-is
+			return $object_id;
+		}elseif( $export_from_site_a_to_b ){
+			//we couldn't find a mapping for this, and it's from a different site,
+			//so blank it out
+			return null;
+		}elseif( ! $export_from_site_a_to_b ) {
+			//we couldn't find a mapping for this, but it's from this DB anyway
+			//so let's just leave it as-is
+			return $object_id;
+		}
+		return null;
 	}
 
 	/**
 	 *
-	 * @param type $id_in_csv
-	 * @param type $model_object_data
+	 * @param int $id_in_csv
+	 * @param array $model_object_data
 	 * @param EEM_Base $model
-	 * @param type $old_db_to_new_db_mapping
+	 * @param array $old_db_to_new_db_mapping
 	 * @return array updated $old_db_to_new_db_mapping
 	 */
 	protected function _insert_from_data_array( $id_in_csv, $model_object_data, $model, $old_db_to_new_db_mapping ) {
@@ -672,36 +665,37 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	protected function _update_from_data_array( $id_in_csv,  $original_model_object_data, $model, $old_db_to_new_db_mapping ) {
 		try{
 			//let's keep two copies of the model object data:
-			//one for performing an update, one for everthing else
+			//one for performing an update, one for everything else
 			$model_object_data_for_update = $original_model_object_data;
-
-			if($model->has_primary_key_field()){
+			if ( $model->has_primary_key_field() ) {
 				//wait- will this update cause a conflict with other data?
-				$conflicting = $model->get_one_conflicting($original_model_object_data, false );
-				if( $conflicting ){
-					//if so, just update the thing it woudl conflict with, dont cause a conflict
+				$conflicting = $model->get_one_conflicting( $original_model_object_data, false );
+				if ( $conflicting ) {
+					//if so, just update the thing it would conflict with, dont cause a conflict
 					$pk_value = $conflicting->ID();
-				}else{
-					$pk_value = $model_object_data_for_update[$model->primary_key_name()];
+				} else {
+					$pk_value = $model_object_data_for_update[ $model->primary_key_name() ];
 				}
-				$conditions = array($model->primary_key_name() => $pk_value);
+				$conditions = array( $model->primary_key_name() => $pk_value );
 				//remove the primary key because we shouldn't use it for updating
-				unset($model_object_data_for_update[$model->primary_key_name()]);
-			}elseif($model->get_combined_primary_key_fields() > 1 ){
+				unset( $model_object_data_for_update[ $model->primary_key_name() ] );
+			} elseif ( $model->get_combined_primary_key_fields() > 1 ) {
 				$conditions = array();
-				foreach($model->get_combined_primary_key_fields() as $key_field){
-					$conditions[$key_field->get_name()] = $model_object_data_for_update[$key_field->get_name()];
+				foreach ( $model->get_combined_primary_key_fields() as $key_field ) {
+					$conditions[ $key_field->get_name() ] = $model_object_data_for_update[ $key_field->get_name() ];
 				}
-				$pk_value = $model->get_index_primary_key_string( $original_model_object_data ) ;
-			}else{
-				$model->primary_key_name();//this shoudl just throw an exception, explaining that we dont have a primary key (or a combine dkey)
+				$pk_value = $model->get_index_primary_key_string( $original_model_object_data );
+			} else {
+				$model->primary_key_name();//this should just throw an exception, explaining that we dont have a primary key (or a combine dkey)
+				$conditions = null;
+				$pk_value = null;
 			}
 
 			$success = $model->update($model_object_data_for_update,array($conditions));
 			if($success){
 				$this->_add_update_success( sprintf(__("Successfully updated %s with csv data %s", "event_espresso"),$model->get_this_model_name(),implode(",",$model_object_data_for_update)));
 				//we should still record the mapping even though it was an update
-				//because if we were going to insert somethign but it was going to conflict
+				//because if we were going to insert something but it was going to conflict
 				//we would have last-minute decided to update. So we'd like to know what we updated
 				//and so we record what record ended up being updated using the mapping
 				$old_db_to_new_db_mapping[ $model->get_this_model_name() ][ $id_in_csv ] = $pk_value;
