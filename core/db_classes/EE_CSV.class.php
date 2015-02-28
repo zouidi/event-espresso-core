@@ -18,8 +18,6 @@
 	 // instance of the EE_CSV object
 	private static $_instance = NULL;
 
-	private $_primary_keys;
-
 
 
 	 /**
@@ -29,39 +27,6 @@
 	  * @access private
 	  */
  	private function __construct() {
-
-
-		global $wpdb;
-
-		$this->_primary_keys = array(
-				$wpdb->prefix . 'esp_answer' => array( 'ANS_ID' ),
-				$wpdb->prefix . 'esp_attendee' => array( 'ATT_ID' ),
-				$wpdb->prefix . 'esp_datetime'	=> array( 'DTT_ID' ),
-				$wpdb->prefix . 'esp_event_question_group'	=> array( 'EQG_ID' ),
-				$wpdb->prefix . 'esp_message_template'	=> array( 'MTP_ID' ),
-				$wpdb->prefix . 'esp_payment'	=> array( 'PAY_ID' ),
-				$wpdb->prefix . 'esp_price'	=> array( 'PRC_ID' ),
-				$wpdb->prefix . 'esp_price_type'	=> array( 'PRT_ID' ),
-				$wpdb->prefix . 'esp_question'	=> array( 'QST_ID' ),
-				$wpdb->prefix . 'esp_question_group'	=> array( 'QSG_ID' ),
-				$wpdb->prefix . 'esp_question_group_question'	=> array( 'QGQ_ID' ),
-				$wpdb->prefix . 'esp_question_option'	=> array( 'QSO_ID' ),
-				$wpdb->prefix . 'esp_registration'	=> array( 'REG_ID' ),
-				$wpdb->prefix . 'esp_status'	=> array( 'STS_ID' ),
-				$wpdb->prefix . 'esp_transaction'	=> array( 'TXN_ID' ),
-				$wpdb->prefix . 'esp_transaction'	=> array( 'TXN_ID' ),
-				// ARE THESE NEEDED STILL ????
-				$wpdb->prefix . 'events_detail'	=> array( 'id' ),
-				$wpdb->prefix . 'events_category_detail'	=> array( 'id' ),
-				$wpdb->prefix . 'events_category_rel'	=> array( 'id' ),
-				$wpdb->prefix . 'events_venue'	=> array( 'id' ),
-				$wpdb->prefix . 'events_venue_rel' =>  array( 'emeta_id' ),
-				$wpdb->prefix . 'events_locale'	=> array( 'id' ),
-				$wpdb->prefix . 'events_locale_rel'	=> array( 'id' ),
-				$wpdb->prefix . 'events_personnel' =>  array( 'id' ),
-				$wpdb->prefix . 'events_personnel_rel' =>  array( 'id' ),
-			);
-
 	}
 
 
