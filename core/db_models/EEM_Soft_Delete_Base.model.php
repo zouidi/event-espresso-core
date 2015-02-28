@@ -55,7 +55,7 @@ abstract class EEM_Soft_Delete_Base extends EEM_Base{
 	/**
 	 * Overrides parent's 'get_all' to only get undeleted ones. If you REALLY
 	 * want to fetch both deleted and undeleted ones, call get_all_deleted_and_undeleted()
-	 * For 'soft deletable' models, gets all whicha re not yet deleted.
+	 * For 'soft deletable' models, gets all which are not yet deleted.
 	 * @param array $query_params like EEM_Base::get_all
 	 * @return EE_Soft_Delete_Base_Class[]
 	 */
