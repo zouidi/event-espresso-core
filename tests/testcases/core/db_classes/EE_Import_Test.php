@@ -83,7 +83,7 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$event2_mapping = $new_mappings[ 'Event' ][ 1000 ];
 		$this->assertNotEmpty( $event2_mapping );
 		$this->assertNotEquals( 1000, $event1_mapping );
-		//newly inerted datetime...
+		//newly inserted datetime...
 		$this->assertNotEmpty( $new_mappings );
 		$this->assertArrayHasKey( 'Datetime', $new_mappings );
 		$datetime1_mapping = $new_mappings[ 'Datetime' ][ $original_datetime1->ID() ];
@@ -95,7 +95,7 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$ticket1_mapping = $new_mappings[ 'Ticket' ][ $original_ticket1->ID() ];
 		$this->assertNotEmpty( $ticket1_mapping );
 		$this->assertNotEquals( $original_ticket1->ID(), $ticket1_mapping );
-		//and newly inserted datetime-ticke...
+		//and newly inserted datetime-ticket...
 		$this->assertNotEmpty( $new_mappings );
 		$this->assertArrayHasKey( 'Datetime_Ticket', $new_mappings );
 		$datetime_ticket_mapping = $new_mappings[ 'Datetime_Ticket' ][ $original_datetime_ticket->ID() ];
@@ -108,10 +108,10 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$this->assertEquals( $datetime_count + 1, EEM_Datetime::instance()->count() );
 		$this->assertEquals( $ticket_count + 1, EEM_Ticket::instance()->count() );
 		$this->assertEquals( $datetime_ticket_count + 1, EEM_Datetime_Ticket::instance()->count() );
-		//the newly inserted datetime shoudl have bene associated to the new event for $other_db_event_props
+		//the newly inserted datetime should have been associated to the new event for $other_db_event_props
 		$inserted_datetime_from_other_db = EEM_Datetime::instance()->get_one_by_ID( $datetime1_mapping );
 		$this->assertEquals( $event1_mapping, $inserted_datetime_from_other_db->get('EVT_ID') );
-		//there shoudl be a newly inserted ticket
+		//there should be a newly inserted ticket
 		$inserted_ticket_from_other_db = EEM_Ticket::instance()->get_one_by_ID( $ticket1_mapping );
 		$this->assertNotNull( $inserted_ticket_from_other_db );
 		//the newly inserted datetime-ticket should hae been associated with the newly inserted datetime and ticket
@@ -121,7 +121,7 @@ class EE_Import_Test extends EE_UnitTestCase {
 		//the original event shouldn't be affected, nor should it have more than the original datetime on it
 		$updated_event1 = EEM_Event::instance()->refresh_entity_map_from_db( $original_event1->ID() );
 		$this->assertEEModelObjectsEquals( $original_event1, $updated_event1 );
-		//the original datetime shoudln't be affected, nor shoudl it have more than the original ticket associagted with it
+		//the original datetime shouldn't be affected, nor should it have more than the original ticket associated with it
 		$updated_datetime1 = EEM_Datetime::instance()->refresh_entity_map_from_db( $original_datetime1->ID() );
 		$this->assertEEModelObjectsEquals( $original_datetime1, $updated_datetime1 );
 	}
