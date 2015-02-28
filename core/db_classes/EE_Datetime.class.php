@@ -437,9 +437,8 @@ class EE_Datetime extends EE_Soft_Delete_Base_Class {
 	 *        get start date and start time
 	 *
 	 * @access        public
-	 * @param null          $dt_frmt
+	 * @param null          $dt_frmt - - string representation of date format defaults to 'F j, Y'
 	 * @param        string $tm_format - string representation of time format defaults to 'g:i a'
-	 * @internal      param string $dt_format - string representation of date format defaults to 'F j, Y'
 	 * @return        mixed        string on success, FALSE on fail
 	 */
 	public function start_date_and_time( $dt_frmt = NULL, $tm_format = NULL ) {
