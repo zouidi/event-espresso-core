@@ -135,7 +135,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 		require_once( EE_CLASSES . 'EE_CSV.class.php' );
 		$this->EE_CSV = EE_CSV::instance();
-
+		$success = true;
 		if ( isset( $_REQUEST['import'] )) {
 			if( isset( $_POST['csv_submitted'] )) {
 
@@ -192,37 +192,38 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 								if ( is_array( $this->csv_array ) ) {
 									// save processed codes to db
 									if ( $this->save_csv_data_array_to_db( $this->csv_array, false ) ) {
-										return TRUE;
+										$success = TRUE;
 									}
 								} else {
 									// no array? must be an error
 									$this->_add_general_error( sprintf(__("No file seems to have been uploaded", "event_espresso")), __FILE__, __FUNCTION__, __LINE__ );
-									return FALSE;
+									$success = FALSE;
 								}
 
 							} else {
 								$this->_add_general_error(sprintf(__("%s was not successfully uploaded", "event_espresso"),$filename), __FILE__, __FUNCTION__, __LINE__ );
-								return FALSE;
+								$success = FALSE;
 							}
 
 						} else {
 							$this->_add_general_error( sprintf(__("%s was too large of a file and could not be uploaded. The max filesize is %s' KB.", "event_espresso"),$filename,$max_upload), __FILE__, __FUNCTION__, __LINE__ );
-							return FALSE;
+							$success = FALSE;
 						}
 
 					} else {
 						$this->_add_general_error( sprintf(__("%s  had an invalid file extension, not uploaded", "event_espresso"),$filename), __FILE__, __FUNCTION__, __LINE__ );
-						return FALSE;
+						$success = FALSE;
 					}
 
 				} else {
 					$this->_add_general_error( $error_msg, __FILE__, __FUNCTION__, __LINE__ );
-					return FALSE;
+					$success = FALSE;
 				}
 
 			}
 		}
-		return false;
+		$this->report_successes_and_errors();
+		return $success;
 	}
 
 	/**
@@ -308,7 +309,6 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		//save the mapping from old db to new db in case they try re-importing the same data from the same website again
 		update_option('ee_id_mapping_from'.sanitize_title($old_site_url),$old_db_to_new_db_mapping);
 
-		$all_good = $this->report_successes_and_errors();
 
 		//lastly, we need to update the datetime and ticket sold amounts
 		//as those may have been affected by this
@@ -316,7 +316,11 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		EEM_Ticket::instance()->update_tickets_sold(EEM_Ticket::instance()->get_all());
 
 		// if there was at least one success and absolutely no errors
-		if ( $all_good ) {
+		if (	! $this->get_total_general_errors() &&
+				! $this->get_total_insert_errors()  &&
+				! $this->get_total_update_errors() &&
+				$this->get_total_inserts() &&
+				$this->get_total_updates() ) {
 			return TRUE;
 		} else {
 			return FALSE;
@@ -637,19 +641,20 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 			$new_id = $model->insert($model_object_data);
 			if( $new_id ){
 				$old_db_to_new_db_mapping[$model->get_this_model_name()][$id_in_csv] = $new_id;
-				$this->_add_insert_success( sprintf(__("Successfully added new %s (with id %s) with csv data %s", "event_espresso"),$model->get_this_model_name(),$new_id, implode(",",$model_object_data)));
+				$this->_add_insert_success( sprintf(__("Successfully added new %s (with id %s).", "event_espresso"),$model->get_this_model_name(),$new_id));
 			}else{
 				//put the ID used back in there for the error message
 				if($model->has_primary_key_field()){
 					$model_object_data[$model->primary_key_name()] = $effective_id;
 				}
-				$this->_add_insert_error( sprintf(__("Could not insert new %s with the csv data: %s", "event_espresso"),$model->get_this_model_name(),http_build_query($model_object_data)), __FILE__, __FUNCTION__, __LINE__ );
+				global $wpdb;
+				$this->_add_insert_error( sprintf(__("Could not insert new %s with ID in file %s because %s", "event_espresso"),$model->get_this_model_name(),$id_in_csv, $wpdb->last_error), __FILE__, __FUNCTION__, __LINE__ );
 			}
 		}catch(EE_Error $e){
 			if($model->has_primary_key_field()){
 				$model_object_data[$model->primary_key_name()] = $effective_id;
 			}
-			$this->_add_insert_error( sprintf(__("Could not insert new %s with the csv data: %s because %s", "event_espresso"),$model->get_this_model_name(),implode(",",$model_object_data),$e->getMessage()), __FILE__, __FUNCTION__, __LINE__ );
+			$this->_add_insert_error( sprintf(__("Could not insert new %s with ID in file of %s because %s", "event_espresso"),$model->get_this_model_name(),$id_in_csv, $e->getMessage()), __FILE__, __FUNCTION__, __LINE__ );
 		}
 		return $old_db_to_new_db_mapping;
 	}
@@ -693,7 +698,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 			$success = $model->update($model_object_data_for_update,array($conditions));
 			if($success){
-				$this->_add_update_success( sprintf(__("Successfully updated %s with csv data %s", "event_espresso"),$model->get_this_model_name(),implode(",",$model_object_data_for_update)));
+				$this->_add_update_success( sprintf(__("Successfully updated %s with ID '%s'.", "event_espresso"),$model->get_this_model_name(), $pk_value ));
 				//we should still record the mapping even though it was an update
 				//because if we were going to insert something but it was going to conflict
 				//we would have last-minute decided to update. So we'd like to know what we updated
@@ -703,13 +708,11 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				$matched_items = $model->get_all(array($conditions));
 				if( ! $matched_items){
 					//no items were matched (so we shouldn't have updated)... but then we should have inserted? what the heck?
-					$this->_add_update_error( sprintf(__("Could not update %s with the csv data: '%s' for an unknown reason (using WHERE conditions %s)", "event_espresso"),$model->get_this_model_name(),http_build_query($original_model_object_data),http_build_query($conditions)), __FILE__, __FUNCTION__, __LINE__ );
-				}else{
-					$this->_add_update_success( sprintf(__("%s with csv data '%s' was found in the database and didn't need updating because all the data is identical.", "event_espresso"),$model->get_this_model_name(),implode(",",$original_model_object_data)));
+					$this->_add_update_error( sprintf(__("Could not update %s (with ID %s) for an unknown reason (using WHERE conditions %s)", "event_espresso"),$model->get_this_model_name(), $pk_value, http_build_query($conditions)), __FILE__, __FUNCTION__, __LINE__ );
 				}
 			}
 		}catch(EE_Error $e){
-			$basic_message = sprintf(__("Could not update %s with the csv data: %s because %s", "event_espresso"),$model->get_this_model_name(),implode(",",$original_model_object_data),$e->getMessage());
+			$basic_message = sprintf(__("Could not update %s with ID %s because %s", "event_espresso"),$model->get_this_model_name(),$pk_value, $e->getMessage());
 			$debug_message = $basic_message . ' Stack trace: ' . $e->getTraceAsString();
 			$this->_add_general_error( "$basic_message | $debug_message", __FILE__, __FUNCTION__, __LINE__ );
 		}
