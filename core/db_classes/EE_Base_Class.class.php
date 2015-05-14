@@ -1500,7 +1500,7 @@ abstract class EE_Base_Class{
 	 * @return boolean
 	 */
 	public function relation_exists_to( $other_model_obj_or_id, $relation_name, $extra_where_params = array() ){
-		$this->get_model()->relation_exists_between( $this, $other_model_obj_or_id, $relation_name, $extra_where_params );
+		return $this->get_model()->relation_exists_between( $this, $other_model_obj_or_id, $relation_name, $extra_where_params );
 	}
 
 	/**

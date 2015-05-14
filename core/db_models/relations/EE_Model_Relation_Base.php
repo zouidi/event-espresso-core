@@ -335,11 +335,9 @@ abstract class EE_Model_Relation_Base{
 	public function relation_exists_between( $this_obj_or_id, $other_obj_or_id ){
 		//easiest way to check is to use the get_all_related method
 		//child classes might want to implement something more efficient
-		$related_objs =  $this->get_all_related( $this_obj_or_id, array( array( $this->get_other_model()->primary_key_name() => $this->get_other_model()->ensure_is_ID( $other_obj_or_id ) ), 'limit' => 1 ) );
-		if( empty( $related_objs ) ){
-			return false;
-		}else{
-			return true;
-		}
+		return  $this->get_other_model()->exists( array(
+			array(
+				$this->get_this_model()->get_this_model_name() . '.' . $this->get_this_model()->primary_key_name() => $this->get_this_model()->ensure_is_ID( $this_obj_or_id ),
+				$this->get_other_model()->primary_key_name() =>  $this->get_other_model()->ensure_is_ID( $other_obj_or_id) )) );
 	}
 }

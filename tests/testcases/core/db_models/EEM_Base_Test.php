@@ -436,7 +436,48 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$this->assertEquals( $event->ID()-1, $previous_event['EVT_ID'] );
 	}
 
+	/**
+	 * @group 8162
+	 */
+	function test_relation_exists_between__belongs_to() {
+		$state = EEM_State::instance()->get_one();
+		$v = $this->new_model_obj_with_dependencies( 'Venue', array( 'STA_ID' => $state->ID() ) );
 
+		$this->assertTrue( $v->relation_exists_to( $state, 'State' ) );
+		$this->assertTrue( $v->relation_exists_to($state->ID(), 'State' ) );
+
+		$other_state = EEM_State::instance()->get_one( array( array( 'STA_ID' => array( '!=', $state->ID() ) ) ) );
+		$this->assertFalse( $v->relation_exists_to( $other_state, 'State' ) );
+
+	}
+
+	function test_relation_exists_between__belongs_to_any() {
+
+	}
+
+	/**
+	 * @group 8162
+	 */
+	function test_relation_exists_between__has_many() {
+		$state = EEM_State::instance()->get_one();
+		$other_state = EEM_State::instance()->get_one( array( array( 'STA_ID' => array( '!=', $state->ID() ) ) ) );
+		$v = $this->new_model_obj_with_dependencies( 'Venue', array( 'STA_ID' => $state->ID() ) );
+		$v2 = $this->new_model_obj_with_dependencies( 'Venue', array( 'STA_ID' => $other_state->ID() ) );
+
+		$this->assertTrue( $state->relation_exists_to( $v, 'Venue' ) );
+		$this->assertTrue( $state->relation_exists_to($v->ID(), 'Venue' ) );
+
+
+		$this->assertFalse( $state->relation_exists_to( $v2, 'Venue' ) );
+	}
+
+	function test_relation_exists_between__has_many_any() {
+
+	}
+
+	function test_relation_exists_between__habtm() {
+
+	}
 
 }
 
