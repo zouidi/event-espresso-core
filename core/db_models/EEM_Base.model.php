@@ -1553,6 +1553,19 @@ abstract class EEM_Base extends EE_Base{
 		return $relation_obj->remove_relations($id_or_obj, $where_query_params );
 	}
 
+	/**
+	 * Returns whether or not there is a relation between the two model objects indicated.
+	 * @param EE_Base_Class|int|string $id_or_obj
+	 * @param EE_Base_Class|int|string $other_id_or_obj
+	 * @param string $relation_name
+	 * @param array $extra_where_params extra WHERE conditions to add onto the query
+	 * @return boolean
+	 */
+	public function relation_exists_between( $id_or_obj, $other_id_or_obj, $relation_name, $extra_where_params = array() ) {
+		$relation_obj = $this->related_settings_for($relation_name);
+		return $relation_obj->relation_exists_between($id_or_obj, $other_id_or_obj, $extra_where_params );
+	}
+
 
 	/**
 	 * Gets all the related items of the specified $model_name, using $query_params.

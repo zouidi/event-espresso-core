@@ -1492,6 +1492,18 @@ abstract class EE_Base_Class{
 	}
 
 	/**
+	 * Returns whether or not there is a relation between this model object
+	 * and the indicated $other_model_obj_or_id
+	 * @param EE_Base_Class|int|string $other_model_obj_or_id
+	 * @param string $relation_name
+	 * @param array $extra_where_params
+	 * @return boolean
+	 */
+	public function relation_exists_to( $other_model_obj_or_id, $relation_name, $extra_where_params = array() ){
+		$this->get_model()->relation_exists_between( $this, $other_model_obj_or_id, $relation_name, $extra_where_params );
+	}
+
+	/**
 	 * Removes ALL the related things for the $relationName.
 	 * @param string $relationName
 	 * @param array $where_query_params like EEM_Base::get_all's $query_params[0] (where conditions)

@@ -323,4 +323,23 @@ abstract class EE_Model_Relation_Base{
 			);
 		}
 	}
+
+	/**
+	 * Checks if there is a relation between $this_obj_or_id, and $other_obj_or_id.
+	 * Child classes should probably override this to do the check in a more efficient manner,
+	 * but this should work.
+	 * @param EE_Base_Class|int|string $this_obj_or_id
+	 * @param EE_Base_Class|int|string $other_obj_or_id
+	 * @return boolean
+	 */
+	public function relation_exists_between( $this_obj_or_id, $other_obj_or_id ){
+		//easiest way to check is to use the get_all_related method
+		//child classes might want to implement something more efficient
+		$related_objs =  $this->get_all_related( $this_obj_or_id, array( array( $this->get_other_model()->primary_key_name() => $this->get_other_model()->ensure_is_ID( $other_obj_or_id ) ), 'limit' => 1 ) );
+		if( empty( $related_objs ) ){
+			return false;
+		}else{
+			return true;
+		}
+	}
 }
