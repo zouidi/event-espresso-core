@@ -66,6 +66,10 @@ jQuery(document).ready(function($) {
 		$('#txn-admin-payment-date-inp').val( $('#txn-admin-todays-date-inp').val() );
 		var paymentAmount = $('#txn-admin-total-amount-due').text();
 		$('#txn-admin-payment-amount-inp').val( paymentAmount );
+
+		//make sure payment status selector shows
+		$('.txn-admin-apply-payment-status-dv').show();
+
 		dttPickerHelper.resetpicker().picker($('#txn-admin-payment-date-inp'), {}, $('#txn-admin-payment-amount-inp'), true);
 	});
 
@@ -93,6 +97,9 @@ jQuery(document).ready(function($) {
 		$('#txn-admin-payment-date-inp').val( $('#txn-admin-todays-date-inp').val() );
 		var refundAmount = $('#txn-admin-total-amount-due').text();
 		$('#txn-admin-payment-amount-inp').val( refundAmount );
+		//don't show payment status selector
+		$('.txn-admin-apply-payment-status-dv').hide();
+
 		dttPickerHelper.resetpicker().picker($('#txn-admin-payment-date-inp'), {}, $('#txn-admin-payment-amount-inp'), true);
 	});
 
@@ -171,12 +178,13 @@ jQuery(document).ready(function($) {
 	function validate_form_inputs() {
 		goodToGo = true;
 		$('#txn-admin-apply-payment-frm .required').each( function( index ) {
-			if( $( this ).val() === false ) {
+			if( ! $(this).val() ) {
 				$( this ).addClass('requires-value').siblings( '.validation-notice-dv' ).fadeIn();
+                $( this ).eeScrollTo(400);
 				goodToGo = false;
 			}
 			$( this ).on( 'change', function() {
-				if( $( this ).val() !== false ) {
+				if( ! $(this).val() ) {
 					$( this ).removeClass('requires-value').siblings( '.validation-notice-dv' ).fadeOut('fast');
 				}
 			});
@@ -270,6 +278,7 @@ jQuery(document).ready(function($) {
 				dialog_content.html(d_contents);
 				$('.admin-modal-dialog-h2').hide();
 				$('#del-admin-modal-dialog-options-ul a').hide();
+				$('#admin-modal-dialog-options-ul a').hide();
 			});
 	}
 
@@ -388,8 +397,9 @@ jQuery(document).ready(function($) {
 		var totalPaid = response.return_data.total_paid;
 		$('#txn-admin-payment-total').html( accounting.formatMoney( totalPaid ) );
 		// total-amount-due
-		var txnTotal = accounting.unformat( $('#txn-admin-grand-total').text() );
+		var txnTotal = $('#txn-admin-grand-total').text(); //this is already in decimal format, no unformatting needed
 		var totalAmountDue = txnTotal - totalPaid;
+        
 		//$('#txn-admin-total-amount-due').html( totalAmountDue.toFixed(2) );
 		$('#txn-amount-due-h2 > span').html( accounting.formatMoney( totalAmountDue ) );
 
