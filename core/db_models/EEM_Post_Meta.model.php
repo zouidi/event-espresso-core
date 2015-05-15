@@ -38,7 +38,7 @@ class EEM_Post_Meta extends EEM_Base {
 		$this->singular_item = __('Post Meta','event_espresso');
 		$this->plural_item = __('Post Metas','event_espresso');
 		$this->_tables = array(
-			'Post_Meta'=> new EE_Primary_Table('postmeta', 'EXM_ID')
+			'Post_Meta'=> new EE_Primary_Table('postmeta', 'meta_id')
 		);
 		$models_this_can_attach_to = apply_filters( 'FHEE__EEM_Post_Meta__construct__models_this_can_attach_to', array( 'Event', 'Venue', 'Attendee' ) );
 		$this->_fields = array(
