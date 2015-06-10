@@ -11,7 +11,7 @@
  * @since 				$VID:$
  *
  */
-class EE_Cart_Repository extends EE_Object_Repository {
+class CartRepository extends EE_Object_Repository {
 
 	/**
 	 * @type \EE_Session $_session
@@ -150,4 +150,4 @@ class EE_Cart_Repository extends EE_Object_Repository {
 
 }
 // End of file EE_Cart_Repository.class.php
-// Location: /core/services/EE_Cart_Repository.class.php:18
+// Location: /core/services/CartRepository.class.php:18
