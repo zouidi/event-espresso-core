@@ -36,6 +36,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );/**
 	private static $_instance = NULL;
 
 	/**
+	 * 	instance of the EE_Session object
+	 * 	@access    protected
+	 *	@var EE_Session $_session
+	 */
+	protected $_session = NULL;
+
+	/**
 	 * The total Line item which comprises all the children line-item subtotals,
 	 * which in turn each have their line items.
 	 * Typically, the line item structure will look like:
@@ -57,24 +64,24 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );/**
 	  * @singleton method used to instantiate class object
 	  * @access    public
 	  * @param EE_Line_Item $grand_total
+	  * @param EE_Session $session
 	  * @return \EE_Cart
 	  */
-	public static function instance( EE_Line_Item $grand_total = NULL ) {
-		EE_Registry::instance()->load_helper('Line_Item');
-		// check if class object is instantiated
-		if( ! empty( $grand_total ) ){
-			self::$_instance = new self( $grand_total );
-		}elseif ( ! self::$_instance instanceof EE_Cart) {
-			//try getting the cart out of the session
-			$saved_cart = EE_Registry::instance()->SSN->cart();
-			self::$_instance = $saved_cart instanceof EE_Cart ? $saved_cart : new self( $grand_total );
-			unset( $saved_cart );
-		}
-
-		// once everything is all said and done, save the cart to the EE_Session
-		add_action( 'shutdown', array( self::$_instance, 'save_cart' ), 90 );
-		return self::$_instance;
-	}
+	 public static function instance( EE_Line_Item $grand_total = null, EE_Session $session = null ) {
+		 EE_Registry::instance()->load_helper( 'Line_Item' );
+		 // check if class object is instantiated
+		 if ( ! empty( $grand_total ) ) {
+			 self::$_instance = new self( $grand_total, $session );
+		 } elseif ( ! self::$_instance instanceof EE_Cart ) {
+			 //try getting the cart out of the session
+			 $saved_cart = $session instanceof EE_Session ? $session->cart() : null;
+			 self::$_instance = $saved_cart instanceof EE_Cart ? $saved_cart : new self( $grand_total, $session );
+			 unset( $saved_cart );
+		 }
+		 // once everything is all said and done, save the cart to the EE_Session
+		 add_action( 'shutdown', array( self::$_instance, 'save_cart' ), 90 );
+		 return self::$_instance;
+	 }
 
 
 
@@ -83,13 +90,12 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );/**
 	  * @Constructor
 	  * @access private
 	  * @param EE_Line_Item $grand_total
+	  * @param EE_Session $session
 	  * @return \EE_Cart
 	  */
-	 private function __construct( EE_Line_Item $grand_total = NULL ) {
+	 private function __construct( EE_Line_Item $grand_total = null, EE_Session $session = null ) {
 		 do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
-		 if ( ! defined( 'ESPRESSO_CART' )) {
-			 define( 'ESPRESSO_CART', TRUE );
-		 }
+		 $this->set_session( $session );
 		 if ( $grand_total instanceof EE_Line_Item ) {
 			 $this->set_grand_total_line_item( $grand_total );
 		 }
@@ -98,17 +104,40 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );/**
 
 
 
-	/**
-	 * Resets the cart completely (whereas empty_cart
-	 * @param EE_Line_Item $grand_total
-	 * @return EE_Cart
-	 */
-	public static function reset( EE_Line_Item $grand_total = NULL ){
-		remove_action( 'shutdown', array( self::$_instance, 'save_cart'), 90 );
-		EE_Registry::instance()->SSN->reset_cart();
-		self::$_instance = NULL;
-		return self::instance( $grand_total );
-	}
+	 /**
+	  * Resets the cart completely (whereas empty_cart
+	  * @param EE_Line_Item $grand_total
+	  * @param EE_Session $session
+	  * @return EE_Cart
+	  */
+	 public static function reset( EE_Line_Item $grand_total = null, EE_Session $session = null ) {
+		 remove_action( 'shutdown', array( self::$_instance, 'save_cart' ), 90 );
+		 if ( $session instanceof EE_Session ) {
+			 $session->reset_cart();
+		 }
+		 self::$_instance = null;
+		 return self::instance( $grand_total, $session );
+	 }
+
+
+
+	 /**
+	  * @param EE_Session $session
+	  */
+	 public function set_session( EE_Session $session ) {
+		 $this->_session = $session;
+	 }
+
+
+
+	 /**
+	  * Sets the cart to match the line item. Especially handy for loading an old cart where you
+	  *  know the grand total line item on it
+	  * @param EE_Line_Item $line_item
+	  */
+	 public function set_grand_total_line_item( EE_Line_Item $line_item ) {
+		 $this->_grand_total = $line_item;
+	 }
 
 
 
@@ -116,13 +145,14 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );/**
 	  *    get_cart_from_reg_url_link
 	  * @access public
 	  * @param EE_Transaction $transaction
+	  * @param EE_Session $session
 	  * @return \EE_Cart
 	  */
-	public static function get_cart_from_txn( EE_Transaction $transaction ) {
+	public static function get_cart_from_txn( EE_Transaction $transaction, EE_Session $session = null ) {
 		$grand_total = $transaction->total_line_item();
 		$grand_total->get_items();
 		$grand_total->tax_descendants();
-		return EE_Cart::instance( $grand_total );
+		return EE_Cart::instance( $grand_total, $session );
 	}
 
 
@@ -240,7 +270,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );/**
 	/**
 	 *	deletes an item from the cart
 	 *	@access public
-	 *	@param mixed - string or array - line_item_ids
+	 *	@param array|bool|string $line_item_codes
 	 *	@return int on success, FALSE on fail
 	 */
 	public function delete_items( $line_item_codes = FALSE ) {
@@ -281,24 +311,17 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );/**
 
 
 	/**
-	 * Sets the cart to match the line item. Especially handy for loading an old cart where you
-	 *  know the grand total line item on it
-	 * @param EE_Line_Item $line_item
-	 */
-	public function set_grand_total_line_item( EE_Line_Item $line_item ) {
-		$this->_grand_total = $line_item;
-	}
-
-
-
-	/**
 	 *	@save cart to session
 	 *	@access public
 	 *	@return TRUE on success, FALSE on fail
 	 */
 	public function save_cart() {
 		EEH_Line_Item::ensure_taxes_applied( $this->_grand_total );
-		return EE_Registry::instance()->SSN->set_cart( $this );
+		if ( $this->_session instanceof EE_Session ) {
+			return $this->_session->set_cart( $this );
+		} else {
+			return false;
+		}
 	}
 
 

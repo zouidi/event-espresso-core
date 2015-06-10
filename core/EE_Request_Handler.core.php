@@ -62,20 +62,14 @@ final class EE_Request_Handler {
 	 *    class constructor
 	 *
 	 * @access    public
-	 * @param WP_Query $wp
 	 * @return \EE_Request_Handler
 	 */
-	public function __construct( $wp = null ) {
-		//if somebody forgot to provide us with WP, that's ok because its global
-		if( ! $wp){
-			global $wp;
-		}
+	public function __construct() {
 		// grab request vars
 		$this->_params = $_REQUEST;
 		// AJAX ???
 		$this->ajax = defined( 'DOING_AJAX' ) ? true : false;
 		$this->front_ajax = $this->is_set( 'ee_front_ajax' ) && $this->get( 'ee_front_ajax' ) == 1 ? true : false;
-		$this->set_request_vars( $wp );
 		do_action( 'AHEE__EE_Request_Handler__construct__complete' );
 	}
 
@@ -85,7 +79,7 @@ final class EE_Request_Handler {
 	 *    set_request_vars
 	 *
 	 * @access public
-	 * @param WP_Query $wp
+	 * @param WP $wp
 	 * @return void
 	 */
 	public function set_request_vars( $wp = null ) {
@@ -107,7 +101,7 @@ final class EE_Request_Handler {
 	 *    get_post_id_from_request
 	 *
 	 * @access public
-	 * @param WP_Query $wp
+	 * @param WP $wp
 	 * @return int
 	 */
 	public function get_post_id_from_request( $wp = null ) {
@@ -154,7 +148,7 @@ final class EE_Request_Handler {
 			if ( ! is_numeric( $possible_post_name )) {
 				/** @type WPDB $wpdb */
 				global $wpdb;
-				$SQL = 'SELECT ID from ' . $wpdb->posts . ' WHERE post_status="publish" AND post_name=%d';
+				$SQL = "SELECT ID from $wpdb->posts WHERE post_status='publish' AND post_name=%s";
 				$possible_post_name = $wpdb->get_var( $wpdb->prepare( $SQL, $possible_post_name ));
 				if ( $possible_post_name ) {
 					$post_name = $possible_post_name;
@@ -164,7 +158,7 @@ final class EE_Request_Handler {
 		if ( ! $post_name && $this->get( 'post_id' )) {
 			/** @type WPDB $wpdb */
 			global $wpdb;
-			$SQL = 'SELECT post_name from ' . $wpdb->posts . ' WHERE post_status="publish" AND ID=%d';
+			$SQL = "SELECT post_name from $wpdb->posts WHERE post_status='publish' AND ID=%d";
 			$possible_post_name = $wpdb->get_var( $wpdb->prepare( $SQL, $this->get( 'post_id' )));
 			if( $possible_post_name ) {
 				$post_name = $possible_post_name;
