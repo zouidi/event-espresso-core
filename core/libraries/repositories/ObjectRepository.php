@@ -32,10 +32,10 @@ class ObjectRepository extends \SplObjectStorage {
 	/**
 	 * @param ObjectInfoStrategyInterface $object_info_strategy
 	 */
-	function __construct( ObjectInfoStrategyInterface $object_info_strategy ) {
+	function __construct( ObjectInfoStrategyInterface $object_info_strategy = null ) {
 		// so that object info strategy can access objects, rewind, etc
 		$object_info_strategy->setRepository( $this );
-		$this->object_info_strategy = $object_info_strategy;
+		$this->object_info_strategy = $object_info_strategy instanceof ObjectInfoStrategyInterface ? $object_info_strategy : new ObjectInfoSingleKeyStrategy();
 	}
 
 
@@ -162,4 +162,4 @@ class ObjectRepository extends \SplObjectStorage {
 
 }
 // End of file ObjectRepository.php
-// Location: /core/ObjectRepository.php
+// Location: /core/libraries/repositories/ObjectRepository.php
