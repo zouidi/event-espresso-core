@@ -26,6 +26,32 @@ interface EEI_Base{
 
 
 
+/**
+ * Interface EEI_Factory
+ */
+interface EEI_Factory {
+
+	function make();
+}
+
+
+
+/**
+ * Interface EEI_Object_Info_Strategy
+ */
+interface EEI_Object_Info_Strategy {
+
+	/**
+	 * @return bool
+	 */
+	function setObjectInfo();
+
+	/**
+	 * @return null | object
+	 */
+	function getObjectByInfo();
+
+}
 
 
 /**
