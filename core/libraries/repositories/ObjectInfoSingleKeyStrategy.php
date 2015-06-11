@@ -8,7 +8,12 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 /**
  * Class ObjectInfoSingleKeyStrategy
  *
- * Description
+ * setObjectInfo
+ * Sets a single datum for the info associated with an object in the SplObjectStorage
+ * if no $info is supplied, then the spl_object_hash() is used
+ *
+ * getObjectByInfo
+ * finds and returns an object in the repository based on the info that was set using addObject()
  *
  * @package 			Event Espresso
  * @subpackage 	core
@@ -20,16 +25,16 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 
 	 /**
-	  * @type EE_Object_Repository $object_repository
+	  * @type ObjectRepository $object_repository
 	  */
 	 protected $object_repository;
 
 
 
 	 /**
-	  * @param EE_Object_Repository $object_repository
+	  * @param ObjectRepository $object_repository
 	  */
-	 public function setRepository( EE_Object_Repository $object_repository ) {
+	 public function setRepository( ObjectRepository $object_repository ) {
 		 $this->object_repository = $object_repository;
 	 }
 
@@ -67,7 +72,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  * finds and returns an object in the repository based on the info that was set using addObject()
 	  *
 	  * @access protected
-	  * @param mixed
+	  * @param mixed $info
 	  * @return null | object
 	  */
 	 public function getObjectByInfo( $info ) {
