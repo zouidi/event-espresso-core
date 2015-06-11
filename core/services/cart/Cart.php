@@ -3,6 +3,8 @@
 namespace EventEspresso\Core\Services\Cart;
 
 use EventEspresso\Core;
+use EventEspresso\Core\Libraries\Repositories\ObjectRepository;
+use EventEspresso\Core\Libraries\Repositories\ObjectInfoArrayKeyStrategy;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	exit('No direct script access allowed');
@@ -45,16 +47,16 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	 protected $updated;
 
 	 /**
-	  * @type \EE_Object_Repository $tickets
+	  * @type ObjectRepository $tickets
 	  */
 	 protected $tickets;
 	 /**
-	  * @type \EE_Object_Repository $items
+	  * @type ObjectRepository $items
 	  */
 	 protected $items;
 
 	 /**
-	  * @type \EE_Object_Repository $promos
+	  * @type ObjectRepository $promos
 	  */
 	 protected $promos;
 
@@ -62,9 +64,9 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 	 function __construct() {
 		 $this->ID 			= $this->generateID();
-		 $this->tickets 	= new \EE_Object_Repository();
-		 $this->items 		= new \EE_Object_Repository();
-		 $this->promos 	= new \EE_Object_Repository();
+		 $this->tickets 	= new ObjectRepository( new ObjectInfoArrayKeyStrategy() );
+		 $this->items 		= new ObjectRepository( new ObjectInfoArrayKeyStrategy() );
+		 $this->promos 	= new ObjectRepository( new ObjectInfoArrayKeyStrategy() );
 		 $this->setCreated();
 	 }
 
