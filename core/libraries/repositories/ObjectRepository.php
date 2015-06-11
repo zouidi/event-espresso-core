@@ -6,7 +6,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
 /**
- * Class EE_Object_Repository
+ * Class ObjectRepository
  *
  * abstract storage entity for unique objects
  * extends SplObjectStorage so therefore implements the
@@ -18,7 +18,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @since                4.6.31
  *
  */
-class EE_Object_Repository extends \SplObjectStorage {
+class ObjectRepository extends \SplObjectStorage {
 
 
 	/**
@@ -41,26 +41,11 @@ class EE_Object_Repository extends \SplObjectStorage {
 
 
 	/**
-	 * route all other method calls directly to EE_Object_Info_Strategy
-	 *
-	 * @param $method
-	 * @param $args
-	 * @return mixed
-	 */
-	public function __call( $method, $args ) {
-		if ( method_exists( $this->object_info_strategy, $method ) ) {
-			return call_user_func_array( array( $this->object_info_strategy, $method ), $args );
-		}
-	}
-
-
-
-	/**
 	 * addObject
 	 *
 	 * attaches an object to the SplObjectStorage
 	 * and sets any supplied data associated with the current iterator entry
-	 * by calling EE_Object_Repository::setObjectInfo()
+	 * by calling ObjectRepository::setObjectInfo()
 	 *
 	 * @access protected
 	 * @param object $object
@@ -69,7 +54,7 @@ class EE_Object_Repository extends \SplObjectStorage {
 	 */
 	protected function addObject( $object, $info = null ) {
 		$this->attach( $object );
-		call_user_func_array( array( $this->object_info_strategy, 'setObjectInfo' ), array( $object, $info ) );
+		$this->setObjectInfo( $object, $info );
 		return $this->contains( $object );
 	}
 
@@ -87,6 +72,38 @@ class EE_Object_Repository extends \SplObjectStorage {
 	 */
 	protected function hasObject( $object ) {
 		return $this->contains( $object );
+	}
+
+
+
+	/**
+	 * setObjectInfo
+	 *
+	 * Sets the data associated with an object in the SplObjectStorage
+	 * according to the ObjectInfoStrategy
+	 *
+	 * @access protected
+	 * @param object $object
+	 * @param mixed  $info
+	 * @return bool
+	 */
+	public function setObjectInfo( $object, $info = null ) {
+		return call_user_func_array( array( $this->object_info_strategy, 'setObjectInfo' ), array( $object, $info ) );
+	}
+
+
+
+	/**
+	 * getObjectByInfo
+	 *
+	 * finds and returns an object in the repository based on the info that was set using addObject()
+	 *
+	 * @access protected
+	 * @param mixed
+	 * @return null | object
+	 */
+	public function getObjectByInfo( $info ) {
+		return call_user_func_array( array( $this->object_info_strategy, 'getObjectByInfo' ), array( $info ) );
 	}
 
 
@@ -144,5 +161,5 @@ class EE_Object_Repository extends \SplObjectStorage {
 
 
 }
-// End of file EE_Object_Repository.core.php
-// Location: /core/EE_Object_Repository.core.php
+// End of file ObjectRepository.php
+// Location: /core/ObjectRepository.php

@@ -6,13 +6,12 @@ namespace EventEspresso\Core\Libraries\Repositories;
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	exit('No direct script access allowed');
 }
-
-interface ObjectInfoStrategyInterface {
+abstract class ObjectInfoStrategy {
 
 	/**
-	 * @param EE_Object_Repository $object_repository
+	 * @param ObjectRepository $object_repository
 	 */
-	function setRepository( EE_Object_Repository $object_repository );
+	abstract function setRepository( ObjectRepository $object_repository );
 
 
 
@@ -21,7 +20,7 @@ interface ObjectInfoStrategyInterface {
 	 * @param $info
 	 * @return bool
 	 */
-	function setObjectInfo( $object, $info );
+	abstract function setObjectInfo( $object, $info );
 
 
 
@@ -29,7 +28,7 @@ interface ObjectInfoStrategyInterface {
 	 * @param $info
 	 * @return null|object
 	 */
-	function getObjectByInfo( $info );
+	abstract function getObjectByInfo( $info );
 
 }
 // End of file ObjectInfoStrategyInterface.php
