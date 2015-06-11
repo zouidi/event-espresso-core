@@ -1,4 +1,8 @@
-<?php if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
+<?php
+
+namespace EventEspresso\Core\Libraries\Repositories;
+
+if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
 /**
@@ -14,21 +18,23 @@
  * @since                4.6.31
  *
  */
-class EE_Object_Repository extends SplObjectStorage {
+class EE_Object_Repository extends \SplObjectStorage {
 
 
 	/**
 	 * how to set, get, and utilize object info when retrieving objects
-	 * @type \EEI_Object_Info_Strategy $object_info_strategy
+	 * @type ObjectInfoStrategyInterface $object_info_strategy
 	 */
 	protected $object_info_strategy;
 
 
 
 	/**
-	 * @param \EEI_Object_Info_Strategy $object_info_strategy
+	 * @param ObjectInfoStrategyInterface $object_info_strategy
 	 */
-	function __construct( EEI_Object_Info_Strategy $object_info_strategy ) {
+	function __construct( ObjectInfoStrategyInterface $object_info_strategy ) {
+		// so that object info strategy can access objects, rewind, etc
+		$object_info_strategy->setRepository( $this );
 		$this->object_info_strategy = $object_info_strategy;
 	}
 
@@ -63,59 +69,10 @@ class EE_Object_Repository extends SplObjectStorage {
 	 */
 	protected function addObject( $object, $info = null ) {
 		$this->attach( $object );
-		$this->setObjectInfo( $object, $info );
+		call_user_func_array( array( $this->object_info_strategy, 'setObjectInfo' ), array( $object, $info ) );
 		return $this->contains( $object );
 	}
 
-
-
-	/**
-	 * setObjectInfo
-	 *
-	 * Sets the data associated with an object in the SplObjectStorage
-	 * if no $info is supplied, then the spl_object_hash() is used
-	 *
-	 * @access protected
-	 * @param object $object
-	 * @param mixed $info
-	 * @return bool
-	 */
-	protected function setObjectInfo( $object, $info = null ) {
-		$info = ! empty( $info ) ? $info : spl_object_hash( $object );
-		$this->rewind();
-		while ( $this->valid() ) {
-			if ( $object == $this->current() ) {
-				$this->setInfo( $info );
-				$this->rewind();
-				return;
-			}
-			$this->next();
-		}
-	}
-
-
-
-	/**
-	 * getObjectByInfo
-	 *
-	 * finds and returns an object in the repository based on the info that was set using addObject()
-	 *
-	 * @access protected
-	 * @param mixed
-	 * @return null | object
-	 */
-	protected function getObjectByInfo( $info ) {
-		$this->rewind();
-		while ( $this->valid() ) {
-			if ( $info === $this->getInfo() ) {
-				$object = $this->current();
-				$this->rewind();
-				return $object;
-			}
-			$this->next();
-		}
-		return null;
-	}
 
 
 
@@ -155,9 +112,9 @@ class EE_Object_Repository extends SplObjectStorage {
 			while ( $this->valid() ) {
 				if ( $object === $this->current() ) {
 					$success = false;
-					if ( $persistence_callback !== '' && method_exists( $object, $persistence_callback ) ) {
-						$success = $object->$persistence_callback( $persistence_arguments );
-					} else if ( $object instanceof EE_Base_Class ) {
+					if ( method_exists( $object, $persistence_callback ) ) {
+						$success = call_user_func_array( array( $object, $persistence_callback ), $persistence_arguments );
+					} else if ( $object instanceof \EE_Base_Class ) {
 						$success = $object->save( $persistence_arguments );
 					}
 					$this->rewind();
