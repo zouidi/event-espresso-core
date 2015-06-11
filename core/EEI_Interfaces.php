@@ -36,22 +36,7 @@ interface EEI_Factory {
 
 
 
-/**
- * Interface EEI_Object_Info_Strategy
- */
-interface EEI_Object_Info_Strategy {
 
-	/**
-	 * @return bool
-	 */
-	function setObjectInfo();
-
-	/**
-	 * @return null | object
-	 */
-	function getObjectByInfo();
-
-}
 
 
 /**
