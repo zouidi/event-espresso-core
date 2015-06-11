@@ -6,12 +6,13 @@ namespace EventEspresso\Core\Libraries\Repositories;
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	exit('No direct script access allowed');
 }
-abstract class ObjectInfoStrategy {
+
+interface ObjectInfoStrategyInterface {
 
 	/**
 	 * @param ObjectRepository $object_repository
 	 */
-	abstract function setRepository( ObjectRepository $object_repository );
+	function setRepository( ObjectRepository $object_repository );
 
 
 
@@ -20,15 +21,15 @@ abstract class ObjectInfoStrategy {
 	 * @param $info
 	 * @return bool
 	 */
-	abstract function setObjectInfo( $object, $info );
+	function setObjectInfo( $object, $info );
 
 
 
 	/**
-	 * @param $info
+	 * @param mixed $array_of_key_value_pairings
 	 * @return null|object
 	 */
-	abstract function getObjectByInfo( $info );
+	function getObjectByInfo( $array_of_key_value_pairings );
 
 }
 // End of file ObjectInfoStrategyInterface.php
