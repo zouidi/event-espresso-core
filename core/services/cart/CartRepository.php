@@ -1,4 +1,10 @@
-<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
+<?php
+
+namespace EventEspresso\Core\Services\Cart;
+
+use EventEspresso\Core\Libraries\Repositories;
+
+if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
 /**
  * Class EE_Cart_Repository
  *
@@ -11,7 +17,7 @@
  * @since 				$VID:$
  *
  */
-class CartRepository extends EE_Object_Repository {
+class CartRepository extends Repositories\ObjectRepository {
 
 	/**
 	 * @type \EE_Session $_session
@@ -23,8 +29,9 @@ class CartRepository extends EE_Object_Repository {
 	/**
 	 * @param \EE_Session $session
 	 */
-	function __construct( EE_Session $session ) {
+	function __construct( \EE_Session $session ) {
 		$this->_session = $session;
+		parent::__construct();
 	}
 
 
@@ -39,44 +46,58 @@ class CartRepository extends EE_Object_Repository {
 
 
 	/**
-	 * @param \EE_Cart $cart
-	 * @return bool
+	 * @return Cart
 	 */
-	public function add_cart( EE_Cart $cart ) {
-		return $this->addObject( $cart, $cart->cart_id() );
+	public function create_cart() {
+		return $this->add_cart( new Cart() );
 	}
 
 
 
 	/**
-	 * @param mixed $cart_id
-	 * @return null | object
+	 * @param Cart $cart
+	 *
+*@return bool
 	 */
-	public function get_cart( $cart_id ) {
-		return $this->getObjectByInfo( $cart_id );
+	public function add_cart( Cart $cart ) {
+		return $this->addObject( $cart, $cart->ID() );
 	}
 
 
 
 	/**
-	 * @param mixed $cart_id
+	 * @param mixed $ID
 	 * @return null | object
 	 */
-	public function get_cart_by_id( $cart_id ) {
-		return $this->getObjectByInfo( $cart_id );
+	public function get_cart( $ID ) {
+		$cart = $this->getObjectByInfo( $ID );
+		if ( ! $cart instanceof Cart ) {
+			$cart = $this->create_cart();
+		}
+		return $cart;
 	}
 
 
 
 	/**
-	 * @param mixed $cart_id
+	 * @param mixed $ID
 	 * @return null | object
 	 */
-	public function get_cart_from_session( $cart_id ) {
+	public function get_cart_by_id( $ID ) {
+		return $this->getObjectByInfo( $ID );
+	}
+
+
+
+	/**
+	 * @param mixed $ID
+	 * @return null | object
+	 */
+	public function get_cart_from_session( $ID ) {
 		//try getting the cart out of the session
-		$cart = $this->session()->cart( $cart_id );
-		if ( $cart instanceof EE_Cart && $cart_id == $cart->cart_id() ) {
-			if ( $this->addObject( $cart, $cart_id ) ) {
+		$cart = $this->session()->cart( $ID );
+		if ( $cart instanceof Cart && $ID == $cart->ID() ) {
+			if ( $this->addObject( $cart, $ID ) ) {
 				return $cart;
 			}
 		}
@@ -86,68 +107,71 @@ class CartRepository extends EE_Object_Repository {
 
 
 	/**
-	 * @param \EE_Cart $cart
-	 * @return bool
+	 * @param Cart $cart
+	 *
+*@return bool
 	 */
-	public function has_cart( EE_Cart $cart ) {
+	public function has_cart( Cart $cart ) {
 		return $this->hasObject( $cart );
 	}
 
 
 
 	/**
-	 * @param mixed $cart_id
+	 * @param mixed $ID
 	 * @return bool
 	 */
-	public function has_cart_by_id( $cart_id ) {
-		$cart = $this->getObjectByInfo( $cart_id );
+	public function has_cart_by_id( $ID ) {
+		$cart = $this->getObjectByInfo( $ID );
 		return $this->hasObject( $cart );
 	}
 
 
 
 	/**
-	 * @param \EE_Cart $cart
-	 * @return bool | int
+	 * @param Cart $cart
+	 *
+*@return bool | int
 	 */
-	public function save_cart( EE_Cart $cart ) {
+	public function save_cart( Cart $cart ) {
 		return $this->persistObject( $cart, 'save_cart' );
 	}
 
 
 
 	/**
-	 * @param mixed $cart_id
+	 * @param mixed $ID
 	 * @return bool | int
 	 */
-	public function save_cart_by_id( $cart_id ) {
-		$cart = $this->getObjectByInfo( $cart_id );
+	public function save_cart_by_id( $ID ) {
+		$cart = $this->getObjectByInfo( $ID );
 		return $this->persistObject( $cart, 'save_cart' );
 	}
 
 
 
 	/**
-	 * @param \EE_Cart $cart
-	 * @return void
+	 * @param Cart $cart
+	 *
+*@return void
 	 */
-	public function remove_cart( EE_Cart $cart ) {
+	public function remove_cart( Cart $cart ) {
 		$this->removeObject( $cart );
 	}
 
 
 
 	/**
-	 * @param mixed $cart_id
+	 * @param mixed $ID
 	 * @return void
 	 */
-	public function remove_cart_by_id( $cart_id ) {
-		$cart = $this->getObjectByInfo( $cart_id );
+	public function remove_cart_by_id( $ID ) {
+		$cart = $this->getObjectByInfo( $ID );
 		$this->removeObject( $cart );
 	}
 
 
 
 }
-// End of file EE_Cart_Repository.class.php
-// Location: /core/services/CartRepository.class.php:18
+// End of file CartRepository.class.php
+// Location: /core/services/cart/CartRepository.php
