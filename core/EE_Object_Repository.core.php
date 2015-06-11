@@ -14,7 +14,40 @@
  * @since                4.6.31
  *
  */
-abstract class EE_Object_Repository extends SplObjectStorage {
+class EE_Object_Repository extends SplObjectStorage {
+
+
+	/**
+	 * how to set, get, and utilize object info when retrieving objects
+	 * @type \EEI_Object_Info_Strategy $object_info_strategy
+	 */
+	protected $object_info_strategy;
+
+
+
+	/**
+	 * @param \EEI_Object_Info_Strategy $object_info_strategy
+	 */
+	function __construct( EEI_Object_Info_Strategy $object_info_strategy ) {
+		$this->object_info_strategy = $object_info_strategy;
+	}
+
+
+
+	/**
+	 * route all other method calls directly to EE_Object_Info_Strategy
+	 *
+	 * @param $method
+	 * @param $args
+	 * @return mixed
+	 */
+	public function __call( $method, $args ) {
+		if ( method_exists( $this->object_info_strategy, $method ) ) {
+			return call_user_func_array( array( $this->object_info_strategy, $method ), $args );
+		}
+	}
+
+
 
 	/**
 	 * addObject
