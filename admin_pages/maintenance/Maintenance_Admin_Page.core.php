@@ -87,6 +87,15 @@ class Maintenance_Admin_Page extends EE_Admin_Page {
 				'func' => '_confirm_migration_crash_report_sent',
 				'capability' => 'manage_options'
 				),
+			'csv_export' => array(
+				'func' => '_csv_export',
+				'capability' => 'manage_options'
+			),
+			'full_csv_export' => array(
+				'func' => '_full_csv_export',
+				'capability' => 'manage_options',
+				'noheader'=>true,
+			),
 			'data_reset' => array(
 				'func' => '_data_reset_and_delete',
 				'capability' => 'manage_options'
@@ -134,17 +143,24 @@ class Maintenance_Admin_Page extends EE_Admin_Page {
 					),
 				'require_nonce' => FALSE,
 				),
+			'csv_export' => array(
+				'nav'           => array(
+					'label' => __( 'CSV Export', 'event_espresso' ),
+					'order' => 20
+				),
+				'require_nonce' => false,
+			),
 			'data_reset' => array(
 				'nav' => array(
 					'label' => __('Reset/Delete Data', 'event_espresso'),
-					'order' => 20
+					'order' => 30
 					),
 				'require_nonce' => FALSE,
 				),
 			'system_status'=>array(
 				'nav'=>array(
 					'label'=>  __("System Information", "event_espresso"),
-					'order'=>30
+					'order'=>40
 				),
 				'require_nonce' => FALSE,
 			)
@@ -320,7 +336,65 @@ class Maintenance_Admin_Page extends EE_Admin_Page {
 
 
 	/**
-	 * a tab with options for reseting and/or deleting EE data
+	 * a tab with options for exporting EE data
+	 */
+	public function _csv_export(){
+		$csv_export_form = $this->_generate_csv_export_form();
+		$this->_template_args[ 'admin_page_content' ] = $csv_export_form->get_html_and_js();
+		$this->display_admin_page_with_sidebar();
+	}
+
+
+
+	/**
+	 * a tab with options for exporting EE data
+	 */
+	public function _generate_csv_export_form(){
+		EE_Registry::instance()->load_helper( 'HTML' );
+		return new EE_Form_Section_Proper(
+			array(
+				'name'            => 'csv_export',
+				'html_id'         => 'csv_export',
+				'subsections' => array(
+					'full' => new EE_Form_Section_HTML(
+						EEH_HTML::link(
+							EE_Admin_Page::add_query_args_and_nonce(
+								array(  'action' => 'full_csv_export', ),
+								EE_MAINTENANCE_ADMIN_URL
+							),
+							__( 'Export ALL Event Espresso Data to CSV.', 'event_espresso' ),
+							__( 'Export ALL Event Espresso Data to CSV.', 'event_espresso' ),
+							'',
+							'button-primary'
+						)
+					),
+				),
+				'layout_strategy' => new EE_Admin_Two_Column_Layout(),
+			)
+		);
+
+	}
+
+
+
+	/**
+	 * a tab with options for resetting and/or deleting EE data
+	 */
+	public function _full_csv_export(){
+		EE_Registry::instance()->load_class( 'Export', array(), false, true, true );
+		$EE_Export = EE_Export::instance(
+			array(
+				'export' => 'report',
+				'action' => 'everything',
+			)
+		);
+		$EE_Export->export();
+	}
+
+
+
+	/**
+	 * a tab with options for resetting and/or deleting EE data
 	 */
 	public function _data_reset_and_delete(){
 		$this->_template_path = EE_MAINTENANCE_TEMPLATE_PATH . 'ee_data_reset_and_delete.template.php';
