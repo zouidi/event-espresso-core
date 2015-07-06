@@ -333,6 +333,18 @@ class EE_DMS_Core_4_7_0 extends EE_Data_Migration_Script_Base{
 		$this->_table_has_not_changed_since_previous($table_name, $sql, 'ENGINE=InnoDB ');
 
 
+		$table_name = 'esp_promotion_rule';
+		$sql = "PRR_ID INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+					PRO_ID INT UNSIGNED NOT NULL ,
+					RUL_ID INT UNSIGNED NOT NULL ,
+					PRR_order TINYINT UNSIGNED NOT NULL DEFAULT 1,
+					PRR_add_rule_comparison ENUM('AND','OR') NULL DEFAULT 'AND',
+					PRR_wp_user BIGINT UNSIGNED NOT NULL DEFAULT 1,
+					PRIMARY KEY  (PRR_ID) ,
+					KEY PRO_ID (PRO_ID),
+					KEY RUL_ID (RUL_ID) ";
+		$this->_table_is_new_in_this_version($table_name, $sql, 'ENGINE=InnoDB ');
+
 		$table_name = "esp_ticket_price";
 		$sql = "TKP_ID INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 					  TKT_ID INT(10) UNSIGNED NOT NULL,
@@ -433,6 +445,20 @@ class EE_DMS_Core_4_7_0 extends EE_Data_Migration_Script_Base{
 					  PRIMARY KEY  (RPY_ID),
 					  KEY REG_ID (REG_ID),
 					  KEY PAY_ID (PAY_ID)";
+		$this->_table_is_new_in_this_version($table_name, $sql, 'ENGINE=InnoDB ');
+
+		$table_name = 'esp_rule';
+		$sql = "RUL_ID INT UNSIGNED NOT NULL AUTO_INCREMENT ,
+					RUL_name VARCHAR(45) NOT NULL ,
+					RUL_desc TEXT NULL ,
+					RUL_trigger VARCHAR(45) NOT NULL ,
+					RUL_trigger_type VARCHAR(45) NULL DEFAULT NULL ,
+					RUL_comparison ENUM('=','!=','<','>') NOT NULL DEFAULT '=' ,
+					RUL_value VARCHAR(45) NOT NULL ,
+					RUL_value_type VARCHAR(45) NULL DEFAULT NULL ,
+					RUL_is_active TINYINT(1) NOT NULL DEFAULT 1 ,
+					RUL_archived TINYINT(1) NOT NULL DEFAULT 0 ,
+					PRIMARY KEY  (RUL_ID)";
 		$this->_table_is_new_in_this_version($table_name, $sql, 'ENGINE=InnoDB ');
 
 
