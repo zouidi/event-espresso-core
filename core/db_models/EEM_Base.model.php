@@ -1949,7 +1949,7 @@ abstract class EEM_Base extends EE_Base{
 		}else{
 			throw new EE_Error(sprintf(__("%s get_all_conflicting should be called with a model object or an array of field names and values, you provided %d", "event_espresso"),get_class($this),$obj_or_fields_array));
 		}
-		$query_params = array();
+		$query_params = array( 'default_where_conditions' => 'minimum' );
 		if( $this->has_primary_key_field() &&
 				( $include_primary_key || $this->get_primary_key_field() instanceof EE_Primary_Key_String_Field) &&
 				isset($fields_n_values[$this->primary_key_name()])){

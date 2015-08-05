@@ -695,8 +695,10 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				$conditions = null;
 				$pk_value = null;
 			}
-
-			$success = $model->update($model_object_data_for_update,array($conditions));
+			$query_params = array(
+				$conditions,
+				'default_where_conditions' => 'minimum' );
+			$success = $model->update($model_object_data_for_update,$query_params);
 			if($success){
 				$this->_add_update_success( sprintf(__("Successfully updated %s with ID '%s'.", "event_espresso"),$model->get_this_model_name(), $pk_value ));
 				//we should still record the mapping even though it was an update
@@ -705,10 +707,10 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				//and so we record what record ended up being updated using the mapping
 				$old_db_to_new_db_mapping[ $model->get_this_model_name() ][ $id_in_csv ] = $pk_value;
 			}else{
-				$matched_items = $model->get_all(array($conditions));
+				$matched_items = $model->get_all($query_params);
 				if( ! $matched_items){
 					//no items were matched (so we shouldn't have updated)... but then we should have inserted? what the heck?
-					$this->_add_update_error( sprintf(__("Could not update %s (with ID %s) for an unknown reason (using WHERE conditions %s)", "event_espresso"),$model->get_this_model_name(), $pk_value, http_build_query($conditions)), __FILE__, __FUNCTION__, __LINE__ );
+					$this->_add_update_error( sprintf(__("Could not update %s (with ID %s) for an unknown reason (query params %s)", "event_espresso"),$model->get_this_model_name(), $pk_value, http_build_query($query_params)), __FILE__, __FUNCTION__, __LINE__ );
 				} else {
 					//wasn't an error, just didn't need updating
 				}
