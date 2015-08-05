@@ -558,7 +558,8 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$new_mapping_data = EE_Import::instance()->save_data_rows_to_db( $csv_data, false, $mapping_data );
 
 		//we should have only updated data, no inserts
-		$this->assertEquals( 4, EE_Import::instance()->get_total_updates() );
+		//but one item didn't need to be udpated
+		$this->assertEquals( 3, EE_Import::instance()->get_total_updates() );
 		$this->assertEquals( 0, EE_Import::instance()->get_total_inserts() );
 		//e1 in teh database should have been unaffected
 		$this->assertNotEquals( $original_e1_data['EVT_name'], $e1->get( 'EVT_name' ) );

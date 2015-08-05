@@ -709,6 +709,8 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				if( ! $matched_items){
 					//no items were matched (so we shouldn't have updated)... but then we should have inserted? what the heck?
 					$this->_add_update_error( sprintf(__("Could not update %s (with ID %s) for an unknown reason (using WHERE conditions %s)", "event_espresso"),$model->get_this_model_name(), $pk_value, http_build_query($conditions)), __FILE__, __FUNCTION__, __LINE__ );
+				} else {
+					//wasn't an error, just didn't need updating
 				}
 			}
 		}catch(EE_Error $e){
