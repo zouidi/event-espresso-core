@@ -57,6 +57,9 @@ class EEM_State extends EEM_Base {
 		$this->_indexes = array(
 			'identifier' => new EE_Unique_Index( array( 'STA_abbrev', 'CNT_ISO' ) )
 		);
+		//this model is generally available for reading
+		$this->_cap_restriction_generators[ EEM_Base::caps_read ] = new EE_Restriction_Generator_Public();
+		//@todo: only show STA_active 
 		parent::__construct( $timezone );
 	}
 
