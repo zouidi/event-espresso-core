@@ -60,6 +60,15 @@ class EE_Default_Where_Conditions{
 	}
 
 	/**
+	 * Returns the set of bare minimum where conditions that need to be used with ALL model queries.
+	 * Array keys should be the field names (without model relation chains.
+	 * @return array
+	 */
+	protected function _get_minimum_where_conditions() {
+		return array();
+	}
+
+	/**
 	 *
 	 * @param string $model_relation_chain
 	 * @return string
