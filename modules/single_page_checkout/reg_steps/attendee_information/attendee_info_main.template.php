@@ -1,3 +1,5 @@
+<?php do_action( 'FHEE__registration_page_attendee_information__before_attendee_information_pg', get_defined_vars() ); ?>
+
 	<p id="spco-attendee_information-pg" class="spco-steps-pg small-text drk-grey-text">
 		<?php echo apply_filters( 'FHEE__registration_page_attendee_information__attendee_information_pg', sprintf( __('In order to process your registration, we ask you to provide the following information.%1$sPlease note that all fields marked with an asterisk (%2$s) are required.', 'event_espresso'), '<br />', '<span class="asterisk">*</span>' )); ?>
 	</p>
@@ -6,8 +8,8 @@
 $att_nmbr = 0;
 $prev_event = '';
 $prev_ticket = '';
-
 if ( count( $registrations ) > 0 ) {
+	do_action( 'FHEE__registration_page_attendee_information__before_attendee_panels', get_defined_vars() );
 	foreach ( $registrations as $registration ) {
 		if ( $registration instanceof EE_Registration ) {
 			$att_nmbr++;
@@ -55,9 +57,13 @@ if ( count( $registrations ) > 0 ) {
 		} // if ( $registration instanceof EE_Registration )
 	 } // end foreach ( $registrations as $registration )
 
+	do_action( 'FHEE__registration_page_attendee_information__after_attendee_panels', get_defined_vars() );
 	echo $default_hidden_inputs;
 
-} // end if ( count( $registrations ) > 0 )
+	// end if ( count( $registrations ) > 0 )
+} else {
+	do_action( 'FHEE__registration_page_attendee_information__reg_count_zero', get_defined_vars() );
+}
 
 ?>
 
