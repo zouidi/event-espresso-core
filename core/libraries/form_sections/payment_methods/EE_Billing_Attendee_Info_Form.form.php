@@ -21,7 +21,7 @@ class EE_Billing_Attendee_Info_Form extends EE_Billing_Info_Form{
 	 * @param EE_Payment_Method $payment_method
 	 * @param array $options_array @see EE_Form_Section_Proper::__construct()
 	 */
-	public function __construct( EE_Payment_Method $payment_method, $options_array= array()){
+	public function __construct( EE_Payment_Method $payment_method = null, $options_array= array()){
 		$options_array['subsections'] = array_merge(
 			array(
 				'first_name' 	=> new EE_Text_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn ee-billing-qstn-fname', 'html_label_text' => __( 'First Name', 'event_espresso' ) ) ),
