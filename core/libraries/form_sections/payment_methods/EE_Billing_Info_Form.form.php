@@ -26,7 +26,7 @@ class EE_Billing_Info_Form extends EE_Form_Section_Proper{
 	 * @param EE_Payment_Method $payment_method
 	 * @param array $options_array @see EE_Form_Section_Proper::__construct()
 	 */
-	public function __construct( EE_Payment_Method $payment_method, $options_array= array()){
+	public function __construct( EE_Payment_Method $payment_method = null, $options_array= array()){
 		$this->_pm_instance = $payment_method;
 		$this->_layout_strategy = new EE_Div_Per_Section_Layout();
 		parent::__construct( $options_array );
