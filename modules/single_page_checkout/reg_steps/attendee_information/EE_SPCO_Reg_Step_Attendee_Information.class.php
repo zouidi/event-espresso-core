@@ -122,23 +122,25 @@ class EE_SPCO_Reg_Step_Attendee_Information extends EE_SPCO_Reg_Step {
 			}
 
 		}
-
-		return new EE_Form_Section_Proper(
-			array(
-				'name' 					=> $this->reg_form_name(),
-				'html_id' 					=> $this->reg_form_name(),
-				'subsections' 			=> $subsections,
-				'layout_strategy'		=> $this->checkout->admin_request ?
-					new EE_Div_Per_Section_Layout() :
-					new EE_Template_Layout(
-						array(
-							'layout_template_file' 	=> $this->_template, // layout_template
-							'template_args' 				=> $template_args
-						)
-					),
-			)
+		return apply_filters(
+			'FHEE__EE_SPCO_Reg_Step_Attendee_Information__generate_reg_form__reg_form',
+			new EE_Form_Section_Proper(
+				array(
+					'name' 					=> $this->reg_form_name(),
+					'html_id' 					=> $this->reg_form_name(),
+					'subsections' 			=> $subsections,
+					'layout_strategy'		=> $this->checkout->admin_request ?
+						new EE_Div_Per_Section_Layout() :
+						new EE_Template_Layout(
+							array(
+								'layout_template_file' 	=> $this->_template, // layout_template
+								'template_args' 				=> $template_args
+							)
+						),
+				)
+			),
+			$this->checkout
 		);
-
 	}
 
 
@@ -201,7 +203,11 @@ class EE_SPCO_Reg_Step_Attendee_Information extends EE_SPCO_Reg_Step {
 			$form_args['subsections']['primary_registrant'] = $this->_additional_primary_registrant_inputs( $registration );
 		}
 		$attendee_nmbr++;
-		return new EE_Form_Section_Proper( $form_args );
+		return apply_filters(
+			'FHEE__EE_SPCO_Reg_Step_Attendee_Information___registrations_reg_form__registration_reg_form',
+			new EE_Form_Section_Proper( $form_args ),
+			$registration
+		);
 	}
 
 
