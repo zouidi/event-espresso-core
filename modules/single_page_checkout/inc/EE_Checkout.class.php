@@ -194,6 +194,14 @@ class EE_Checkout {
 	public $primary_attendee_obj = NULL;
 
 	/**
+	 * 	the related attendee object for the purchasing_agent
+	 * 	who is a contact OTHER than the primary registrant that is handling the payment
+	 * 	for the transaction. The purchasing_agent is NOT a registrant.
+	 * @type EE_Attendee
+	 */
+	public $purchasing_agent = NULL;
+
+	/**
 	 *	$payment_method - the payment method object for the selected method of payment
 	 *	@type EE_Payment_Method
 	 */
