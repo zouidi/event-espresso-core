@@ -958,6 +958,15 @@ class EED_Single_Page_Checkout  extends EED_Module {
 						$this->go_to_next_step();
 						return;
 					}
+					// allow other systems to access and modify the form data prior to any other processing
+					$this->checkout->current_step->set_valid_data(
+						apply_filters(
+							'FHEE__EE_SPCO_ReFHEE__Single_Page_Checkout___check_form_submission__valid_data',
+							$this->checkout->current_step->reg_form->valid_data(),
+							$this->checkout
+						)
+					);
+
 				}
 			} catch( EE_Error $e ) {
 				$e->get_error();
