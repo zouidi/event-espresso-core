@@ -996,6 +996,7 @@ class EE_SPCO_Reg_Step_Attendee_Information extends EE_SPCO_Reg_Step {
 		// add relation to attendee
 		$registration->_add_relation_to( $attendee, 'Attendee' );
 		$registration->set_attendee_id( $attendee->ID() );
+		$attendee = apply_filters( 'FHEE__EE_SPCO_Reg_Step_Attendee_Information___associate_attendee_with_registration__attendee', $attendee, $registration, $this->checkout );
 		$registration->update_cache_after_object_save( 'Attendee', $attendee );
 	}
 
