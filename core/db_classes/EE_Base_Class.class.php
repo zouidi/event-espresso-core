@@ -379,7 +379,7 @@ abstract class EE_Base_Class{
 			if ( $field_obj instanceof EE_Datetime_Field ) {
 				$field_obj->set_timezone( $this->_timezone );
 				if ( isset( $this->_fields[$field_name] ) && $this->_fields[$field_name] instanceof DateTime ) {
-					$this->_fields[$field_name]->setTimeZone( new DateTimeZone( $this->_timezone ) );
+					$this->_fields[$field_name]->setTimezone( new DateTimeZone( $this->_timezone ) );
 				}
 			}
 		}
@@ -737,7 +737,7 @@ abstract class EE_Base_Class{
 	 *
 	 * @param string $relationName
 	 * @throws \EE_Error
-	 * @return EE_Base_Class[]
+	 * @return EE_Base_Class[] NOT necessarily indexed by primary keys
 	 */
 	public function get_all_from_cache($relationName){
 		$cached_array_or_object =  $this->_model_relations[$relationName];
@@ -1003,7 +1003,7 @@ abstract class EE_Base_Class{
 
 		//clear cached property if either formats are not null.
 		if( $dt_frmt !== null || $tm_frmt !== null ) {
-			$this->_clear_cached_property( $field_name, $date_or_time );
+			$this->_clear_cached_property( $field_name );
 			//reset format properties because they are used in get()
 			$this->_dt_frmt = $in_dt_frmt;
 			$this->_tm_frmt = $in_tm_frmt;
@@ -1710,7 +1710,8 @@ abstract class EE_Base_Class{
 	 * because we want to get even deleted items etc.
 	 * @param string $relationName key in the model's _model_relations array
 	 * @param array  $query_params  like EEM_Base::get_all
-	 * @return EE_Base_Class[]
+	 * @return EE_Base_Class[] Results not necessarily indexed by IDs, because some results might not have primary keys
+	 * or might not be saved yet. Consider using EEM_Base::get_IDs() on these results if you want IDs
 	 */
 	public function get_many_related($relationName,$query_params = array()){
 		if($this->ID()){//this exists in the DB, so get the related things from either the cache or the DB
@@ -2146,6 +2147,47 @@ abstract class EE_Base_Class{
 	 */
 	public function __toString(){
 		return sprintf( '%s (%s)', $this->name(), $this->ID() );
+	}
+
+	/**
+	 * Clear related model objects if they're already in the DB, because otherwise when we
+	 * UNserialize this model object we'll need to be careful to add them to the entity map.
+	 * This means if we have made changes to those related model obejcts, and want to unserialize
+	 * the this model object on a subsequent request, changes to those related model objects will be lost.
+	 * Instead, those related model objects should be directly serialized and stored.
+	 * Eg, the following won't work:
+	 * $reg = EEM_Registration::instance()->get_one_by_ID( 123 );
+	 * $att = $reg->attendee();
+	 * $att->set( 'ATT_fname', 'Dirk' );
+	 * update_option( 'my_option', serialize( $reg ) );
+	 * //END REQUEST
+	 * //START NEXT REQUEST
+	 * $reg = get_option( 'my_option' );
+	 * $reg->attendee()->save();
+	 *
+	 * And would need to be replace with:
+	 * $reg = EEM_Registration::instance()->get_one_by_ID( 123 );
+	 * $att = $reg->attendee();
+	 * $att->set( 'ATT_fname', 'Dirk' );
+	 * update_option( 'my_option', serialize( $reg ) );
+	 * //END REQUEST
+	 * //START NEXT REQUEST
+	 * $att = get_option( 'my_option' );
+	 * $att->save();
+	 *
+	 * @return array
+	 */
+	public function __sleep() {
+		foreach( $this->get_model()->relation_settings() as $relation_name => $relation_obj ) {
+			if( $relation_obj instanceof EE_Belongs_To_Relation ) {
+				$classname = 'EE_' . $this->get_model()->get_this_model_name();
+				if( $this->get_one_from_cache( $relation_name ) instanceof $classname &&
+						$this->get_one_from_cache( $relation_name )->ID() ) {
+					$this->clear_cache( $relation_name, $this->get_one_from_cache( $relation_name )->ID() );
+				}
+			}
+		}
+		return array_keys( get_object_vars( $this ) );
 	}
 
 
