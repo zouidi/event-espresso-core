@@ -1452,13 +1452,16 @@ abstract class EEM_Base extends EE_Base{
 	 * Deletes a single row from the DB given the model object's primary key value. (eg, EE_Attendee->ID()'s value).
 	 * Wrapper for EEM_Base::delete()
 	 * @param mixed $id
+         * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
+	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
+	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
 	 * @return boolean whether the row got deleted or not
 	 */
-	public function delete_by_ID( $id ){
+	public function delete_by_ID( $id, $allow_blocking = true ){
 		return $this->delete( array(
 			array( $this->get_primary_key_field()->get_name() => $id ),
 			'limit' 	=> 1
-		) );
+		), $allow_blocking );
 	}
 
 
@@ -2075,7 +2078,7 @@ abstract class EEM_Base extends EE_Base{
 			$query_params[0]['OR']['AND*'.$unique_index_name] = $uniqueness_where_params;
 		}
 		//if there is nothing to base this search on, then we shouldn't find anything
-		if( empty( $query_params ) ){
+		if( ! isset( $query_params[0] ) || ( isset( $query_params[0] ) && empty( $query_params[0] ) ) ) {
 			return array();
 		}else{
 			return $this->get_one($query_params);

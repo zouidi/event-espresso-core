@@ -30,9 +30,12 @@ abstract class EE_Soft_Delete_Base_Class extends EE_Base_Class {
 
 	/**
 	 * Performs a soft delete (archive) fo this object
+         * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
+	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
+	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
 	 * @return boolean success
 	 */
-	public function delete() {
+	public function delete( $allow_blocking = true) {
 		return $this->delete_or_restore( TRUE );
 	}
 
@@ -40,10 +43,13 @@ abstract class EE_Soft_Delete_Base_Class extends EE_Base_Class {
 
 	/**
 	 * Permanently deletes this object (not just archive)
+         * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
+	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
+	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
 	 * @return boolean success
 	 */
-	public function delete_permanently() {
-		return $this->get_model()->delete_permanently_by_ID( $this->ID() );
+	public function delete_permanently( $allow_blocking = true) {
+		return $this->get_model()->delete_permanently_by_ID( $this->ID(), $allow_blocking ) ? true : false;
 	}
 
 

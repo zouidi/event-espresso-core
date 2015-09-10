@@ -1263,16 +1263,19 @@ abstract class EE_Base_Class{
 
 	/**
 	 * Deletes this model object. That may mean just 'soft deleting' it though.
+         * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
+	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
+	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
 	 * @return boolean | int
 	 */
-	public function delete(){
+	public function delete( $allow_blocking = true ){
 		/**
 		 * Called just before deleting a model object
 		 *
 		 * @param EE_Base_Class $model_object about to be 'deleted'
 		 */
 		do_action( 'AHEE__EE_Base_Class__delete__before', $this );
-		$result = $this->get_model()->delete_by_ID( $this->ID() );
+		$result = $this->get_model()->delete_by_ID( $this->ID(), $allow_blocking );
 		/**
 		 * Called just after deleting a model object
 		 * @param EE_Base_Class $model_object that was just 'deleted'
@@ -1286,14 +1289,17 @@ abstract class EE_Base_Class{
 
 	/**
 	 * Deletes this model object permanently from db (but keep in mind related models my block the delete and return an error)
+         * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
+	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
+	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
 	 * @return bool
 	 */
-	public function delete_permanently(){
+	public function delete_permanently( $allow_blocking = true){
 		$model=$this->get_model();
 		if($model instanceof EEM_Soft_Delete_Base){
-			$result=$model->delete_permanently_by_ID($this->ID());
+			$result=$model->delete_permanently_by_ID( $this->ID(), $allow_blocking );
 		}else{
-			$result = $this->delete();
+			$result = $this->delete( $allow_blocking );
 		}
 		return $result ? true : false;
 	}

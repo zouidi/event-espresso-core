@@ -272,9 +272,12 @@ abstract class EEM_Soft_Delete_Base extends EEM_Base{
 	 * has been soft-deletd or not. Note: because this item will be soft-deleted only,
 	 * doesn't block because of model dependencies
 	 * @param mixed $ID value of the primary_key or primary_text_key
+         * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
+	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
+	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
 	 * @return boolean success
 	 */
-	public function delete_by_ID($ID){
+	public function delete_by_ID($ID, $allow_blocking = true ){
 		return $this->delete_or_restore_by_ID(true,$ID);
 	}
 	/**

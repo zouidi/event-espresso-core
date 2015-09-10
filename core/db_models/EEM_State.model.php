@@ -168,9 +168,12 @@ class EEM_State extends EEM_Base {
 	*
 	* 		@access		public
 	* 		@param		$STA_ID
+         * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
+	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
+	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
 	*		@return 		mixed		array on success, FALSE on fail
 	*/
-	public function delete_by_ID( $STA_ID = FALSE ) {
+	public function delete_by_ID( $STA_ID = FALSE, $allow_blocking = true ) {
 
 		if ( ! $STA_ID ) {
 			return FALSE;
@@ -178,7 +181,7 @@ class EEM_State extends EEM_Base {
 
 		// retrieve a particular transaction
 		$where_cols_n_values = array( array( 'STA_ID' => $STA_ID ));
-		if ( $answer = $this->delete ( $where_cols_n_values )) {
+		if ( $answer = $this->delete ( $where_cols_n_values, $allow_blocking )) {
 			return TRUE;
 		} else {
 			return FALSE;

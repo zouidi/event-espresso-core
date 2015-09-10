@@ -610,8 +610,8 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$new_state_name = 'changed-name';
 		$state->save( array( 'STA_name' => $new_state_name ) );
 		$att->save( array( 'ATT_fname' => 'changed-name' ) );
-		$reg->delete();
-		$qst->delete();
+		$this->assertTrue( $reg->delete_permanently( false ) );
+		$this->assertTrue( $qst->delete_permanently( false ) );
 
 		//re-import it, but only update some of it
 		$new_mappings = EE_Import::instance()->save_data_rows_to_db( $csv_data, false, array(), $models_to_update );
@@ -628,7 +628,7 @@ class EE_Import_Test extends EE_UnitTestCase {
 
 		//but they should have inserted data that doesn't exist int he DB (because other data depends on it)
 		$this->assertTrue( isset( $new_mappings[ 'Question' ][ $qst->ID() ] ) );
-		$new_question = EEM_Question::instance()->get_one_by_ID( $qst->ID() );
+		$new_question = EEM_Question::instance()->get_one_by_ID(  $new_mappings[ 'Question' ][ $qst->ID() ] );
 		$this->assertInstanceOf( 'EE_Question', $new_question);
 	}
 	/**

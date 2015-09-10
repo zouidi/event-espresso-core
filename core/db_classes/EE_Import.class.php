@@ -385,6 +385,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 				foreach($model_object_data as $field){
 					if($field){
 						$row_is_completely_empty = false;
+                                                break;                                                
 					}
 				}
 				if($row_is_completely_empty){
