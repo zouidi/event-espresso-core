@@ -200,7 +200,14 @@ $has_answers = $question->has_answers();
 
 					<a id="new-question-option" class="button" style="margin:0 0 1em 3px;">
 						<?php _e('Add Another Answer Option','event_espresso')?>
+					</a>
+                                        <a id="bulk-edit-question-options" class="button" style="margin:0 0 1em 3px;">
+						<?php _e('Bulk Add Answer Options','event_espresso')?>
 					</a><br/>
+                                        <!-- modal dialogue for bulk editing-->
+                                        <div id="bulk-edit-question-options-dv" style="display:none">
+                                            this is the modal dialogue content
+                                        </div>
 
 					<p class="description">
 						<?php _e('Answer Options are the choices that you give people to select from for RADIO_BTN, CHECKBOX or DROPDOWN questions. The Value is a simple key that will be saved to the database and the description is optional. Note that values CANNOT contain any HTML, but descriptions can.','event_espresso')?>

@@ -35,7 +35,13 @@ jQuery(document).ready(function($) {
 			espresso_update_option_order();
 		}
 	});
-
+        $('#bulk-edit-question-options').on('click', function(){
+            $('#message').hide();
+            dialog_content = $('#bulk-edit-question-options-dv');
+            d_contents = dialog_content.html();
+            dialog_content.empty();
+            dialogHelper.displayModal().addContent(d_contents);
+        });
 });
 
 
