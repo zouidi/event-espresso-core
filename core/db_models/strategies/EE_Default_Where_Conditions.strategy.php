@@ -1,8 +1,16 @@
-<?php
+<?php if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
+	exit( 'No direct script access allowed' );
+}
 
 /*
+ * EE_Default_Where_Conditions
+ *
  * Strategy to be used for getting default where conditions for EEM_Base children.
  * Should be initialized and set on construction of model
+ *
+ * @package			Event Espresso
+ * @subpackage		core/db_models/strategies/
+ * @author				Michael Nelson
  */
 class EE_Default_Where_Conditions{
 	/**
@@ -48,12 +56,16 @@ class EE_Default_Where_Conditions{
 	function _finalize_construct(EEM_Base $model){
 		$this->_model = $model;
 	}
+
+
+
 	/**
 	 * Gets the bare minimum where conditions. Usually this is NOTHING,
 	 * but if the data for this model shares a table with another table,
 	 * this is the bare minimum to differentiate between this model's data
 	 * and the other model's data
 	 * @param string $model_relation_chain
+	 * @return array
 	 */
 	function get_minimum_where_conditions( $model_relation_chain = null ){
 		return $this->prepare_where_conditions_for_querying( array_merge( $this->_get_minimum_where_conditions(), $this->get_where_conditions_provided() ), $model_relation_chain );
