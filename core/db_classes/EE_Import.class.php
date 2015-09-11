@@ -24,6 +24,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
   // imported CSV data as array
 	 protected $csv_array = array();
+         /**
+          * values from the metadata row in EE csv exports. keys are the column names,
+          * values are the csv column's values. Nice ot have as an instance variable
+          * because it's general info other parts of the importer might want
+          * @var array
+          */
+         protected $_csv_import_metadata_row = array();
 
 
   // instance of the EE_Import object
@@ -303,13 +310,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 		//handle metadata
 		if(isset($csv_data_array[EE_CSV::metadata_header]) ){
-			$csv_metadata = array_shift($csv_data_array[EE_CSV::metadata_header]);
+			$this->_csv_import_metadata_row = array_shift($csv_data_array[EE_CSV::metadata_header]);
 			//ok so its metadata, dont try to save it to the db obviously...
-			if(isset($csv_metadata['site_url']) && $csv_metadata['site_url'] == site_url()){
+			if(isset($this->_csv_import_metadata_row['site_url']) && $this->_csv_import_metadata_row['site_url'] == site_url()){
 				EE_Error::add_attention( __("CSV Data appears to be from the same database, so attempting to update data", "event_espresso") );
 				$export_from_site_a_to_b = false;
 			}else{
-				$old_site_url = isset( $csv_metadata['site_url']) ? $csv_metadata['site_url'] : $old_site_url;
+				$old_site_url = isset( $this->_csv_import_metadata_row['site_url']) ? $this->_csv_import_metadata_row['site_url'] : $old_site_url;
 				EE_Error::add_attention(
 					sprintf(
 						__('CSV Data appears to be from a different database (%1$s instead of %2$s), so we assume IDs in the CSV data DO NOT correspond to IDs in this database', "event_espresso"),
@@ -318,8 +325,8 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 					)
 				);
 			};
-			if( ! empty( $csv_metadata['models_to_update'] )){
-				$models_to_update = explode(",", $csv_metadata['models_to_update' ] );
+			if( ! empty( $this->_csv_import_metadata_row['models_to_update'] )){
+				$models_to_update = explode(",", $this->_csv_import_metadata_row['models_to_update' ] );
 			}
 			unset($csv_data_array[EE_CSV::metadata_header]);
 		}
@@ -446,7 +453,8 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 
 				$model_object_data = $this->_replace_temp_ids_with_mappings( $model_object_data, $model, $old_db_to_new_db_mapping, $export_from_site_a_to_b );
-				//now we need to decide if we're going to add a new model object given the $model_object_data,
+                                $model_object_data = $this->_prepare_data_for_use_in_db( $model_object_data, $model );
+//now we need to decide if we're going to add a new model object given the $model_object_data,
 				//or just update.
 				if($export_from_site_a_to_b){
 					$what_to_do = $this->_decide_whether_to_insert_or_update_given_data_from_other_db( $id_in_csv, $model_object_data, $model, $old_db_to_new_db_mapping );
@@ -620,6 +628,29 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		//allow for any other value replacement
 		return apply_filters( 'FHEE__EE_Import___replace_temp_ids_with_mappings__model_object_data__end', $model_object_data, $model );
 	}
+        
+        /**
+         * Does a little extra processing on the data to maintain data consistency
+         * @param array $original_data_row
+         * @param EEM_Base $model
+         * @param string $origin_site_name
+         */
+        protected function _prepare_data_for_use_in_db( $original_data_row, $model ) {
+            $altered_data_row = $original_data_row;
+            switch( $model->get_this_model_name() ) {
+                case 'Message_Template_Group':
+                    if( isset( $original_data_row[ 'MTP_is_global' ] ) && 
+                            intval( $original_data_row[ 'MTP_is_global' ] ) == 1 && 
+                            apply_filters( 'FHEE__EE_Import___prepare_data_for_use_in_db__tweak_global_message_template_groups', true ) ) {
+                        $altered_data_row[ 'MTP_is_global' ] = 0;
+                        $message_type = isset( $altered_data_row[ 'MTP_message_type' ] ) ? $altered_data_row[ 'MTP_message_type' ] : __( 'Unknown', 'event_espresso' );
+                        $altered_data_row[ 'MTP_name' ] = sprintf( __( 'Global %1$s message template from %2$s', 'event_espresso'), $message_type, $this->_csv_import_metadata_row[ 'site_url' ] );
+                        global $current_user;
+                        $altered_data_row[ 'MTP_description' ] .= sprintf( __( 'Imported at %1$s by user %2$s', 'event_espresso' ), current_time( 'mysql' ), $current_user->user_nicename );
+                    }
+            }
+            return apply_filters( 'FHEE__EE_Import___prepare_data_for_use_in_db__return', $altered_data_row, $original_data_row, $model, $this );
+        }
 
 	/**
 	 * If the data was exported PRE-4.2, but then imported POST-4.2, then the term_id
