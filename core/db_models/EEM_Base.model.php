@@ -147,7 +147,7 @@ abstract class EEM_Base extends EE_Base{
 	/**
 	 * 2d array where top-level keys are one of EEM_Base::valid_cap_contexts(),
 	 * and next-level keys are capability names, and each's value is a
-	 * EE_Default_Where_Condition. If the requestor requests to apply caps to the query,
+	 * EE_Default_Where_Condition. If the requester requests to apply caps to the query,
 	 * they specify which context to use (ie, frontend, backend, edit or delete)
 	 * and then each capability in the corresponding sub-array that they're missing
 	 * adds the where conditions onto the query.
@@ -345,6 +345,12 @@ abstract class EEM_Base extends EE_Base{
 	 */
 	protected $_entity_map;
 
+
+	/**
+	 * instance of Espresso_model
+	 * @var object $_instance
+	 */
+	private static $_instance;
 
 
 
@@ -568,7 +574,7 @@ abstract class EEM_Base extends EE_Base{
 	 *
 	 *	@var array $0 (where) array {
 	 *		eg: array('QST_display_text'=>'Are you bob?','QST_admin_text'=>'Determine if user is bob')
-			becomes
+			* becomes
 	 *		SQL >> "...WHERE QST_display_text = 'Are you bob?' AND QST_admin_text = 'Determine if user is bob'...")
 	 *
 	 *		To add WHERE conditions based on related models (and even models-related-to-related-models) prepend the model's name
@@ -582,17 +588,20 @@ abstract class EEM_Base extends EE_Base{
 	 *						WHERE Venue_CPT.ID = 12
 	 *		Notice that automatically took care of joining Events to Venues (even when each of those models actually consisted of two tables).
 	 * 	 	Also, you may chain the model relations together. Eg instead of just having "Venue.VNU_ID", you could have
-	 *		"Registration.Attendee.ATT_ID" as a field on a query for events (because events are related to Registrations, which are related to Attendees).
+	 * 		"Registration.Attendee.ATT_ID" as a field on a query for events
+	 * 		(because events are related to Registrations, which are related to Attendees).
 	 *		You can take it even further with "Registration.Transaction.Payment.PAY_amount" etc.
 	 *		To change the operator (from the default of '='), change the value to an numerically-indexed array, where the
 	 *		first item in the list is the operator.
 	 *		eg: array( 'QST_display_text' => array('LIKE','%bob%'), 'QST_ID' => array('<',34), 'QST_wp_user' => array('in',array(1,2,7,23)))
 	 *		becomes
 	 *		SQL >> "...WHERE QST_display_text LIKE '%bob%' AND QST_ID < 34 AND QST_wp_user IN (1,2,7,23)...".
-	 * 		Valid operators so far: =, !=, <, <=, >, >=, LIKE, NOT LIKE, IN (followed by numeric-indexed array), NOT IN (dido), BETWEEN (followed by an array with exactly 2 date strings), IS NULL, and IS NOT NULL
+	 * 		Valid operators so far: =, !=, <, <=, >, >=, LIKE, NOT LIKE, IN (followed by numeric-indexed array), NOT IN (dido),
+	 * 		BETWEEN (followed by an array with exactly 2 date strings), IS NULL, and IS NOT NULL
 	 *
 	 *		Values can be a string, int, or float. They can also be arrays IFF the operator is IN.
-	 *		Also, values can actually be field names. To indicate the value is a field, simply provide a third array item (true) to the operator-value array like so:
+	 * 		Also, values can actually be field names. To indicate the value is a field,
+	 * 		simply provide a third array item (true) to the operator-value array like so:
 	 *		eg: array( 'DTT_reg_limit' => array('>', 'DTT_sold', TRUE) )
 	 *		becomes
 	 *		SQL >> "...WHERE DTT_reg_limit > DTT_sold"
@@ -617,7 +626,13 @@ abstract class EEM_Base extends EE_Base{
 	 *		SQL >> "...where ! (TXN_total =50 OR TXN_paid =23) AND TXN_ID=1 AND STS_ID='TIN'"
 	 *
 	 *		They can be nested indefinitely.
-	 *		eg: array('OR'=>array('TXN_total' => 23, 'NOT'=> array( 'TXN_timestamp'=> 345678912, 'AND'=>array('TXN_paid' => 53, 'STS_ID' => 'TIN'))))
+	 *      eg:
+	 * 		array(
+	 * 			'OR'=>array(
+	 * 				'TXN_total' => 23,
+	 * 				'NOT'=> array( 'TXN_timestamp'=> 345678912, 'AND'=>array('TXN_paid' => 53, 'STS_ID' => 'TIN'))
+	 * 			)
+	 * 		)
 	 *		becomes
 	 *		SQL >> "...WHERE TXN_total = 23 OR ! (TXN_timestamp = 345678912 OR (TXN_paid = 53 AND STS_ID = 'TIN'))..."
 	 *
@@ -632,47 +647,79 @@ abstract class EEM_Base extends EE_Base{
 	 *		To overcome this, you can add a '*' character to the end of the field's name, followed by anything.
 	 *		These will be removed when generating the SQL string, but allow for the array keys to be unique.
 	 *		eg: you could rewrite the previous query as:
-	 *		array('PAY_timestamp'=>array('>',$start_date),'PAY_timestamp*1st'=>array('<',$end_date),'PAY_timestamp*2nd'=>array('!=',$special_date))
+	 * 		array(
+	 * 			'PAY_timestamp'=>array('>',$start_date),
+	 * 			'PAY_timestamp*1st'=>array('<',$end_date),
+	 * 			'PAY_timestamp*2nd'=>array('!=',$special_date)
+	 * 		)
 	 *		which correctly becomes
 	 *		SQL >> "PAY_timestamp > 123412341 AND PAY_timestamp < 2354235235234 AND PAY_timestamp != 1241234123"
 	 *		This can be applied to condition operators too,
-	 *		eg: array('OR'=>array('REG_ID'=>3,'Transaction.TXN_ID'=>23),'OR*whatever'=>array('Attendee.ATT_fname'=>'bob','Attendee.ATT_lname'=>'wilson')));
-	 *	@var mixed $limit int|array	adds a limit to the query just like the SQL limit clause, so limits of "23", "25,50", and array(23,42) are all valid would become
+	 *     eg:
+	 * 		array(
+	 * 			'OR'=>array('REG_ID'=>3,'Transaction.TXN_ID'=>23),
+	 * 			'OR*whatever'=>array('Attendee.ATT_fname'=>'bob','Attendee.ATT_lname'=>'wilson'))
+	 * 		);
+	 *
+	 * @var mixed $limit int|array
+	 * 		adds a limit to the query just like the SQL limit clause, so limits of "23", "25,50", and array(23,42) are all valid would become
 	 *		SQL "...LIMIT 23", "...LIMIT 25,50", and "...LIMIT 23,42" respectively
 	 *
-	 *	@var array $on_join_limit allows the setting of a special select join with a internal limit so you can do paging on one-to-many multi-table-joins.
+	 * @var array $on_join_limit
+	 * 		allows the setting of a special select join with a internal limit so you can do paging on one-to-many multi-table-joins.
 	 *		Send an array in the following format array('on_join_limit' => array( 'table_alias', array(1,2) ) ).
-	 *	@var mixed $order_by name of a column to order by, or an array where keys are field names and values are either 'ASC' or 'DESC'. 'limit'=>array('STS_ID'=>'ASC','REG_date'=>'DESC'),
+	 *
+	 * @var mixed $order_by
+	 *     name of a column to order by, or an array where keys are field names and values are either 'ASC' or 'DESC'.
+	 * 		'limit'=>array('STS_ID'=>'ASC','REG_date'=>'DESC'),
 	 *		which would becomes SQL "...ORDER BY TXN_timestamp..." and "...ORDER BY STS_ID ASC, REG_date DESC..." respectively.
 	 *		Like the 'where' conditions, these fields can be on related models.
-	 *		Eg 'order_by'=>array('Registration.Transaction.TXN_amount'=>'ASC') is perfectly valid from any model related to 'Registration' (like Event, Attendee, Price, Datetime, etc.)
-	 *	@var string $order	If 'order_by' is used and its value is a string (NOT an array), then 'order' specifies whether to order the field specified in 'order_by' in ascending or
-	 *		descending order. Acceptable values are 'ASC' or 'DESC'. If, 'order_by' isn't used, but 'order' is, then it is assumed you want to order by the primary key.
-	 *		Eg, EEM_Event::instance()->get_all(array('order_by'=>'Datetime.DTT_EVT_start','order'=>'ASC'); //(will join with the Datetime model's table(s) and order by its field DTT_EVT_start)
-	 *		or EEM_Registration::instance()->get_all(array('order'=>'ASC'));//will make SQL "SELECT * FROM wp_esp_registration ORDER BY REG_ID ASC"
+	 *     Eg 'order_by'=>array('Registration.Transaction.TXN_amount'=>'ASC') is perfectly valid from any model related to 'Registration'
+	 * 		(like Event, Attendee, Price, Datetime, etc.)
 	 *
-	 *	@var mixed $group_by name of field to order by, or an array of fields. Eg either 'group_by'=>'VNU_ID', or 'group_by'=>array('EVT_name','Registration.Transaction.TXN_total')
+	 * @var string $order
+	 * 		If 'order_by' is used and its value is a string (NOT an array), then 'order' specifies
+	 * 		whether to order the field specified in 'order_by' in ascending or descending order.
+	 * 		Acceptable values are 'ASC' or 'DESC'. If, 'order_by' isn't used, but 'order' is,
+	 * 		then it is assumed you want to order by the primary key.
+	 * 		Eg, EEM_Event::instance()->get_all(array('order_by'=>'Datetime.DTT_EVT_start','order'=>'ASC');
+	 * 		(will join with the Datetime model's table(s) and order by its field DTT_EVT_start)
+	 * 		or EEM_Registration::instance()->get_all(array('order'=>'ASC'));
+	 * 		(will make SQL "SELECT * FROM wp_esp_registration ORDER BY REG_ID ASC")
 	 *
-	 *	@var array $having	exactly like WHERE parameters array, except these conditions apply to the grouped results (whereas WHERE conditions apply to the pre-grouped results)
+	 * @var mixed $group_by
+	 * 		Name of field to order by, or an array of fields.
+	 * 		Eg either 'group_by'=>'VNU_ID', or 'group_by'=>array('EVT_name','Registration.Transaction.TXN_total')
 	 *
-	 *	@var array $force_join forces a join with the models named. Should be an numerically-indexed array where values are models to be joined in the query.Eg
-	 *		array('Attendee','Payment','Datetime'). You may join with transient models using period, eg "Registration.Transaction.Payment".
+	 * @var array $having
+	 * 		exactly like WHERE parameters array, except these conditions apply to the grouped results
+	 * 		(whereas WHERE conditions apply to the pre-grouped results)
+	 *
+	 * @var array $force_join
+	 * 		Forces a join with the models named. Should be an numerically-indexed array where values are models to be joined in the query.
+	 * 		Eg: array('Attendee','Payment','Datetime'). You may join with transient models using period, eg "Registration.Transaction.Payment".
 	 *		You will probably only want to do this in hopes of increasing efficiency, as related models which belongs to the current model
 	 *		(ie, the current model has a foreign key to them, like how Registration belongs to Attendee) can be cached in order
 	 *		to avoid future queries
 	 *
-	 *	@var string $default_where_conditions can be set to 'none', 'minimum',  'this_model_only', 'other_models_only', or 'all'. set this to 'none' to disable all default where conditions. Eg, usually trashed Custom Post Types objects are filtered-out
-	 *		if you want to include them, set this query param to 'minimum'. If you want to provide a different argument for the 'post_type', use 'none'.
+	 * @var string $default_where_conditions
+	 *      Can be set to 'none', 'minimum',  'this_model_only', 'other_models_only', or 'all'.
+	 * 		Set this to 'none' to disable all default where conditions. Eg, usually trashed Custom Post Types objects are filtered-out
+	 * 		If you want to include them, set this query param to 'minimum'.
+	 * 		If you want to provide a different argument for the 'post_type', use 'none'.
 	 *		If you want to ONLY disable THIS model's default where conditions
 	 *		set it to 'other_models_only'. If you only want this model's default where conditions added to the query, use 'this_model_only'.
 	 *		If you want to use all default where conditions (default), set to 'all'.
 	 *	@var string $caps controls what capability requirements to apply to the query; ie, should we just NOT
-	 *		apply cany capabilities/permissions/restrictions and return everything? Or should we only show the
+	 *		apply any capabilities/permissions/restrictions and return everything? Or should we only show the
 	 *		current user items they should be able to view on the frontend, backend, edit, or delete?
 	 *		can be set to 'none' (default), 'read_frontend', 'read_backend', 'edit' or 'delete'
 	 * }
-	 * @return EE_Base_Class[]  *note that there is NO option to pass the output type. If you want results different from EE_Base_Class[], use _get_all_wpdb_results()and make it public again. Array keys are object IDs (if there is a primary key on the model. if not, numerically indexed)
-	 * Some full examples:
+	 * @return EE_Base_Class[]
+	 *		note that there is NO option to pass the output type. If you want results different from EE_Base_Class[],
+	 * 		use _get_all_wpdb_results()and make it public again. Array keys are object IDs (if there is a primary key on the model.
+	 * 		If not, numerically indexed)
+	 * 		Some full examples:
 	 *
 	 * 		get 10 transactions which have Scottish attendees:
 	 *
@@ -1292,7 +1339,7 @@ abstract class EEM_Base extends EE_Base{
 				if( $this->has_primary_key_field() ){
 					$main_table_pk_value = $wpdb_result[ $this->get_primary_key_field()->get_qualified_column() ];
 				}else{
-					//if there's no primary key, we basically can't support having a 2nd table on the model (we could but it woudl be lots of work)
+					//if there's no primary key, we basically can't support having a 2nd table on the model (we could but it would be lots of work)
 					$main_table_pk_value = null;
 				}
 				//if there are more than 1 tables, we'll want to verify that each table for this model has an entry in the other tables
