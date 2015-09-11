@@ -28,9 +28,19 @@ class EEM_State extends EEM_Base {
 
   	// private instance of the Attendee object
 	protected static $_instance = NULL;
-  	// array of all states
+
+	/**
+	 * array of all states
+	 * @access private
+	 * @var EE_State[] $_all_states
+	 */
 	private static $_all_states = FALSE;
-  	// array of all active states
+
+	/**
+	 * array of all active states
+	 * @access private
+	 * @var EE_State[] $_active_states
+	 */
 	private static $_active_states = FALSE;
 
 	protected function __construct( $timezone = NULL ) {
@@ -59,7 +69,7 @@ class EEM_State extends EEM_Base {
 		);
 		//this model is generally available for reading
 		$this->_cap_restriction_generators[ EEM_Base::caps_read ] = new EE_Restriction_Generator_Public();
-		//@todo: only show STA_active 
+		//@todo: only show STA_active
 		parent::__construct( $timezone );
 	}
 
@@ -132,7 +142,8 @@ class EEM_State extends EEM_Base {
 
 
 	/**
-	 * 	get_all_states_of_active_countries
+	 *    get_all_states_of_active_countries
+	 * @param array $countries
 	 * @return array
 	 */
 	public function get_all_active_states_for_these_countries( $countries ){
@@ -149,6 +160,7 @@ class EEM_State extends EEM_Base {
 
 	/**
 	 * 	get_all_states_of_active_countries
+	 * @param array $countries
 	 * @return array
 	 */
 	public function get_all_states_for_these_countries( $countries ){
@@ -195,8 +207,7 @@ class EEM_State extends EEM_Base {
 	 * @return string
 	 */
 	public function get_state_name_by_ID( $state_ID ){
-		if( isset( self::$_all_states[ $state_ID ] ) &&
-				self::$_all_states[ $state_ID ] instanceof EE_State ){
+		if( isset( self::$_all_states[ $state_ID ] ) && self::$_all_states[ $state_ID ] instanceof EE_State ){
 			return self::$_all_states[ $state_ID ]->name();
 		}
 		$names = $this->get_col( array( array( 'STA_ID' => $state_ID ), 'limit' => 1), 'STA_name' );
