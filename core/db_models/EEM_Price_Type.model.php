@@ -36,7 +36,7 @@ class EEM_Price_Type extends EEM_Soft_Delete_Base {
 	*	Price Base types
 	*
 	*	@access	private
-	*	@var int
+	*	@var array
 	*/
 	public $base_types = null;
 
@@ -51,8 +51,8 @@ class EEM_Price_Type extends EEM_Soft_Delete_Base {
 
 	/**
 	 * Gets the name of the base
-	 * @param type $base_type_int
-	 * @return type
+	 * @param int $base_type_int
+	 * @return string
 	 */
 	public function get_base_type_name($base_type_int){
 		return $this->base_types[$base_type_int];
@@ -60,7 +60,7 @@ class EEM_Price_Type extends EEM_Soft_Delete_Base {
 
 	/**
 	 * constants for price base types. In the DB, we decided to store the price base type
-	 * as an integer. So, to avoid just having magic numbers everwhere (eg, querying for
+	 * as an integer. So, to avoid just having magic numbers everywhere (eg, querying for
 	 * all price types with PBT_ID = 2), we define these constants, to make code more understandable.
 	 * So, as an example, to query for all price types that are a tax, we'd do
 	 * EEM_PRice_Type::instance()->get_all(array(array('PBT_ID'=>EEM_Price_Type::base_type_tax)))
@@ -73,11 +73,15 @@ class EEM_Price_Type extends EEM_Soft_Delete_Base {
 	const base_type_discount = 2;
 	const base_type_surcharge = 3;
 	const base_type_tax = 4;
+
+
+
 	/**
-	 * 		private constructor to prevent direct creation
-	 * 		@Constructor
-	 * 		@access protected
-	 * 		@return void
+	 * 	private constructor to prevent direct creation
+	 *
+	 * @Constructor
+	 * @access protected
+	 * @param null $timezone
 	 */
 	protected function __construct( $timezone = NULL ) {
 		$this->base_types = array(
@@ -146,7 +150,7 @@ class EEM_Price_Type extends EEM_Soft_Delete_Base {
 
 /**
  *
- * @param type $query_params
+ * @param array $query_params
  * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
 	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
 	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
