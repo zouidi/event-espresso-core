@@ -169,6 +169,7 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 	/**
 	 * Gets an array for converting between QST_system and QST_IDs for system questions. Eg, if you want to know
 	 * which system question QST_ID corresponds to the QST_system 'city', use EEM_Question::instance()->get_Question_ID_from_system_string('city');
+	 * @param string $QST_system
 	 * @return int of QST_ID for the question that corresponds to that QST_system
 	 */
 	public function get_Question_ID_from_system_string($QST_system){
