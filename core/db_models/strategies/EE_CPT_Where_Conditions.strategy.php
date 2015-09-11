@@ -39,12 +39,12 @@ class EE_CPT_Where_Conditions extends EE_Default_Where_Conditions{
 	 */
 	protected function _get_field_on_column($column){
 		$all_fields = $this->_model->field_settings(true);
-		foreach($all_fields as $field_name => $field_obj){
+		foreach($all_fields as $field_obj){
 			if($column == $field_obj->get_table_column()){
 				return $field_obj;
 			}
 		}
-		// todo: throw exception if column not found ?  or  return null ?
+                throw new EE_Error( sprintf( __( 'Model EE_CPT_Where_Conditions misconfigured. Looking for a field with column %1$s on model %2$s but none found.', 'event_espresso'), $column, $this->_model->get_this_model_name() ));
 	}
 
 
