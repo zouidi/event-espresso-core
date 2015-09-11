@@ -832,7 +832,52 @@ if( ! function_exists( 'wp_get_split_term' ) ){
 		}
 
 		return $term_id;
-}
+        }
+        
+        /**
+         * verifies that when we import message types from site A to B, that they become non-global.
+         */
+        function test_save_data_rows_to_db__make_global_message_types_from_other_sites_non_global() {
+            //create some data but don't save it
+            $mtg_in_other_site_id = 25;
+            $mtg_in_other_site = $this->new_model_obj_with_dependencies( 'Message_Template_Group', array( 'MTP_is_global' => true ), false );
+		
+            $csv_data = array(
+                    'Message_Template_Group' => array(
+                            array_merge( $mtg_in_other_site->model_field_array(), array( 'GRP_ID' => $mtg_in_other_site_id ) ),
+                    ),	
+            );
+		
+            $this->assertTrue( $mtg_in_other_site->get( 'MTP_is_global' ) );
+            $mapping_data = EE_Import::instance()->save_data_rows_to_db( $csv_data, true, array() );
+
+            $new_mtg_id = $mapping_data[ 'Message_Template_Group' ][ $mtg_in_other_site_id ];
+            $new_mtg_this_site = EEM_Message_Template_Group::instance()->get_one_by_ID( $new_mtg_id );
+            $this->assertFalse( $new_mtg_this_site->get( 'MTP_is_global' ) );
+        }
+        
+        /**
+         * verifies that when we import message types from site A to A (the same site) that
+         * they keep the same MTP_is_global value
+         */
+        function test_save_data_rows_to_db__make_global_message_types_from_same_site_stay_global() {
+             //create some data but don't save it
+            $mtg_in_other_site = $this->new_model_obj_with_dependencies( 'Message_Template_Group', array( 'MTP_is_global' => true ) );
+		
+            $csv_data = array(
+                    'Message_Template_Group' => array(
+                             $mtg_in_other_site->model_field_array(),
+                    ),	
+            );
+		
+            $this->assertTrue( $mtg_in_other_site->get( 'MTP_is_global' ) );
+            $mapping_data = EE_Import::instance()->save_data_rows_to_db( $csv_data, true, array() );
+
+            $new_mtg_id = $mapping_data[ 'Message_Template_Group' ][ 25 ];
+            $new_mtg_this_site = EEM_Message_Template_Group::instance()->get_one_by_ID( $new_mtg_id );
+            $this->assertTrue( $new_mtg_this_site->get( 'MTP_is_global' ) );
+            $this->assertTrue( 'monkesy' );
+        }
 }
 
 // End of file EE_Import_Test.php

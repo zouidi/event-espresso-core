@@ -453,7 +453,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 
 				$model_object_data = $this->_replace_temp_ids_with_mappings( $model_object_data, $model, $old_db_to_new_db_mapping, $export_from_site_a_to_b );
-                                $model_object_data = $this->_prepare_data_for_use_in_db( $model_object_data, $model );
+                                $model_object_data = $this->_prepare_data_for_use_in_db( $model_object_data, $model, $export_from_site_a_to_b );
 //now we need to decide if we're going to add a new model object given the $model_object_data,
 				//or just update.
 				if($export_from_site_a_to_b){
@@ -633,20 +633,21 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
          * Does a little extra processing on the data to maintain data consistency
          * @param array $original_data_row
          * @param EEM_Base $model
-         * @param string $origin_site_name
+         * @param boolean $export_from_site_a_to_b
          */
-        protected function _prepare_data_for_use_in_db( $original_data_row, $model ) {
+        protected function _prepare_data_for_use_in_db( $original_data_row, $model, $export_from_site_a_to_b ) {
             $altered_data_row = $original_data_row;
             switch( $model->get_this_model_name() ) {
                 case 'Message_Template_Group':
                     if( isset( $original_data_row[ 'MTP_is_global' ] ) && 
                             intval( $original_data_row[ 'MTP_is_global' ] ) == 1 && 
-                            apply_filters( 'FHEE__EE_Import___prepare_data_for_use_in_db__tweak_global_message_template_groups', true ) ) {
+                            apply_filters( 'FHEE__EE_Import___prepare_data_for_use_in_db__tweak_global_message_template_groups', true, $original_data_row, $model, $export_from_site_a_to_b ) &&
+                            ! $export_from_site_a_to_b ) {
                         $altered_data_row[ 'MTP_is_global' ] = 0;
                         $message_type = isset( $altered_data_row[ 'MTP_message_type' ] ) ? $altered_data_row[ 'MTP_message_type' ] : __( 'Unknown', 'event_espresso' );
                         $altered_data_row[ 'MTP_name' ] = sprintf( __( 'Global %1$s message template from %2$s', 'event_espresso'), $message_type, $this->_csv_import_metadata_row[ 'site_url' ] );
                         global $current_user;
-                        $altered_data_row[ 'MTP_description' ] .= sprintf( __( 'Imported at %1$s by user %2$s', 'event_espresso' ), current_time( 'mysql' ), $current_user->user_nicename );
+                        $altered_data_row[ 'MTP_description' ] = sprintf( __( 'Imported at %1$s by user %2$s', 'event_espresso' ), current_time( 'mysql' ), $current_user->user_nicename );
                     }
             }
             return apply_filters( 'FHEE__EE_Import___prepare_data_for_use_in_db__return', $altered_data_row, $original_data_row, $model, $this );
