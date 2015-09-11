@@ -68,7 +68,13 @@ class EE_Default_Where_Conditions{
 	 * @return array
 	 */
 	function get_minimum_where_conditions( $model_relation_chain = null ){
-		return $this->prepare_where_conditions_for_querying( array_merge( $this->_get_minimum_where_conditions(), $this->get_where_conditions_provided() ), $model_relation_chain );
+		return $this->prepare_where_conditions_for_querying(
+			array_replace_recursive(
+				$this->_get_minimum_where_conditions(),
+				$this->get_where_conditions_provided()
+			),
+			$model_relation_chain
+		);
 	}
 
 	/**
@@ -104,7 +110,13 @@ class EE_Default_Where_Conditions{
 	 * @return array like what's expected in EEM_Base::get_all()'s $query_params[0]
 	 */
 	function get_default_where_conditions( $model_relation_chain = '' ){
-		return $this->prepare_where_conditions_for_querying( array_merge( $this->_get_default_where_conditions(), $this->get_where_conditions_provided() ), $model_relation_chain );
+		return $this->prepare_where_conditions_for_querying(
+			array_replace_recursive(
+				$this->_get_default_where_conditions(),
+				$this->get_where_conditions_provided()
+			),
+			$model_relation_chain
+		);
 	}
 	/**
 	 * Gets the default where conditions that are specific to this child of EE_Default_Where_Conditions.
