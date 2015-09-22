@@ -258,11 +258,11 @@ final class EE_Front_Controller {
 		$page_for_posts = EE_Config::get_page_for_posts();
 		// in case $current_post is hierarchical like: /parent-page/current-page
 		$current_post = basename( $current_post );
-		// are we on a category page?
-		$term_exists = is_array( term_exists( $current_post, 'category' )) || array_key_exists( 'category_name', $WP->query_vars );
 		// make sure shortcodes are set
 		if ( isset( EE_Registry::instance()->CFG->core->post_shortcodes )) {
 			// d( EE_Registry::instance()->CFG->core->post_shortcodes );
+			// are we on a category page?
+			$term_exists = $this->espresso_term_exists( $WP, $current_post );
 			// cycle thru all posts with shortcodes set
 			foreach ( EE_Registry::instance()->CFG->core->post_shortcodes as $post_name => $post_shortcodes ) {
 				// filter shortcodes so
@@ -309,6 +309,25 @@ final class EE_Front_Controller {
 			}
 		}
 		do_action( 'AHEE__EE_Front_Controller__initialize_shortcodes__end', $this );
+	}
+
+
+
+	/**
+	 *    pre_get_posts - basically a module factory for instantiating modules and selecting the final view template
+	 *
+	 * @access    public
+	 * @param    WP  $WP
+	 * @param string $current_post
+	 * @return bool
+	 */
+	public function espresso_term_exists( WP $WP, $current_post ) {
+		if ( is_array( term_exists( $current_post, 'category' ) ) ) {
+			return true;
+		} else if ( EE_Registry::instance()->REQ->is_espresso_term( $WP ) ) {
+			return true;
+		}
+		return false;
 	}
 
 
@@ -537,15 +556,15 @@ final class EE_Front_Controller {
 		static $shown_already = FALSE;
 		do_action( 'AHEE__EE_Front_Controller__display_errors__begin' );
 		if (
-			apply_filters( 'FHEE__EE_Front_Controller__display_errors', TRUE )
+			apply_filters( 'FHEE__EE_Front_Controller__display_errors', true )
 			&& ! $shown_already
 			&& is_main_query()
 			&& ! is_feed()
 			&& in_the_loop()
 			&& EE_Registry::instance()->REQ->is_espresso_page()
 		) {
+			$shown_already = true;
 			echo EE_Error::get_notices();
-			$shown_already = TRUE;
 			EE_Registry::instance()->load_helper( 'Template' );
 			EEH_Template::display_template( EE_TEMPLATES . 'espresso-ajax-notices.template.php' );
 		}
