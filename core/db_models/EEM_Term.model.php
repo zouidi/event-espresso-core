@@ -17,8 +17,11 @@ class EEM_Term extends EEM_Base {
 	protected static $_instance = NULL;
 
 
+
 	/**
 	 *__construct
+	 * @param null $timezone
+	 * @throws \EE_Error
 	 */
 	protected function __construct( $timezone = NULL ) {
 		$this->singular_item = __('Term','event_espresso');
@@ -76,27 +79,25 @@ class EEM_Term extends EEM_Base {
 
 
 
-
 	/**
 	 * retrieves a list of all EE event categories
 	 *
 	 * @access public
+	 * @param bool $show_uncategorized
+	 * @return \EE_Base_Class[]
 	 */
-	public function get_all_ee_categories( $show_uncategorized = FALSE ) {
-
+	public function get_all_ee_categories( $show_uncategorized = false ) {
 		$where_params = array(
 			'Term_Taxonomy.taxonomy' => 'espresso_event_categories',
-			'NOT' => array( 'name' => __( 'Uncategorized', 'event_espresso' ))
+			'NOT' => array( 'name' => __( 'Uncategorized', 'event_espresso' ) )
 		);
-
 		if ( $show_uncategorized ) {
-			unset( $where_params['NOT'] );
+			unset( $where_params[ 'NOT' ] );
 		}
-
-	 	return EEM_Term::instance()->get_all( array(
+		return EEM_Term::instance()->get_all( array(
 			$where_params,
 			'order_by' => array( 'name' => 'ASC' )
-		));
+		) );
 	}
 
 
@@ -112,16 +113,13 @@ class EEM_Term extends EEM_Base {
 		switch( $post_type ) {
 			case 'espresso_events' :
 				return $this->get_all_event_post_tags();
-				break;
 			case 'espresso_venues' :
 				return $this->get_all_venue_post_tags();
-				break;
 			default :
 				$event_tags = $this->get_all_event_post_tags();
 				$venue_tags = $this->get_all_venue_post_tags();
 				return array_merge( $event_tags, $venue_tags );
 		}
-		return array();
 	}
 
 
