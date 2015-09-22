@@ -225,14 +225,6 @@ final class EE_Request_Handler {
 		global $wp;
 		/** @type EE_CPT_Strategy $EE_CPT_Strategy */
 		$EE_CPT_Strategy = EE_Registry::instance()->load_core( 'CPT_Strategy' );
-		$espresso_CPT_taxonomies = $EE_CPT_Strategy->get_CPT_taxonomies();
-		if ( is_array( $espresso_CPT_taxonomies ) ) {
-			foreach ( $espresso_CPT_taxonomies as $espresso_CPT_taxonomy =>$details ) {
-				if ( isset( $wp->query_vars, $wp->query_vars[ $espresso_CPT_taxonomy ] ) ) {
-					return true;
-				}
-			}
-		}
 		// load espresso CPT endpoints
 		$espresso_CPT_endpoints = $EE_CPT_Strategy->get_CPT_endpoints();
 		$post_type_CPT_endpoints = array_flip( $espresso_CPT_endpoints );
@@ -260,6 +252,38 @@ final class EE_Request_Handler {
 			// was a post name passed ?
 			if (  isset( $espresso_pages[ $this->get( 'post_name' ) ] )) {
 				 return true;
+			}
+		}
+		$espresso_CPT_taxonomies = $EE_CPT_Strategy->get_CPT_taxonomies();
+		if ( is_array( $espresso_CPT_taxonomies ) ) {
+			foreach ( $espresso_CPT_taxonomies as $espresso_CPT_taxonomy => $details ) {
+				if (
+					isset( $wp->query_vars, $wp->query_vars[ $espresso_CPT_taxonomy ] )
+					|| $this->is_espresso_term( $wp )
+				) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+
+
+	/**
+	 *    is_espresso_page
+	 *
+	 * @access    public
+	 * @param \WP $WP
+	 * @return bool
+	 */
+	public function is_espresso_term( WP $WP ) {
+		if ( isset( $WP->query_vars[ 'category_name' ] ) ) {
+			$ee_categories = EEM_Term::instance()->get_all_ee_categories();
+			foreach ( $ee_categories as $ee_category ) {
+				if ( $ee_category instanceof EE_Term && $ee_category->slug() == $WP->query_vars[ 'category_name' ] ) {
+					return true;
+				}
 			}
 		}
 		return false;
