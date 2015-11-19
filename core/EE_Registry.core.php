@@ -816,6 +816,7 @@ class EE_Registry {
 	/**
 	 * Gets the addon by its name/slug (not classname. For that, just
 	 * use the classname as the property name on EE_Config::instance()->addons)
+	 *
 	 * @param string $name
 	 * @return EE_Addon
 	 */
@@ -831,7 +832,12 @@ class EE_Registry {
 
 
 	/**
-	 * Gets an array of all the registered addons, where the keys are their names. (ie, what each returns for their name() function) They're already available on EE_Config::instance()->addons as properties, where each property's name is the addon's classname. So if you just want to get the addon by classname, use EE_Config::instance()->addons->{classname}
+	 * Gets an array of all the registered addons, where the keys are their names.
+	 * (ie, what each returns for their name() function)
+	 * They're already available on EE_Config::instance()->addons as properties,
+	 * where each property's name is the addon's classname.
+	 * So if you just want to get the addon by classname,
+	 * use EE_Config::instance()->addons->{classname}
 	 *
 	 * @return EE_Addon[] where the KEYS are the addon's name()
 	 */
@@ -846,20 +852,23 @@ class EE_Registry {
 
 
 	/**
-	 * Resets that specified model's instance AND makes sure EE_Registry doesn't keep
+	 * Resets the specified model's instance AND makes sure EE_Registry doesn't keep
 	 * a stale copy of it around
+	 *
 	 * @param string $model_name
-	 * @return \EEM_Base
-	 * @throws \EE_Error
+	 * @return EEM_Base
+	 * @throws EE_Error
 	 */
 	public function reset_model( $model_name ) {
 		$model = $this->load_model( $model_name );
 		$model_class_name = get_class( $model );
 		//get that model reset it and make sure we nuke the old reference to it
-		if ( is_callable( array( $model_class_name, 'reset' ) ) ) {
+		if ( $model instanceof $model_class_name && is_callable( array( $model_class_name, 'reset' ) ) ) {
 			$this->LIB->$model_class_name = $model::reset();
 		} else {
-			throw new EE_Error( sprintf( __( 'Model %s does not have a method "reset"', 'event_espresso' ), $model_name ) );
+			throw new EE_Error(
+				sprintf( __( 'Model %s does not have a method "reset"', 'event_espresso' ), $model_name )
+			);
 		}
 		return $this->LIB->$model_class_name;
 	}
@@ -867,14 +876,15 @@ class EE_Registry {
 
 
 	/**
-	 * Resets the registry and everything in it (eventually, getting it to properly
-	 * reset absolutely everything will probably be tricky. right now it just resets
-	 * the config, data migration manager, and the models)
-	 * @param boolean $hard whether to reset data in the database too, or just refresh
-	 * the Registry to its state at the beginning of the request
+	 * Resets the registry and everything in it
+	 * (eventually, getting it to properly reset absolutely everything will probably be tricky.
+	 * right now it just resets the config, data migration manager, and the models)
+	 *
+	 * @param boolean $hard          whether to reset data in the database too, or just refresh
+	 *                               the Registry to its state at the beginning of the request
 	 * @param boolean $reinstantiate whether to create new instances of EE_Registry's singletons too,
-	 * or just reset without re-instantiating (handy to set to FALSE if you're not sure if you CAN
-	 * currently reinstantiate the singletons at the moment)
+	 *                               or just reset without re-instantiating (handy to set to FALSE if you're not sure if you CAN
+	 *                               currently reinstantiate the singletons at the moment)
 	 * @return EE_Registry
 	 */
 	public static function reset( $hard = false, $reinstantiate = true ) {
@@ -888,6 +898,23 @@ class EE_Registry {
 			$instance->reset_model( $model_name );
 		}
 		return $instance;
+	}
+
+
+
+	/**
+	 * Gets all the custom post type models defined
+	 *
+	 * @return array keys are model "short names" (Eg "Event") and keys are classnames (eg "EEM_Event")
+	 */
+	public function cpt_models() {
+		$cpt_models = array();
+		foreach ( $this->non_abstract_db_models as $short_name => $classname ) {
+			if ( is_subclass_of( $classname, 'EEM_CPT_Base' ) ) {
+				$cpt_models[ $short_name ] = $classname;
+			}
+		}
+		return $cpt_models;
 	}
 
 
@@ -972,100 +999,6 @@ class EE_Registry {
 	 * @param $b
 	 */
 	final static function __callStatic($a,$b) {}
-
-	/**
-	 * Gets the addon by its name/slug (not classname. For that, just
-	 * use the classname as the property name on EE_Config::instance()->addons)
-	 * @param string $name
-	 * @return EE_Addon
-	 */
-	public function get_addon_by_name( $name ){
-		foreach($this->addons as $addon){
-			if( $addon->name() == $name){
-				return $addon;
-			}
-		}
-		return NULL;
-	}
-	/**
-	 * Gets an array of all the registered addons, where the keys are their names. (ie, what each returns for their name() function) They're already available on EE_Config::instance()->addons as properties, where each property's name is the addon's classname. So if you just want to get the addon by classname, use EE_Config::instance()->addons->{classname}
-	 *
-	 * @return EE_Addon[] where the KEYS are the addon's name()
-	 */
-	public function get_addons_by_name(){
-		$addons = array();
-		foreach($this->addons as $addon){
-			$addons[ $addon->name() ] = $addon;
-		}
-		return $addons;
-	}
-
-
-
-	/**
-	 * Resets the specified model's instance AND makes sure EE_Registry doesn't keep
-	 * a stale copy of it around
-	 *
-	 * @param string $model_name
-	 * @return EEM_Base
-	 * @throws EE_Error
-	 */
-	public function reset_model( $model_name ){
-		$model = $this->load_model( $model_name );
-		$model_class_name = get_class( $model );
-		//get that model reset it and make sure we nuke the old reference to it
-		if ( $model instanceof $model_class_name && is_callable( array( $model_class_name, 'reset' ))) {
-			$this->LIB->$model_class_name = $model::reset();
-		}else{
-			throw new EE_Error( sprintf( __( 'Model %s does not have a method "reset"', 'event_espresso' ), $model_name ) );
-		}
-		return $this->LIB->$model_class_name;
-	}
-
-
-
-	final function __invoke() {
-	}
-
-
-
-	final function __set_state() {
-	}
-
-
-
-	final function __clone() {
-	}
-
-
-
-	/**
-	 * Resets the registry and everything in it (eventually, getting it to properly
-	 * reset absolutely everything will probably be tricky. right now it just resets
-	 * the config, data migration manager, and the models)
-	 * @param boolean $hard whether to reset data in the database too, or just refresh
-	 * the Registry to its state at the beginning of the request
-	 * @param boolean $reinstantiate whether to create new instances of EE_Registry's singletons too,
-	 * or just reset without re-instantiating (handy to set to FALSE if you're not sure if you CAN
-	 * currently reinstantiate the singletons at the moment)
-	 * @return EE_Registry
-	 */
-	final static function __callStatic( $a, $b ) {
-	}
-
-	/**
-	 * Gets all the custom post type models defined
-	 * @return array keys are model "short names" (Eg "Event") and keys are classnames (eg "EEM_Event")
-	 */
-	public function cpt_models() {
-		$cpt_models = array();
-		foreach( $this->non_abstract_db_models as $shortname => $classname ) {
-			if( is_subclass_of(  $classname, 'EEM_CPT_Base' ) ) {
-				$cpt_models[ $shortname ] = $classname;
-			}
-		}
-		return $cpt_models;
-	}
 
 
 
