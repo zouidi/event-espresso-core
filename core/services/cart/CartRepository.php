@@ -2,7 +2,7 @@
 
 namespace EventEspresso\Core\Services\Cart;
 
-use EventEspresso\Core\Libraries\Repositories;
+use EventEspresso\Core\Libraries\Repositories\EE_Object_Repository;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
 /**
@@ -17,7 +17,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowe
  * @since 				$VID:$
  *
  */
-class CartRepository extends Repositories\ObjectRepository {
+class CartRepository extends EE_Object_Repository {
 
 	/**
 	 * @type \EE_Session $_session
