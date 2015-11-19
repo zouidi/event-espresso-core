@@ -50,6 +50,8 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 	// constant used to indicate that the question type is TEXTAREA
 	const QST_type_textarea = 'TEXTAREA';
 
+	// constant used to indicate that the question type is a TEXTAREA that allows simple html
+	const QST_type_html_textarea = 'HTML_TEXTAREA';
 	/**
 	 * Question types that are interchangeable, even after answers have been provided for them.
 	 * Top-level keys are category slugs, next level is an array of question types. If question types
@@ -57,7 +59,6 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 	 * @var array
 	 */
 	protected $_question_type_categories = null;
-
 	/**
 	 * lists all the question types which should be allowed. Ideally, this will be extensible.
 	 * @access private
@@ -81,7 +82,8 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 				EEM_Question::QST_type_dropdown =>__('Dropdown','event_espresso'),
 				EEM_Question::QST_type_state =>__('State/Province Dropdown','event_espresso'),
 				EEM_Question::QST_type_country =>__('Country Dropdown','event_espresso'),
-				EEM_Question::QST_type_date =>__('Date Picker','event_espresso')
+				EEM_Question::QST_type_date =>__('Date Picker','event_espresso'),
+				EEM_Question::QST_type_html_textarea => __( 'HTML Textarea', 'event_espresso' ),
 			)
 		);
 		$this->_question_type_categories = apply_filters(
@@ -89,7 +91,8 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 				array(
 				'text' => array(
 						self::QST_type_text,
-						self::QST_type_textarea
+						self::QST_type_textarea,
+						self::QST_type_html_textarea,
 					),
 				'single-answer-enum' => array(
 					self::QST_type_radio,
@@ -157,30 +160,71 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 		return array_intersect_key( $this->allowed_question_types(), array_flip( $question_types ) );
 	}
 
+        /**
+         * Returns an array of all the QST_system values that can be allowed in the system question group
+         * identified by $system_question_group_id
+         * @param string $system_question_group_id QSG_system
+         * @return array of system question names (QST_system)
+         */
+        public function allowed_system_questions_in_system_question_group( $system_question_group_id ) {
+            $question_system_ids = array();
+            switch( $system_question_group_id ) {
+                case EEM_Question_Group::system_personal:
+                    $question_system_ids = array(
+                        EEM_Attendee::system_question_fname,
+                        EEM_Attendee::system_question_lname,
+                        EEM_Attendee::system_question_email,
+                        EEM_Attendee::system_question_phone
+                    );
+                    break;
+                case EEM_Question_Group::system_address:
+                    $question_system_ids = array(
+						EEM_Attendee::system_question_address,
+                        EEM_Attendee::system_question_address2,
+                        EEM_Attendee::system_question_city,
+                        EEM_Attendee::system_question_state,
+                        EEM_Attendee::system_question_country,
+                        EEM_Attendee::system_question_zip,
+                        EEM_Attendee::system_question_phone
+                    );
+                    break;
+            }
+            return apply_filters( 'FHEE__EEM_Question__system_questions_allowed_in_system_question_group__return', $question_system_ids, $system_question_group_id );
+        }
+
+        /**
+         * Returns an array of all the QST_system values that are required in the system question group
+         * identified by $system_question_group_id
+         * @param string $system_question_group_id QSG_system
+         * @return array of system question names (QST_system)
+         */
+        public function required_system_questions_in_system_question_group( $system_question_group_id ) {
+            $question_system_ids = null;
+            switch( $system_question_group_id ) {
+                case EEM_Question_Group::system_personal:
+                    $question_system_ids =  array(
+						EEM_Attendee::system_question_fname,
+						EEM_Attendee::system_question_email,
+					);
+                    break;
+                default:
+                    $question_system_ids = array();
+            }
+            return apply_filters( 'FHEE__EEM_Question__system_questions_required_in_system_question_group', $question_system_ids, $system_question_group_id );
+        }
+
 
 
 	/**
 	 * Gets an array for converting between QST_system and QST_IDs for system questions. Eg, if you want to know
 	 * which system question QST_ID corresponds to the QST_system 'city', use EEM_Question::instance()->get_Question_ID_from_system_string('city');
+	 * @param $QST_system
 	 * @return int of QST_ID for the question that corresponds to that QST_system
 	 */
-	public function get_Question_ID_from_system_string($QST_system){
-		 $conversion_array = array(
-			'fname'=> EEM_Attendee::fname_question_id,
-			'lname'=> EEM_Attendee::lname_question_id,
-			'email'=> EEM_Attendee::email_question_id,
-			'address'=> EEM_Attendee::address_question_id,
-			'address2'=> EEM_Attendee::address2_question_id,
-			'city'=> EEM_Attendee::city_question_id,
-			'state'=> EEM_Attendee::state_question_id,
-			'country'=> EEM_Attendee::country_question_id,
-			'zip'=> EEM_Attendee::zip_question_id,
-			'phone'=> EEM_Attendee::phone_question_id
-		);
-
-		return isset( $conversion_array[ $QST_system ] ) ? $conversion_array[ $QST_system ] : NULL;
-
+	public function get_Question_ID_from_system_string( $QST_system ){
+		 return $this->get_var( array( array( 'QST_system' => $QST_system ) ) );
 	}
+
 
 
 	/**
@@ -191,8 +235,8 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 	public function get_latest_question_order() {
 		$columns_to_select = array(
 			'max_order' => array("MAX(QST_order)","%d")
-			);
-		$max = $this->_get_all_wpdb_results(array(), ARRAY_A, $columns_to_select );
+		);
+		$max = $this->_get_all_wpdb_results( array(), ARRAY_A, $columns_to_select );
 		return $max[0]['max_order'];
 	}
 

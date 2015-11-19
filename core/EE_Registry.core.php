@@ -2,25 +2,9 @@
 	exit( 'No direct script access allowed' );
 }
 /**
- *
- * Event Espresso
- *
- * Event Registration and Ticketing Management Plugin for WordPress
- *
- * @package            Event Espresso
- * @author            Event Espresso
- * @copyright        (c) 2008-2011 Event Espresso  All Rights Reserved.
- * @license            http://eventespresso.com/support/terms-conditions/   * see Plugin Licensing *
- * @link                    http://www.eventespresso.com
- * @version            $VID:$
- *
- * ------------------------------------------------------------------------
- */
-
-
-
+<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
 /**
- * EE_Registry Class
+* EE_Registry Class
  *
  * Centralized Application Data Storage and Management
  *
@@ -132,7 +116,9 @@ class EE_Registry {
 	 * $non_abstract_db_models
 	 * @access public
 	 * @var array this is an array of all implemented model names (i.e. not the parent abstract models, or models
-	 * which don't actually fetch items from the DB in the normal way (ie, are not children of EEM_Base))
+	 * which don't actually fetch items from the DB in the normal way (ie, are not children of EEM_Base)).
+	 * Keys are model "shortnames" (eg "Event") as used in model relations, and values are
+	 * classnames (eg "EEM_Event")
 	 */
 	public $non_abstract_db_models = array();
 
@@ -210,6 +196,24 @@ class EE_Registry {
 		// Output admin-ajax.php URL with same protocol as current page
 		self::$i18n_js_strings[ 'ajax_url' ] = admin_url( 'admin-ajax.php', $protocol );
 		self::$i18n_js_strings[ 'wp_debug' ] = defined( 'WP_DEBUG' ) ? WP_DEBUG : false;
+	}
+
+
+
+	/**
+	 * localize_i18n_js_strings
+	 *
+	 * @return string
+	 */
+	public static function localize_i18n_js_strings() {
+		$i18n_js_strings = (array)EE_Registry::$i18n_js_strings;
+		foreach ( $i18n_js_strings as $key => $value ) {
+			if ( is_scalar( $value ) ) {
+				$i18n_js_strings[ $key ] = html_entity_decode( (string)$value, ENT_QUOTES, 'UTF-8' );
+			}
+		}
+
+		return "/* <![CDATA[ */ var eei18n = " . wp_json_encode( $i18n_js_strings ) . '; /* ]]> */';
 	}
 
 
@@ -956,8 +960,66 @@ class EE_Registry {
 	/**
 	 * @return string
 	 */
-	final function __toString() {
-		return '';
+	final function __toString() { return ''; }
+	final function __invoke() {}
+	final function __set_state() {}
+	final function __clone() {}
+
+
+
+	/**
+	 * @param $a
+	 * @param $b
+	 */
+	final static function __callStatic($a,$b) {}
+
+	/**
+	 * Gets the addon by its name/slug (not classname. For that, just
+	 * use the classname as the property name on EE_Config::instance()->addons)
+	 * @param string $name
+	 * @return EE_Addon
+	 */
+	public function get_addon_by_name( $name ){
+		foreach($this->addons as $addon){
+			if( $addon->name() == $name){
+				return $addon;
+			}
+		}
+		return NULL;
+	}
+	/**
+	 * Gets an array of all the registered addons, where the keys are their names. (ie, what each returns for their name() function) They're already available on EE_Config::instance()->addons as properties, where each property's name is the addon's classname. So if you just want to get the addon by classname, use EE_Config::instance()->addons->{classname}
+	 *
+	 * @return EE_Addon[] where the KEYS are the addon's name()
+	 */
+	public function get_addons_by_name(){
+		$addons = array();
+		foreach($this->addons as $addon){
+			$addons[ $addon->name() ] = $addon;
+		}
+		return $addons;
+	}
+
+
+
+	/**
+	 * Resets the specified model's instance AND makes sure EE_Registry doesn't keep
+	 * a stale copy of it around
+	 *
+	 * @param string $model_name
+	 * @return EEM_Base
+	 * @throws EE_Error
+	 */
+	public function reset_model( $model_name ){
+		$model = $this->load_model( $model_name );
+		$model_class_name = get_class( $model );
+		//get that model reset it and make sure we nuke the old reference to it
+		if ( $model instanceof $model_class_name && is_callable( array( $model_class_name, 'reset' ))) {
+			$this->LIB->$model_class_name = $model::reset();
+		}else{
+			throw new EE_Error( sprintf( __( 'Model %s does not have a method "reset"', 'event_espresso' ), $model_name ) );
+		}
+		return $this->LIB->$model_class_name;
 	}
 
 
@@ -978,10 +1040,31 @@ class EE_Registry {
 
 
 	/**
-	 * @param $a
-	 * @param $b
+	 * Resets the registry and everything in it (eventually, getting it to properly
+	 * reset absolutely everything will probably be tricky. right now it just resets
+	 * the config, data migration manager, and the models)
+	 * @param boolean $hard whether to reset data in the database too, or just refresh
+	 * the Registry to its state at the beginning of the request
+	 * @param boolean $reinstantiate whether to create new instances of EE_Registry's singletons too,
+	 * or just reset without re-instantiating (handy to set to FALSE if you're not sure if you CAN
+	 * currently reinstantiate the singletons at the moment)
+	 * @return EE_Registry
 	 */
 	final static function __callStatic( $a, $b ) {
+	}
+
+	/**
+	 * Gets all the custom post type models defined
+	 * @return array keys are model "short names" (Eg "Event") and keys are classnames (eg "EEM_Event")
+	 */
+	public function cpt_models() {
+		$cpt_models = array();
+		foreach( $this->non_abstract_db_models as $shortname => $classname ) {
+			if( is_subclass_of(  $classname, 'EEM_CPT_Base' ) ) {
+				$cpt_models[ $shortname ] = $classname;
+			}
+		}
+		return $cpt_models;
 	}
 
 

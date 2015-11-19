@@ -96,9 +96,9 @@ class EE_Cart_Test extends EE_UnitTestCase{
 		$ticket->_add_relation_to( $ddt2, 'Datetime' );
 		$this->assertArrayContains( $ddt1, $ticket->datetimes() );
 		$this->assertArrayContains( $ddt2, $ticket->datetimes() );
-
-		EE_Cart::reset( null, $this->_session )->add_ticket_to_cart( $ticket, $quantity_purchased );
-
+		// reset cart
+		$cart = EE_Cart::reset( null, $this->_session );
+		$cart->add_ticket_to_cart( $ticket, $quantity_purchased );
 		$total_line_item = EE_Cart::instance( null, $this->_session )->get_grand_total();
 		$subtotals = $total_line_item->children();
 		$this->assertNotEmpty( $subtotals );
@@ -151,8 +151,8 @@ class EE_Cart_Test extends EE_UnitTestCase{
 		$cart = EE_Cart::get_cart_from_txn( $transaction, $this->_session );
 
 		$removals = $cart->delete_items( array( $latest_line_item->code() ) );
-
-		$this->assertEquals( 1, $removals );
+		//should remove the ticket line item and its sub-line-item for the price
+		$this->assertEquals( 2, $removals );
 		$this->assertEquals( $ticket_types - 1, $cart->all_ticket_quantity_count() );
 		$cart_items = $cart->get_tickets();
 		$this->assertArrayDoesNotContain( $latest_line_item, $cart_items );
@@ -188,7 +188,8 @@ class EE_Cart_Test extends EE_UnitTestCase{
 		$this->assertEquals( $this->_session->get_session_data( 'cart' ), $cart );
 	}
 
-}
 
+
+}
 // End of file EE_Cart_Test.php
 // Location: /tests/testcases/core/EE_Cart_Test.php
