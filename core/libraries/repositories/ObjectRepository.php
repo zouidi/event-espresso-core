@@ -1,4 +1,9 @@
-<?php if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
+<?php
+namespace EventEspresso\Core\Libraries\Repositories;
+
+use core\interfaces\EEI_Repository;
+
+if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
 /**
@@ -9,10 +14,10 @@
  * which extends SplObjectStorage, so therefore implements the
  * Countable, Iterator, Serializable, and ArrayAccess interfaces
  *
- * @package 			Event Espresso
+ * @package 	Event Espresso
  * @subpackage 	core
- * @author 				Brent Christensen
- * @since                4.6.31
+ * @author 		Brent Christensen
+ * @since 		4.6.31
  *
  */
 abstract class EE_Object_Repository extends EE_Object_Collection implements EEI_Repository {
