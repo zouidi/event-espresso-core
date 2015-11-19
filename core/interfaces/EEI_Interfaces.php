@@ -76,7 +76,6 @@ interface EEI_Request_Stack_Core_App {
 	 */
 	public function handle_response( EE_Request $request, EE_Response $response );
 }
->>>>>>> github/master:core/interfaces/EEI_Interfaces.php
 
 
 
