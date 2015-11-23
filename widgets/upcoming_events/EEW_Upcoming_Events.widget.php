@@ -57,7 +57,7 @@ class EEW_Upcoming_Events  extends WP_Widget {
 		$defaults = array(
 			'title' => __('Upcoming Events', 'event_espresso'),
 			'category_name' => '',
-			'show_expired' => FALSE,
+			'show_expired' => 0,
 			'show_desc' => TRUE,
 			'show_dates' => TRUE,
 			'show_everywhere' => FALSE,
@@ -129,7 +129,11 @@ class EEW_Upcoming_Events  extends WP_Widget {
 			echo EEH_Form_Fields::select(
 				 __('Show Expired Events:', 'event_espresso'),
 				$instance['show_expired'],
-				$yes_no_values,
+				array(
+					EE_Question_Option::new_instance( array( 'QSO_value' => 0, 'QSO_desc' => __('No', 'event_espresso'))),
+					EE_Question_Option::new_instance( array( 'QSO_value' => 1, 'QSO_desc' => __('Yes', 'event_espresso'))),
+					EE_Question_Option::new_instance( array( 'QSO_value' => 2, 'QSO_desc' => __('Show Only Expired', 'event_espresso'))),
+				),
 				$this->get_field_name('show_expired'),
 				$this->get_field_id('show_expired')
 			);
@@ -317,7 +321,7 @@ class EEW_Upcoming_Events  extends WP_Widget {
 				}
 				// grab widget settings
 				$category = isset( $instance['category_name'] ) && ! empty( $instance['category_name'] ) ? $instance['category_name'] : FALSE;
-				$show_expired = isset( $instance['show_expired'] ) ? (bool) absint( $instance['show_expired'] ) : FALSE;
+				$show_expired = isset( $instance['show_expired'] ) ? absint( $instance['show_expired'] ) : 0;
 				$image_size = isset( $instance['image_size'] ) && ! empty( $instance['image_size'] ) ? $instance['image_size'] : 'medium';
 				$show_desc = isset( $instance['show_desc'] ) ? (bool) absint( $instance['show_desc'] ) : TRUE;
 				$show_dates = isset( $instance['show_dates'] ) ? (bool) absint( $instance['show_dates'] ) : TRUE;
@@ -333,10 +337,16 @@ class EEW_Upcoming_Events  extends WP_Widget {
 					$where['Term_Taxonomy.taxonomy'] = 'espresso_event_categories';
 					$where['Term_Taxonomy.Term.slug'] = $category;
 				}
-				// if NOT expired then we want events that start today or in the future
-				if ( ! $show_expired ) {
-					$where['Datetime.DTT_EVT_end'] = array( '>=', EEM_Datetime::instance()->current_time_for_query( 'DTT_EVT_end' ) );
+				// if NOT show expired then we want events that start today or in the future
+				if ( $show_expired == 0 ) {
+				 	$where['Datetime.DTT_EVT_end'] = array( '>=', EEM_Datetime::instance()->current_time_for_query( 'DTT_EVT_end' ) );
 				}
+
+				// if show ONLY expired we want events that ended prior to today
+				if ( $show_expired == 2 ) {
+					$where['Datetime.DTT_EVT_end'] = array( '<=', EEM_Datetime::instance()->current_time_for_query( 'DTT_EVT_start' ) );
+				}
+
 				// run the query
 				$events = EE_Registry::instance()->load_model( 'Event' )->get_all( array(
 					$where,
