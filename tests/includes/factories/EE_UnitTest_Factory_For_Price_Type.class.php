@@ -43,6 +43,7 @@ class EE_UnitTest_Factory_For_Price_Type extends WP_UnitTest_Factory_For_Thing {
 	 * constructor
 	 *
 	 * @param EE_UnitTest_Factory $factory
+	 * @param bool                $chained
 	 */
 	public function __construct( $factory = null, $chained = false ) {
 		parent::__construct( $factory );
@@ -86,7 +87,7 @@ class EE_UnitTest_Factory_For_Price_Type extends WP_UnitTest_Factory_For_Thing {
 		if ( $this->_chained ) {
 			if ( empty( $this->_price ) ) {
 				$PRC_ID = isset( $args[ 'PRC_ID' ] ) ? $args[ 'PRC_ID' ] : 0;
-				$this->_set_new_price_type( $PRC_ID );
+				$this->_set_new_price( $PRC_ID );
 			}
 			//add relation to datetime
 			$price_type->_add_relation_to( $this->_price, 'Price' );
