@@ -5,7 +5,9 @@
 /**
  * EE Factory Class for Prices
  *
- * Note that prices do  have a chained option.  However, this only applies to a price type automatically created and attached to the price.  Details about this price type can be included with the (optional) arguments for create, and create many.
+ * Note that prices do  have a chained option.
+ * However, this only applies to a price type automatically created and attached to the price.
+ * Details about this price type can be included with the (optional) arguments for create, and create many.
  *
  * @since        4.3.0
  * @package        Event Espresso
@@ -49,9 +51,9 @@ class EE_UnitTest_Factory_For_Price extends WP_UnitTest_Factory_For_Thing {
 		$this->_chained = $chained;
 		//default args for creating prices
 		$this->default_generation_definitions = array(
-			'PRC_name'            => new WP_UnitTest_Generator_Sequence( 'Price %s' ),
-			'PRC_desc'            => new WP_UnitTest_Generator_Sequence( 'Price Description %s' ),
-			'PRC_amount'          => 0,
+			'PRC_name'      => new WP_UnitTest_Generator_Sequence( 'Price %s' ),
+			'PRC_desc'      => new WP_UnitTest_Generator_Sequence( 'Price Description %s' ),
+			'PRC_amount' 	=> 0,
 			/**
 			 * Options for price type are:
 			 * 'base': This will result in a base price type created for EEM_Price_type::base_type_base_price
@@ -62,7 +64,7 @@ class EE_UnitTest_Factory_For_Price extends WP_UnitTest_Factory_For_Thing {
 			'PRT_name'            => 'Base Price Type',
 			'PRC_type'            => 'base',
 			'PRC_type_is_percent' => false, //true if percent for price type, false if dollar
-			'TKT_end_date'        => strtotime( '+2 months' )
+			'TKT_end_date'        => strtotime( '+2 months', current_time( 'timestamp' ) )
 		);
 	}
 
