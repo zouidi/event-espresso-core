@@ -29,7 +29,10 @@ class EE_UnitTest_Factory_For_Ticket extends WP_UnitTest_Factory_For_Thing {
 	protected $_price;
 
 	/**
-	 * Used to indicate whether the generated objects are chained in the EE Model Heirarchy or not.  note currently multiple tickets can be attached to a single datetime, however at this time one cannot automatically generate multiple tickets to multiple datetimes via the chained process.
+	 * Used to indicate whether the generated objects are chained in the EE Model Hierarchy or not.
+	 * Note: currently multiple tickets can be attached to a single datetime,
+	 * however at this time one cannot automatically generate multiple tickets
+	 * to multiple datetimes via the chained process.
 	 *
 	 * @var bool
 	 */
@@ -49,7 +52,8 @@ class EE_UnitTest_Factory_For_Ticket extends WP_UnitTest_Factory_For_Thing {
 	 * constructor
 	 *
 	 * @param EE_UnitTest_Factory $factory
-	 * @param bool $chained This indicates that we are chaining this ticket to a datetime (instead of creating an isolated Ticket).
+	 * @param bool                $chained This indicates that we are chaining this ticket
+	 *                                     to a datetime (instead of creating an isolated Ticket).
 	 */
 	public function __construct( $factory = null, $chained = false ) {
 		parent::__construct( $factory );
