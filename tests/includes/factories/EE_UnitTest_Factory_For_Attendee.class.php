@@ -28,8 +28,10 @@ class EE_UnitTest_Factory_For_Attendee extends WP_UnitTest_Factory_For_Thing {
 	protected $_registration;
 
 	/**
-	 * For EE_Attendee objects, this simply indicates whether a registration will automatically be setup and attached to the attendee or not.
-	 * Note.  When create_many() method is called for the transaction factory, NEW registrations will be created for each attendee (instead of reusing any existing created ones).
+	 * For EE_Attendee objects, this simply indicates whether a registration
+	 * will automatically be setup and attached to the attendee or not.
+	 * Note.  When create_many() method is called for the transaction factory,
+	 * NEW registrations will be created for each attendee (instead of reusing any existing created ones).
 	 *
 	 * @var bool
 	 */
@@ -60,17 +62,23 @@ class EE_UnitTest_Factory_For_Attendee extends WP_UnitTest_Factory_For_Thing {
 
 
 	/**
-	 * This generates the dummy relation objects for use in a new attendee if the $_chained flag is set.  Note this is called on EVERY new attendee created when create_many() is called.
+	 * This generates the dummy relation objects for use in a new attendee if the $_chained flag is set.
+	 * Note this is called on EVERY new attendee created when create_many() is called.
 	 *
 	 * @since 4.3.0
 	 *
 	 * @param array $args arguments that are sent to the factory that *may contain registration id.
-	 * @param int $ATT_ID required to make sure that when registration_chained is called, it does not create a new attendee object but uses THIS attendee and sets the relation.
+	 * @param int $ATT_ID required to make sure that when registration_chained is called,
+	 *                    it does not create a new attendee object but uses THIS attendee and sets the relation.
 	 */
 	private function _set_new_relations( $args, $ATT_ID ) {
 		//registration
-		$this->_registration = empty( $args[ 'REG_ID' ] ) ? $this->factory->registration_chained->create( array( 'ATT_ID' => $ATT_ID ) ) : EEM_Registration::instance()->get_one_by_ID( $args[ 'REG_ID' ] );
-		$this->_registration = empty( $this->_registration ) ? $this->factory->registration_chained->create( array( 'ATT_ID' => $ATT_ID ) ) : $this->_registration;
+		$this->_registration = empty( $args[ 'REG_ID' ] )
+			? $this->factory->registration_chained->create( array( 'ATT_ID' => $ATT_ID ) )
+			: EEM_Registration::instance()->get_one_by_ID( $args[ 'REG_ID' ] );
+		$this->_registration = empty( $this->_registration )
+			? $this->factory->registration_chained->create( array( 'ATT_ID' => $ATT_ID ) )
+			: $this->_registration;
 	}
 
 
@@ -90,7 +98,8 @@ class EE_UnitTest_Factory_For_Attendee extends WP_UnitTest_Factory_For_Thing {
 			if ( empty( $this->_status ) ) {
 				$this->_set_repeated_relation( $args, $attendee->ID() );
 			}
-			//YES we DO want to set brand new relation objects because multiple attendees do not share the same related objects (for the purpose of tests at least)
+			// YES we DO want to set brand new relation objects because multiple attendees
+			// do not share the same related objects (for the purpose of tests at least)
 			$this->_set_new_relations( $args, $attendee->ID() );
 			//note relation to registration should already be set via the factory->registration_chained->create() method.
 			//add relation to status
