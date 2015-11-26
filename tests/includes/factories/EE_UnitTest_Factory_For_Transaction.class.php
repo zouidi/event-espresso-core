@@ -39,8 +39,11 @@ class EE_UnitTest_Factory_For_Transaction extends WP_UnitTest_Factory_For_Thing 
 	protected $_status;
 
 	/**
-	 * For transactions, this simply indicates whether a registration and status will automatically be setup and attached to the transaction or not.
-	 * Note.  When create_many() method is called for the transaction factory, NEW registrations will be created for each transaction (instead of reusing any existing created ones).  However the EXISTING status is reused.
+	 * For transactions, this simply indicates whether a registration and status
+	 * will automatically be setup and attached to the transaction or not.
+	 * Note.  When create_many() method is called for the transaction factory,
+	 * NEW registrations will be created for each transaction (instead of reusing any existing created ones).
+	 * However the EXISTING status is reused.
 	 *
 	 * @var bool
 	 */
@@ -64,39 +67,57 @@ class EE_UnitTest_Factory_For_Transaction extends WP_UnitTest_Factory_For_Thing 
 
 
 	/**
-	 * This generates the dummy relation objects for use in a new transaction if the $_chained flag is set.  Note this is called on EVERY new transaction created when create_many() is called.
+	 * This generates the dummy relation objects for use in a new transaction if the $_chained flag is set.
+	 * Note this is called on EVERY new transaction created when create_many() is called.
 	 *
 	 * @since 4.3.0
 	 *
 	 * @param array $args arguments that are sent to the factory that *may contain registration id.
-	 * @param int $TXN_ID required to make sure that when registration_chained is called, it does not create a new transaction object but uses THIS transaction and sets the relation.
+	 * @param int $TXN_ID required to make sure that when registration_chained is called,
+	 *                    it does not create a new transaction object but uses THIS transaction and sets the relation.
 	 */
 	private function _set_new_relations( $args, $TXN_ID ) {
 		//registration
-		$this->_registration = empty( $args[ 'REG_ID' ] ) ? $this->factory->registration_chained->create( array( 'TXN_ID' => $TXN_ID ) ) : EEM_Registration::instance()->get_one_by_ID( $args[ 'REG_ID' ] );
-		$this->_registration = empty( $this->_registration ) ? $this->factory->registration_chained->create( array( 'TXN_ID' => $TXN_ID ) ) : $this->_registration;
+		$this->_registration = empty( $args[ 'REG_ID' ] )
+			? $this->factory->registration_chained->create( array( 'TXN_ID' => $TXN_ID ) )
+			: EEM_Registration::instance()->get_one_by_ID( $args[ 'REG_ID' ] );
+		$this->_registration = empty( $this->_registration )
+			? $this->factory->registration_chained->create( array( 'TXN_ID' => $TXN_ID ) )
+			: $this->_registration;
 	}
 
 
 
 	/**
-	 * This generates the dummy relation objects for use in a new transaction if the $_chained flag is true.  Note this is called just once when create_many() method is used.
+	 * This generates the dummy relation objects for use in a new transaction if the $_chained flag is true.
+	 * Note: this is called just once when create_many() method is used.
 	 *
 	 * @since 4.3.0
 	 *
 	 * @param array $args arguments that are sent to the factory that *may contain registration id.
-	 * @param int $TXN_ID required to make sure that when registration_chained is called, it does not create a new transaction object but uses THIS transaction and sets the relation.
+	 * @param int $TXN_ID required to make sure that when registration_chained is called,
+	 *                    it does not create a new transaction object but uses THIS transaction and sets the relation.
 	 */
 	private function _set_repeated_relation( $args, $TXN_ID ) {
 		//status
-		$this->_status = empty( $args[ 'STS_ID' ] ) ? $this->factory->status->create( array( 'STS_ID'   => EEM_Transaction::incomplete_status_code,
-																							 'STS_type' => 'transaction',
-																							 'STS_code' => 'INCOMPLETE'
-		) ) : EEM_Status::instance()->get_one_by_ID( $args[ 'STS_ID' ] );
-		$this->_status = empty( $this->_status ) ? $this->factory->status->create( array( 'STS_ID'   => EEM_Transaction::incomplete_status_code,
-																						  'STS_type' => 'transaction',
-																						  'STS_code' => 'INCOMPLETE'
-		) ) : $this->_status;
+		$this->_status = empty( $args[ 'STS_ID' ] )
+			? $this->factory->status->create(
+				array(
+					'STS_ID'   => EEM_Transaction::incomplete_status_code,
+					'STS_type' => 'transaction',
+					'STS_code' => 'INCOMPLETE'
+				)
+			)
+			: EEM_Status::instance()->get_one_by_ID( $args[ 'STS_ID' ] );
+		$this->_status = empty( $this->_status )
+			? $this->factory->status->create(
+				array(
+					'STS_ID'   => EEM_Transaction::incomplete_status_code,
+					'STS_type' => 'transaction',
+					'STS_code' => 'INCOMPLETE'
+				)
+			)
+			: $this->_status;
 	}
 
 
@@ -116,7 +137,8 @@ class EE_UnitTest_Factory_For_Transaction extends WP_UnitTest_Factory_For_Thing 
 			if ( empty( $this->_status ) ) {
 				$this->_set_repeated_relation( $args, $transaction->ID() );
 			}
-			//YES we DO want to set brand new relation objects because multiple transactions do not share the same related objects (for the purpose of tests at least)
+			// YES we DO want to set brand new relation objects because multiple transactions
+			// do not share the same related objects (for the purpose of tests at least)
 			$this->_set_new_relations( $args, $transaction->ID() );
 			//note relation to registration should already be set via the factory->registration_chained->create() method.
 			//add relation to status
