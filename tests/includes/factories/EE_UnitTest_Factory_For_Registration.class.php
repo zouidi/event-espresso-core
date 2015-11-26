@@ -79,23 +79,48 @@ class EE_UnitTest_Factory_For_Registration extends WP_UnitTest_Factory_For_Thing
 	 */
 	private function _set_new_relations( $args ) {
 		//transaction
-		$this->_transaction = empty( $args[ 'TXN_ID' ] ) ? $this->factory->transaction->create() : EEM_Transaction::instance()->get_one_by_ID( $args[ 'TXN_ID' ] );
-		$this->_transaction = empty( $this->_transaction ) ? $this->factory->transaction->create() : $this->_transaction;
+		$this->_transaction = empty( $args[ 'TXN_ID' ] )
+			? $this->factory->transaction->create()
+			: EEM_Transaction::instance()->get_one_by_ID( $args[ 'TXN_ID' ] );
+		$this->_transaction = empty( $this->_transaction )
+			? $this->factory->transaction->create()
+			: $this->_transaction;
+
 		//ticket
-		$this->_ticket = empty( $args[ 'TKT_ID' ] ) ? $this->factory->ticket_chained->create() : EEM_Ticket::instance()->get_one_by_ID( $args[ 'TKT_ID' ] );
-		$this->_ticket = empty( $this->_ticket ) ? $this->factory->ticket_chained->create() : $this->_ticket;
+		$this->_ticket = empty( $args[ 'TKT_ID' ] )
+			? $this->factory->ticket_chained->create()
+			: EEM_Ticket::instance()->get_one_by_ID( $args[ 'TKT_ID' ] );
+		$this->_ticket = empty( $this->_ticket )
+			? $this->factory->ticket_chained->create()
+			: $this->_ticket;
+
 		//attendee
-		$this->_attendee = empty( $args[ 'ATT_ID' ] ) ? $this->factory->attendee->create() : EEM_Attendee::instance()->get_one_by_ID( $args[ 'ATT_ID' ] );
-		$this->_attendee = empty( $this->_attendee ) ? $this->factory->attendee->create() : $this->_attendee;
+		$this->_attendee = empty( $args[ 'ATT_ID' ] )
+			? $this->factory->attendee->create()
+			: EEM_Attendee::instance()->get_one_by_ID( $args[ 'ATT_ID' ] );
+		$this->_attendee = empty( $this->_attendee )
+			? $this->factory->attendee->create()
+			: $this->_attendee;
+
 		//status
-		$this->_status = empty( $arg[ 'STS_ID' ] ) ? $this->factory->status->create( array( 'STS_ID'   => EEM_Registration::status_id_pending_payment,
-																							'STS_type' => 'registration',
-																							'STS_code' => 'PENDING_PAYMENT'
-		) ) : EEM_Status::instance()->get_one_by_ID( $args[ 'STS_ID' ] );
-		$this->_status = empty( $this->_status ) ? $this->factory->status->create( array( 'STS_ID'   => EEM_Registration::status_id_pending_payment,
-																						  'STS_type' => 'registration',
-																						  'STS_code' => 'PENDING_PAYMENT'
-		) ) : $this->_status;
+		$this->_status = empty( $arg[ 'STS_ID' ] )
+			? $this->factory->status->create(
+				array(
+					'STS_ID'   => EEM_Registration::status_id_pending_payment,
+					'STS_type' => 'registration',
+					'STS_code' => 'PENDING_PAYMENT'
+				)
+			)
+			: EEM_Status::instance()->get_one_by_ID( $args[ 'STS_ID' ] );
+		$this->_status = empty( $this->_status )
+			? $this->factory->status->create(
+				array(
+					'STS_ID'   => EEM_Registration::status_id_pending_payment,
+					'STS_type' => 'registration',
+					'STS_code' => 'PENDING_PAYMENT'
+				)
+			)
+			: $this->_status;
 	}
 
 
@@ -115,17 +140,23 @@ class EE_UnitTest_Factory_For_Registration extends WP_UnitTest_Factory_For_Thing
 			if ( empty( $this->_transaction ) || empty( $this->_ticket ) || empty( $this->_attendee ) || empty( $this->_status ) ) {
 				$this->_set_new_relations( $args );
 			}
+
 			//add relation to transaction
 			$registration->_add_relation_to( $this->_transaction, 'Transaction' );
+
 			//add relation to ticket
 			$registration->_add_relation_to( $this->_ticket, 'Ticket' );
+
 			//add relation to event
 			$event = $this->_ticket->get_first_related( 'Datetime' )->get_first_related( 'Event' );
 			$registration->_add_relation_to( $event, 'Event' );
+
 			//add relation to attendee
 			$registration->_add_relation_to( $this->_attendee, 'Attendee' );
+
 			//add relation to status
 			$registration->_add_relation_to( $this->_status, 'Status' );
+
 			$registration->save();
 			return $registration;
 		}
