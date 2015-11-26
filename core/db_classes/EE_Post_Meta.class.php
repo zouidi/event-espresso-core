@@ -45,6 +45,25 @@ class EE_Post_Meta extends EE_Base_Class {
 		return new self( $props_n_values, TRUE );
 	}
 
+
+	/**
+	 * Gets meta_id
+	 * @return int
+	 */
+	function meta_id() {
+		return $this->get( 'meta_id' );
+	}
+
+
+
+	/**
+	 * Sets meta_id
+	 * @param int $meta_id
+	 * @return boolean
+	 */
+	function set_meta_id( $meta_id) {
+		return $this->set( 'meta_id', $meta_id);
+	}
 	/**
 	 * Gets post_id
 	 * @return int
@@ -64,9 +83,7 @@ class EE_Post_Meta extends EE_Base_Class {
 		return $this->set( 'post_id', $post_id);
 	}
 
-
-
-		/**
+	/**
 	 * Gets meta_key
 	 * @return string
 	 */
@@ -84,7 +101,7 @@ class EE_Post_Meta extends EE_Base_Class {
 	function set_meta_key( $meta_key) {
 		return $this->set( 'meta_key', $meta_key);
 	}
-
+	
 	/**
 	 * Gets meta_value
 	 * @return mixed
@@ -103,10 +120,6 @@ class EE_Post_Meta extends EE_Base_Class {
 	function set_meta_value( $meta_value) {
 		return $this->set( 'meta_value', $meta_value);
 	}
-
-
-
-
 }
 /* End of file EE_Post_Meta.class.php */
 /* Location: /includes/classes/EE_Answer.class.php */

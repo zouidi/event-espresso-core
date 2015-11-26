@@ -15,11 +15,15 @@
  *
  * Post Meta Model
  *
- * This is meta info which can be potentially attached to any CPT model.
- * It is preferred that CPT models store their extra meta using the postmeta
- * rather than the more general extra-meta
- * Querying on this meta data is cumbersome and difficult, but this can be used
- * to attach any arbitrary information onto any model desired.
+ * Model for accessing the wp core postmeta table. Generally it's better to use the
+ * built-in wp functions directly, but this is useful if you want to use the EE models
+ * and need a query that factors in an EE custom post type's postmeta (eg, attendees, events or venues).
+ * Currently, if applying caps to the queries, these are only accessible to site admins;
+ * however we may devise some strategy for marking specified postmetas as public.
+ * (Using the wp core convention of prefixing meta keys with an underscore might work,
+ * see https://codex.wordpress.org/Function_Reference/add_post_meta, but when a postmeta is
+ * "non-hidden" it's meant to show in the wp admin's post editing page, not necessarily on the frontend)
+ *
  *
  * @package			Event Espresso
  * @subpackage		includes/models/
@@ -31,7 +35,7 @@ require_once ( EE_MODELS . 'EEM_Base.model.php' );
 
 class EEM_Post_Meta extends EEM_Base {
 
-  	// private instance of the Attendee object
+  	// private instance of the EE_Post_Meta object
 	protected static $_instance = NULL;
 
 	protected function __construct( $timezone = NULL ) {
@@ -40,20 +44,18 @@ class EEM_Post_Meta extends EEM_Base {
 		$this->_tables = array(
 			'Post_Meta'=> new EE_Primary_Table('postmeta', 'meta_id')
 		);
-		$models_this_can_attach_to = apply_filters( 'FHEE__EEM_Post_Meta__construct__models_this_can_attach_to', array( 'Event', 'Venue', 'Attendee' ) );
+		$models_this_can_attach_to = apply_filters( 'FHEE__EEM_Post_Meta__construct__models_this_can_attach_to', array_keys( EE_Registry::instance()->cpt_models() ) );
 		$this->_fields = array(
 			'Post_Meta'=>array(
-				'meta_id'=>new EE_Primary_Key_Int_Field('meta_id', __("Post Meta ID", "event_espresso")),
-				'post_id'=>new EE_Foreign_Key_Int_Field('post_id', __("CPT ID", "event_espresso"), false, 0, $models_this_can_attach_to),
+				'meta_id'=>new EE_Primary_Key_Int_Field('meta_id', __("Meta ID", "event_espresso")),
+				'post_id'=>new EE_Foreign_Key_Int_Field('post_id', __("Primary Key of Post", "event_espresso"), false, 0, $models_this_can_attach_to),
 				'meta_key'=>new EE_Plain_Text_Field('meta_key', __("Meta Key", "event_espresso"), false, ''),
 				'meta_value'=>new EE_Maybe_Serialized_Text_Field('meta_value', __("Meta Value", "event_espresso"), true)
-
 			));
 		$this->_model_relations = array();
 		foreach($models_this_can_attach_to as $model){
 			$this->_model_relations[$model] = new EE_Belongs_To_Relation();
 		}
-
 		parent::__construct( $timezone );
 	}
 
