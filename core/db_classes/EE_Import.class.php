@@ -453,7 +453,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 
 				$model_object_data = $this->_replace_temp_ids_with_mappings( $model_object_data, $model, $old_db_to_new_db_mapping, $export_from_site_a_to_b );
-                                $model_object_data = $this->_prepare_data_for_use_in_db( $model_object_data, $model, $export_from_site_a_to_b );
+                $model_object_data = $this->_prepare_data_for_use_in_db( $model_object_data, $model, $export_from_site_a_to_b );
 //now we need to decide if we're going to add a new model object given the $model_object_data,
 				//or just update.
 				if($export_from_site_a_to_b){
@@ -527,11 +527,20 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		$model_name = $model->get_this_model_name();
 		//if it's a site-to-site export-and-import, see if this model object's id
 		//in the old data that we know of
+		
 		if( isset($old_db_to_new_db_mapping[$model_name][$id_in_csv]) ){
-			return self::do_update;
+			$what_to_do =  self::do_update;
 		}else{
-			return self::do_insert;
+			$what_to_do =  self::do_insert;
 		}
+		//consider any exceptions, usually where there are other uniqueness constraints
+		if( $model instanceof EEM_Question_Group ) {
+			if( isset( $model_object_data[ 'QSG_system' ] ) &&
+					$model_object_data[ 'QSG_system' ] ) {
+				$what_to_do = self::do_update;
+			}
+		}
+		return $what_to_do;
 	}
 
 

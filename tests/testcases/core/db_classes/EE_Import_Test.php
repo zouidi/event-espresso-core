@@ -169,6 +169,45 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$this->assertEquals( 'in other db', $updated_term_taxonomy->get( 'description' ) );
 		$updated_country = EEM_Country::instance()->refresh_entity_map_from_db( $country_usa->ID() );
 		$this->assertEquals( true, $updated_country->get( 'CNT_is_EU' ) );
+	}/**
+	 * test we dont insert conflicting data (especially term-taxonomies)
+	 * @group current
+	 */
+	public function test_save_data_array_to_db__from_other_site__avoid_inserting_conflicting_question_group() {
+		$system_qg = EEM_Question_Group::instance()->get_one( array( array( 'QSG_system' => EEM_Question_Group::system_personal ) ) );
+		$non_system_qg = $this->new_model_obj_with_dependencies( 'Question_Group', array( 'QSG_system' => 0 ) );
+		
+		$other_db_system_qg = clone $system_qg;
+		$other_db_system_qg->set( 'QSG_name', 'other db system qg' );
+		$other_db_system_qg_data = $other_db_system_qg->model_field_array();
+		$other_db_system_qg_data[ 'QSG_ID' ] = 12345;
+		
+		$other_db_non_system_qg = $this->new_model_obj_with_dependencies( 'Question_Group', array( 'QSG_system' => 0 ), false );
+		$other_db_non_system_qg_data = $other_db_non_system_qg->model_field_array();
+		$other_db_non_system_qg_data[ 'QSG_ID' ] = 123456;
+		
+		$csv_data_rows = array(
+			'Question_Group' => array(
+				$other_db_non_system_qg_data,
+				$other_db_system_qg_data,
+			),
+		);
+		$question_group_count = EEM_Question_Group::instance()->count();
+
+		//ok give it a whirl (keep the term-taxonomy's "term_id" the same by having it map to itself, obviously super unlikely but helps testing)
+		$mapping = EE_Import::instance()->save_data_rows_to_db($csv_data_rows, true, array() );
+
+		$this->assertEmpty( EE_Import::instance()->get_update_errors() );
+		$this->assertEquals( 1, EE_Import::instance()->get_total_inserts() );
+		$this->assertEmpty( EE_Import::instance()->get_insert_errors() );
+		$this->assertEquals( 1, EE_Import::instance()->get_total_updates() );
+		
+		//we should have updated the question group
+		$this->assertEquals( $other_db_system_qg->name(), $system_qg->name() );
+		
+		//we should have inserted the non system question group
+		$newly_inserted_qg = EEM_Question_Group::instance()->get_one( array( array( 'QSG_identifier' => $other_db_non_system_qg->identifier() ) ) );
+		$this->assertTrue( $newly_inserted_qg instanceof EE_Question_Group );
 	}
 	/**
 	 * test if an INT fk doesn't exist -> set it to NULL!
