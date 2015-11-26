@@ -15,7 +15,7 @@ if ( !defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 class EEM_Post_Meta_Test extends EE_UnitTestCase{
 	function test_get_all(){
 		$postmeta = $this->new_model_obj_with_dependencies( 'Post_Meta', array( 'meta_key' => 'foo', 'meta_value' => 'bar' ) );
-		$postmetas = EEM_Post_Meta::reset()->get_all( array( array( 'meta_key' => 'foo', 'meta_value' => 'bar', 'Event.EVT_ID' => $postmeta->get('post_id') ) ) );
+		$postmetas = EEM_Post_Meta::reset()->get_all( array( array( 'meta_key' => 'foo', 'meta_value' => 'bar', 'Attendee.ATT_ID' => $postmeta->get('post_id') ) ) );
 		$this->assertEEModelObjectsEquals( $postmeta, reset( $postmetas ) );
 		$this->assertEquals( 1, count( $postmetas ) );
 	}
