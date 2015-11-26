@@ -1277,8 +1277,11 @@ abstract class EEM_Base extends EE_Base{
 		$set_timezone = empty( $timezone ) ? EEH_DTT_Helper::get_timezone() : $timezone;
 
 		$incomingDateTime = date_create_from_format( $incoming_format, $timestring, new DateTimeZone( $set_timezone ) );
-
-		return $incomingDateTime->setTimeZone( new DateTimeZone( $this->_timezone ) );
+		if( $incomingDateTime ) {
+			return $incomingDateTime->setTimeZone( new DateTimeZone( $this->_timezone ) );
+		} else {
+			return new DateTime( null, new DateTimeZone( $set_timezone ) );
+		}
 	}
 
 

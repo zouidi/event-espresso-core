@@ -24,13 +24,13 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
   // imported CSV data as array
 	 protected $csv_array = array();
-         /**
-          * values from the metadata row in EE csv exports. keys are the column names,
-          * values are the csv column's values. Nice ot have as an instance variable
-          * because it's general info other parts of the importer might want
-          * @var array
-          */
-         protected $_csv_import_metadata_row = array();
+	/**
+	 * values from the metadata row in EE csv exports. keys are the column names,
+	 * values are the csv column's values. Nice ot have as an instance variable
+	 * because it's general info other parts of the importer might want
+	 * @var array
+	 */
+	protected $_csv_import_metadata_row = array();
 
 
   // instance of the EE_Import object
@@ -659,6 +659,15 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
                         $altered_data_row[ 'MTP_description' ] = sprintf( __( 'Imported at %1$s by user %2$s', 'event_espresso' ), current_time( 'mysql' ), $current_user->user_nicename );
                     }
             }
+			foreach( $model->field_settings() as $field_name => $field_obj ) {
+				if( $field_obj instanceof EE_Datetime_Field ) {
+					$altered_data_row[ $field_name ] = $model->convert_datetime_for_query( 
+							$field_name, 
+							$original_data_row[ $field_name ], 
+							apply_filters( 'FHEE__EE_Import___prepare_data_for_use_in_db__datetime_format_in_csv', 'Y-m-d H:i:s' ),
+							isset( $this->_csv_import_metadata_row[ 'timezone' ] ) ? $this->_csv_import_metadata_row[ 'timezone' ] : '' );
+				}
+			}
             return apply_filters( 'FHEE__EE_Import___prepare_data_for_use_in_db__return', $altered_data_row, $original_data_row, $model, $this );
         }
 

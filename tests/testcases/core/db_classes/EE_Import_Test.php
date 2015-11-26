@@ -171,7 +171,6 @@ class EE_Import_Test extends EE_UnitTestCase {
 		$this->assertEquals( true, $updated_country->get( 'CNT_is_EU' ) );
 	}/**
 	 * test we dont insert conflicting data (especially term-taxonomies)
-	 * @group current
 	 */
 	public function test_save_data_array_to_db__from_other_site__avoid_inserting_conflicting_question_group() {
 		$system_qg = EEM_Question_Group::instance()->get_one( array( array( 'QSG_system' => EEM_Question_Group::system_personal ) ) );
@@ -208,6 +207,22 @@ class EE_Import_Test extends EE_UnitTestCase {
 		//we should have inserted the non system question group
 		$newly_inserted_qg = EEM_Question_Group::instance()->get_one( array( array( 'QSG_identifier' => $other_db_non_system_qg->identifier() ) ) );
 		$this->assertTrue( $newly_inserted_qg instanceof EE_Question_Group );
+	}
+	
+	/**
+	 * Verify we are able to parse the dates using the format in the exports
+	 */
+	public function test_save_data_array_to_db__time_format_ok() {
+		$datetime = $this->new_model_obj_with_dependencies( 'Datetime' );
+		$datetime_data = $datetime->model_field_array();
+		$datetime_data[ 'DTT_EVT_start' ] = '2015-11-18 22:30:00';
+		$csv_data_rows = array(
+			'Datetime' => array(
+				$datetime_data
+			),
+		);
+		$mapping = EE_Import::instance()->save_data_rows_to_db($csv_data_rows, false, array() );
+		$this->assertEquals( '2015-11-18', $datetime->get_date( 'DTT_EVT_start', 'Y-m-d' ) );
 	}
 	/**
 	 * test if an INT fk doesn't exist -> set it to NULL!
