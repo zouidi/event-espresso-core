@@ -47,8 +47,8 @@ class EE_UnitTest_Factory_For_Datetime extends WP_UnitTest_Factory_For_Thing {
 		$this->default_generation_definitions = array(
 			'DTT_name'        => new WP_UnitTest_Generator_Sequence( 'Datetime %s' ),
 			'DTT_description' => new WP_UnitTest_Generator_Sequence( 'Datetime Description %s' ),
-			'DTT_EVT_start'   => strtotime( '+1 month' ),
-			'DTT_EVT_end'     => strtotime( '+2 months' )
+			'DTT_EVT_start'   => strtotime( '+1 month', current_time( 'timestamp' ) ),
+			'DTT_EVT_end'     => strtotime( '+2 months', current_time( 'timestamp' ) )
 		);
 	}
 
