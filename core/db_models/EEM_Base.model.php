@@ -3350,7 +3350,7 @@ abstract class EEM_Base extends EE_Base{
 	 */
 	function get_related_model_obj($model_name){
 
-		$model_classname = "EEM_".$model_name;
+		$model_classname = strpos( $model_name, 'EEM_' ) === 0 ? $model_name : 'EEM_' . $model_name;
 		if(!class_exists($model_classname)){
 			throw new EE_Error(sprintf(__("You specified a related model named %s in your query. No such model exists, if it did, it would have the classname %s",'event_espresso'),$model_name,$model_classname));
 		}
