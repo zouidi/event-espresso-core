@@ -73,11 +73,13 @@ class EEM_Price_Type extends EEM_Soft_Delete_Base {
 	const base_type_discount = 2;
 	const base_type_surcharge = 3;
 	const base_type_tax = 4;
+
+
+
 	/**
 	 * 		private constructor to prevent direct creation
 	 * 		@Constructor
 	 * 		@access protected
-	 * 		@return void
 	 */
 	protected function __construct( $timezone = NULL ) {
 		$this->base_types = array(
