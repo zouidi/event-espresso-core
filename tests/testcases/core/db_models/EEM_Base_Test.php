@@ -822,6 +822,39 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$this->assertEquals( array( $e1->ID(), $e2->ID() ), EEM_Event::instance()->get_IDs( array( $e1, $e2 ), true ) );
 	}
         
+	/**
+	 * @group 7537
+	 */
+	function test_update_with_convert_datetime_for_query() {
+		$a_datetime = $this->new_model_obj_with_dependencies( 'Datetime' );
+		$a_datetime_with_diff_format = $this->new_model_obj_with_dependencies( 'Datetime' );
+		$a_datetime_with_diff_format->set_date_format( 'Y-m-d' );
+		
+		
+		//first veirfy each one actually has a different format
+		$this->assertEquals( date( 'F j, Y', $a_datetime->get_raw( 'DTT_EVT_start' ) ) , 
+				$a_datetime->start_date() );
+		$this->assertEquals( date( 'Y-m-d', $a_datetime_with_diff_format->get_raw( 'DTT_EVT_start' ) ) , 
+				$a_datetime_with_diff_format->start_date() );
+		//run a query, where we shouldn't care what the format is on the model objects
+		$a_timestamp = time() - WEEK_IN_SECONDS;
+		$a_date_properly_formatted = EEM_Datetime::instance()->convert_datetime_for_query('DTT_EVT_start', date('Y-m-d', $a_timestamp ), 'Y-m-d' );
+		$count_updated = EEM_Datetime::instance()->update( 
+				array( 
+					'DTT_EVT_start' => $a_date_properly_formatted,
+				),
+				array(
+					array(
+						'DTT_ID' => array( 'IN', array( $a_datetime->ID(), $a_datetime_with_diff_format->ID() ))
+						)
+				) 
+				);
+		$this->assertEquals( 2, $count_updated );
+		//now both datetime's starts should have been updated to that date, 
+		//not to the current time (which is the fallback when there are datetime formatting issues)
+		$this->assertEquals( $a_timestamp, $a_datetime->get_raw( 'DTT_EVT_start' ) );
+		$this->assertEquals( $a_timestamp, $a_datetime_with_diff_format->get_raw( 'DTT_EVT_start' ) );
+	}
  
 }
 
