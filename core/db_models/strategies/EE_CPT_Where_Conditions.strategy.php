@@ -34,17 +34,25 @@ class EE_CPT_Where_Conditions extends EE_Default_Where_Conditions{
 	/**
 	 * Gets the field with the specified column. Note, this function might not work
 	 * properly if two fields refer to columns with the same name on different tables
+	 *
 	 * @param string $column column name
-	 * @return EE_Model_Field_Base
+	 * @return \EE_Model_Field_Base
+	 * @throws \EE_Error
 	 */
-	protected function _get_field_on_column($column){
-		$all_fields = $this->_model->field_settings(true);
-		foreach($all_fields as $field_obj){
-			if($column == $field_obj->get_table_column()){
+	protected function _get_field_on_column( $column ){
+		$all_fields = $this->_model->field_settings( true );
+		foreach ( $all_fields as $field_obj ) {
+			if ( $column == $field_obj->get_table_column() ) {
 				return $field_obj;
 			}
 		}
-                throw new EE_Error( sprintf( __( 'Model EE_CPT_Where_Conditions misconfigured. Looking for a field with column %1$s on model %2$s but none found.', 'event_espresso'), $column, $this->_model->get_this_model_name() ));
+		throw new EE_Error(
+			sprintf(
+				__( 'Model EE_CPT_Where_Conditions misconfigured. Looking for a field with column %1$s on model %2$s but none found.', 'event_espresso'),
+				$column,
+				$this->_model->get_this_model_name()
+			)
+		);
 	}
 
 
