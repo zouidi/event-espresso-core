@@ -7,168 +7,59 @@
  * @subpackage    tests
  *
  */
-class EE_UnitTest_Factory_For_Datetime extends WP_UnitTest_Factory_For_Thing {
-
-	/**
-	 * Datetimes always have to be attached to an event, so this holds a Event default.
-	 *
-	 * @since  4.3.0
-	 * @var EE_Event
-	 */
-	protected $_event;
-
-	/**
-	 * Used to indicate whether the generated objects are chained in the EE Model Hierarchy or not.
-	 *
-	 * @var bool
-	 */
-	protected $_chained;
-
-	/**
-	 * This is a cache holder for args that cannot be used to instantiate the object but are used for
-	 * chaining to other previously created objects.
-	 *
-	 * @var array
-	 */
-	protected $_special_args = array();
-
-
+class EE_UnitTest_Factory_For_Datetime extends EE_UnitTest_Factory_for_Model_Object {
 
 	/**
 	 * constructor
 	 *
 	 * @param EE_UnitTest_Factory $factory
-	 * @param bool $chained This indicates that we are chaining this datetime to an event (instead of creating a isolated Datetime).
+	 * @param array | null        $properties_and_relations
+	 *        pass null (or nothing) to just get the default properties with NO relations
+	 * 		  or pass empty array for default properties AND relations
+	 *        or non-empty array to override default properties and manually set related objects and their properties,
 	 */
-	public function __construct( $factory = null, $chained = false ) {
-		parent::__construct( $factory );
-		$this->_chained = $chained;
-		//default args for creating datetimes
-		$this->default_generation_definitions = array(
-			'DTT_name'        => new WP_UnitTest_Generator_Sequence( 'Datetime %s' ),
-			'DTT_description' => new WP_UnitTest_Generator_Sequence( 'Datetime Description %s' ),
-			'DTT_EVT_start'   => strtotime( '+1 month', current_time( 'timestamp' ) ),
-			'DTT_EVT_end'     => strtotime( '+2 months', current_time( 'timestamp' ) )
-		);
+	public function __construct( $factory, $properties_and_relations = null ) {
+		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
+		$this->set_model_object_name( 'Datetime' );
+		parent::__construct( $factory, $properties_and_relations );
 	}
 
 
 
 	/**
-	 * This allows setting the $_event property to a new event object if the incoming args for the
-	 * new dtt have an event id (or set to default if no evt_id)
+	 * _set_default_properties_and_relations
 	 *
-	 * @since 4.3.0
-	 * @param int $EVT_ID EE_Event ID
+	 * @access protected
+	 * @param string $called_class in order to avoid recursive application of relations,
+	 *                             we need to know which class is making this request
+	 * @return void
 	 */
-	private function _set_new_event( $EVT_ID = 0 ) {
-		$this->_event = empty( $EVT_ID ) ? EEM_Event::instance()->get_one_by_ID( $EVT_ID ) : $this->factory->event->create();
-		//fail safe just in case (so we can be sure to have an event).
-		if ( empty( $this->_event ) ) {
-			$this->_event = $this->factory->event->create();
+	protected function _set_default_properties_and_relations( $called_class ) {
+		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
+		// set some sensible defaults for this model object
+		if ( empty( $this->_default_properties ) ) {
+			static $counter = 1;
+			$this->_default_properties = array(
+				'DTT_name'        => sprintf( 'Datetime %s', $counter ),
+				'DTT_description' => sprintf( 'Datetime Description %s', $counter ),
+				'DTT_EVT_start'   => strtotime( '+1 month', current_time( 'timestamp' ) ),
+				'DTT_EVT_end'     => strtotime( '+2 months', current_time( 'timestamp' ) ),
+			);
+			$counter++;
 		}
-	}
-
-
-
-	/**
-	 * This handles connecting a datetime to the event object that's been generated.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param EE_Datetime $dtt
-	 * @param array $args incoming arguments from caller for specifying overrides.
-	 *
-	 * @return EE_Datetime
-	 */
-	private function _maybe_chained( EE_Datetime $dtt, $args ) {
-		if ( $this->_chained ) {
-			if ( empty( $this->_event ) ) {
-				$EVT_ID = isset( $this->_special_args[ 'EVT_ID' ] ) ? $this->_special_args[ 'EVT_ID' ] : 0;
-				$this->_set_new_event( $EVT_ID );
-			}
-			//add relation to event
-			$dtt->_add_relation_to( $this->_event, 'Event' );
-			$dtt->save();
-			return $dtt;
+		// and set some sensible default relations
+		if ( empty( $this->_default_relations ) ) {
+			$this->_default_relations = array(
+				'Ticket' => array(),
+			);
+			$this->_resolve_default_relations( $called_class );
+			//echo "\n\n RESOLVED_RELATIONS for " . __CLASS__ . " ";
+			//echo implode( ' ', array_keys( $this->_default_relations ) ) . ":";
+			//echo " \n  {{ " . __LINE__ . ") " . __METHOD__ . "() }} \n";
+			//var_dump( $resolved_relations );
+			//$this->_default_relations = $resolved_relations;
+			//$this->_default_properties = array_merge( $this->_default_properties, $this->_default_relations );
 		}
-		return $dtt;
-	}
-
-
-
-	/**
-	 * used by factory to create datetime object
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param array $args Incoming field values to set on the new object
-	 *
-	 * @return EE_Datetime|false
-	 */
-	public function create_object( $args ) {
-		$this->_special_args[ 'EVT_ID' ] = isset( $args[ 'EVT_ID' ] ) ? $args[ 'EVT_ID' ] : 0;
-		if ( isset( $args[ 'EVT_ID' ] ) ) {
-			unset( $args[ 'EVT_ID' ] );
-		}
-		//timezone?
-		if ( isset( $args[ 'timezone' ] ) ) {
-			$timezone = $args[ 'timezone' ];
-			unset( $args[ 'timezone' ] );
-		} else {
-			$timezone = null;
-		}
-		//date formats?
-		if ( isset( $args[ 'formats' ] ) && is_array( $args[ 'formats' ] ) ) {
-			$formats = $args[ 'formats' ];
-			unset( $args[ 'formats' ] );
-		} else {
-			$formats = array();
-		}
-		$dtt = EE_Datetime::new_instance( $args, $timezone, $formats );
-		$dttID = $dtt->save();
-		$dtt = $this->_maybe_chained( $dtt, $args );
-		return $dttID ? $dtt : false;
-	}
-
-
-
-	/**
-	 * Update datetime object for given datetime
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $DTT_ID Datetime ID for the datetime to update
-	 * @param array $cols_n_data columns and values to change/update
-	 *
-	 * @return EE_Datetime|false.
-	 */
-	public function update_object( $DTT_ID, $cols_n_data ) {
-		//all the stuff for updating an datetime.
-		$dtt = EEM_Datetime::instance()->get_one_by_ID( $DTT_ID );
-		if ( ! $dtt instanceof EE_Datetime ) {
-			return null;
-		}
-		foreach ( $cols_n_data as $key => $val ) {
-			$dtt->set( $key, $val );
-		}
-		$success = $dtt->save();
-		return $success ? $dtt : false;
-	}
-
-
-
-	/**
-	 * return the datetime object for a given datetime ID
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $DTT_ID the datetime id for the datetime to attempt to retrieve
-	 *
-	 * @return mixed null|EE_Datetime
-	 */
-	public function get_object_by_id( $DTT_ID ) {
-		return EEM_Datetime::instance()->get_one_by_ID( $DTT_ID );
 	}
 
 
