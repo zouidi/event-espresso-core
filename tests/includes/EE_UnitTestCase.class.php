@@ -96,8 +96,8 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		$this->factory = new EE_UnitTest_Factory;
 
 		// load scenarios
-		require_once EE_TESTS_DIR . 'includes/scenarios/EE_Test_Scenario_Classes.php';
-		$this->scenarios = new EE_Test_Scenario_Factory( $this );
+		//require_once EE_TESTS_DIR . 'includes/scenarios/EE_Test_Scenario_Classes.php';
+		//$this->scenarios = new EE_Test_Scenario_Factory( $this );
 		EE_Registry::reset();
 	}
 
@@ -717,6 +717,14 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @return EE_Base_Class
 	 */
 	function new_model_obj_with_dependencies( $model_name, $args = array(), $save = true ) {
+		$factory = $this->factory->get_factory_for_model( $model_name );
+		if ( $factory instanceof EE_UnitTest_Factory_for_Model_Object ) {
+			if ( ! empty( $args )) {
+				$factory->set_properties_and_relations( $args );
+			}
+			return $factory->create_object();
+		}
+
 		global $auto_made_thing_seed;
 		if($auto_made_thing_seed === NULL){
 			$auto_made_thing_seed = 1;
@@ -735,8 +743,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 				if( ! isset( $args['CNT_ISO' ] )){
 					$args[ 'CNT_ISO' ] = 'US';
 				}
-			}
-			elseif( $related_model_name == 'Status' ){
+			}elseif( $related_model_name == 'Status' ){
 				$fk = $model->get_foreign_key_to($related_model_name);
 				if( ! isset( $args[ $fk->get_name() ] ) ){
 					//only set the default if they haven't specified anything
