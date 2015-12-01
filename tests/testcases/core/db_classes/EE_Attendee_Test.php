@@ -46,7 +46,15 @@ class EE_Attendee_Test extends EE_UnitTestCase{
 		/*
 		 * @var $reg EE_Registration
 		 */
-		$reg = $this->new_model_obj_with_dependencies('Registration');
+		//$reg = $this->new_model_obj_with_dependencies('Registration');
+		$this->factory->registration->set_properties_and_relations(
+			array(
+				'Transaction' => array(
+					'Payment_Method' => array()
+				),
+			)
+		);
+		$reg = $this->factory->registration->create_object();
 
 		$att = $reg->attendee();
 		$payment_method = $reg->transaction()->payment_method();
