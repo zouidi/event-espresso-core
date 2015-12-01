@@ -20,206 +20,55 @@
  * @subpackage    tests
  *
  */
-class EE_UnitTest_Factory_For_Transaction extends WP_UnitTest_Factory_For_Thing {
-
-	/**
-	 * If chained, the registration will be added to this property.
-	 *
-	 * @since  4.3.0
-	 * @var EE_Registration
-	 */
-	protected $_registration;
-
-	/**
-	 * If chained, the EE_Status object.
-	 *
-	 * @since  4.3.0
-	 * @var EE_Status
-	 */
-	protected $_status;
-
-	/**
-	 * For transactions, this simply indicates whether a registration and status
-	 * will automatically be setup and attached to the transaction or not.
-	 * Note.  When create_many() method is called for the transaction factory,
-	 * NEW registrations will be created for each transaction (instead of reusing any existing created ones).
-	 * However the EXISTING status is reused.
-	 *
-	 * @var bool
-	 */
-	protected $_chained;
-
+class EE_UnitTest_Factory_For_Transaction extends EE_UnitTest_Factory_for_Model_Object {
 
 
 	/**
 	 * constructor
 	 *
 	 * @param EE_UnitTest_Factory $factory
-	 * @param bool $chained
+	 * @param array | null        $properties_and_relations
+	 *          pass null (or nothing) to just get the default properties with NO relations
+	 *          or pass empty array for default properties AND relations
+	 *          or non-empty array to override default properties and manually set related objects and their properties,
 	 */
-	public function __construct( $factory = null, $chained = false ) {
-		parent::__construct( $factory );
-		$this->_chained = $chained;
-		//default args for creating transactions
-		$this->default_generation_definitions = array();
+	public function __construct( $factory, $properties_and_relations = null ) {
+		$this->set_model_object_name( 'Transaction' );
+		parent::__construct( $factory, $properties_and_relations );
 	}
 
 
 
 	/**
-	 * This generates the dummy relation objects for use in a new transaction if the $_chained flag is set.
-	 * Note this is called on EVERY new transaction created when create_many() is called.
+	 * _set_default_properties_and_relations
 	 *
-	 * @since 4.3.0
-	 *
-	 * @param array $args arguments that are sent to the factory that *may contain registration id.
-	 * @param int $TXN_ID required to make sure that when registration_chained is called,
-	 *                    it does not create a new transaction object but uses THIS transaction and sets the relation.
+	 * @access protected
+	 * @param string $called_class in order to avoid recursive application of relations,
+	 *                             we need to know which class is making this request
+	 * @return void
 	 */
-	private function _set_new_relations( $args, $TXN_ID ) {
-		//registration
-		$this->_registration = empty( $args[ 'REG_ID' ] )
-			? $this->factory->registration_chained->create( array( 'TXN_ID' => $TXN_ID ) )
-			: EEM_Registration::instance()->get_one_by_ID( $args[ 'REG_ID' ] );
-		$this->_registration = empty( $this->_registration )
-			? $this->factory->registration_chained->create( array( 'TXN_ID' => $TXN_ID ) )
-			: $this->_registration;
-	}
-
-
-
-	/**
-	 * This generates the dummy relation objects for use in a new transaction if the $_chained flag is true.
-	 * Note: this is called just once when create_many() method is used.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param array $args arguments that are sent to the factory that *may contain registration id.
-	 * @param int $TXN_ID required to make sure that when registration_chained is called,
-	 *                    it does not create a new transaction object but uses THIS transaction and sets the relation.
-	 */
-	private function _set_repeated_relation( $args, $TXN_ID ) {
-		//status
-		$this->_status = empty( $args[ 'STS_ID' ] )
-			? $this->factory->status->create(
-				array(
-					'STS_ID'   => EEM_Transaction::incomplete_status_code,
-					'STS_type' => 'transaction',
-					'STS_code' => 'INCOMPLETE'
-				)
-			)
-			: EEM_Status::instance()->get_one_by_ID( $args[ 'STS_ID' ] );
-		$this->_status = empty( $this->_status )
-			? $this->factory->status->create(
-				array(
-					'STS_ID'   => EEM_Transaction::incomplete_status_code,
-					'STS_type' => 'transaction',
-					'STS_code' => 'INCOMPLETE'
-				)
-			)
-			: $this->_status;
-	}
-
-
-
-	/**
-	 * This handles connecting a transaction to related items when the chained flag is true.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param EE_Transaction $transaction
-	 * @param array $args incoming arguments from caller for specifying overrides.
-	 *
-	 * @return EE_Transaction
-	 */
-	private function _maybe_chained( EE_Transaction $transaction, $args ) {
-		if ( $this->_chained ) {
-			if ( empty( $this->_status ) ) {
-				$this->_set_repeated_relation( $args, $transaction->ID() );
-			}
-			// YES we DO want to set brand new relation objects because multiple transactions
-			// do not share the same related objects (for the purpose of tests at least)
-			$this->_set_new_relations( $args, $transaction->ID() );
-			//note relation to registration should already be set via the factory->registration_chained->create() method.
-			//add relation to status
-			$transaction->_add_relation_to( $this->_status, 'Status' );
-			$transaction->save();
-			return $transaction;
+	protected function _set_default_properties_and_relations( $called_class ) {
+		// set some sensible defaults for this model object
+		if ( empty( $this->_default_properties ) ) {
+			$this->_default_properties = array(
+				'TXN_timestamp'   => time(),
+				'TXN_total' 	  => 0,
+				'TXN_paid'        => 0,
+			);
 		}
-		return $transaction;
-	}
-
-
-
-	/**
-	 * used by factory to create transaction object.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param array $args Incoming field values to set on the new object
-	 *
-	 * @return EE_Transaction|false
-	 */
-	public function create_object( $args ) {
-		//timezone?
-		if ( isset( $args[ 'timezone' ] ) ) {
-			$timezone = $args[ 'timezone' ];
-			unset( $args[ 'timezone' ] );
-		} else {
-			$timezone = null;
+		// and set some sensible default relations
+		if ( empty( $this->_default_relations ) ) {
+			$this->_default_relations = array(
+				'Registration' 	=> array(),
+				'Status' 		=> array(
+					'STS_ID' => EEM_Transaction::incomplete_status_code,
+				),
+				//'Payment'        => array(),
+				//'Line_Item'      => array(),
+				//'Payment_Method' => array(),
+			);
+			$this->_resolve_default_relations( $called_class );
 		}
-		//date_formats?
-		if ( isset( $args[ 'formats' ] ) && is_array( $args[ 'formats' ] ) ) {
-			$formats = $args[ 'formats' ];
-			unset( $args[ 'formats' ] );
-		} else {
-			$formats = array();
-		}
-		$transaction = EE_Transaction::new_instance( $args, $timezone, $formats );
-		$transactionID = $transaction->save();
-		$transaction = $this->_maybe_chained( $transaction, $args );
-		$transaction->save();
-		return $transactionID ? $transaction : false;
-	}
-
-
-
-	/**
-	 * Update transaction object for given transaction.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $TXN_ID Transaction ID for the transaction to update
-	 * @param array $cols_n_data columns and values to change/update
-	 *
-	 * @return EE_Transaction|false.
-	 */
-	public function update_object( $TXN_ID, $cols_n_data ) {
-		//all the stuff for updating an transaction.
-		$transaction = EEM_Transaction::instance()->get_one_by_ID( $TXN_ID );
-		if ( ! $transaction instanceof EE_Transaction ) {
-			return null;
-		}
-		foreach ( $cols_n_data as $key => $val ) {
-			$transaction->set( $key, $val );
-		}
-		$success = $transaction->save();
-		return $success ? $transaction : false;
-	}
-
-
-
-	/**
-	 * return the transaction object for a given transaction ID.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $TXN_ID the transaction id for the transaction to attempt to retrieve
-	 *
-	 * @return mixed null|EE_Transaction
-	 */
-	public function get_object_by_id( $TXN_ID ) {
-		return EEM_Transaction::instance()->get_one_by_ID( $TXN_ID );
 	}
 
 
