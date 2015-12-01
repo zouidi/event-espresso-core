@@ -7,73 +7,59 @@
  * @subpackage    tests
  *
  */
-class EE_UnitTest_Factory_For_Event extends WP_UnitTest_Factory_For_Thing {
+class EE_UnitTest_Factory_For_Event extends EE_UnitTest_Factory_for_Model_Object {
 
-	public function __construct( $factory = null ) {
-		parent::__construct( $factory );
-		//default args for creating events.
-		$this->default_generation_definitions = array(
-			'EVT_name'       => new WP_UnitTest_Generator_Sequence( 'Event %s' ),
-			'EVT_desc'       => new WP_UnitTest_Generator_Sequence( 'Event content %s' ),
-			'EVT_short_desc' => new WP_UnitTest_Generator_Sequence( 'Event excerpt %s' ),
-		);
+
+	/**
+	 * constructor
+	 *
+	 * @param EE_UnitTest_Factory $factory
+	 * @param array | null        $properties_and_relations
+	 *          pass null (or nothing) to just get the default properties with NO relations
+	 *          or pass empty array for default properties AND relations
+	 *          or non-empty array to override default properties and manually set related objects and their properties,
+	 */
+	public function __construct( $factory, $properties_and_relations = null ) {
+		$this->set_model_object_name( 'Event' );
+		parent::__construct( $factory, $properties_and_relations );
 	}
 
 
 
 	/**
-	 * used by factory to create event object
+	 * _set_default_properties_and_relations
 	 *
-	 * @since 4.3.0
-	 *
-	 * @param array $args Incoming field values to set on the new object
-	 *
-	 * @return EE_Event|false
+	 * @access protected
+	 * @param string $called_class in order to avoid recursive application of relations,
+	 *                             we need to know which class is making this request
+	 * @return void
 	 */
-	public function create_object( $args ) {
-		$event = EE_Event::new_instance( $args );
-		$evtID = $event->save();
-		return $evtID ? $event : false;
-	}
-
-
-
-	/**
-	 * Update event object for given event
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $EVT_ID Event ID for the event to update
-	 * @param array $cols_n_data columns and values to change/update
-	 *
-	 * @return EE_Event|false
-	 */
-	public function update_object( $EVT_ID, $cols_n_data ) {
-		//all the stuff for updating an event.
-		$event = EEM_Event::instance()->get_one_by_ID( $EVT_ID );
-		if ( ! $event instanceof EE_Event ) {
-			return null;
+	protected function _set_default_properties_and_relations( $called_class ) {
+		static $counter = 1;
+		// set some sensible defaults for this model object
+		if ( empty( $this->_default_properties ) ) {
+			$this->_default_properties = array(
+				'EVT_name'       => "Event $counter",
+				'EVT_desc'       => "Event Content $counter",
+				'EVT_short_desc' => "Event Excerpt $counter",
+			);
+			$counter++;
 		}
-		foreach ( $cols_n_data as $key => $val ) {
-			$event->set( $key, $val );
+		// and set some sensible default relations
+		if ( empty( $this->_default_relations ) ) {
+			$this->_default_relations = array(
+				'Datetime' 	=> array(),
+				'Venue' 	=> array(),
+				//'Registration' 			 => array(),
+				//'Question_Group'         => array(),
+				//'Term_Taxonomy'          => array(),
+				//'Message_Template_Group' => array(),
+				//'Attendee'               => array(),
+				//'WP_User'                => array(),
+			);
+			$counter++;
+			$this->_resolve_default_relations( $called_class );
 		}
-		$success = $event->save();
-		return $success ? $event : false;
-	}
-
-
-
-	/**
-	 * return the event object for a given event ID
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $EVT_ID the event id for the event to attempt to retrieve
-	 *
-	 * @return null|EE_Event
-	 */
-	public function get_object_by_id( $EVT_ID ) {
-		return EEM_Event::instance()->get_one_by_ID( $EVT_ID );
 	}
 
 
