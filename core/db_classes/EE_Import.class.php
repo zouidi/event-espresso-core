@@ -306,7 +306,7 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 		//leave it alone; if there is no matching state in the database, only then do we insert one
 		$models_to_update = NULL;
 		// begin looking through the $csv_data_array, expecting the top level key to be the model's name...
-		$old_site_url = 'none-specified';
+		$old_site_url = site_url();
 
 		//handle metadata
 		if(isset($csv_data_array[EE_CSV::metadata_header]) ){
