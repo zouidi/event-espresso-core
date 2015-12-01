@@ -670,6 +670,9 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 //							$field->set_date_format('Y-m-d');
 //							$field->set_time_format('H:i:s');
 							$model_data_array[$column_name] = $model_object->get_datetime($field->get_name(),'Y-m-d','H:i:s');
+						} elseif( $field instanceof EE_Infinite_Integer_Field &&
+								$model_object->get( $field->get_name() ) === EE_INF ) {
+							$model_data_array[$column_name] = "";
 						}
 						else{
 							$model_data_array[$column_name] = $model_object->get($field->get_name());
