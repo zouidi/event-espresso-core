@@ -84,19 +84,6 @@ if( defined('CAFFEINATED') && CAFFEINATED ) : ?>
 					</td>
 				</tr>
 
-				<tr>
-					<th>
-						<?php printf( __('Event Espresso %sAffiliate%s ID', 'event_espresso'), '<a href="http://eventespresso.com/affiliates/" target="_blank">', '</a>' ); ?>
-					</th>
-					<td>
-						<input name="affiliate_id" class="regular-text" type="text" value="<?php echo $affiliate_id; ?>" />
-						<br />
-						<p class="description">
-							<?php _e('Earn cash for promoting Event Espresso.', 'event_espresso'); ?>
-						</p>
-					</td>
-				</tr>
-
 			</tbody>
 		</table>
 	<?php endif; ?>
