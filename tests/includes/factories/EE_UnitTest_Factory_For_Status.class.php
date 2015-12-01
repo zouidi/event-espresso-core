@@ -10,69 +10,48 @@
  * @subpackage    tests
  *
  */
-class EE_UnitTest_Factory_For_Status extends WP_UnitTest_Factory_For_Thing {
+class EE_UnitTest_Factory_For_Status extends EE_UnitTest_Factory_for_Model_Object {
 
-	public function __construct( $factory = null ) {
-		parent::__construct( $factory );
-		//default args for creating events.
-		$this->default_generation_definitions = array();
+
+	/**
+	 * constructor
+	 *
+	 * @param EE_UnitTest_Factory $factory
+	 * @param array | null        $properties_and_relations
+	 *          pass null (or nothing) to just get the default properties with NO relations
+	 *          or pass empty array for default properties AND relations
+	 *          or non-empty array to override default properties and manually set related objects and their properties,
+	 */
+	public function __construct( $factory, $properties_and_relations = null ) {
+		$this->set_model_object_name( 'Status' );
+		parent::__construct( $factory, $properties_and_relations );
 	}
 
 
 
 	/**
-	 * used by factory to create status object
+	 * _set_default_properties_and_relations
 	 *
-	 * @since 4.3.0
-	 *
-	 * @param array $args Incoming field values to set on the new object
-	 *
-	 * @return EE_Status|false
+	 * @access protected
+	 * @param string $called_class in order to avoid recursive application of relations,
+	 *                             we need to know which class is making this request
+	 * @return void
 	 */
-	public function create_object( $args ) {
-		$status = EE_Status::new_instance( $args );
-		$statusID = $status->save();
-		return $statusID ? $status : false;
-	}
-
-
-
-	/**
-	 * Update status object for given status
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $STS_ID Status ID for the status to update
-	 * @param array $cols_n_data columns and values to change/update
-	 *
-	 * @return EE_Status|false
-	 */
-	public function update_object( $STS_ID, $cols_n_data ) {
-		//all the stuff for updating an status.
-		$status = EEM_Status::instance()->get_one_by_ID( $STS_ID );
-		if ( ! $status instanceof EE_Status ) {
-			return null;
+	protected function _set_default_properties_and_relations( $called_class ) {
+		// set some sensible defaults for this model object
+		if ( empty( $this->_default_properties ) ) {
+			$this->_default_properties = array();
+			$model = EE_Registry::instance()->load_model( $called_class);
+			$foreign_key = $model->get_foreign_key_to( 'Status' );
+			if ( $foreign_key instanceof EE_Foreign_Key_Field_Base ) {
+				$this->_default_properties['STS_ID'] = $foreign_key->get_default_value();
+			}
 		}
-		foreach ( $cols_n_data as $key => $val ) {
-			$status->set( $key, $val );
+		// and set some sensible default relations
+		if ( empty( $this->_default_relations ) ) {
+			$this->_default_relations = array();
+			$this->_resolve_default_relations( $called_class );
 		}
-		$success = $status->save();
-		return $success ? $status : false;
-	}
-
-
-
-	/**
-	 * return the status object for a given status ID
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $STS_ID the status id for the status to attempt to retrieve
-	 *
-	 * @return mixed null|EE_Status
-	 */
-	public function get_object_by_id( $STS_ID ) {
-		return EEM_Status::instance()->get_one_by_ID( $STS_ID );
 	}
 
 
