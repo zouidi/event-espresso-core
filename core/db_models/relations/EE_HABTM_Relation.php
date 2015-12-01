@@ -3,9 +3,9 @@
 require_once( EE_MODELS . 'relations/EE_Model_Relation_Base.php');
 class EE_HABTM_Relation extends EE_Model_Relation_Base{
 	/**
-	 * Model whicih defines the relation between two other models. Eg, the EE_Event_Question_Group model,
+	 * Model which defines the relation between two other models. Eg, the EE_Event_Question_Group model,
 	 * which joins EE_Event and EE_Question_Group
-	 * @var EEMerimental_Base
+	 * @var EEM_Base
 	 */
 	private $_joining_model_name;
 
