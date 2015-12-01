@@ -5,128 +5,86 @@
  * Examples of things we might setup using the factory are events, registrations, tickets etc.
  *
  * @since 		4.3.0
- * @package 		Event Espresso
+ * @package 	Event Espresso
  * @subpackage 	tests
- *
- * @todo 		This is not done yet.  Just a shell as an example of what can be done.
  */
 class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 
 
 	/**
-	 * @var EE_UnitTest_Factory_For_Event
-	 */
-	public $event;
-
-
-	/**
-	 * @var EE_UnitTest_Factory_For_Venue
-	 */
-	public $venue;
-
-
-	/**
-	 * @var EE_UnitTest_Factory_For_Datetime
-	 */
-	public $datetime;
-	public $datetime_chained;
-
-	/**
-	 * @var EE_UnitTest_Factory_For_Ticket
-	 */
-	public $ticket;
-	public $ticket_chained;
-
-
-	/**
-	 * @var EE_UnitTest_Factory_For_Price
-	 */
-	public $price;
-	public $price_chained;
-
-
-	/**
-	 * @var EE_UnitTest_Factory_For_Price_Type
-	 */
-	public $price_type;
-	public $price_type_chained;
-
-
-	/**
-	 * @var EE_UnitTest_Factory_For_Registration
-	 */
-	public $registration;
-	public $registration_chained;
-
-
-	/**
-	 * @var EE_UnitTest_Factory_For_Transaction
-	 */
-	public $transaction;
-	public $transaction_chained;
-
-
-
-	/**
-	 * @var EE_UnitTest_Factory_For_Attendee
-	 */
-	public $attendee;
-	public $attendee_chained;
-
-
-
-	/**
-	 * @var EE_UnitTest_Factory_For_Status
-	 */
-	public $status;
-
-
-
-	/**
+	 * EE_Test_Factories extend the EE_UnitTest_Factory_for_Model_Object class,
+	 * which extends the WP_UnitTest_Factory_for_Thing abstract class
 	 *
-	 * @var EE_UnitTest_Factory_For_Payment
+	 * @see wp tests/includes/EE_UnitTest_Factory.class.php
+	 * @var EE_UnitTest_Factory_for_Model_Object[]
 	 */
-	public $payment;
+	public $repo = array();
 
 
-	/**
-	 * @var EE_UnitTest_Factory_for_Specific_Builds
-	 */
-	public $complex_factory;
 
 
 
 	public function __construct() {
 		parent::__construct();
 
-		//simple factories
-		//setup any properties containing various test factory objects. EE_Test_Factories should extend the
-		// WP_UnitTest_Factory_for_Thing abstract class ( @see wp tests/includes/EE_UnitTest_Factory.class.php).
-		$this->event = new EE_UnitTest_Factory_For_Event( $this );
-		$this->venue = new EE_UnitTest_Factory_For_Venue( $this );
-		$this->datetime = new EE_UnitTest_Factory_For_Datetime( $this );
-		$this->datetime_chained = new EE_UnitTest_Factory_For_Datetime( $this, true );
-		$this->ticket = new EE_UnitTest_Factory_For_Ticket( $this );
-		$this->ticket_chained = new EE_UnitTest_Factory_For_Ticket( $this, true );
-		$this->price = new EE_UnitTest_Factory_For_Price( $this );
-		$this->price_chained = new EE_UnitTest_Factory_For_Price( $this, true );
-		$this->price_type = new EE_UnitTest_Factory_For_Price_Type( $this );
-		$this->price_type_chained = new EE_UnitTest_Factory_For_Price_Type( $this, true );
-		$this->registration = new EE_UnitTest_Factory_For_Registration( $this );
-		$this->registration_chained = new EE_UnitTest_Factory_For_Registration( $this, true );
-		$this->transaction = new EE_UnitTest_Factory_For_Transaction( $this );
-		$this->transaction_chained = new EE_UnitTest_Factory_For_Transaction( $this, true );
-		$this->attendee = new EE_UnitTest_Factory_For_Attendee( $this );
-		$this->attendee_chained = new EE_UnitTest_Factory_For_Attendee( $this, true );
-		$this->status = new EE_UnitTest_Factory_For_Status( $this );
-		$this->payment = new EE_UnitTest_Factory_For_Payment( $this );
+		// simple factories
+		// setup any properties containing various test factory objects.
 
-		//complex relationship factory
-		//This is a unique factory (not extending WP_UnitTest_Factory_for_Thing) that builds EE objects from a given special formatted
-		//setup array outlining object instantiation and relationships.
-		$this->complex_factory = new EE_UnitTest_Factory_for_Specific_Builds( $this );
+		$factories = array(
+			'event',
+			'venue',
+			'datetime',
+			'ticket',
+			'price',
+			'price_type',
+			'registration',
+			'transaction',
+			'attendee',
+			'status',
+			'payment',
+			'state',
+			'country',
+			'wp_user',
+		);
+		foreach ( $factories as $factory ) {
+			$class = 'EE_UnitTest_Factory_For_' . str_replace( ' ', '_', ucwords( str_replace( '_', ' ', $factory ) ) );
+			if ( class_exists( $class )) {
+				$this->repo[ $factory ]              = new $class( $this );
+				$this->repo[ $factory . '_chained' ] = new $class( $this, array() );
+			}
+		}
 
 	}
+
+
+
+	/**
+	 * get_factory_for_model
+	 *
+	 * @param string $model_name
+	 * @return \EE_UnitTest_Factory_for_Model_Object
+	 */
+	public function get_factory_for_model( $model_name ) {
+		$model_name = strtolower( $model_name );
+		if ( isset( $this->repo[ $model_name ] ) ) {
+			return $this->repo[ $model_name ];
+		}
+		return null;
+	}
+
+
+
+	/**
+	 * @param string $factory
+	 * @return \EE_UnitTest_Factory_for_Model_Object
+	 */
+	public function __get( $factory ) {
+		if ( isset( $this->repo[ $factory ] ) ) {
+			return $this->repo[ $factory ];
+		}
+		return null;
+	}
+
 }
 
 

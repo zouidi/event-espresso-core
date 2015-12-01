@@ -17,159 +17,163 @@
  * @subpackage    tests
  *
  */
-class EE_UnitTest_Factory_For_Attendee extends WP_UnitTest_Factory_For_Thing {
-
-	/**
-	 * If chained, the registration will be added to this property.
-	 *
-	 * @since  4.3.0
-	 * @var EE_Registration
-	 */
-	protected $_registration;
-
-	/**
-	 * For EE_Attendee objects, this simply indicates whether a registration
-	 * will automatically be setup and attached to the attendee or not.
-	 * Note.  When create_many() method is called for the transaction factory,
-	 * NEW registrations will be created for each attendee (instead of reusing any existing created ones).
-	 *
-	 * @var bool
-	 */
-	protected $_chained;
-
+class EE_UnitTest_Factory_For_Attendee extends EE_UnitTest_Factory_for_Model_Object {
 
 
 	/**
 	 * constructor
 	 *
 	 * @param EE_UnitTest_Factory $factory
+	 * @param array | null        $properties_and_relations
+	 *          pass null (or nothing) to just get the default properties with NO relations
+	 *          or pass empty array for default properties AND relations
+	 *          or non-empty array to override default properties and manually set related objects and their properties,
 	 */
-	public function __construct( $factory = null, $chained = false ) {
-		parent::__construct( $factory );
-		$this->_chained = $chained;
-		//default args for creating attendees
-		$this->default_generation_definitions = array(
-			'ATT_fname'   => 'Anonymous',
-			'ATT_lname'   => new WP_UnitTest_Generator_Sequence( 'Llama %s' ),
-			'ATT_address' => new WP_UnitTest_Generator_Sequence( '%s Farm Lane' ),
-			'ATT_city'    => 'Some Town',
-			'ATT_zip'     => new WP_UnitTest_Generator_Sequence( '00000%s' ),
-			'ATT_email'   => new WP_UnitTest_Generator_Sequence( 'llamasrule%s@llama.lm' ),
-			'ATT_phone'   => new WP_UnitTest_Generator_Sequence( '%s%s%s-%s%s%s-%s%s%s%s' )
+	public function __construct( $factory, $properties_and_relations = null ) {
+		$this->set_model_object_name( 'Attendee' );
+		parent::__construct( $factory, $properties_and_relations );
+	}
+
+
+
+	/**
+	 * _set_default_properties_and_relations
+	 *
+	 * @access protected
+	 * @param string $called_class in order to avoid recursive application of relations,
+	 *                             we need to know which class is making this request
+	 * @return void
+	 */
+	protected function _set_default_properties_and_relations( $called_class ) {
+		// set some sensible defaults for this model object
+		if ( empty( $this->_default_properties ) ) {
+			static $counter = 1;
+			$fname = EE_UnitTest_Factory_For_Attendee::star_wars_first_name();
+			$place = EE_UnitTest_Factory_For_Attendee::star_wars_place();
+			$this->_default_properties = array(
+				'ATT_fname'   => $fname,
+				'ATT_lname'   => EE_UnitTest_Factory_For_Attendee::star_wars_last_name(),
+				'ATT_address' => substr( uniqid(), 0, rand( 1, 4 ) ) . ' '
+								 . EE_UnitTest_Factory_For_Attendee::star_wars_place(),
+				'ATT_city'    => $place,
+				'ATT_zip'     => substr( uniqid(), 0, rand( 0, 6 ) ),
+				'ATT_email'   => "$fname@$place." . substr(
+						EE_UnitTest_Factory_For_Attendee::star_wars_place(),
+						2,
+						rand( 2, 3 )
+					),
+				'ATT_phone'   => sprintf(
+					'%1$d-%1$d-%2$d',
+					EE_UnitTest_Factory_For_Attendee::random_number( 3 ),
+					EE_UnitTest_Factory_For_Attendee::random_number( 4 )
+				)
+			);
+			$counter++;
+		}
+		// and set some sensible default relations
+		if ( empty( $this->_default_relations ) ) {
+			$this->_default_relations = array(
+				'Registration' => array(),
+				'State'        => array(),
+				'Country'      => array(),
+				'Event'        => array(),
+				'WP_User'      => array(),
+			);
+			$this->_resolve_default_relations( $called_class );
+		}
+
+	}
+
+
+
+	/**
+	 * @return string
+	 */
+	public static function star_wars_first_name() {
+		$names = array(
+			'Gyogdag',
+			'Oberon',
+			'Chaffery',
+			'Noort',
+			'Lukef',
+			'Lasak',
+			'Xislan',
+			'Adan',
+			'Edus',
+			'Kalaila',
+			'Melfina',
+			'Arod',
+			'Nihran',
+			'Horreek',
+			'Tyrria',
+			'Ardler',
 		);
+		return $names[ rand( 0, 15 ) ];
 	}
 
 
 
 	/**
-	 * This generates the dummy relation objects for use in a new attendee if the $_chained flag is set.
-	 * Note this is called on EVERY new attendee created when create_many() is called.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param array $args arguments that are sent to the factory that *may contain registration id.
-	 * @param int $ATT_ID required to make sure that when registration_chained is called,
-	 *                    it does not create a new attendee object but uses THIS attendee and sets the relation.
+	 * @return string
 	 */
-	private function _set_new_relations( $args, $ATT_ID ) {
-		//registration
-		$this->_registration = empty( $args[ 'REG_ID' ] )
-			? $this->factory->registration_chained->create( array( 'ATT_ID' => $ATT_ID ) )
-			: EEM_Registration::instance()->get_one_by_ID( $args[ 'REG_ID' ] );
-		$this->_registration = empty( $this->_registration )
-			? $this->factory->registration_chained->create( array( 'ATT_ID' => $ATT_ID ) )
-			: $this->_registration;
+	public static function star_wars_last_name() {
+		$names = array(
+			'Lighthopper',
+			'Vand',
+			'Ordona',
+			'Nelant',
+			'Zaria',
+			'Bebec',
+			'Narag',
+			'Tarrk',
+			'Renning',
+			'Remex',
+			'Corra',
+			'Kuolor',
+			'Mithric',
+			'Meelux',
+			'Nabkin',
+			'Helran',
+		);
+		return $names[ rand( 0, 15 ) ];
 	}
 
 
 
 	/**
-	 * This handles connecting a attendee to related items when the chained flag is true.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param EE_Attendee $attendee
-	 * @param array $args incoming arguments from caller for specifying overrides.
-	 *
-	 * @return EE_Attendee
+	 * @return string
 	 */
-	private function _maybe_chained( EE_Attendee $attendee, $args ) {
-		if ( $this->_chained ) {
-			if ( empty( $this->_status ) ) {
-				$this->_set_repeated_relation( $args, $attendee->ID() );
-			}
-			// YES we DO want to set brand new relation objects because multiple attendees
-			// do not share the same related objects (for the purpose of tests at least)
-			$this->_set_new_relations( $args, $attendee->ID() );
-			//note relation to registration should already be set via the factory->registration_chained->create() method.
-			//add relation to status
-			$attendee->_add_relation_to( $this->_status, 'Status' );
-			$attendee->save();
-			return $attendee;
-		}
-		return $attendee;
+	public static function star_wars_place() {
+		$names = array(
+			'Drendanwan',
+			'Kaalecien',
+			'Galored 5',
+			'Nydeviel',
+			'Uloetram',
+			'Uloldan',
+			'Loassi',
+			'Yerrand',
+			'Elelirien',
+			'Aligoli',
+			'Sevoewen',
+			'Nyhar L7',
+			'Acissi',
+			'Etheib',
+			'Kedilaniel',
+			'Ocaowen',
+		);
+		return $names[ rand( 0, 15 ) ];
 	}
 
 
 
 	/**
-	 * used by factory to create attendee object.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param array $args Incoming field values to set on the new object
-	 *
-	 * @return EE_Attendee|false
+	 * @param int $digits
+	 * @return string
 	 */
-	public function create_object( $args ) {
-		$attendee = EE_Attendee::new_instance( $args );
-		$attendeeID = $attendee->save();
-		$attendee = $this->_maybe_chained( $attendee, $args );
-		$attendee->save();
-		return $attendeeID ? $attendee : false;
+	public static function random_number( $digits = 1 ) {
+		return rand( pow( 10, $digits - 1 ) - 1, pow( 10, $digits ) - 1 );
 	}
-
-
-
-	/**
-	 * Update attendee object for given attendee.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $ATT_ID Attendee ID for the attendee to update
-	 * @param array $cols_n_data columns and values to change/update
-	 *
-	 * @return EE_Attendee|false.
-	 */
-	public function update_object( $ATT_ID, $cols_n_data ) {
-		//all the stuff for updating an attendee.
-		$attendee = EEM_Attendee::instance()->get_one_by_ID( $ATT_ID );
-		if ( ! $attendee instanceof EE_Attendee ) {
-			return null;
-		}
-		foreach ( $cols_n_data as $key => $val ) {
-			$attendee->set( $key, $val );
-		}
-		$success = $attendee->save();
-		return $success ? $attendee : false;
-	}
-
-
-
-	/**
-	 * return the attendee object for a given attendee ID.
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $ATT_ID the attendee id for the attendee to attempt to retrieve
-	 *
-	 * @return mixed null|EE_Attendee
-	 */
-	public function get_object_by_id( $ATT_ID ) {
-		return EEM_Attendee::instance()->get_one_by_ID( $ATT_ID );
-	}
-
-
 
 }
 // End of file EE_UnitTest_Factory_For_Attendee.class.php
