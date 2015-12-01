@@ -7,73 +7,56 @@
  * @subpackage    tests
  *
  */
-class EE_UnitTest_Factory_For_Venue extends WP_UnitTest_Factory_For_Thing {
+class EE_UnitTest_Factory_For_Venue extends EE_UnitTest_Factory_for_Model_Object {
 
-	public function __construct( $factory = null ) {
-		parent::__construct( $factory );
-		//default args for creating events.
-		$this->default_generation_definitions = array(
-			'VNU_name'       => new WP_UnitTest_Generator_Sequence( 'Venue %s' ),
-			'VNU_desc'       => new WP_UnitTest_Generator_Sequence( 'Venue content %s' ),
-			'VNU_short_desc' => new WP_UnitTest_Generator_Sequence( 'Venue excerpt %s' ),
-		);
+
+	/**
+	 * constructor
+	 *
+	 * @param EE_UnitTest_Factory $factory
+	 * @param array | null        $properties_and_relations
+	 *          pass null (or nothing) to just get the default properties with NO relations
+	 *          or pass empty array for default properties AND relations
+	 *          or non-empty array to override default properties and manually set related objects and their properties,
+	 */
+	public function __construct( $factory, $properties_and_relations = null ) {
+		$this->set_model_object_name( 'Venue' );
+		parent::__construct( $factory, $properties_and_relations );
 	}
 
 
 
 	/**
-	 * used by factory to create venue object
+	 * _set_default_properties_and_relations
 	 *
-	 * @since 4.3.0
-	 *
-	 * @param array $args Incoming field values to set on the new object
-	 *
-	 * @return EE_Venue|false
+	 * @access protected
+	 * @param string $called_class in order to avoid recursive application of relations,
+	 *                             we need to know which class is making this request
+	 * @return void
 	 */
-	public function create_object( $args ) {
-		$venue = EE_Venue::new_instance( $args );
-		$venID = $venue->save();
-		return $venID ? $venue : false;
-	}
-
-
-
-	/**
-	 * Update venue object for given venue
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $VNU_ID Venue ID for the event to update
-	 * @param array $cols_n_data columns and values to change/update
-	 *
-	 * @return EE_Venue|false
-	 */
-	public function update_object( $VNU_ID, $cols_n_data ) {
-		//all the stuff for updating an event.
-		$venue = EEM_Venue::instance()->get_one_by_ID( $VNU_ID );
-		if ( ! $venue instanceof EE_Venue ) {
-			return null;
+	protected function _set_default_properties_and_relations( $called_class ) {
+		static $counter = 1;
+		// set some sensible defaults for this model object
+		if ( empty( $this->_default_properties ) ) {
+			$this->_default_properties = array(
+				'VNU_name'       => "Venue $counter",
+				'VNU_desc'       => "Venue Content $counter",
+				'VNU_short_desc' => "Venue Excerpt $counter",
+			);
+			$counter++;
 		}
-		foreach ( $cols_n_data as $key => $val ) {
-			$venue->set( $key, $val );
+		// and set some sensible default relations
+		if ( empty( $this->_default_relations ) ) {
+			$this->_default_relations = array(
+				'Event'    	  => array(),
+				'State'       => array(),
+				'Country'     => array(),
+				//'Event_Venue' => array(),
+				//'WP_User'     => array(),
+			);
+			$counter++;
+			$this->_resolve_default_relations( $called_class );
 		}
-		$success = $venue->save();
-		return $success ? $venue : false;
-	}
-
-
-
-	/**
-	 * return the venue object for a given venue ID
-	 *
-	 * @since 4.3.0
-	 *
-	 * @param int $VNU_ID the venue id for the venue to attempt to retrieve
-	 *
-	 * @return mixed null|EE_Venue
-	 */
-	public function get_object_by_id( $VNU_ID ) {
-		return EEM_Venue::instance()->get_one_by_ID( $VNU_ID );
 	}
 
 
