@@ -27,7 +27,7 @@ abstract class EEM_Base extends EE_Base{
 
 	//admin posty
 	//basic -> grants access to mine -> if they don't have it, select none
-	//*_others -> grants access to others that arent private, and all mine -> if they don't have it, select mine
+	//*_others -> grants access to others that aren't private, and all mine -> if they don't have it, select mine
 	//*_private -> grants full access -> if dont have it, select all mine and others' non-private
 	//*_published -> grants access to published -> if they dont have it, select non-published
 	//*_global/default/system -> grants access to global items -> if they don't have it, select non-global
@@ -36,8 +36,8 @@ abstract class EEM_Base extends EE_Base{
 
 	//frontend posty
 	//by default has access to published
-	//basic -> grants access to mine that arent published, and all published
-	//*_others ->grants access to others that arent private, all mine
+	//basic -> grants access to mine that aren't published, and all published
+	//*_others ->grants access to others that aren't private, all mine
 	//*_private -> grants full access
 
 	//frontend non-posty
@@ -768,7 +768,7 @@ abstract class EEM_Base extends EE_Base{
 	 * useful for finding if model objects of this type are 'owned' by the current user.
 	 * This is an empty string when the foreign key is on this model and when it isn't,
 	 * but is only non-empty when this model's ownership is indicated by a RELATED model
-	 * (or transietly-related model)
+	 * (or transiently-related model)
 	 * @return string
 	 */
 	public function model_chain_to_wp_user(){
