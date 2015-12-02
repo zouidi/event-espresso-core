@@ -65,7 +65,7 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 	 * @return \EE_UnitTest_Factory_for_Model_Object
 	 */
 	public function get_factory_for_model( $model_name ) {
-		$model_name = strtolower( $model_name );
+		$model_name = strtolower( rtrim( $model_name, '*' ) );
 		if ( isset( $this->repo[ $model_name ] ) ) {
 			return $this->repo[ $model_name ];
 		}
@@ -84,6 +84,8 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 		}
 		return null;
 	}
+
+
 
 }
 
