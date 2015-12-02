@@ -39,58 +39,40 @@ class EE_Event_Scenario_H extends EE_Test_Scenario {
 	 * @throws \Exception
 	 */
 	protected function _set_up_scenario(){
-		$build_artifact = array(
-			'Event' => array(
-				1 => array(
-					'fields' => array(
-						'EVT_name' 	=> 'Test Scenario EVT H - Two Classes',
-						'status' 	=> 'publish',
-					)
-				)
-			),
-			'Datetime' => array(
-				1 => array(
-					'fields' => array(
-						'DTT_name' 		=> 'Class 1 of 2',
+		$event = $this->generate_objects_for_scenario(
+			array(
+				'Event' => array(
+					'EVT_name' => 'Test Scenario EVT H - Two Classes',
+					'status'   => 'publish',
+					'Datetime'    => array(
+						'DTT_name'      => 'Class 1 of 2',
 						'DTT_EVT_start' => time() + ( 7 * DAY_IN_SECONDS ),
-						'DTT_EVT_end' 	=> time() + ( 7.5 * DAY_IN_SECONDS ),
+						'DTT_EVT_end'   => time() + ( 7.5 * DAY_IN_SECONDS ),
 						'DTT_reg_limit' => 12,
-						'DTT_sold' 		=> 0,
+						'DTT_sold'      => 0,
+						'Ticket'    => array(
+							'TKT_name' => 'Ticket 1',
+							'TKT_qty'  => 12,
+							'TKT_sold' => 0,
+						),
 					),
-					'relations' => array(
-						'Event' => array( 1 )
-					)
-				),
-				2 => array(
-					'fields' => array(
-						'DTT_name' 		=> 'Class 2 of 2',
+					'Datetime*'   => array(
+						'DTT_name'      => 'Class 2 of 2',
 						'DTT_EVT_start' => time() + ( 14 * DAY_IN_SECONDS ),
 						'DTT_EVT_end'   => time() + ( 14.5 * DAY_IN_SECONDS ),
 						'DTT_reg_limit' => 12,
-						'DTT_sold' 		=> 0,
+						'DTT_sold'      => 0,
+						'Ticket'    => array(
+							'TKT_name' => 'Ticket 1',
+							'TKT_qty'  => 12,
+							'TKT_sold' => 0,
+						),
 					),
-					'relations' => array(
-						'Event' => array( 1 )
-					)
-				)
-			),
-			'Ticket' => array(
-				1 => array(
-					'fields' => array(
-						'TKT_name' 	=> 'Ticket 1',
-						'TKT_qty' 	=> 12,
-						'TKT_sold' 	=> 0,
-					),
-					'relations' => array(
-						'Datetime' => array( 1, 2 )
-					)
 				),
-			),
+			)
 		);
-
-		$build_objects = $this->_eeTest->factory->complex_factory->build( $build_artifact );
 		//assign the event object as the scenario object
-		$this->_scenario_object = reset( $build_objects['Event'] );
+		$this->_scenario_object = reset( $event );
 		$this->_sell_tickets( $this->_get_event_ticket() , 6 );
 	}
 
