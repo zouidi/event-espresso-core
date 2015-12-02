@@ -25,13 +25,13 @@ class EEM_Answer_Test extends EE_UnitTestCase{
 		$this->assertEquals( $a, EEM_Answer::instance()->get_registration_question_answer_object( $r, $a->question_ID() ) );
 	}
 	function test_get_attendee_property_answer_value(){
-		$r = $this->new_model_obj_with_dependencies( 'Registration' );
+		$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'Attendee' => array() ) );
 		global $wpdb;
 		$att = EEM_Attendee::reset()->get_one_by_ID( $r->attendee_ID() );
 		$this->assertEquals( $r->attendee()->fname(), EEM_Answer::instance()->get_attendee_property_answer_value( $r,  EEM_Attendee::system_question_fname ) );
 	}
 	public function test_get_answer_value_to_question(){
-		$r = $this->new_model_obj_with_dependencies('Registration');
+		$r = $this->new_model_obj_with_dependencies('Registration', array( 'Attendee' => array() ) );
 		$a = $this->new_model_obj_with_dependencies('Answer',array('REG_ID'=>$r->ID()));
 		$this->assertEquals($a->value(),EEM_Answer::instance()->get_answer_value_to_question($r,$a->question_ID(),false));
 		$this->assertEquals($r->attendee()->fname(),EEM_Answer::instance()->get_answer_value_to_question($r,  EEM_Question::instance()->get_Question_ID_from_system_string( EEM_Attendee::system_question_fname ) ) );
@@ -76,10 +76,11 @@ class EEM_Answer_Test extends EE_UnitTestCase{
 						)
 					),
 					'ANS_value' ));
-		//ok so it's definetely got dangerous stuff in the db, but when we fetch it using the models it should be safe again
+		//ok so it's definitely got dangerous stuff in the db, but when we fetch it using the models it should be safe again
 		$a->refresh_from_db();
 		$this->assertEquals( '', $a->get_raw( 'ANS_value' ) );
 	}
 }
 
 // End of file EEM_Answer_Test.php
+// Location: /tests/testcases/core/db_models/EEM_Answer_Test.php
