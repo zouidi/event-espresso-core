@@ -124,6 +124,20 @@ abstract class EE_Test_Scenario {
 
 
 
+	/**
+	 * @param array $scenario_data_arrays
+	 * @return array
+	 */
+	public function generate_objects_for_scenario( $scenario_data_arrays = array() ) {
+		$generated_objects = array();
+		foreach ( $scenario_data_arrays as $factory => $scenario_data ) {
+			$factory = $this->_eeTest->factory->get_factory_for_model( $factory );
+			$factory->set_properties_and_relations( $scenario_data );
+			$generated_objects[] = $factory->create_object();
+		}
+		return $generated_objects;
+	}
+
 
 
 	/**
