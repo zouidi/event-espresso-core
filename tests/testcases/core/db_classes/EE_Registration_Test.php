@@ -45,7 +45,7 @@ class EE_Registration_Test extends EE_UnitTestCase{
 				)
 			)
 		);
-		$r = EE_REgistration::new_instance(
+		$r = EE_Registration::new_instance(
 			array(
 				'EVT_ID'			=>$e->ID(),
 				'TXN_ID'			=>$t->ID(),
@@ -61,10 +61,10 @@ class EE_Registration_Test extends EE_UnitTestCase{
 	}
 
 	function test_answer_value_to_question() {
-		$r = $this->new_model_obj_with_dependencies( 'Registration' );
+		$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'Attendee' => array() ) );
 		$q1 = $this->new_model_obj_with_dependencies( 'Question' );
-		//also grab the default firstname question
-		$q2 = EEM_Question::instance()->get_Question_ID_from_system_string(EEM_Attendee::system_question_fname);
+		//also grab the default first name question
+		$q2 = EEM_Question::instance()->get_Question_ID_from_system_string( EEM_Attendee::system_question_fname );
 		$this->assertNotNull($q2);
 		$a1 = $this->new_model_obj_with_dependencies( 'Answer', array('REG_ID'=>$r->ID(), 'QST_ID'=>$q1->ID()));
 		$this->assertEquals( $a1->value(), $r->answer_value_to_question( $q1, false ) );
@@ -82,7 +82,7 @@ class EE_Registration_Test extends EE_UnitTestCase{
 	 */
 	function test_can_checkin() {
 		//setup a registration
-		$r = $this->new_model_obj_with_dependencies( 'Registration' );
+		$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'Event' => array() ) );
 
 		$t = $this->new_ticket();
 
@@ -127,3 +127,4 @@ class EE_Registration_Test extends EE_UnitTestCase{
 }
 
 // End of file EE_Registration_Test.php
+// Location:/tests/testcases/core/db_classes/EE_Registration_Test.php
