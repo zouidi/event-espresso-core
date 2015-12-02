@@ -419,10 +419,11 @@ function test_process__2_events_some_taxed_with_discounts() {
 
 	/**
 	 * Creates a bunch of registrations and returns an array of all the "approved" ones
+	 *
 	 * @param array $ticket_quantities top-level-keys are ticket IDs,
-	 * next-level keys are either 'included' or 'not'.
+	 *                                 next-level keys are either 'included' or 'not'.
 	 * @param EE_Line_Item $grand_total
-	 * @return a flat array of all the registrations that were for 'included'
+	 * @return EE_Registration[] a flat array of all the registrations that were for 'included'
 	 */
 	protected function _create_regs( $ticket_quantities, $grand_total ) {
 		$txn = $this->new_model_obj_with_dependencies( 'Transaction' );
@@ -430,7 +431,18 @@ function test_process__2_events_some_taxed_with_discounts() {
 		foreach( $ticket_quantities as $ticket_id => $approved_or_not_counts ) {
 			foreach( $approved_or_not_counts as $key => $count ) {
 				for( $i = 0; $i < $count; $i++ ) {
-					$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'TXN_ID' => $txn->ID(), 'TKT_ID' => $ticket_id ) );
+					$r = $this->new_model_obj_with_dependencies(
+						'Registration',
+						array(
+							'Transaction' => array(
+								'TXN_ID' => $txn->ID(),
+								'Line_Item' => array(),
+							),
+							'Ticket'      => array(
+								'TKT_ID' => $ticket_id,
+							),
+						)
+					);
 					if( $key == 'included' ) {
 						$regs_to_include[] = $r;
 					}
@@ -444,3 +456,4 @@ function test_process__2_events_some_taxed_with_discounts() {
 }
 
 // End of file EE_Specific_Registrations_Line_Item_Filter_Test.php
+// Location: /tests/testcases/core/libraries/line_item_filters/EE_Specific_Registrations_Line_Item_Filter_Test.php
