@@ -545,7 +545,14 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		$related_object_class = $this->_prefix_class_name( $model_name );
 		if ( ! $related_object instanceof $related_object_class ) {
 			throw new Exception(
-				sprintf( 'An invalid "%1$s" object was generated.', $related_object_class )
+				sprintf(
+					'An invalid "%1$s" object was generated. This is what was returned after calling the "%2$s" factory:%5$s %3$s %5$s with the following fields:%5$s %4$s',
+					$related_object_class,
+					$model_name,
+					print_r( $related_object, true ),
+					print_r( $model_fields, true ),
+					'<br />'
+				)
 
 			);
 		}
@@ -565,6 +572,9 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	protected function _get_model_factory( $model_name, $chained = true ) {
 		$factory_model = strtolower( $model_name );
 		$factory_model .= $chained ? '_chained' : '';
+		if ( ! isset( $this->_factory->repo[ $factory_model ] ) ) {
+			$this->_factory->construct_generic_factory_for_model( $model_name );
+		}
 		if ( ! isset( $this->_factory->repo[ $factory_model ] ) ) {
 			throw new Exception(
 				sprintf(

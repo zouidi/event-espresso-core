@@ -45,6 +45,7 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 			'state',
 			'country',
 			'wp_user',
+			'line_item',
 		);
 		foreach ( $factories as $factory ) {
 			$class = 'EE_UnitTest_Factory_For_' . str_replace( ' ', '_', ucwords( str_replace( '_', ' ', $factory ) ) );
@@ -70,6 +71,22 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 			return $this->repo[ $model_name ];
 		}
 		return null;
+	}
+
+
+
+
+	/**
+	 * construct_generic_factory_for_model
+	 *
+	 * @param string $model_name
+	 * @return \EE_UnitTest_Factory_for_Model_Object
+	 */
+	public function construct_generic_factory_for_model( $model_name ) {
+		$model_name = strtolower( rtrim( $model_name, '*' ) );
+		$this->repo[ $model_name ] = new EE_UnitTest_Factory_For_Generic_Model( $model_name, $this );
+		$this->repo[ $model_name . '_chained' ] = new EE_UnitTest_Factory_For_Generic_Model( $model_name, $this, array() );
+		return $this->get_factory_for_model( $model_name );
 	}
 
 
