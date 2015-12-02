@@ -58,86 +58,102 @@ class EE_Datetime_Scenario_B extends EE_Test_Scenario {
 
 
 	protected function _set_up_scenario() {
-		$build_artifact = array(
-			'Datetime' => array(
-				1 => array(
-					'fields' => array(
-						'DTT_name'      => 'Datetime 1',
-						'DTT_reg_limit' => 9,
-						'DTT_sold'      => 8,
-					)
-				),
-				2 => array(
-					'fields' => array(
-						'DTT_name'      => 'Datetime 2',
-						'DTT_reg_limit' => 9,
-						'DTT_sold'      => 8,
-					)
-				),
-				3 => array(
-					'fields' => array(
-						'DTT_name'      => 'Datetime 3',
-						'DTT_reg_limit' => 9,
-						'DTT_sold'      => 8,
-					)
-				)
-			),
-			'Ticket'   => array(
-				'A' => array(
-					'fields'    => array(
+		$datetimes = $this->generate_objects_for_scenario(
+			array(
+				'Datetime'   => array(
+					'DTT_name'      => 'Datetime 1',
+					'DTT_reg_limit' => 9,
+					'DTT_sold'      => 8,
+					'Ticket'       => array(
 						'TKT_name' => 'Ticket A',
 						'TKT_qty'  => 9,
 						'TKT_sold' => 4,
 					),
-					'relations' => array(
-						'Datetime' => array( 1, 2, 3 )
-					)
-				),
-				'B' => array(
-					'fields'    => array(
+					'Ticket*'      => array(
 						'TKT_name' => 'Ticket B',
 						'TKT_qty'  => 9,
 						'TKT_sold' => 3,
 					),
-					'relations' => array(
-						'Datetime' => array( 1, 2, 3 )
-					)
-				),
-				'C' => array(
-					'fields'    => array(
+					'Ticket**' => array(
 						'TKT_name' => 'Ticket C',
 						'TKT_qty'  => 9,
 						'TKT_sold' => 1,
 					),
-					'relations' => array(
-						'Datetime' => array( 1, 2, 3 )
-					)
-				),
-				'D' => array(
-					'fields'    => array(
+					'Ticket***'  => array(
 						'TKT_name' => 'Ticket D',
 						'TKT_qty'  => 9,
 						'TKT_sold' => 0,
 					),
-					'relations' => array(
-						'Datetime' => array( 1, 2, 3 )
-					)
-				),
-				'E' => array(
-					'fields'    => array(
+					'Ticket****' => array(
 						'TKT_name' => 'Ticket E',
 						'TKT_qty'  => 9,
 						'TKT_sold' => 0,
 					),
-					'relations' => array(
-						'Datetime' => array( 1, 2, 3 )
-					)
 				),
-			),
+				'Datetime*'  => array(
+					'DTT_name'      => 'Datetime 2',
+					'DTT_reg_limit' => 9,
+					'DTT_sold'      => 8,
+					'Ticket'       => array(
+						'TKT_name' => 'Ticket A',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 4,
+					),
+					'Ticket*'      => array(
+						'TKT_name' => 'Ticket B',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 3,
+					),
+					'Ticket**' => array(
+						'TKT_name' => 'Ticket C',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 1,
+					),
+					'Ticket***'  => array(
+						'TKT_name' => 'Ticket D',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 0,
+					),
+					'Ticket****' => array(
+						'TKT_name' => 'Ticket E',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 0,
+					),
+				),
+				'Datetime**' => array(
+					'DTT_name'      => 'Datetime 3',
+					'DTT_reg_limit' => 9,
+					'DTT_sold'      => 8,
+					'Ticket'       => array(
+						'TKT_name' => 'Ticket A',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 4,
+					),
+					'Ticket*'       => array(
+						'TKT_name' => 'Ticket B',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 3,
+					),
+					'Ticket**' => array(
+						'TKT_name' => 'Ticket C',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 1,
+					),
+					'Ticket***'  => array(
+						'TKT_name' => 'Ticket D',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 0,
+					),
+					'Ticket****' => array(
+						'TKT_name' => 'Ticket E',
+						'TKT_qty'  => 9,
+						'TKT_sold' => 0,
+					),
+				),
+			)
 		);
-		$build_objects = $this->_eeTest->factory->complex_factory->build( $build_artifact );
 		//assign the first datetime object as the scenario object (it's the one that will be used for tests.
-		$this->_scenario_object = reset( $build_objects[ 'Datetime' ] );
+		$this->_scenario_object = reset( $datetimes );
 	}
 
 
