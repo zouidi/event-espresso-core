@@ -36,14 +36,13 @@ class EE_UnitTest_Factory_For_Datetime extends EE_UnitTest_Factory_for_Model_Obj
 	protected function _set_default_properties_and_relations( $called_class ) {
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
-			static $counter = 1;
 			$this->_default_properties = array(
-				'DTT_name'        => sprintf( 'Datetime %s', $counter ),
-				'DTT_description' => sprintf( 'Datetime Description %s', $counter ),
+				'DTT_name'        => sprintf( 'Datetime %s', EE_UnitTest_Factory::$counter ),
+				'DTT_description' => sprintf( 'Datetime Description %s', EE_UnitTest_Factory::$counter ),
 				'DTT_EVT_start'   => strtotime( '+1 month', current_time( 'timestamp' ) ),
 				'DTT_EVT_end'     => strtotime( '+2 months', current_time( 'timestamp' ) ),
 			);
-			$counter++;
+			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
