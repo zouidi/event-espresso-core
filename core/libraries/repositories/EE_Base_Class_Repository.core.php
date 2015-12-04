@@ -1,5 +1,8 @@
 <?php
+
 namespace EventEspresso\Core\Libraries\Repositories;
+
+use core\interfaces\EEI_Deletable;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
