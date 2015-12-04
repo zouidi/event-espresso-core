@@ -1,5 +1,5 @@
 <?php
-namespace core\interfaces;
+namespace EventEspresso\core\interfaces;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
