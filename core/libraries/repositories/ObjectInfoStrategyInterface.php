@@ -2,6 +2,8 @@
 
 namespace EventEspresso\Core\Libraries\Repositories;
 
+use EventEspresso\core\interfaces\EEI_Collection;
+
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	exit('No direct script access allowed');
@@ -10,9 +12,9 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 interface ObjectInfoStrategyInterface {
 
 	/**
-	 * @param ObjectRepository $object_repository
+	 * @param EEI_Collection $object_collection
 	 */
-	function setRepository( ObjectRepository $object_repository );
+	function setCollection( EEI_Collection $object_collection );
 
 
 
@@ -30,6 +32,14 @@ interface ObjectInfoStrategyInterface {
 	 * @return null|object
 	 */
 	function getObjectByInfo( $array_of_key_value_pairings );
+
+
+
+	/**
+	 * @param mixed $array_of_key_value_pairings
+	 * @return void
+	 */
+	function setCurrentByInfo( $array_of_key_value_pairings );
 
 }
 // End of file ObjectInfoStrategyInterface.php
