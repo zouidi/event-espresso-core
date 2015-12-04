@@ -47,7 +47,6 @@ class EE_UnitTest_Factory_For_Attendee extends EE_UnitTest_Factory_for_Model_Obj
 	protected function _set_default_properties_and_relations( $called_class ) {
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
-			static $counter = 1;
 			$fname = EE_UnitTest_Factory_For_Attendee::star_wars_first_name();
 			$place = EE_UnitTest_Factory_For_Attendee::star_wars_place();
 			$this->_default_properties = array(
@@ -68,7 +67,6 @@ class EE_UnitTest_Factory_For_Attendee extends EE_UnitTest_Factory_for_Model_Obj
 					EE_UnitTest_Factory_For_Attendee::random_number( 4 )
 				)
 			);
-			$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
