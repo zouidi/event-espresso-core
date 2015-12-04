@@ -2,6 +2,8 @@
 
 namespace EventEspresso\Core\Libraries\Repositories;
 
+use core\interfaces\EEI_Collection;
+
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	exit('No direct script access allowed');
 }
@@ -21,76 +23,97 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
  * @since 				$VID:$
  *
  */
- class ObjectInfoSingleKeyStrategy implements ObjectInfoStrategyInterface {
+class ObjectInfoSingleKeyStrategy implements ObjectInfoStrategyInterface {
 
 
-	 /**
-	  * @type ObjectRepository $object_repository
-	  */
-	 protected $object_repository;
-
-
-
-	 /**
-	  * @param ObjectRepository $object_repository
-	  */
-	 public function setRepository( ObjectRepository $object_repository ) {
-		 $this->object_repository = $object_repository;
-	 }
+	/**
+	* @type ObjectRepository $object_collection
+	*/
+	protected $object_collection;
 
 
 
-	 /**
-	  * setObjectInfo
-	  *
-	  * Sets the data associated with an object in the SplObjectStorage
-	  * if no $info is supplied, then the spl_object_hash() is used
-	  *
-	  * @access protected
-	  * @param object $object
-	  * @param mixed  $info
-	  * @return bool
-	  */
-	 public function setObjectInfo( $object, $info = null ) {
-		 $info = ! empty( $info ) ? $info : spl_object_hash( $object );
-		 $this->object_repository->rewind();
-		 while ( $this->object_repository->valid() ) {
-			 if ( $object == $this->object_repository->current() ) {
-				 $this->object_repository->setInfo( $info );
-				 $this->object_repository->rewind();
-				 return;
-			 }
-			 $this->object_repository->next();
-		 }
-	 }
+	/**
+	* @param EEI_Collection $object_collection
+	*/
+	public function setCollection( EEI_Collection $object_collection ) {
+		$this->object_collection = $object_collection;
+	}
 
 
 
-	 /**
-	  * getObjectByInfo
-	  *
-	  * finds and returns an object in the repository based on the info that was set using addObject()
-	  *
-	  * @access protected
-	  * @param mixed $info
-	  * @return null | object
-	  */
-	 public function getObjectByInfo( $info ) {
-		 $this->object_repository->rewind();
-		 while ( $this->object_repository->valid() ) {
-			 if ( $info === $this->object_repository->getInfo() ) {
-				 $object = $this->object_repository->current();
-				 $this->object_repository->rewind();
-				 return $object;
-			 }
-			 $this->object_repository->next();
-		 }
-		 return null;
-	 }
+	/**
+	* setObjectInfo
+	*
+	* Sets the data associated with an object in the SplObjectStorage
+	* if no $info is supplied, then the spl_object_hash() is used
+	*
+	* @access protected
+	* @param object $object
+	* @param mixed  $info
+	* @return bool
+	*/
+	public function setObjectInfo( $object, $info = null ) {
+		$info = ! empty( $info ) ? $info : spl_object_hash( $object );
+		$this->object_collection->rewind();
+		while ( $this->object_collection->valid() ) {
+			if ( $object == $this->object_collection->current() ) {
+				$this->object_collection->setInfo( $info );
+				$this->object_collection->rewind();
+				return true;
+			}
+			$this->object_collection->next();
+		}
+		return false;
+	}
 
- }
+
+
+	/**
+	* getObjectByInfo
+	*
+	* finds and returns an object in the repository based on the info that was set using addObject()
+	*
+	* @access protected
+	* @param mixed $info
+	* @return null | object
+	*/
+	public function getObjectByInfo( $info ) {
+		$this->object_collection->rewind();
+		while ( $this->object_collection->valid() ) {
+			if ( $info === $this->object_collection->getInfo() ) {
+				$object = $this->object_collection->current();
+				$this->object_collection->rewind();
+				return $object;
+			}
+			$this->object_collection->next();
+		}
+		return null;
+	}
 
 
 
+	/**
+	 * setCurrentByInfo
+	 *
+	 * advances pointer to the object whose info matches that which was provided
+	 *
+	 * @access public
+	 * @param $info
+	 * @return void
+	 */
+	public function setCurrentByInfo( $info ) {
+		$this->object_collection->rewind();
+		while ( $this->object_collection->valid() ) {
+			if ( $info === $this->object_collection->getInfo() ) {
+				break;
+			}
+			$this->object_collection->next();
+		}
+	}
+
+
+
+}
 // End of file ObjectInfoSingleKeyStrategy.php
 // Location: /ObjectInfoSingleKeyStrategy.php
