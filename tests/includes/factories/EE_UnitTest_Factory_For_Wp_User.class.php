@@ -37,7 +37,7 @@ class EE_UnitTest_Factory_For_Wp_User extends EE_UnitTest_Factory_for_Model_Obje
 	protected function _set_default_properties_and_relations( $called_class ) {// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'ID' => 1,
+				'ID' => get_current_user_id(),
 			);
 		}
 		// and set some sensible default relations
