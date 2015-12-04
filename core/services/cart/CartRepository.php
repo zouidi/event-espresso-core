@@ -2,6 +2,8 @@
 
 namespace EventEspresso\Core\Services\Cart;
 
+use EventEspresso\core\interfaces\CartInterface;
+use EventEspresso\core\interfaces\CartRepositoryInterface;
 use EventEspresso\Core\Libraries\Repositories\EE_Object_Repository;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
@@ -11,56 +13,23 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowe
  * Storage entity for Carts that implements the
  * Countable, Iterator, Serializable, and ArrayAccess interfaces
  *
- * @package 			Event Espresso
+ * @package 	Event Espresso
  * @subpackage 	core
- * @author 				Brent Christensen
- * @since 				$VID:$
+ * @author 		Brent Christensen
+ * @since 		$VID:$
  *
  */
-class CartRepository extends EE_Object_Repository {
+class CartRepository extends EE_Object_Repository implements CartRepositoryInterface {
 
-	/**
-	 * @type \EE_Session $_session
-	 */
-	protected $_session;
 
 
 
 	/**
-	 * @param \EE_Session $session
+	 * @param CartInterface $cart
+	 * @return bool
 	 */
-	function __construct( \EE_Session $session ) {
-		$this->_session = $session;
-		parent::__construct();
-	}
-
-
-
-	/**
-	 * @return \EE_Session
-	 */
-	public function session() {
-		return $this->_session;
-	}
-
-
-
-	/**
-	 * @return Cart
-	 */
-	public function create_cart() {
-		return $this->add_cart( new Cart() );
-	}
-
-
-
-	/**
-	 * @param Cart $cart
-	 *
-*@return bool
-	 */
-	public function add_cart( Cart $cart ) {
-		return $this->addObject( $cart, $cart->ID() );
+	public function addCart( CartInterface $cart ) {
+		return $this->add( $cart, $cart->ID() );
 	}
 
 
@@ -69,10 +38,10 @@ class CartRepository extends EE_Object_Repository {
 	 * @param mixed $ID
 	 * @return null | object
 	 */
-	public function get_cart( $ID ) {
-		$cart = $this->getObjectByInfo( $ID );
+	public function getCart( $ID ) {
+		$cart = $this->get_by_info( $ID );
 		if ( ! $cart instanceof Cart ) {
-			$cart = $this->create_cart();
+			// exception ??
 		}
 		return $cart;
 	}
@@ -80,39 +49,11 @@ class CartRepository extends EE_Object_Repository {
 
 
 	/**
-	 * @param mixed $ID
-	 * @return null | object
+	 * @param CartInterface $cart
+	 * @return bool
 	 */
-	public function get_cart_by_id( $ID ) {
-		return $this->getObjectByInfo( $ID );
-	}
-
-
-
-	/**
-	 * @param mixed $ID
-	 * @return null | object
-	 */
-	public function get_cart_from_session( $ID ) {
-		//try getting the cart out of the session
-		$cart = $this->session()->cart( $ID );
-		if ( $cart instanceof Cart && $ID == $cart->ID() ) {
-			if ( $this->addObject( $cart, $ID ) ) {
-				return $cart;
-			}
-		}
-		return null;
-	}
-
-
-
-	/**
-	 * @param Cart $cart
-	 *
-*@return bool
-	 */
-	public function has_cart( Cart $cart ) {
-		return $this->hasObject( $cart );
+	public function hasCart( CartInterface $cart ) {
+		return $this->contains( $cart );
 	}
 
 
@@ -121,20 +62,19 @@ class CartRepository extends EE_Object_Repository {
 	 * @param mixed $ID
 	 * @return bool
 	 */
-	public function has_cart_by_id( $ID ) {
-		$cart = $this->getObjectByInfo( $ID );
-		return $this->hasObject( $cart );
+	public function hasCartByID( $ID ) {
+		$cart = $this->get_by_info( $ID );
+		return $this->contains( $cart );
 	}
 
 
 
 	/**
-	 * @param Cart $cart
-	 *
-*@return bool | int
+	 * @param CartInterface $cart
+	 * @return bool | int
 	 */
-	public function save_cart( Cart $cart ) {
-		return $this->persistObject( $cart, 'save_cart' );
+	public function saveCart( CartInterface $cart ) {
+		return $this->persist( $cart, 'save_cart' );
 	}
 
 
@@ -143,20 +83,19 @@ class CartRepository extends EE_Object_Repository {
 	 * @param mixed $ID
 	 * @return bool | int
 	 */
-	public function save_cart_by_id( $ID ) {
-		$cart = $this->getObjectByInfo( $ID );
-		return $this->persistObject( $cart, 'save_cart' );
+	public function saveCartByID( $ID ) {
+		$cart = $this->get_by_info( $ID );
+		return $this->persist( $cart, 'save_cart' );
 	}
 
 
 
 	/**
-	 * @param Cart $cart
-	 *
-*@return void
+	 * @param CartInterface $cart
+	 * @return void
 	 */
-	public function remove_cart( Cart $cart ) {
-		$this->removeObject( $cart );
+	public function removeCart( CartInterface $cart ) {
+		$this->remove( $cart );
 	}
 
 
@@ -165,9 +104,9 @@ class CartRepository extends EE_Object_Repository {
 	 * @param mixed $ID
 	 * @return void
 	 */
-	public function remove_cart_by_id( $ID ) {
-		$cart = $this->getObjectByInfo( $ID );
-		$this->removeObject( $cart );
+	public function removeCartByID( $ID ) {
+		$cart = $this->get_by_info( $ID );
+		$this->remove( $cart );
 	}
 
 
