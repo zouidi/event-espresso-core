@@ -35,15 +35,14 @@ class EE_UnitTest_Factory_For_Event extends EE_UnitTest_Factory_for_Model_Object
 	 * @return void
 	 */
 	protected function _set_default_properties_and_relations( $called_class ) {
-		static $counter = 1;
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'EVT_name'       => "Event $counter",
-				'EVT_desc'       => "Event Content $counter",
-				'EVT_short_desc' => "Event Excerpt $counter",
+				'EVT_name'       => sprintf( 'Event %d', EE_UnitTest_Factory::$counter ),
+				'EVT_desc'       => sprintf( 'Event Content %d', EE_UnitTest_Factory::$counter ),
+				'EVT_short_desc' => sprintf( 'Event Excerpt %d', EE_UnitTest_Factory::$counter ),
 			);
-			$counter++;
+			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
@@ -57,7 +56,6 @@ class EE_UnitTest_Factory_For_Event extends EE_UnitTest_Factory_for_Model_Object
 				//'Attendee'               => array(),
 				//'WP_User'                => array(),
 			);
-			$counter++;
 			$this->_resolve_default_relations( $called_class );
 		}
 	}
