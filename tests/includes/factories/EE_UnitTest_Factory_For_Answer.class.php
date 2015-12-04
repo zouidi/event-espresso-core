@@ -35,13 +35,12 @@ class EE_UnitTest_Factory_For_Answer extends EE_UnitTest_Factory_for_Model_Objec
 	 * @return void
 	 */
 	protected function _set_default_properties_and_relations( $called_class ) {
-		static $counter = 1;
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'ANS_value' => "$counter potato",
+				'ANS_value' => EE_UnitTest_Factory::$counter . " potato",
 			);
-			$counter++;
+			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
