@@ -25,7 +25,6 @@ class EE_UnitTest_Factory_For_Price_Type extends EE_UnitTest_Factory_for_Model_O
 	 *          or non-empty array to override default properties and manually set related objects and their properties,
 	 */
 	public function __construct( $factory, $properties_and_relations = null ) {
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
 		$this->set_model_object_name( 'Price_Type' );
 		parent::__construct( $factory, $properties_and_relations );
 	}
@@ -41,16 +40,13 @@ class EE_UnitTest_Factory_For_Price_Type extends EE_UnitTest_Factory_for_Model_O
 	 * @return void
 	 */
 	protected function _set_default_properties_and_relations( $called_class ) {
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
-			static $counter = 1;
 			$this->_default_properties = array(
 				'PRT_ID'   => 1,
 				//'PBT_ID'   => EEM_Price_Type::base_type_base_price,
 				//'PRT_name' => sprintf( 'Price Type %s', $counter ),
 			);
-			$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
@@ -58,12 +54,6 @@ class EE_UnitTest_Factory_For_Price_Type extends EE_UnitTest_Factory_for_Model_O
 				'Price' => array(),
 			);
 			$this->_resolve_default_relations( $called_class );
-			//echo "\n\n RESOLVED_RELATIONS for " . __CLASS__ . " ";
-			//echo implode( ' ', array_keys( $this->_default_relations ) ) . ":";
-			//echo " \n  {{ " . __LINE__ . ") " . __METHOD__ . "() }} \n";
-			//var_dump( $resolved_relations );
-			//$this->_default_relations = $resolved_relations;
-			//$this->_default_properties = array_merge( $this->_default_properties, $this->_default_relations );
 		}
 	}
 
