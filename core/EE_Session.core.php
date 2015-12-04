@@ -268,10 +268,13 @@
 
 
 	 /**
+	  * @param $ID
 	  * @return \EE_Cart
 	  */
-	 public function cart() {
-		 return isset( $this->_session_data['cart'] ) ? $this->_session_data['cart'] : NULL;
+	 public function cart( $ID ) {
+		 return isset( $this->_session_data['cart'], $this->_session_data['cart'][ $ID ] )
+			 ? $this->_session_data['cart'][ $ID ]
+			 : NULL;
 	 }
 
 
