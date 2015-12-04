@@ -1,7 +1,7 @@
 <?php
 namespace EventEspresso\Core\Libraries\Repositories;
 
-use core\interfaces\EEI_Repository;
+use EventEspresso\core\interfaces\EEI_Repository;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
