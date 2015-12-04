@@ -35,13 +35,11 @@ class EE_UnitTest_Factory_For_Question extends EE_UnitTest_Factory_for_Model_Obj
 	 * @return void
 	 */
 	protected function _set_default_properties_and_relations( $called_class ) {
-		static $counter = 1;
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
 				'QST_display_text' => "can you count to ten?",
 			);
-			$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
@@ -52,7 +50,6 @@ class EE_UnitTest_Factory_For_Question extends EE_UnitTest_Factory_for_Model_Obj
 				//'Question_Option' 			=> array(),
 				//'WP_User' 					=> array(),
 			);
-			$counter++;
 			$this->_resolve_default_relations( $called_class );
 		}
 	}
