@@ -26,7 +26,6 @@ class EE_UnitTest_Factory_For_Price extends EE_UnitTest_Factory_for_Model_Object
 	 *          or non-empty array to override default properties and manually set related objects and their properties,
 	 */
 	public function __construct( $factory, $properties_and_relations = null ) {
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
 		$this->set_model_object_name( 'Price' );
 		parent::__construct( $factory, $properties_and_relations );
 	}
@@ -42,17 +41,15 @@ class EE_UnitTest_Factory_For_Price extends EE_UnitTest_Factory_for_Model_Object
 	 * @return void
 	 */
 	protected function _set_default_properties_and_relations( $called_class ) {
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
-			static $counter = 1;
 			$this->_default_properties = array(
 				'PRT_ID' 	 => 1,
-				'PRC_name'   => sprintf( 'Price %s', $counter ),
-				'PRC_desc'   => sprintf( 'Price Description %s', $counter ),
+				'PRC_name'   => sprintf( 'Price %s', EE_UnitTest_Factory::$counter ),
+				'PRC_desc'   => sprintf( 'Price Description %s', EE_UnitTest_Factory::$counter ),
 				'PRC_amount' => 0,
 			);
-			$counter++;
+			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
@@ -60,12 +57,6 @@ class EE_UnitTest_Factory_For_Price extends EE_UnitTest_Factory_for_Model_Object
 				'Price_Type'    => array(),
 			);
 			$this->_resolve_default_relations( $called_class );
-			//echo "\n\n RESOLVED_RELATIONS for " . __CLASS__ . " ";
-			//echo implode( ' ', array_keys( $this->_default_relations ) ) . ":";
-			//echo " \n  {{ " . __LINE__ . ") " . __METHOD__ . "() }} \n";
-			//var_dump( $resolved_relations );
-			//$this->_default_relations = $resolved_relations;
-			//$this->_default_properties = array_merge( $this->_default_properties, $this->_default_relations );
 		}
 	}
 
