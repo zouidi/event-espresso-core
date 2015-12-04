@@ -22,7 +22,6 @@ class EE_UnitTest_Factory_For_Ticket extends EE_UnitTest_Factory_for_Model_Objec
 	 *          or non-empty array to override default properties and manually set related objects and their properties,
 	 */
 	public function __construct( $factory, $properties_and_relations = null ) {
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
 		$this->set_model_object_name( 'Ticket' );
 		parent::__construct( $factory, $properties_and_relations );
 	}
@@ -38,17 +37,15 @@ class EE_UnitTest_Factory_For_Ticket extends EE_UnitTest_Factory_for_Model_Objec
 	 * @return void
 	 */
 protected function _set_default_properties_and_relations( $called_class ) {
-	//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
 	// set some sensible defaults for this model object
 	if ( empty( $this->_default_properties ) ) {
-		static $counter = 1;
 		$this->_default_properties = array(
-			'TKT_name'        => sprintf( 'Ticket %s', $counter ),
-			'TKT_description' => sprintf( 'Ticket Description %s', $counter ),
+			'TKT_name'        => sprintf( 'Ticket %s', EE_UnitTest_Factory::$counter ),
+			'TKT_description' => sprintf( 'Ticket Description %s', EE_UnitTest_Factory::$counter ),
 			'TKT_start_date'  => strtotime( '+1 month' ),
 			'TKT_end_date'    => strtotime( '+2 months' )
 		);
-		$counter++;
+		EE_UnitTest_Factory::$counter++;
 	}
 	// and set some sensible default relations
 	if ( empty( $this->_default_relations ) ) {
