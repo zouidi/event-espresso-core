@@ -23,6 +23,10 @@ class EE_UnitTest_Factory_For_Registration extends EE_UnitTest_Factory_for_Model
 	 *          or non-empty array to override default properties and manually set related objects and their properties,
 	 */
 	public function __construct( $factory, $properties_and_relations = null ) {
+		echo "\n\n ************ " . __LINE__ . ") " . __METHOD__ . "() " . $this->factory_type() . ' ' . spl_object_hash( $this ) . " ************ ";
+		echo is_null( $properties_and_relations )
+			? "\n not chained \n"
+			: "\n CHAINED \n";
 		$this->set_model_object_name( 'Registration' );
 		parent::__construct( $factory, $properties_and_relations );
 	}
@@ -38,20 +42,20 @@ class EE_UnitTest_Factory_For_Registration extends EE_UnitTest_Factory_for_Model
 	 * @return void
 	 */
 	protected function _set_default_properties_and_relations( $called_class ) {
-		static $counter = 1;
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
+			echo "\n " . __LINE__ . ") " . __METHOD__ . "() " . $this->factory_type() . ' ' . spl_object_hash( $this );
 			$this->_default_properties = array(
-				'REG_date'        => time(),
+				'REG_date'        => 0, //time(),
 				'REG_final_price' => 0,
 				'REG_paid'        => 0,
 				'REG_session'     => uniqid(),
-				'REG_code'        => "1-1-$counter-" . substr( uniqid(), 0, 4 ),
-				'REG_url_link'    => "$counter-" . md5( 'ticket' . microtime() ),
-				'REG_count'       => $counter,
-				'REG_group_size'  => $counter,
+				'REG_code'        => "1-1-" . EE_UnitTest_Factory::$counter . "-" . substr( uniqid(), 0, 4 ),
+				'REG_url_link'    => EE_UnitTest_Factory::$counter . md5( 'ticket' . microtime() ),
+				'REG_count'       => EE_UnitTest_Factory::$counter,
+				'REG_group_size'  => EE_UnitTest_Factory::$counter,
 			);
-			$counter++;
+			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
@@ -68,7 +72,6 @@ class EE_UnitTest_Factory_For_Registration extends EE_UnitTest_Factory_for_Model
 				//'Payment'              => array(),
 				//'Registration_Payment' => array(),
 			);
-			$counter++;
 			$this->_resolve_default_relations( $called_class );
 		}
 	}
