@@ -35,15 +35,14 @@ class EE_UnitTest_Factory_For_Venue extends EE_UnitTest_Factory_for_Model_Object
 	 * @return void
 	 */
 	protected function _set_default_properties_and_relations( $called_class ) {
-		static $counter = 1;
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'VNU_name'       => "Venue $counter",
-				'VNU_desc'       => "Venue Content $counter",
-				'VNU_short_desc' => "Venue Excerpt $counter",
+				'VNU_name'       => "Venue " . EE_UnitTest_Factory::$counter,
+				'VNU_desc'       => "Venue Content " . EE_UnitTest_Factory::$counter,
+				'VNU_short_desc' => "Venue Excerpt " . EE_UnitTest_Factory::$counter,
 			);
-			$counter++;
+			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
@@ -54,7 +53,6 @@ class EE_UnitTest_Factory_For_Venue extends EE_UnitTest_Factory_for_Model_Object
 				//'Event_Venue' => array(),
 				//'WP_User'     => array(),
 			);
-			$counter++;
 			$this->_resolve_default_relations( $called_class );
 		}
 	}
