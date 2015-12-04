@@ -3,8 +3,9 @@
 namespace EventEspresso\Core\Services\Cart;
 
 use EventEspresso\Core;
-use EventEspresso\Core\Libraries\Repositories\ObjectRepository;
-use EventEspresso\Core\Libraries\Repositories\ObjectInfoArrayKeyStrategy;
+use EventEspresso\core\interfaces\CartInterface;
+//use EventEspresso\Core\Libraries\Repositories\EE_Object_Repository;
+//use EventEspresso\Core\Libraries\Repositories\ObjectInfoArrayKeyStrategy;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	exit('No direct script access allowed');
@@ -14,13 +15,13 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
  *
  * Description
  *
- * @package 			Event Espresso
+ * @package 	Event Espresso
  * @subpackage 	core
- * @author 				Brent Christensen
- * @since 				$VID:$
+ * @author 		Brent Christensen
+ * @since 		$VID:$
  *
  */
- class Cart {
+ class Cart implements CartInterface {
 
 	 /**
 	  * unique identifier for cart
@@ -47,40 +48,33 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	 protected $updated;
 
 	 /**
-	  * @type ObjectRepository $tickets
+	  * @type TicketRepository $tickets
 	  */
 	 protected $tickets;
 	 /**
-	  * @type ObjectRepository $items
+	  * @type ProductRepository $items
 	  */
-	 protected $items;
+	 protected $products;
 
 	 /**
-	  * @type ObjectRepository $promos
+	  * @type PromotionRepository $promos
 	  */
-	 protected $promos;
+	 protected $promotions;
 
 
 
-	 function __construct() {
-		 $this->ID 			= $this->generateID();
-		 $this->tickets 	= new ObjectRepository( new ObjectInfoArrayKeyStrategy() );
-		 $this->items 		= new ObjectRepository( new ObjectInfoArrayKeyStrategy() );
-		 $this->promos 	= new ObjectRepository( new ObjectInfoArrayKeyStrategy() );
-		 $this->setCreated();
-	 }
-
-
-
-	 protected function generateID() {
-		 $admin = is_admin() && ! EE_FRONT_AJAX ? 'admin-' : '';
-		 return uniqid( $admin );
-	 }
-
-
-
-	 public function setID( $ID ) {
-		 $this->ID = $ID;
+	 function __construct(
+		 $ID,
+		 TicketRepository $TicketRepository,
+		 ProductRepository $ProductRepository,
+		 PromotionRepository $PromoRepository,
+		 \DateTime $created = null
+	 ) {
+		 $this->ID 		 	= $ID;
+		 $this->tickets  	= $TicketRepository;
+		 $this->products 	= $ProductRepository;
+		 $this->promotions 	= $PromoRepository;
+		 $this->setCreated( $created );
 	 }
 
 
@@ -119,9 +113,10 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 
 	 /**
+	  * @access protected
 	  * @param \DateTime $created
 	  */
-	 public function setCreated( \DateTime $created = null ) {
+	 protected function setCreated( \DateTime $created = null ) {
 		 if ( ! $created instanceof \DateTime ) {
 			 $created = new \DateTime( 'now', new \DateTimeZone( 'UTC' ) );
 		 }
@@ -140,9 +135,10 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 
 	 /**
+	  * @access protected
 	  * @param \DateTime $updated
 	  */
-	 public function setUpdated( \DateTime $updated = null ) {
+	 protected function setUpdated( \DateTime $updated = null ) {
 		 if ( ! $updated instanceof \DateTime ) {
 			 $updated = new \DateTime( 'now', new \DateTimeZone( 'UTC' ) );
 		 }
@@ -156,6 +152,15 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  */
 	 public function getUpdated() {
 		 return $this->updated;
+	 }
+
+
+
+	 /**
+	  * @return TicketRepository
+	  */
+	 public function getTickets() {
+		 return $this->tickets;
 	 }
 
 
