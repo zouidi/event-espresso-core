@@ -14,10 +14,10 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * extends SplObjectStorage so therefore implements the
  * Countable, Iterator, Serializable, and ArrayAccess interfaces
  *
- * @package               Event Espresso
- * @subpackage            core
- * @author                Brent Christensen
- * @since                 4.6.31
+ * @package 	Event Espresso
+ * @subpackage 	core
+ * @author 		Brent Christensen
+ * @since 		4.6.31
  *
  */
 class ObjectRepository extends \SplObjectStorage {
@@ -37,7 +37,7 @@ class ObjectRepository extends \SplObjectStorage {
 	 */
 	function __construct( ObjectInfoStrategyInterface $object_info_strategy = null ) {
 		// so that object info strategy can access objects, rewind, etc
-		$object_info_strategy->setRepository( $this );
+		$object_info_strategy->setCollection( $this );
 		$this->object_info_strategy = $object_info_strategy instanceof ObjectInfoStrategyInterface
 			? $object_info_strategy : new ObjectInfoSingleKeyStrategy();
 	}
@@ -133,8 +133,7 @@ class ObjectRepository extends \SplObjectStorage {
 				if ( $object === $this->current() ) {
 					$success = false;
 					if ( method_exists( $object, $persistence_callback ) ) {
-						$success = call_user_func_array( array( $object, $persistence_callback ),
-														 $persistence_arguments );
+						$success = call_user_func_array( array( $object, $persistence_callback ), $persistence_arguments );
 					} else if ( $object instanceof \EE_Base_Class ) {
 						$success = $object->save( $persistence_arguments );
 					}
