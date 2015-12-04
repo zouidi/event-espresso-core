@@ -38,13 +38,11 @@ class EE_UnitTest_Factory_For_Payment extends EE_UnitTest_Factory_for_Model_Obje
 	 * @return void
 	 */
 	protected function _set_default_properties_and_relations( $called_class ) {
-		static $counter = 1;
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
 				'PAY_timestamp' => time(),
 			);
-			$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
@@ -57,7 +55,6 @@ class EE_UnitTest_Factory_For_Payment extends EE_UnitTest_Factory_for_Model_Obje
 				'Registration' 		   => array(),
 				//'Registration_Payment' => array(),
 			);
-			$counter++;
 			$this->_resolve_default_relations( $called_class );
 		}
 	}
