@@ -1,7 +1,7 @@
 <?php
 namespace EventEspresso\Core\Libraries\Repositories;
 
-use core\interfaces\EEI_Collection;
+use EventEspresso\core\interfaces\EEI_Collection;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
@@ -27,6 +27,27 @@ abstract class EE_Object_Collection extends \SplObjectStorage implements EEI_Col
 	 * @type string $interface
 	 */
 	protected $interface;
+
+
+	/**
+	 * how to set, get, and utilize object info when retrieving objects
+	 *
+	 * @type ObjectInfoStrategyInterface $object_info_strategy
+	 */
+	protected $object_info_strategy;
+
+
+
+	/**
+	 * @param ObjectInfoStrategyInterface $object_info_strategy
+	 */
+	function __construct( ObjectInfoStrategyInterface $object_info_strategy = null ) {
+		// so that object info strategy can access objects, rewind, etc
+		$object_info_strategy->setCollection( $this );
+		$this->object_info_strategy = $object_info_strategy instanceof ObjectInfoStrategyInterface
+			? $object_info_strategy
+			: new ObjectInfoSingleKeyStrategy();
+	}
 
 
 
@@ -66,17 +87,7 @@ abstract class EE_Object_Collection extends \SplObjectStorage implements EEI_Col
 	 * @return bool
 	 */
 	public function set_info( $object, $info = null ) {
-		$info = ! empty( $info ) ? $info : spl_object_hash( $object );
-		$this->rewind();
-		while ( $this->valid() ) {
-			if ( $object == $this->current() ) {
-				$this->setInfo( $info );
-				$this->rewind();
-				return true;
-			}
-			$this->next();
-		}
-		return false;
+		return call_user_func_array( array( $this->object_info_strategy, 'setObjectInfo' ), array( $object, $info ) );
 	}
 
 
@@ -92,16 +103,7 @@ abstract class EE_Object_Collection extends \SplObjectStorage implements EEI_Col
 	 * @return null | object
 	 */
 	public function get_by_info( $info ) {
-		$this->rewind();
-		while ( $this->valid() ) {
-			if ( $info === $this->getInfo() ) {
-				$object = $this->current();
-				$this->rewind();
-				return $object;
-			}
-			$this->next();
-		}
-		return null;
+		return call_user_func_array( array( $this->object_info_strategy, 'getObjectByInfo' ), array( $info ) );
 	}
 
 
@@ -167,13 +169,7 @@ abstract class EE_Object_Collection extends \SplObjectStorage implements EEI_Col
 	 * @return void
 	 */
 	public function set_current_by_info( $info ) {
-		$this->rewind();
-		while ( $this->valid() ) {
-			if ( $info === $this->getInfo() ) {
-				break;
-			}
-			$this->next();
-		}
+		call_user_func_array( array( $this->object_info_strategy, 'setCurrentByInfo' ), array( $info ) );
 	}
 
 
