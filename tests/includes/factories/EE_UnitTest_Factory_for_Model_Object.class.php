@@ -141,7 +141,17 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @return string.
 	 */
 	protected function _prep_model_or_class_name( $model_name ) {
-		return str_replace( ' ', '_', ucwords( str_replace( '_', ' ', trim( $model_name, '*' ) ) ) );
+		return str_replace(
+			array( ' ', 'Wp_User' ), // find spaces or malformed class names
+			array( '_', 'WP_User' ), // replace with underscores or correct class names
+			ucwords(
+			   str_replace(
+				   '_', // find underscores
+				   ' ', // replace with spaces so that ucwords() will work
+				   trim( $model_name, '*' ) // remove asterisks from model name
+			   )
+		   )
+		);
 	}
 
 
@@ -221,11 +231,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @param string $class_name
 	 */
 	protected function set_object_class( $class_name ) {
-		$class_name = $this->_prefix_class_name( $class_name );
-		if ( $class_name === 'EE_Wp_User' ) {
-			$class_name = 'EE_WP_User';
-		}
-		$this->_object_class = $class_name;
+		$this->_object_class = $this->_prefix_class_name( $class_name );
 	}
 
 
