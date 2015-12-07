@@ -58,27 +58,21 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 		$transaction = $this->new_model_obj_with_dependencies(
 			'Transaction',
 			array(
-				'STS_ID' 		=> EEM_Transaction::incomplete_status_code,
-				'TXN_total' 	=> $txn_total,
-				'TXN_paid' 	=> 0,
+				'STS_ID'    => EEM_Transaction::incomplete_status_code,
+				'TXN_total' => $txn_total,
+				'TXN_paid'  => 0,
 			)
 		);
 		if ( $reg_count ) {
-			$registrations = $this->factory->registration->create_many(
+			$this->factory->registration->create_many(
 				$reg_count,
 				array(
+					'TXN_ID'          => $transaction->ID(),
 					'STS_ID'          => EEM_Registration::status_id_pending_payment,
 					'REG_final_price' => $txn_total / $reg_count,
 				)
 			);
-			foreach ( $registrations as $registration ) {
-				if ( $registration instanceof EE_Registration ) {
-					$transaction->_add_relation_to( $registration, 'Registration' );
-					$registration->save();
-				}
-			}
 		}
-		$transaction->save();
 		return $transaction;
 	}
 
@@ -143,19 +137,19 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	 */
 	protected function _generate_details_array_for_payment_or_refund( EE_Transaction $transaction, $amount = 10.00, $PAY_ID = null, $refund = false ) {
 		return array(
-			'type' 			=> $refund !== true ? 1 : -1,
-			'PAY_ID' 		=> $PAY_ID,
-			'TXN_ID'      => $transaction->ID(),
-			'PMD_ID'     => $this->_payment_method()->ID(),
-			'STS_ID' 		=> EEM_Payment::status_id_approved,
-			'PAY_source' 		=> EEM_Payment_Method::scope_admin,
-			'PAY_details' 		=> array(),
-			'PAY_amount' 	=> $amount,
-			'PAY_timestamp' 		=> time() - 86400,
-			'PAY_po_number' 		=> rand( 100, 1000 ),
-			'PAY_extra_accntng' 			=>rand( 100, 1000 ),
-			'PAY_txn_id_chq_nmbr' 		=> rand( 100, 1000 ),
-			'PAY_gateway_response' 	=> 'You are a true champion!',
+			'type'                 => $refund !== true ? 1 : -1,
+			'PAY_ID'               => $PAY_ID,
+			'TXN_ID'               => $transaction->ID(),
+			'PMD_ID'               => $this->_payment_method()->ID(),
+			'STS_ID'               => EEM_Payment::status_id_approved,
+			'PAY_source'           => EEM_Payment_Method::scope_admin,
+			'PAY_details'          => array(),
+			'PAY_amount'           => $amount,
+			'PAY_timestamp'        => time() - 86400,
+			'PAY_po_number'        => rand( 100, 1000 ),
+			'PAY_extra_accntng'    => rand( 100, 1000 ),
+			'PAY_txn_id_chq_nmbr'  => rand( 100, 1000 ),
+			'PAY_gateway_response' => 'You are a true champion!',
 		);
 	}
 
@@ -174,7 +168,11 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 		$payment_details['PAY_amount'] = $payment_details[ 'type' ] < 0 ? $payment_details[ 'PAY_amount' ] * -1 : $payment_details[ 'PAY_amount' ];
 		// then remove 'type' from the payment details since it's not an EEM_Payment field
 		unset( $payment_details[ 'type' ] );
-		return EE_Payment::new_instance( $payment_details, '', array( 'Y-m-d', 'H:i a' ) );
+		$payment = EE_Payment::new_instance( $payment_details, '', array( 'Y-m-d', 'H:i a' ) );
+		// need to make sure relation is set between payment and payment method
+		$payment->_add_relation_to( $this->_payment_method, 'Payment_Method' );
+		$payment->save();
+		return $payment;
 	}
 
 
@@ -220,6 +218,8 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 		$this->_payment = $this->_generate_payment(
 			$this->_generate_details_array_for_payment_or_refund( $this->_transaction, $payment_amount )
 		);
+		$this->_transaction->set_status( EEM_Transaction::incomplete_status_code );
+		$this->_transaction->save();
 	}
 
 
@@ -230,7 +230,6 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	 * @param \EE_Registration[] $registrations
 	 */
 	protected function _apply_payment_to_registrations( $registrations ) {
-		//echo "\n\n " . __METHOD__ . "() \n";
 		// reset reg_payment_REG_IDs
 		$this->_admin_page->set_existing_reg_payment_REG_IDs();
 		$available_payment = $this->_payment->amount();
@@ -245,8 +244,7 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 						$available_payment = $available_payment - $payment_amount;
 						//calculate and set new REG_paid
 						$registration->set_paid( $registration->paid() + $payment_amount );
-						//$registration->set_paid( $available_payment );
-						$registration->_add_relation_to( $this->_payment, 'Payment', array( 'RPY_amount' => $this->_payment->amount() ) );
+						$registration->_add_relation_to( $this->_payment, 'Payment', array( 'RPY_amount' => $payment_amount ) );
 						$registration->save();
 					}
 				}
@@ -270,7 +268,6 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	 */
 	public function test_create_new_payment_or_refund_from_request_data() {
 		$this->_admin_page = new Transactions_Admin_Page_Mock();
-		//echo "\n\n " . __METHOD__ . "() \n";
 		$transaction = $this->_generate_transaction_and_registrations();
 		$request_data = $this->_generate_request_data_for_new_payment_or_refund( $transaction );
 		$payment = $this->_admin_page->create_payment_from_request_data( $request_data[ 'txn_admin_payment' ][ 'PAY_ID' ] );
@@ -286,7 +283,6 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	 */
 	public function test_get_REG_IDs_to_apply_payment_to_for_specific_registrations_and_new_payment() {
 		$this->_admin_page = new Transactions_Admin_Page_Mock();
-		//echo "\n\n " . __METHOD__ . "() \n";
 		$this->_setup_standard_transaction_and_payment( 40.00, 4, 10.00 );
 		// get 2 out of the four registrations
 		$registrations = $this->_get_x_number_of_registrations_from_transaction( $this->_transaction, 2 );
@@ -315,7 +311,6 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	 */
 	public function test_get_REG_IDs_to_apply_payment_to_for_all_registrations_and_new_payment() {
 		$this->_admin_page = new Transactions_Admin_Page_Mock();
-		//echo "\n\n " . __METHOD__ . "() \n";
 		$this->_setup_standard_transaction_and_payment( 40.00, 4, 10.00 );
 		$REG_IDs = $this->_admin_page->get_REG_IDs_to_apply_payment_to( $this->_payment );
 		foreach ( $this->_transaction->registrations() as $registration ) {
@@ -334,7 +329,6 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	 */
 	public function test_get_existing_reg_payment_REG_IDs() {
 		$this->_admin_page = new Transactions_Admin_Page_Mock();
-		//echo "\n\n " . __METHOD__ . "() \n";
 		$this->_setup_standard_transaction_and_payment( 40.00, 4, 15.00 );
 		// get 2 out of the four registrations
 		$registrations = $this->_get_x_number_of_registrations_from_transaction( $this->_transaction, 2 );
@@ -358,7 +352,6 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	 */
 	public function test_remove_existing_registration_payments() {
 		$this->_admin_page = new Transactions_Admin_Page_Mock();
-		//echo "\n\n " . __METHOD__ . "() \n";
 		$this->_setup_standard_transaction_and_payment( 40.00, 4, 10.00 );
 		$registrations = $this->_get_x_number_of_registrations_from_transaction( $this->_transaction, 2 );
 		$this->_apply_payment_to_registrations( $registrations );
@@ -424,7 +417,6 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 		$this->_admin_page->set_existing_reg_payment_REG_IDs();
 		$registrations = $this->_transaction->registrations();
 		$this->_admin_page->update_registration_payments( $this->_transaction, $this->_payment, array( end( $registrations )->ID() ) );
-		// ref
 		//$registrations = $this->_transaction->registrations();
 		$this->assertEquals( 0, reset( $registrations )->paid() );
 		$this->assertEquals( 0, next( $registrations )->paid() );
@@ -629,8 +621,7 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	public function test_build_payment_json_response_for_payment() {
 		$this->_admin_page = new Transactions_Admin_Page_Mock();
 		$this->_setup_standard_transaction_and_payment( 40.00, 4, 15.00 );
-		// need to make sure relation is set between payment and payment method
-		$this->_payment->_add_relation_to( $this->_payment_method(), 'Payment_Method' );
+		$this->_transaction->set_status( EEM_Transaction::incomplete_status_code );
 		$registrations = $this->_get_x_number_of_registrations_from_transaction( $this->_transaction, 1 );
 		$this->_apply_payment_to_registrations( $registrations );
 		$json_response_data = $this->_admin_page->build_payment_json_response( $this->_payment );
@@ -645,8 +636,8 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 		$this->assertEquals( $this->_payment->ID(), $json_response_data['PAY_ID'] );
 		$this->assertEquals( $this->_payment->timestamp( 'Y-m-d', 'h:i a' ), $json_response_data['date'] );
 		$this->assertEquals( strtoupper( $this->_payment->source() ), $json_response_data[ 'method' ] );
-		$this->assertEquals( $this->_payment_method()->ID(), $json_response_data[ 'PM_ID' ] );
-		$this->assertEquals( $this->_payment_method()->admin_name(), $json_response_data[ 'gateway' ] );
+		$this->assertEquals( $this->_payment_method->ID(), $json_response_data[ 'PM_ID' ] );
+		$this->assertEquals( $this->_payment_method->admin_name(), $json_response_data[ 'gateway' ] );
 		$this->assertEquals( $this->_payment->gateway_response(), $json_response_data[ 'gateway_response' ] );
 		$this->assertEquals( $this->_payment->txn_id_chq_nmbr(), $json_response_data[ 'txn_id_chq_nmbr' ] );
 		$this->assertEquals( $this->_payment->po_number(), $json_response_data[ 'po_number' ] );
