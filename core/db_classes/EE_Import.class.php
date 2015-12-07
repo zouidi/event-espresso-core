@@ -348,29 +348,32 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	}
 
 
-	/**
-	 * Processes the array of data, given the knowledge that it's from the same database or a different one,
-	 * and the mapping from temporary IDs to real IDs.
-	 * If the data is from a different database, we treat the primary keys and their corresponding
-	 * foreign keys as "temp Ids", basically identifiers that get mapped to real primary keys
-	 * in the real target database. As items are inserted, their temporary primary keys
-	 * are mapped to the real IDs in the target database. Also, before doing any update or
-	 * insert, we replace all the temp ID which are foreign keys with their mapped real IDs.
-	 * An exception: string primary keys are treated as real IDs, or else we'd need to
-	 * dynamically generate new string primary keys which would be very awkard for the country table etc.
-	 * Also, models with no primary key are strange too. We combine use their primar key INDEX (a
-	 * combination of fields) to create a unique string identifying the row and store
-	 * those in the mapping.
-	 *
-	 * If the data is from the same database, we usually treat primary keys as real IDs.
-	 * An exception is if there is nothing in the database for that ID. If that's the case,
-	 * we need to insert a new row for that ID, and then map from the non-existent ID
-	 * to the newly-inserted real ID.
-	 * @param type $csv_data_array
-	 * @param type $export_from_site_a_to_b
-	 * @param type $old_db_to_new_db_mapping
-	 * @return array updated $old_db_to_new_db_mapping
-	 */
+
+	 /**
+	  * Processes the array of data, given the knowledge that it's from the same database or a different one,
+	  * and the mapping from temporary IDs to real IDs.
+	  * If the data is from a different database, we treat the primary keys and their corresponding
+	  * foreign keys as "temp Ids", basically identifiers that get mapped to real primary keys
+	  * in the real target database. As items are inserted, their temporary primary keys
+	  * are mapped to the real IDs in the target database. Also, before doing any update or
+	  * insert, we replace all the temp ID which are foreign keys with their mapped real IDs.
+	  * An exception: string primary keys are treated as real IDs, or else we'd need to
+	  * dynamically generate new string primary keys which would be very awkward for the country table etc.
+	  * Also, models with no primary key are strange too. We combine use their primary key INDEX (a
+	  * combination of fields) to create a unique string identifying the row and store
+	  * those in the mapping.
+	  *
+	  * If the data is from the same database, we usually treat primary keys as real IDs.
+	  * An exception is if there is nothing in the database for that ID. If that's the case,
+	  * we need to insert a new row for that ID, and then map from the non-existent ID
+	  * to the newly-inserted real ID.
+	  *
+	  * @param array $csv_data_array
+	  * @param bool  $export_from_site_a_to_b
+	  * @param array $old_db_to_new_db_mapping
+	  * @return array updated $old_db_to_new_db_mapping
+	  * @throws \EE_Error
+	  */
 	public function save_data_rows_to_db( $csv_data_array, $export_from_site_a_to_b, $old_db_to_new_db_mapping ) {
 		foreach ( $csv_data_array as $model_name_in_csv_data => $model_data_from_import ) {
 			//now check that assumption was correct. If
@@ -504,9 +507,10 @@ do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 	 * replaces them with 123.
 	 * Also, if there is no temp ID for the INT foreign keys from another database,
 	 * replaces them with 0 or the field's default.
-	 * @param type $model_object_data
+	 *
+	 * @param array $model_object_data
 	 * @param EEM_Base $model
-	 * @param type $old_db_to_new_db_mapping
+	 * @param array $old_db_to_new_db_mapping
 	 * @param boolean $export_from_site_a_to_b
 	 * @return array updated model object data with temp IDs removed
 	 */
