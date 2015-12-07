@@ -719,12 +719,19 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	function new_model_obj_with_dependencies( $model_name, $args = array(), $save = true ) {
 		$factory = $this->factory->get_factory_for_model( $model_name );
 		if ( $factory instanceof EE_UnitTest_Factory_for_Model_Object ) {
+			//echo "\n factory: " . $model_name;
 			if ( ! empty( $args )) {
-				$factory->set_properties_and_relations( $args );
+				$factory->set_properties_and_relations( $args, $save );
 			}
-			return $factory->create_object();
+			$object = $factory->create_object();
+			if ( $save ) {
+				$object->save();
+			}
+			return $object;
 		}
-
+		echo "\n\n NO SOUP FOR YOU !!!: " . "\n";
+		echo "\n " . $model_name . " is an invalid model !!!";
+		return null;
 		global $auto_made_thing_seed;
 		if($auto_made_thing_seed === NULL){
 			$auto_made_thing_seed = 1;
@@ -910,7 +917,17 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		}
 		$taxes = EEM_Price::instance()->get_all_prices_that_are_taxes();
 		for( $i = 1; $i <= $ticket_types; $i++ ){
-			$ticket = $this->new_model_obj_with_dependencies( 'Ticket',  array( 'TKT_price'=> $i * 10 , 'TKT_taxable' => $taxable_tickets-- > 0 ? true : false ) );
+			/** @type EE_Ticket $ticket */
+			$ticket            = $this->new_model_obj_with_dependencies(
+				'Ticket',
+				array(
+					'TKT_price'		=> $i * 10 ,
+					'TKT_taxable' 	=> $taxable_tickets-- > 0 ? true : false,
+					'Datetime' 		=> array(
+						'Event' 	=> array()
+					)
+				)
+			);
 			$sum_of_sub_prices = 0;
 			for( $j=1; $j<= $fixed_ticket_price_modifiers; $j++ ) {
 				if( $j == $fixed_ticket_price_modifiers ) {
@@ -922,8 +939,6 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 				$sum_of_sub_prices += $price->amount();
 				$ticket->_add_relation_to( $price, 'Price' );
 			}
-			$a_datetime = $this->new_model_obj_with_dependencies( 'Datetime' );
-			$ticket->_add_relation_to( $a_datetime, 'Datetime');
 			$this->assertInstanceOf( 'EE_Line_Item', EEH_Line_Item::add_ticket_purchase($total_line_item, $ticket) );
 			$reg_final_price = $ticket->price();
 			foreach($taxes as $taxes_at_priority){
@@ -937,7 +952,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 						'TXN_ID' => $txn->ID(),
 						'TKT_ID' => $ticket->ID(),
 						'STS_ID' => EEM_Registration::status_id_approved,
-						'EVT_ID' => $a_datetime->get( 'EVT_ID' ),
+						'EVT_ID' => $ticket->get_event_ID(),
 						'REG_count'=>1,
 						'REG_group_size'=>1,
 						'REG_final_price' => $reg_final_price ) );
@@ -965,8 +980,20 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		$ticket_price = isset( $options[ 'ticket_price' ] ) && is_numeric( $options[ 'ticket_price' ] ) ? $options[ 'ticket_price' ] : 16.5;
 		// apply taxes? default = true
 		$ticket_taxable = isset( $options[ 'ticket_taxable' ] ) ? filter_var( $options[ 'ticket_taxable' ], FILTER_VALIDATE_BOOLEAN ) : true;
+
+		$ticket_args = array(
+			'TKT_price' => $ticket_price,
+			'TKT_taxable' => $ticket_taxable
+		);
+		// set datetimes, default = 1
+		$datetimes = isset( $options[ 'datetimes' ] ) ? $options[ 'datetimes' ] : 1;
+		$event = $this->new_model_obj_with_dependencies( 'Event', null );
+		for ( $i = 0; $i < $datetimes; $i++ ) {
+			$ticket_args[ 'Datetime' . str_repeat( '*', $i ) ] = array( 'EVT_ID' => $event->ID() );
+		}
 		/** @type EE_Ticket $ticket */
-		$ticket = $this->new_model_obj_with_dependencies('Ticket', array( 'TKT_price' => $ticket_price, 'TKT_taxable' => $ticket_taxable ) );
+		$ticket = $this->new_model_obj_with_dependencies('Ticket', $ticket_args );
+		$this->assertequals( $datetimes, count( $ticket->datetimes() ) );
 		$base_price_type = EEM_Price_Type::instance()->get_one( array( array('PRT_name' => 'Base Price' ) ) );
 		$this->assertInstanceOf( 'EE_Price_Type', $base_price_type );
 
@@ -1001,16 +1028,6 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 
 		if ( isset( $options[ 'TKT_taxable'] ) ) {
 			$ticket->set( 'TKT_taxable', $options['TKT_taxable'] );
-		}
-
-		// set datetimes, default = 1
-		$datetimes = isset( $options[ 'datetimes' ] ) ? $options[ 'datetimes' ] : 1;
-
-		$event = $this->new_model_obj_with_dependencies( 'Event' );
-		for( $i = 0; $i <= $datetimes; $i++ ){
-			$ddt = $this->new_model_obj_with_dependencies( 'Datetime', array( 'EVT_ID'=> $event->ID() ) );
-			$ticket->_add_relation_to( $ddt, 'Datetime' );
-			$this->assertArrayContains( $ddt, $ticket->datetimes() );
 		}
 
 		//resave ticket to account for possible field value changes
