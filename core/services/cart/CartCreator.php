@@ -23,35 +23,17 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 class CartCreator {
 
 	/**
-	 * @type TicketRepository $ticketRepository
+	 * @type CartItemRepository $cartItemRepository
 	 */
-	protected $ticketRepository;
-
-	/**
-	 * @type ProductRepository $productRepository
-	 */
-	protected $productRepository;
-
-	/**
-	 * @type PromotionRepository $promotionRepository
-	 */
-	protected $promotionRepository;
+	protected $cartItemRepository;
 
 
 
 	/**
-	 * @param \EventEspresso\core\services\cart\TicketRepository    $ticketRepository
-	 * @param \EventEspresso\core\services\cart\ProductRepository   $productRepository
-	 * @param \EventEspresso\core\services\cart\PromotionRepository $promotionRepository
+	 * @param CartItemRepository $cartItemRepository
 	 */
-	function __construct(
-		TicketRepository $ticketRepository,
-		ProductRepository $productRepository,
-		PromotionRepository $promotionRepository
-	) {
-		$this->ticketRepository 	= $ticketRepository;
-		$this->productRepository 	= $productRepository;
-		$this->promotionRepository 	= $promotionRepository;
+	function __construct( CartItemRepository $cartItemRepository ) {
+		$this->cartItemRepository = $cartItemRepository;
 	}
 
 
@@ -66,14 +48,15 @@ class CartCreator {
 	/**
 	 * createCart
 	 *
-	 * @return CartInterface
+	 * @param 	CartCalculatorRepository $cartCalculatorRepository
+	 * @return 	CartInterface
 	 */
-	protected function newCart() {
+	protected function newCart( CartCalculatorRepository $cartCalculatorRepository ) {
 		return new Cart(
 			$this->generateID(),
-			$this->ticketRepository,
-			$this->productRepository,
-			$this->promotionRepository,
+			$this->cartItemRepository,
+			$cartCalculatorRepository,
+			new CartTotal(),
 			new \DateTime( 'now', new \DateTimeZone( 'UTC' ) )
 		);
 	}
