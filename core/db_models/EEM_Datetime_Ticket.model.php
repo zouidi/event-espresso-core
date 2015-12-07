@@ -35,7 +35,6 @@ class EEM_Datetime_Ticket extends EEM_Base {
 	 *		@Constructor
 	 *		@access private
 	 *		@param string $timezone string representing the timezone we want to set for returned Date Time Strings (and any incoming timezone data that gets saved).  Note this just sends the timezone info to the date time model field objects.  Default is NULL (and will be assumed using the set timezone in the 'timezone_string' wp option)
-	 *		@return void
 	 */
 	protected function __construct( $timezone ) {
 		$this->singular_item = __('Datetime Ticket','event_espresso');
