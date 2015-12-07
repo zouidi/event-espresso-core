@@ -43,7 +43,6 @@ class EE_Line_Item__EE_Single_Registration_Line_Item_Filter__Integration_Test ex
 					'LIN_name' => 'event discount',
 					'LIN_total' => -8,
 					'LIN_unit_price' => -8,
-					'LIN_percent' => 0,
 					'LIN_quantity' => 1,
 					'LIN_parent' => $event_line_item->ID(),
 					'LIN_percent' => null,
@@ -59,7 +58,7 @@ class EE_Line_Item__EE_Single_Registration_Line_Item_Filter__Integration_Test ex
 //		var_dump( $totals );
 //		EEH_Line_Item::visualize( $transaction->total_line_item() );
 
-		//for each registration on the tranasction, verify the REG_final_price
+		//for each registration on the transaction, verify the REG_final_price
 		//indicated by EEH_Line_Item::calculate_reg_final_prices_per_line_item matches
 		//what the line item filters would have returned
 		EEH_Autoloader::register_line_item_filter_autoloaders();
@@ -109,7 +108,6 @@ class EE_Line_Item__EE_Single_Registration_Line_Item_Filter__Integration_Test ex
 					'LIN_name' => 'event discount',
 					'LIN_total' => -8,
 					'LIN_unit_price' => -8,
-					'LIN_percent' => 0,
 					'LIN_quantity' => 1,
 					'LIN_parent' => $event_line_item->ID(),
 					'LIN_percent' => null,
@@ -125,7 +123,7 @@ class EE_Line_Item__EE_Single_Registration_Line_Item_Filter__Integration_Test ex
 //		var_dump( $totals );
 //		EEH_Line_Item::visualize( $transaction->total_line_item() );
 
-		//for each registration on the tranasction, verify the REG_final_price
+		//for each registration on the transaction, verify the REG_final_price
 		//indicated by EEH_Line_Item::calculate_reg_final_prices_per_line_item matches
 		//what the line item filters would have returned
 		EEH_Autoloader::register_line_item_filter_autoloaders();
@@ -146,3 +144,4 @@ class EE_Line_Item__EE_Single_Registration_Line_Item_Filter__Integration_Test ex
 }
 
 // End of file EE_Line_Item__EE_Single_Registration_Line_Item_Filter__Integration_Test.php
+// Location: tests/testcases/integration/EE_Line_Item__EE_Single_Registration_Line_Item_Filter__Integration_Test.php
