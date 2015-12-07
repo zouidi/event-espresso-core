@@ -14,7 +14,8 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 /**
  * Class CartManager
  *
- * Description
+ * the CartManager class oversees the creation, storage, and retrieval of carts,
+ * as well as the storage of cart calculators
  *
  * @package 	Event Espresso
  * @subpackage 	core
@@ -111,32 +112,12 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  * @return CartInterface
 	  */
 	 protected function createCart() {
-		 $cart = $this->cartCreator->newCart();
+		 $cart = $this->cartCreator->newCart( $this->cartCalculators );
 		 if ( $this->cartRepository->addCart( $cart ) ) {
 			 return $cart;
 		 }
 		 return null;
 	 }
-
-
-
-	/**
-	* getCartTotal
-	*
-	* @param CartInterface $cart
-	* @return CartTotal
-	*/
-	protected function calculateCartTotals( CartInterface $cart ) {
-		$cartTotal = new CartTotal();
-		$this->cartCalculators->rewind();
-		while ( $this->cartCalculators->valid() ) {
-			$this->cartCalculators->current()->calculateTotal( $cart, $cartTotal );
-			$this->cartCalculators->next();
-		}
-		$cartTotal->grandTotal = $cartTotal->preTaxSubtotal - $cartTotal->totalDiscount + $cartTotal->taxSubtotal;
-		$cartTotal->grandTotal = max( 0, $cartTotal->grandTotal );
-		return $cartTotal;
-	}
 
 
 
