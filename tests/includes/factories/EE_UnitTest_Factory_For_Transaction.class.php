@@ -51,18 +51,19 @@ class EE_UnitTest_Factory_For_Transaction extends EE_UnitTest_Factory_for_Model_
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'TXN_timestamp'   => time(),
-				'TXN_total' 	  => 0,
-				'TXN_paid'        => 0,
+				'TXN_timestamp' => time(),
+				'TXN_total' 	=> 0,
+				'TXN_paid' 		=> 0,
+				'STS_ID' 		=> EEM_Transaction::incomplete_status_code,
 			);
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
 			$this->_default_relations = array(
 				'Registration' 	=> array(),
-				'Status' 		=> array(
-					'STS_ID' => EEM_Transaction::incomplete_status_code,
-				),
+				//'Status' 		=> array(
+				//	'STS_ID' => EEM_Transaction::incomplete_status_code,
+				//),
 				//'Payment'        => array(),
 				//'Line_Item'      => array(),
 				//'Payment_Method' => array(),
