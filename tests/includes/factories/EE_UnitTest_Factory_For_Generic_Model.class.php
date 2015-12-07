@@ -41,12 +41,20 @@ class EE_UnitTest_Factory_For_Generic_Model extends EE_UnitTest_Factory_for_Mode
 	protected function _set_default_properties_and_relations( $called_class ) {
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
-			$this->_default_properties = array();
+			$field_settings = $this->_model->field_settings( true );
+			foreach ( $field_settings as $field_setting ) {
+				if ( ! $field_setting instanceof EE_Primary_Key_Field_Base ) {
+					$this->_default_properties[ $field_setting->get_name() ] = $field_setting->get_default_value();
+				}
+			}
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
-			$relation_settings = $this->_model->relation_settings();
-			$this->_default_relations = array_keys( $relation_settings );
+			//$relation_settings = $this->_model->relation_settings();
+			//foreach ( $relation_settings as $relation_name => $relation_setting ) {
+			//	$this->_default_relations[ $relation_name ] = array();
+			//}
+			$this->_default_relations = array();
 			$this->_resolve_default_relations( $called_class );
 		}
 	}
