@@ -7,6 +7,17 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 
 
 
+/**
+ * Class CartTotal
+ *
+ * A DTO (Data Transfer Object) for all of the totals and subtotals of a cart's prices
+ *
+ * @package       Event Espresso
+ * @subpackage    core
+ * @author        Brent Christensen
+ * @since         $VID:$
+ *
+ */
 class CartTotal {
 
 	/** @var float */
