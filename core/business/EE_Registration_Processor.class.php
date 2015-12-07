@@ -339,8 +339,9 @@ class EE_Registration_Processor extends EE_Processor_Base {
 		$this->set_old_reg_status( $registration->ID(), $registration->status_ID() );
 		// if not already, toggle reg status to approved IF the event default reg status is approved
 		if (
-			$registration->status_ID() !== EEM_Registration::status_id_approved &&
-			$registration->event()->default_registration_status() == EEM_Registration::status_id_approved
+			$registration->status_ID() !== EEM_Registration::status_id_approved
+			&& $registration->event() instanceof EE_Event
+			&& $registration->event()->default_registration_status() == EEM_Registration::status_id_approved
 		) {
 			// set incoming REG_Status
 			$this->set_new_reg_status( $registration->ID(), EEM_Registration::status_id_approved );
