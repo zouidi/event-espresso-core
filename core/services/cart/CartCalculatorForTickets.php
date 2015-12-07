@@ -63,16 +63,13 @@ class CartCalculatorForTickets implements CartCalculatorInterface {
 	 * calculateTicketTotal
 	 */
 	protected function calculateTicketTotal() {
-		$tickets = $this->cart->getTickets();
-		$tickets->rewind();
-		while ( $tickets->valid() ) {
-			$ticket_price = $tickets->current()->ticket_price();
-			$this->cartTotal->ticketCount++;
+		$ticketCartItems = $this->cart->getTicketCartItems();
+		foreach ( $ticketCartItems as $ticketCartItem ) {
+			$this->cartTotal->ticketCount += $ticketCartItem->quantity();
+			$ticket_price = $ticketCartItem->calculatePrice();
 			$this->cartTotal->totalTicketAmount += $ticket_price;
 			$this->cartTotal->preTaxSubtotal += $ticket_price;
-			$tickets->next();
 		}
-		$tickets->rewind();
 	}
 
 
