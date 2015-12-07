@@ -36,7 +36,7 @@ class CartCalculatorRepository extends EE_Object_Collection implements CartCalcu
 
 	/**
 	 * @param mixed $name
-	 * @return null | object
+	 * @return CartCalculatorInterface
 	 */
 	public function getCartCalculator( $name ) {
 		$cartCalculator = $this->get_by_info( $name );
