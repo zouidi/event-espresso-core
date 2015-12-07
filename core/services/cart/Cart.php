@@ -48,32 +48,33 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	 protected $updated;
 
 	 /**
-	  * @type TicketRepository $tickets
+	  * @type CartItemRepository $items
 	  */
-	 protected $tickets;
-	 /**
-	  * @type ProductRepository $items
-	  */
-	 protected $products;
+	 protected $items;
 
 	 /**
-	  * @type PromotionRepository $promos
+	  * @type CartTotal $cartTotal
 	  */
-	 protected $promotions;
+	 protected $cartTotal;
+
+	 /**
+	  * @type CartCalculatorRepository $cartCalculatorRepository
+	  */
+	 protected $cartCalculators;
 
 
 
 	 function __construct(
 		 $ID,
-		 TicketRepository $TicketRepository,
-		 ProductRepository $ProductRepository,
-		 PromotionRepository $PromoRepository,
+		 CartItemRepository $cartItemRepository,
+		 CartCalculatorRepository $cartCalculatorRepository,
+		 CartTotal $cartTotal,
 		 \DateTime $created = null
 	 ) {
-		 $this->ID 		 	= $ID;
-		 $this->tickets  	= $TicketRepository;
-		 $this->products 	= $ProductRepository;
-		 $this->promotions 	= $PromoRepository;
+		 $this->ID 		 		= $ID;
+		 $this->items  			= $cartItemRepository;
+		 $this->cartCalculators = $cartCalculatorRepository;
+		 $this->cartTotal 		= $cartTotal;
 		 $this->setCreated( $created );
 	 }
 
@@ -157,12 +158,68 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 
 	 /**
-	  * @return TicketRepository
+	  * @param \EE_Ticket $ticket
+	  * @return bool
 	  */
-	 public function getTickets() {
-		 return $this->tickets;
+	 public function addTicket( \EE_Ticket $ticket ) {
+		 return $this->items->addItem(
+			 new TicketCartItem( $ticket, $this )
+		 );
 	 }
 
+
+
+	 /**
+	  * @return \EE_Ticket[]
+	  */
+	 public function getTickets() {
+		 $tickets = array();
+		 foreach ( $this->items as $item ) {
+			 if ( $item instanceof TicketCartItem ) {
+				 $tickets[] = $item->getItem();
+			 }
+		 }
+		 return $tickets;
+	 }
+
+
+
+	 /**
+	  * @return TicketCartItem[]
+	  */
+	 public function getTicketCartItems() {
+		 $ticketCartItems = array();
+		 foreach ( $this->items as $item ) {
+			 if ( $item instanceof TicketCartItem ) {
+				 $ticketCartItems[] = $item;
+			 }
+		 }
+		 return $ticketCartItems;
+	 }
+
+
+
+	 /**
+	  * calculateCartTotal
+	  *
+	  * @return CartTotal
+	  */
+	 protected function calculateCartTotal() {
+		 // allow each cart calculator to modify the subtotals
+		 $this->cartCalculators->rewind();
+		 while ( $this->cartCalculators->valid() ) {
+			 $this->cartCalculators->current()->calculateTotal( $this, $this->cartTotal );
+			 $this->cartCalculators->next();
+		 }
+		 // ya gotta ADD IT UP! ADD IT UP!
+		 $this->cartTotal->grandTotal =
+			 $this->cartTotal->preTaxSubtotal
+			 - $this->cartTotal->totalDiscount
+			 + $this->cartTotal->taxSubtotal;
+		 // no negative values please
+		 $this->cartTotal->grandTotal = max( 0, $this->cartTotal->grandTotal );
+		 return $this->cartTotal;
+	 }
 
 
  }
