@@ -19,7 +19,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @since 		4.6.31
  *
  */
-abstract class EE_Object_Collection extends \SplObjectStorage implements EEI_Collection {
+class EE_Object_Collection extends \SplObjectStorage implements EEI_Collection {
 
 	/**
 	 * an interface (or class) name to be used for restricting the type of objects added to the storage
