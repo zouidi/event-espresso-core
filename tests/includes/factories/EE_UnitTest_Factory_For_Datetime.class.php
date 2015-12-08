@@ -48,6 +48,7 @@ class EE_UnitTest_Factory_For_Datetime extends EE_UnitTest_Factory_for_Model_Obj
 		if ( empty( $this->_default_relations ) ) {
 			$this->_default_relations = array(
 				'Ticket' => array(),
+				'Event' => array(),
 			);
 			$this->_resolve_default_relations( $called_class );
 		}
