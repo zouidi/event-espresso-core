@@ -90,31 +90,98 @@ class EEM_Price_Caps_Test extends EE_UnitTestCase{
 	public function setUp(){
 		parent::setUp();
 		//let's make sure we start off with NO tickets in the DB
-		EEM_Price::instance()->delete_permanently( EEM_Price::instance()->alter_query_params_so_deleted_and_undeleted_items_included(), false );
-		$this->assertEquals( 0, EEM_Price::instance()->count( EEM_Price::instance()->alter_query_params_so_deleted_and_undeleted_items_included() ) );
-
+		EEM_Price::instance()->delete_permanently(
+			EEM_Price::instance()->alter_query_params_so_deleted_and_undeleted_items_included(),
+			false
+		);
+		$this->assertEquals(
+			0,
+			EEM_Price::instance()->count(
+				EEM_Price::instance()->alter_query_params_so_deleted_and_undeleted_items_included()
+			)
+		);
+		// create user
 		$this->user = $this->factory->user->create_and_get();
-		$this->e_mine = $this->new_model_obj_with_dependencies( 'Event', array( 'EVT_wp_user' => $this->user->ID, 'status' => 'publish' ) );
-		$this->e_others =  $this->new_model_obj_with_dependencies( 'Event', array( 'EVT_wp_user' => 99999, 'status' => 'publish' ) );
-		$this->e_private = $this->new_model_obj_with_dependencies( 'Event', array( 'EVT_wp_user' => 99999, 'status' => 'private' ) );
-		$this->t_mine = $this->new_model_obj_with_dependencies('Ticket', array( 'TKT_is_default' => false, 'TKT_wp_user' => $this->user->ID ) );
-		$this->t_others = $this->new_model_obj_with_dependencies('Ticket', array( 'TKT_is_default' => false, 'TKT_wp_user' => 9999 ) );
-		$this->t_private = $this->new_model_obj_with_dependencies('Ticket', array( 'TKT_is_default' => false, 'TKT_wp_user' => 9999 ) );
-		$dtt_to_mine = $this->new_model_obj_with_dependencies( 'Datetime', array( 'EVT_ID' => $this->e_mine->ID() ) );
-		$dtt_to_mine->_add_relation_to( $this->t_mine, 'Ticket' );
-		$dtt_to_others = $this->new_model_obj_with_dependencies( 'Datetime', array( 'EVT_ID' => $this->e_others->ID() ) );
-		$dtt_to_others->_add_relation_to( $this->t_others, 'Ticket' );
-		$dtt_to_private = $this->new_model_obj_with_dependencies( 'Datetime', array( 'EVT_ID' => $this->e_private->ID() ) );
-		$dtt_to_private->_add_relation_to( $this->t_private, 'Ticket');
+		// create events
+		$this->e_mine = $this->new_model_obj_with_dependencies(
+			'Event',
+			array(
+				'EVT_wp_user' => $this->user->ID,
+				'status' => 'publish'
+			)
+		);
+		$this->e_others  = $this->new_model_obj_with_dependencies(
+			'Event',
+			array( 'EVT_wp_user' => 99999, 'status' => 'publish' )
+		);
+		$this->e_private = $this->new_model_obj_with_dependencies(
+			'Event',
+			array(
+				'EVT_wp_user' => 99999, 'status' => 'private'
+			)
+		);
+		// create tickets
+		$this->t_mine = $this->new_model_obj_with_dependencies(
+			'Ticket',
+			array(
+				'TKT_is_default' => false,
+				'TKT_wp_user' => $this->user->ID,
+				'Datetime'=> array( 'EVT_ID' => $this->e_mine->ID() ),
+				'Price' => array(
+					'PRC_is_default' => false,
+					'PRC_wp_user'    => $this->user->ID,
+				)
+			)
+		);
+		$prices = $this->t_mine->prices();
+		$this->p_mine = reset( $prices );
 
-		$this->p_mine = $this->new_model_obj_with_dependencies('Price', array( 'PRC_is_default' => false, 'PRC_wp_user' => $this->user->ID ) );
-		$this->p_others = $this->new_model_obj_with_dependencies('Price', array( 'PRC_is_default' => false, 'PRC_wp_user' => 9999 ) );
-		$this->p_private = $this->new_model_obj_with_dependencies('Price', array( 'PRC_is_default' => false, 'PRC_wp_user' => 9999 ) );
-		$this->p_mine_default = $this->new_model_obj_with_dependencies('Price', array( 'PRC_is_default' => true, 'PRC_wp_user' => $this->user->ID ) );
-		$this->p_others_default = $this->new_model_obj_with_dependencies('Price', array( 'PRC_is_default' => true, 'PRC_wp_user' =>999999  ) );
-		$this->p_mine->_add_relation_to( $this->t_mine, 'Ticket' );
-		$this->p_others->_add_relation_to( $this->t_others, 'Ticket' );
-		$this->p_private->_add_relation_to( $this->t_private, 'Ticket' );
+		$this->t_others = $this->new_model_obj_with_dependencies(
+			'Ticket',
+			array(
+				'TKT_is_default' => false,
+				'TKT_wp_user' => 9999,
+				'Datetime' => array( 'EVT_ID' => $this->e_others->ID() ),
+				'Price' => array(
+					'PRC_is_default' => false,
+					'PRC_wp_user'    => 9999,
+				)
+			)
+		);
+		$prices = $this->t_others->prices();
+		$this->p_others = reset( $prices );
+
+		$this->t_private = $this->new_model_obj_with_dependencies(
+			'Ticket',
+			array(
+				'TKT_is_default' => false,
+				'TKT_wp_user' => 9999,
+				'Datetime' => array( 'EVT_ID' => $this->e_private->ID() ),
+				'Price' => array(
+					'PRC_is_default' => false,
+					'PRC_wp_user'    => 9999,
+				)
+			)
+		);
+		$prices = $this->t_private->prices();
+		$this->p_private = reset( $prices );
+		// create extra prices
+		$this->p_mine_default = $this->new_model_obj_with_dependencies(
+			'Price',
+			array(
+				'PRC_is_default' => true,
+				'PRC_wp_user' => $this->user->ID
+			)
+		);
+
+		$this->p_others_default = $this->new_model_obj_with_dependencies(
+			'Price',
+			array(
+				'PRC_is_default' => true,
+				'PRC_wp_user' => 999999
+			)
+		);
+
 	}
 
 	/**
@@ -124,7 +191,6 @@ class EEM_Price_Caps_Test extends EE_UnitTestCase{
 	public function test_get_all__caps__read__not_logged_in() {
 		//when we have no caps we should find all the non-global ones
 		$results = EEM_Price::instance()->get_all( array( 'caps' => EEM_Base::caps_read, 'order_by' => array ('PRC_ID' => 'ASC' ) ) );
-
 		$first_result = reset( $results );
 		$this->assertEEModelObjectsEquals($this->p_mine, $first_result );
 		$next_result = next( $results );
@@ -199,3 +265,4 @@ class EEM_Price_Caps_Test extends EE_UnitTestCase{
 }
 
 // End of file EEM_Price_Caps_Test.php
+// Location: tests/testcases/core/db_models/EEM_Price_Caps_Test.php
