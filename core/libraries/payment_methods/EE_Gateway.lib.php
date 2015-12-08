@@ -23,9 +23,9 @@
  *
  * ------------------------------------------------------------------------
  * Class for processing payments. This has been designed in a way so that other WP Plugins
- * can use this class for processing payments, and theoreitcally any of its children, provided they implement the
+ * can use this class for processing payments, and theoretically any of its children, provided they implement the
  * interfaces it uses.
- * The necessary interfaces to be implemented are contained in core/libaries/payment_methods/EEI_Payment_Method_Interfaces.php and
+ * The necessary interfaces to be implemented are contained in core/libraries/payment_methods/EEI_Payment_Method_Interfaces.php and
  * EEI_Interfaces. After constructing a gateway object, you need to set all the properties which reference many of the
  * needed helpers and models (see all the methods starting with "set_", eg seg_line_item_helper which should be passed an object
  * which implements EEHI_Line_Item_Helper; etc).
