@@ -128,9 +128,22 @@ class EEM_Registration_Test extends EE_UnitTestCase {
 	function test_delete_registrations_with_no_transaction(){
 		$deletable_count = 5;
 		$safe_count = 8;
-		$this->factory->registration->create_many( $deletable_count, array( 'TXN_ID' =>  0 ) );
+		for ( $i = 0; $i < $deletable_count; $i++ ) {
+			// first reset any defaults that the factories set automagically
+			$this->factory->registration->set_properties_and_relations( null );
+			// create a default object with NO relations
+			$this->factory->registration->create_object();
+		}
 		for ( $i = 0; $i < $safe_count; $i++ ) {
-			$this->new_model_obj_with_dependencies( 'Registration', array( 'Transaction' => array() ) );
+			// reset default properties and relations again
+			$this->factory->registration->set_properties_and_relations(
+				array(
+					'REG_date' => time(),
+					// include TXN relation this time but leave array empty to use all defaults
+					'Transaction' => array()
+				)
+			);
+			$this->factory->registration->create_object();
 		}
 		$deleted = EEM_Registration::instance()->delete_registrations_with_no_transaction();
 		$this->assertEquals( $deletable_count, $deleted );
