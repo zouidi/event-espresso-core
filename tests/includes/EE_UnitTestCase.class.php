@@ -732,93 +732,93 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		echo "\n\n NO SOUP FOR YOU !!!: " . "\n";
 		echo "\n " . $model_name . " is an invalid model !!!";
 		return null;
-		global $auto_made_thing_seed;
-		if($auto_made_thing_seed === NULL){
-			$auto_made_thing_seed = 1;
-		}
-		$model = EE_Registry::instance()->load_model($model_name);
-
-		//set the related model foreign keys
-		foreach($model->relation_settings() as $related_model_name => $relation){
-			if($relation instanceof EE_Belongs_To_Any_Relation){
-				continue;
-			}elseif( $related_model_name == 'Country' ){
-				//we already have lots of countries. lets not make any more
-				//what's more making them is tricky: the primary key needs to be a unique
-				//2-character string but not an integer (else it confuses the country
-				//form input validation)
-				if( ! isset( $args['CNT_ISO' ] )){
-					$args[ 'CNT_ISO' ] = 'US';
-				}
-			}elseif( $related_model_name == 'Status' ){
-				$fk = $model->get_foreign_key_to($related_model_name);
-				if( ! isset( $args[ $fk->get_name() ] ) ){
-					//only set the default if they haven't specified anything
-					$args[ $fk->get_name() ] = $fk->get_default_value();
-				}
-			}elseif($relation instanceof EE_Belongs_To_Relation) {
-				$obj = $this->new_model_obj_with_dependencies($related_model_name);
-				$fk = $model->get_foreign_key_to($related_model_name);
-				if( ! isset( $args[ $fk->get_name() ] )){
-					$args[$fk->get_name()] = $obj->ID();
-				}
-
-			}
-		}
-
-		//set any other fields which haven't yet been set
-		foreach($model->field_settings() as $field_name => $field){
-			$value = NULL;
-			if(in_array( $field_name, array(
-				'EVT_timezone_string',
-				'PAY_redirect_url',
-				'PAY_redirect_args',
-				'parent') ) ){
-				$value = NULL;
-			}elseif($field instanceof EE_Enum_Integer_Field ||
-					$field instanceof EE_Enum_Text_Field ||
-					$field instanceof EE_Boolean_Field ||
-					$field_name == 'PMD_type' ||
-					$field->get_name() == 'CNT_cur_dec_mrk' ||
-					$field->get_name() == 'CNT_cur_thsnds' ||
-					$field->get_name() == 'CNT_tel_code'){
-				$value = $field->get_default_value();
-			}elseif( $field instanceof EE_Integer_Field ||
-					$field instanceof EE_Float_Field ||
-					$field instanceof EE_Foreign_Key_Field_Base ||
-					$field instanceof EE_Primary_Key_String_Field ||
-					$field->get_name() == 'STA_abbrev' ||
-					$field->get_name() == 'CNT_ISO3' ||
-					$field->get_name() == 'CNT_cur_code'){
-				$value = $auto_made_thing_seed;
-			}elseif( $field instanceof EE_Primary_Key_String_Field ){
-				$value = "$auto_made_thing_seed";
-			}elseif( $field instanceof EE_Text_Field_Base ){
-				$value = $auto_made_thing_seed."_".$field->get_name();
-			}
-			if( ! array_key_exists( $field_name, $args ) && $value !== NULL){
-				$args[$field->get_name()] = $value;
-			}
-		}
-		//and finally make the model obj
-		$classname = 'EE_'.$model_name;
-		$model_obj = $classname::new_instance($args);
-		if($save){
-			$success = $model_obj->save();
-			if( ! $success ){
-				global $wpdb;
-				throw new EE_Error(
-					sprintf(
-						__( 'Could not save %1$s using %2$s. Error was %3$s', 'event_espresso' ),
-						$model_name,
-						json_encode($args),
-						$wpdb->last_error
-					)
-				);
-			}
-		}
-		$auto_made_thing_seed++;
-		return $model_obj;
+		//global $auto_made_thing_seed;
+		//if($auto_made_thing_seed === NULL){
+		//	$auto_made_thing_seed = 1;
+		//}
+		//$model = EE_Registry::instance()->load_model($model_name);
+		//
+		////set the related model foreign keys
+		//foreach($model->relation_settings() as $related_model_name => $relation){
+		//	if($relation instanceof EE_Belongs_To_Any_Relation){
+		//		continue;
+		//	}elseif( $related_model_name == 'Country' ){
+		//		//we already have lots of countries. lets not make any more
+		//		//what's more making them is tricky: the primary key needs to be a unique
+		//		//2-character string but not an integer (else it confuses the country
+		//		//form input validation)
+		//		if( ! isset( $args['CNT_ISO' ] )){
+		//			$args[ 'CNT_ISO' ] = 'US';
+		//		}
+		//	}elseif( $related_model_name == 'Status' ){
+		//		$fk = $model->get_foreign_key_to($related_model_name);
+		//		if( ! isset( $args[ $fk->get_name() ] ) ){
+		//			//only set the default if they haven't specified anything
+		//			$args[ $fk->get_name() ] = $fk->get_default_value();
+		//		}
+		//	}elseif($relation instanceof EE_Belongs_To_Relation) {
+		//		$obj = $this->new_model_obj_with_dependencies($related_model_name);
+		//		$fk = $model->get_foreign_key_to($related_model_name);
+		//		if( ! isset( $args[ $fk->get_name() ] )){
+		//			$args[$fk->get_name()] = $obj->ID();
+		//		}
+		//
+		//	}
+		//}
+		//
+		////set any other fields which haven't yet been set
+		//foreach($model->field_settings() as $field_name => $field){
+		//	$value = NULL;
+		//	if(in_array( $field_name, array(
+		//		'EVT_timezone_string',
+		//		'PAY_redirect_url',
+		//		'PAY_redirect_args',
+		//		'parent') ) ){
+		//		$value = NULL;
+		//	}elseif($field instanceof EE_Enum_Integer_Field ||
+		//			$field instanceof EE_Enum_Text_Field ||
+		//			$field instanceof EE_Boolean_Field ||
+		//			$field_name == 'PMD_type' ||
+		//			$field->get_name() == 'CNT_cur_dec_mrk' ||
+		//			$field->get_name() == 'CNT_cur_thsnds' ||
+		//			$field->get_name() == 'CNT_tel_code'){
+		//		$value = $field->get_default_value();
+		//	}elseif( $field instanceof EE_Integer_Field ||
+		//			$field instanceof EE_Float_Field ||
+		//			$field instanceof EE_Foreign_Key_Field_Base ||
+		//			$field instanceof EE_Primary_Key_String_Field ||
+		//			$field->get_name() == 'STA_abbrev' ||
+		//			$field->get_name() == 'CNT_ISO3' ||
+		//			$field->get_name() == 'CNT_cur_code'){
+		//		$value = $auto_made_thing_seed;
+		//	}elseif( $field instanceof EE_Primary_Key_String_Field ){
+		//		$value = "$auto_made_thing_seed";
+		//	}elseif( $field instanceof EE_Text_Field_Base ){
+		//		$value = $auto_made_thing_seed."_".$field->get_name();
+		//	}
+		//	if( ! array_key_exists( $field_name, $args ) && $value !== NULL){
+		//		$args[$field->get_name()] = $value;
+		//	}
+		//}
+		////and finally make the model obj
+		//$classname = 'EE_'.$model_name;
+		//$model_obj = $classname::new_instance($args);
+		//if($save){
+		//	$success = $model_obj->save();
+		//	if( ! $success ){
+		//		global $wpdb;
+		//		throw new EE_Error(
+		//			sprintf(
+		//				__( 'Could not save %1$s using %2$s. Error was %3$s', 'event_espresso' ),
+		//				$model_name,
+		//				json_encode($args),
+		//				$wpdb->last_error
+		//			)
+		//		);
+		//	}
+		//}
+		//$auto_made_thing_seed++;
+		//return $model_obj;
 
 	}
 
@@ -897,34 +897,33 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 */
 	protected function new_typical_transaction($options = array()){
 		EE_Registry::instance()->load_helper( 'Line_Item' );
+		/** @type EE_Transaction $txn */
 		$txn = $this->new_model_obj_with_dependencies( 'Transaction' );
 		$total_line_item = EEH_Line_Item::create_total_line_item( $txn->ID() );
 		$total_line_item->save_this_and_descendants_to_txn( $txn->ID() );
-		if( isset( $options[ 'ticket_types' ] ) ){
-			$ticket_types = $options[ 'ticket_types' ];
-		}else{
-			$ticket_types = 1;
-		}
-		if( isset( $options[ 'taxable_tickets' ] ) ){
-			$taxable_tickets = $options[ 'taxable_tickets' ];
-		}else{
-			$taxable_tickets = EE_INF;
-		}
-		if( isset( $options[ 'fixed_ticket_price_modifiers' ] ) ) {
-			$fixed_ticket_price_modifiers = $options[ 'fixed_ticket_price_modifiers' ];
-		} else {
-			$fixed_ticket_price_modifiers = 1;
-		}
+
+		$ticket_types = isset( $options[ 'ticket_types' ] ) ? $options[ 'ticket_types' ] : 1;
+
+		$taxable_tickets = isset( $options[ 'taxable_tickets' ] ) ? $options[ 'taxable_tickets' ] : EE_INF;
+
+		$fixed_ticket_price_modifiers = isset( $options[ 'fixed_ticket_price_modifiers' ] )
+			? $options[ 'fixed_ticket_price_modifiers' ]
+			: 1;
+
 		$taxes = EEM_Price::instance()->get_all_prices_that_are_taxes();
 		for( $i = 1; $i <= $ticket_types; $i++ ){
+			$taxable_tickets--;
 			/** @type EE_Ticket $ticket */
 			$ticket            = $this->new_model_obj_with_dependencies(
 				'Ticket',
 				array(
 					'TKT_price'		=> $i * 10 ,
-					'TKT_taxable' 	=> $taxable_tickets-- > 0 ? true : false,
+					'TKT_taxable' 	=> $taxable_tickets > 0 ? true : false,
 					'Datetime' 		=> array(
-						'Event' 	=> array()
+						'DTT_name' => sprintf( 'Datetime %d', $i ),
+						'Event' 	=> array(
+							'EVT_name' => sprintf( 'Event %d', $i ),
+						)
 					)
 				)
 			);
@@ -935,6 +934,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 				} else {
 					$price_amount = $i * 10 / $fixed_ticket_price_modifiers;
 				}
+				/** @type EE_Price $price */
 				$price = $this->new_model_obj_with_dependencies( 'Price', array( 'PRC_amount' => $price_amount, 'PRC_order' => $j ) );
 				$sum_of_sub_prices += $price->amount();
 				$ticket->_add_relation_to( $price, 'Price' );
@@ -943,25 +943,30 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 			$reg_final_price = $ticket->price();
 			foreach($taxes as $taxes_at_priority){
 				foreach($taxes_at_priority as $tax){
+					/** @type EE_Price $tax */
 					$reg_final_price += $reg_final_price * $tax->amount() / 100;
 				}
 			}
 			$this->new_model_obj_with_dependencies(
-					'Registration',
-					array(
-						'TXN_ID' => $txn->ID(),
-						'TKT_ID' => $ticket->ID(),
-						'STS_ID' => EEM_Registration::status_id_approved,
-						'EVT_ID' => $ticket->get_event_ID(),
-						'REG_count'=>1,
-						'REG_group_size'=>1,
-						'REG_final_price' => $reg_final_price ) );
+				'Registration',
+				array(
+					'TXN_ID' => $txn->ID(),
+					'TKT_ID' => $ticket->ID(),
+					'STS_ID' => EEM_Registration::status_id_approved,
+					'EVT_ID' => $ticket->get_event_ID(),
+					'REG_count'=>1,
+					'REG_group_size'=>1,
+					'REG_final_price' => $reg_final_price
+				)
+			);
 		}
 		$txn->set_total( $total_line_item->total() );
 		$txn->save();
 
 		return $txn;
 	}
+
+
 
 	/**
 	 * Creates an interesting ticket, with a base price, dollar surcharge, and a percent surcharge,
