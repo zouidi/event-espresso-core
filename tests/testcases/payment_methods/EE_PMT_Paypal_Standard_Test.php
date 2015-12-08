@@ -47,11 +47,15 @@ class EE_PMT_Paypal_Standard_Test extends EE_UnitTestCase{
 	}
 	public function test_set_redirection_info__success(){
 		//make sure paypal gateway is included
+		/** @type EE_Payment_Method $ppm */
 		$ppm = $this->new_model_obj_with_dependencies( 'Payment_Method', array( 'PMD_type' => 'Paypal_Standard' ) );
+		/** @type EE_Offsite_Gateway $ppg */
 		$ppg = $ppm->type_obj()->get_gateway();
 		$ppg->set_settings( $this->_test_settings );
+		/** @type EE_Transaction $t */
 		$t = $this->new_typical_transaction( array( 'ticket_types' => 2) );
-		$p = $this->new_model_obj_with_dependencies( 'Payment', array('TXN_ID'=>$t->ID(), 'PMD_ID' => $ppm->ID(), 'PAY_amount' => $t->total() ) );
+		/** @type EE_Payment $p */
+		$p = $this->new_model_obj_with_dependencies( 'Payment', array( 'TXN_ID' =>$t->ID(), 'PMD_ID' => $ppm->ID(), 'PAY_amount' => $t->total() ) );
 		$this->assertEmpty( $p->redirect_url() );
 
 
