@@ -1,5 +1,5 @@
 <?php
-namespace EventEspresso\core\interfaces;
+namespace EventEspresso\core\interfaces\cart;
 
 use EventEspresso\core\services\cart\CartTotal;
 
