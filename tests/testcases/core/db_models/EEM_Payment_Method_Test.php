@@ -17,7 +17,9 @@ class EEM_Payment_Method_Test extends EE_UnitTestCase{
 	 * @group 7201
 	 */
 	function test_ensure_is_obj(){
-		$pm = $this->new_model_obj_with_dependencies( 'Payment_Method', array( 'PMD_type' => 'Invoice' ) );
+		// we don't need any other relations for this test so override with null to only receive the one object
+		$this->factory->payment_method->set_properties_and_relations( null );
+		$pm = $this->factory->payment_method->create_object();
 		$this->assertNotEmpty( $pm->ID() );
 		$this->assertEquals( $pm, EEM_Payment_Method::instance()->ensure_is_obj( $pm ) );
 		$this->assertEquals( $pm, EEM_Payment_Method::instance()->ensure_is_obj( $pm->ID() ) );
@@ -28,7 +30,9 @@ class EEM_Payment_Method_Test extends EE_UnitTestCase{
 	 * @group 7201
 	 */
 	function test_get_one_by_slug(){
-		$pm = $this->new_model_obj_with_dependencies( 'Payment_Method', array( 'PMD_type' => 'Invoice' ) );
+		// we don't need any other relations for this test so override with null to only receive the one object
+		$this->factory->payment_method->set_properties_and_relations( null );
+		$pm = $this->factory->payment_method->create_object();
 		$this->assertNotEmpty( $pm->ID() );
 		$this->assertEquals( $pm, EEM_Payment_Method::instance()->get_one_by_ID( $pm->ID() ) );
 		$this->assertEquals( $pm, EEM_Payment_Method::instance()->get_one_by_slug( $pm->slug()  ) );
@@ -36,3 +40,4 @@ class EEM_Payment_Method_Test extends EE_UnitTestCase{
 }
 
 // End of file EEM_Payment_Method_Test.php
+// Location: testcases\core\db_models\EEM_Payment_Method_Test.php
