@@ -496,16 +496,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		//echo "\n " . __LINE__ . ") " . __METHOD__ . "()";
 		$object = null;
 		$object_class = $this->object_class();
-		//timezone?
-		if ( isset( $model_fields_and_values[ 'timezone' ] ) ) {
-			$this->set_timezone( $model_fields_and_values[ 'timezone' ] );
-			unset( $model_fields_and_values[ 'timezone' ] );
-		}
-		//date formats?
-		if ( isset( $model_fields_and_values[ 'formats' ] ) && is_array( $model_fields_and_values[ 'formats' ] ) ) {
-			$this->set_date_time_formats( $model_fields_and_values[ 'formats' ] );
-			unset( $model_fields_and_values[ 'formats' ] );
-		}
+		$model_fields_and_values = $this->_parse_timezone_and_formats_in_model_fields( $model_fields_and_values );
 		$primary_key = $this->_find_primary_key_in_model_fields( $this->_model, $model_fields_and_values );
 		if ( ! empty( $primary_key ) && ! empty( $model_fields_and_values[ $primary_key ] ) ) {
 			$object = $this->get_object_by_id( $model_fields_and_values[ $primary_key ] );
@@ -537,6 +528,28 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		//	die();
 		//}
 		return $this->generate_related_objects( $object, $related_model_objects );
+	}
+
+
+
+	/**
+	 * _parse_timezone_and_formats_in_model_fields
+	 *
+	 * @param array $model_fields_and_values
+	 * @return array
+ 	 */
+	protected function _parse_timezone_and_formats_in_model_fields( $model_fields_and_values ) {
+		//timezone?
+		if ( isset( $model_fields_and_values[ 'timezone' ] ) ) {
+			$this->set_timezone( $model_fields_and_values[ 'timezone' ] );
+			unset( $model_fields_and_values[ 'timezone' ] );
+		}
+		//date formats?
+		if ( isset( $model_fields_and_values[ 'formats' ] ) && is_array( $model_fields_and_values[ 'formats' ] ) ) {
+			$this->set_date_time_formats( $model_fields_and_values[ 'formats' ] );
+			unset( $model_fields_and_values[ 'formats' ] );
+		}
+		return $model_fields_and_values;
 	}
 
 
@@ -616,13 +629,17 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 */
 	public function generate_related_objects( EE_Base_Class $object, $properties_and_relations ) {
 		if ( ! empty( $properties_and_relations ) ) {
+			$timezone_and_formats = array( 'timezone', 'formats' );
 			//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() <br />";
 			//echo "\n properties_and_relations: ";
 			//var_dump( $properties_and_relations );
 			//die();
 			foreach ( $properties_and_relations as $relation_name => $model_properties_and_relations ) {
-				//echo "\n\n relation_name: " . $relation_name;
-				$model_fields   = array();
+				//echo "\n\n" . __LINE__ . ") " . __METHOD__ . "()";
+				//echo "\n relation_name: " . $relation_name;
+				//echo "\n properties_and_relations: \n";
+				//var_dump( $properties_and_relations );
+				$model_fields = array();
 				$related_models = array();
 				//if ( $relation_name == 0 ) {
 					//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() <br />";
@@ -639,7 +656,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 				//$relation_name = strpos( $relation_name, 'WP_User' ) === 4 ? 'WP_User' : $relation_name;
 				$model = EE_Registry::instance()->load_model( $relation_name );
 				foreach ( $model_properties_and_relations as $field_or_model => $value_or_properties ) {
-					if ( $model->has_field( $field_or_model ) ) {
+					if ( $model->has_field( $field_or_model ) || in_array( $field_or_model, $timezone_and_formats ) ) {
 						$model_fields[ $field_or_model ] = $value_or_properties;
 					} else {
 						$related_models[ $field_or_model ] = $value_or_properties;
