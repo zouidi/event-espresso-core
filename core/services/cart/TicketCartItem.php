@@ -1,6 +1,8 @@
 <?php
 namespace EventEspresso\core\services\cart;
 
+use EventEspresso\core\interfaces\EEI_Ticket;
+
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
@@ -24,10 +26,10 @@ class TicketCartItem extends CartItem {
 	/**
 	 * TicketCartItem constructor.
 	 *
-	 * @param \EE_Ticket 	$ticket
+	 * @param EEI_Ticket 	$ticket
 	 * @param Cart 			$cart
 	 */
-	public function __construct( \EE_Ticket $ticket, Cart $cart ) {
+	public function __construct( EEI_Ticket $ticket, Cart $cart ) {
 		$this->item = $ticket;
 		parent::__construct( $cart );
 	}
