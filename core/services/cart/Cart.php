@@ -3,7 +3,9 @@
 namespace EventEspresso\Core\Services\Cart;
 
 use EventEspresso\Core;
-use EventEspresso\core\interfaces\CartInterface;
+use EventEspresso\core\interfaces\cart\CartInterface;
+use EventEspresso\core\interfaces\cart\DiscountInterface;
+use EventEspresso\core\interfaces\EEI_Ticket;
 //use EventEspresso\Core\Libraries\Repositories\EE_Object_Repository;
 //use EventEspresso\Core\Libraries\Repositories\ObjectInfoArrayKeyStrategy;
 
@@ -158,10 +160,10 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 
 	 /**
-	  * @param \EE_Ticket $ticket
+	  * @param EEI_Ticket $ticket
 	  * @return bool
 	  */
-	 public function addTicket( \EE_Ticket $ticket ) {
+	 public function addTicket( EEI_Ticket $ticket ) {
 		 return $this->items->addItem(
 			 new TicketCartItem( $ticket, $this )
 		 );
@@ -170,7 +172,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 
 	 /**
-	  * @return \EE_Ticket[]
+	  * @return EEI_Ticket[]
 	  */
 	 public function getTickets() {
 		 $tickets = array();
@@ -191,6 +193,48 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 		 $ticketCartItems = array();
 		 foreach ( $this->items as $item ) {
 			 if ( $item instanceof TicketCartItem ) {
+				 $ticketCartItems[] = $item;
+			 }
+		 }
+		 return $ticketCartItems;
+	 }
+
+
+
+	 /**
+	  * @param DiscountInterface $discount
+	  * @return bool
+	  */
+	 public function addDiscount( DiscountInterface $discount ) {
+		 return $this->items->addItem(
+			 new DiscountCartItem( $discount, $this )
+		 );
+	 }
+
+
+
+	 /**
+	  * @return DiscountInterface[]
+	  */
+	 public function getDiscounts() {
+		 $tickets = array();
+		 foreach ( $this->items as $item ) {
+			 if ( $item instanceof DiscountCartItem ) {
+				 $tickets[] = $item->getItem();
+			 }
+		 }
+		 return $tickets;
+	 }
+
+
+
+	 /**
+	  * @return DiscountCartItem[]
+	  */
+	 public function getDiscountCartItems() {
+		 $ticketCartItems = array();
+		 foreach ( $this->items as $item ) {
+			 if ( $item instanceof DiscountCartItem ) {
 				 $ticketCartItems[] = $item;
 			 }
 		 }
