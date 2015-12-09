@@ -2,8 +2,8 @@
 
 namespace EventEspresso\Core\Services\Cart;
 
-use EventEspresso\core\interfaces\CartInterface;
-use EventEspresso\core\interfaces\CartRepositoryInterface;
+use EventEspresso\core\interfaces\cart\CartInterface;
+use EventEspresso\core\interfaces\cart\CartRepositoryInterface;
 use EventEspresso\Core\Libraries\Repositories\EE_Object_Repository;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
