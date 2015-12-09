@@ -3,10 +3,10 @@
 namespace EventEspresso\Core\Services\Cart;
 
 use EventEspresso\Core;
-use EventEspresso\core\interfaces\CartInterface;
-use EventEspresso\core\interfaces\CartCreatorInterface;
-use EventEspresso\core\interfaces\CartRepositoryInterface;
-use EventEspresso\core\interfaces\CartCalculatorRepositoryInterface;
+use EventEspresso\core\interfaces\cart\CartInterface;
+use EventEspresso\core\interfaces\cart\CartCreatorInterface;
+use EventEspresso\core\interfaces\cart\CartRepositoryInterface;
+use EventEspresso\core\interfaces\cart\CartCalculatorRepositoryInterface;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	exit('No direct script access allowed');
