@@ -44,6 +44,7 @@ class EE_UnitTest_Factory_For_Line_Item extends EE_UnitTest_Factory_for_Model_Ob
 				'LIN_code' 	=> 'total',
 				'LIN_name' 	=> 'Grand Total',
 				'LIN_type' 	=> EEM_Line_Item::type_total,
+				'LIN_timestamp' => time() - DAY_IN_SECONDS,
 			);
 		}
 		// and set some sensible default relations
