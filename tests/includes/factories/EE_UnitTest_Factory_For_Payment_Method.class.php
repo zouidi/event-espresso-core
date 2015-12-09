@@ -1,7 +1,4 @@
 <?php if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
-
-
-
 /**
  * EE Factory Class for EE_Payment
  *
@@ -23,7 +20,7 @@ class EE_UnitTest_Factory_For_Payment_Method extends EE_UnitTest_Factory_for_Mod
 	 *          or non-empty array to override default properties and manually set related objects and their properties,
 	 */
 	public function __construct( $factory, $properties_and_relations = null ) {
-		$this->set_model_object_name( 'Payment' );
+		$this->set_model_object_name( 'Payment_Method' );
 		parent::__construct( $factory, $properties_and_relations );
 	}
 
@@ -38,11 +35,14 @@ class EE_UnitTest_Factory_For_Payment_Method extends EE_UnitTest_Factory_for_Mod
 	 * @return void
 	 */
 	protected function _set_default_properties_and_relations( $called_class ) {
-		static $counter = 1;
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
-			$this->_default_properties = array();
-			$counter++;
+			$this->_default_properties = array(
+				'PMD_name' => sprintf( 'Unit Pay %d', EE_UnitTest_Factory::$counter ),
+				'PMD_slug' => sprintf( 'unit-pay-%d', EE_UnitTest_Factory::$counter ),
+				'PMD_type' => 'Invoice',
+			);
+			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
@@ -52,7 +52,6 @@ class EE_UnitTest_Factory_For_Payment_Method extends EE_UnitTest_Factory_for_Mod
 				//'Transaction' => array(),
 				//'WP_User'     => array(),
 			);
-			$counter++;
 			$this->_resolve_default_relations( $called_class );
 		}
 	}
