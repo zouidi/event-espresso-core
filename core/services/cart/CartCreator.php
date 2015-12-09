@@ -1,7 +1,7 @@
 <?php
 namespace EventEspresso\core\services\cart;
 
-use EventEspresso\core\interfaces\CartInterface;
+use EventEspresso\core\interfaces\cart\CartInterface;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
