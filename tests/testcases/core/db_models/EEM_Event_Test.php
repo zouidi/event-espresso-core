@@ -34,7 +34,7 @@ class EEM_Event_Test extends EE_UnitTestCase {
 
 
 	/**
-	 * This just setsup some events in the db for running certain tests that query getting events back.
+	 * This just sets up some events in the db for running certain tests that query getting events back.
 	 * @since 4.6.x
 	 */
 	protected function _setup_events() {
@@ -48,36 +48,53 @@ class EEM_Event_Test extends EE_UnitTestCase {
 		$full_format = implode( ' ', $formats );
 
 		//setup some datetimes to attach to events.
-		$datetimes = array(
-			'expired_datetime' => $this->factory->datetime->create( array( 'DTT_EVT_start' => $past_start_date->format( $full_format ), 'DTT_EVT_end' => $past_start_date->format( $full_format), 'timezone' => 'America/Toronto', 'formats' =>  $formats ) ),
-			'upcoming_datetime' => $this->factory->datetime->create( array( 'DTT_EVT_start' => $upcoming_start_date->format( $full_format ), 'DTT_EVT_end' => $upcoming_start_date->format( $full_format), 'timezone' => 'America/Toronto', 'formats' => $formats ) ),
-			'active_datetime' => $this->factory->datetime->create( array( 'DTT_EVT_start' => $current->sub( new DateInterval( "PT2H") )->format( $full_format ), 'DTT_EVT_end' => $current_end_date->add( new DateInterval( "PT2H" ) )->format( $full_format), 'timezone' => 'America/Toronto', 'formats' =>  $formats ) ),
-			'sold_out_datetime' => $this->factory->datetime->create( array( 'DTT_EVT_start' => $upcoming_start_date->format( $full_format ), 'DTT_EVT_end' => $upcoming_start_date->format( $full_format), 'DTT_reg_limit' => 10, 'DTT_sold' => 10,  'timezone' => 'America/Toronto', 'formats' =>  $formats ) ),
-			'inactive_datetime' => $this->factory->datetime->create( array( 'DTT_EVT_start' => $current->sub( new DateInterval( "PT2H") )->format( $full_format ), 'DTT_EVT_end' => $current_end_date->add( new DateInterval( "PT2H" ) )->format( $full_format), 'timezone' => 'America/Toronto', 'formats' =>  $formats ) )
+		$datetime_args = array(
+			1 => array(
+				'DTT_name' 		=> 'expired_datetime',
+				'DTT_EVT_start' => $past_start_date->format( $full_format ),
+				'DTT_EVT_end' 	=> $past_start_date->format( $full_format)
+			),
+			2 => array(
+				'DTT_name' 		=> 'upcoming_datetime',
+				'DTT_EVT_start' => $upcoming_start_date->format( $full_format ),
+				'DTT_EVT_end' 	=> $upcoming_start_date->format( $full_format)
+			),
+			3 	=> array(
+				'DTT_name' 		=> 'active_datetime',
+				'DTT_EVT_start' => $current->sub( new DateInterval( "PT2H") )->format( $full_format ),
+				'DTT_EVT_end'   => $current_end_date->add( new DateInterval( "PT2H" ) )->format( $full_format)
+			),
+			4 => array(
+				'DTT_name' 		=> 'sold_out_datetime',
+				'DTT_EVT_start' => $upcoming_start_date->format( $full_format ),
+				'DTT_EVT_end'   => $upcoming_start_date->format( $full_format),
+				'DTT_reg_limit' => 10,
+				'DTT_sold' 		=> 10
+			),
+			5 => array(
+				'DTT_name' 		=> 'inactive_datetime',
+				'DTT_EVT_start' => $current->sub( new DateInterval( "PT2H") )->format( $full_format ),
+				'DTT_EVT_end'   => $current_end_date->add( new DateInterval( "PT2H" ) )->format( $full_format)
+			)
+		);
+		// now create 1 event for each datetime (the last of which will NOT be published
+		for ( $x = 1; $x <= count( $datetime_args ); $x++ ) {
+			$args = array(
+				'EVT_name'    => sprintf( 'Event %d', $x ),
+				'EVT_wp_user' => get_current_user_id(),
+				'status'      => $x != count( $datetime_args ) ? 'publish' : 'draft',
+				'Datetime'    => array_merge(
+					array(
+						'timezone' => 'America/Toronto',
+						'formats'  => $formats,
+					),
+					$datetime_args[ $x ]
+				)
 			);
-
-		//setup some events
-		$events = $this->factory->event->create_many( '4' );
-
-		//add datetimes to the events.
-		$events[0]->_add_relation_to( $datetimes['expired_datetime'], 'Datetime' );
-		$events[0]->save();
-		$events[1]->_add_relation_to( $datetimes['upcoming_datetime'], 'Datetime' );
-		$events[1]->save();
-		$events[2]->_add_relation_to( $datetimes['active_datetime'], 'Datetime' );
-		$events[2]->save();
-		$events[3]->_add_relation_to( $datetimes['sold_out_datetime'], 'Datetime' );
-		$events[3]->save();
-
-		foreach( $events as $event ) {
-			$event->set('status', 'publish');
-			$event->save();
+			$this->factory->event->set_properties_and_relations( $args );
+			$this->factory->event->create_object();
 		}
 
-		//one more event that is just going to be inactive
-		$final_event = $this->factory->event->create();
-		$final_event->_add_relation_to( $datetimes['inactive_datetime'], 'Datetime' );
-		$final_event->save();
 
 	}
 
@@ -89,7 +106,6 @@ class EEM_Event_Test extends EE_UnitTestCase {
 	 */
 	public function test_get_active_events() {
 		$this->_setup_events();
-		//now do our tests
 		$this->assertEquals( 1, EEM_Event::instance()->get_active_events( array(), true ) );
 	}
 
@@ -144,3 +160,5 @@ class EEM_Event_Test extends EE_UnitTestCase {
 		$this->assertEquals( EEM_Registration::status_id_approved, $event->default_registration_status() );
 	}
 }
+
+// location: tests/testcases/core/db_models/EEM_Event_Test.php
