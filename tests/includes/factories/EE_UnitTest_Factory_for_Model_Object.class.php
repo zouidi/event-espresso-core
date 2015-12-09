@@ -575,6 +575,9 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		$related_model_objects = array()
 	) {
 		foreach ( $model_fields_and_values as $field => $values ) {
+			if ( $field === 'OBJ_ID' ) {
+				continue;
+			}
 			$field_obj = $model->field_settings_for( $field );
 			if (
 				$field_obj instanceof EE_Foreign_Key_Field_Base
