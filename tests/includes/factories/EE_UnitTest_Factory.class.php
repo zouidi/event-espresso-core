@@ -86,6 +86,16 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 	public $payment_chained = null;
 
 	/**
+	 * @type EE_UnitTest_Factory_For_Payment_Method $payment_method
+	 */
+	public $payment_method = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Payment_Method $payment_method_chained
+	 */
+	public $payment_method_chained = null;
+
+	/**
 	 * @type EE_UnitTest_Factory_For_Price $price
 	 */
 	public $price = null;
