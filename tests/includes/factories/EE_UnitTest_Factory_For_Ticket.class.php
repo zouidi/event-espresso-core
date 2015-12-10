@@ -50,8 +50,12 @@ protected function _set_default_properties_and_relations( $called_class ) {
 	// and set some sensible default relations
 	if ( empty( $this->_default_relations ) ) {
 		$this->_default_relations = array(
-			'Datetime' => array(),
-			'Price'    => array(),
+			'Datetime' 		  => array(),
+			'Price'    		  => array(),
+			//'Registration' 	  => array(),
+			//'Datetime_Ticket' => array(),
+			//'Ticket_Template' => array(),
+			//'WP_User'         => array(),
 		);
 		$this->_resolve_default_relations( $called_class );
 	}
