@@ -42,19 +42,25 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 	 * @group 6909
 	 */
 	public function test_get_datetimes_for_event_ordered_by_DTT_order__different_timezone() {
-
 		//create an event and datetime
-		$event = $this->factory->event->create( array( 'EVT_timezone_string' =>  'Australia/Sydney' ) );
+		$this->factory->event->set_properties_and_relations( null );
+		$event = $this->factory->event->create( array( 'EVT_timezone_string' => 'Australia/Sydney' ) );
 
-		//for test we want a datetime begining one hour before now and ending now (-1min), and a datetime starting now and ending one hour from now.
-		$dtt1_start = time() - 60*60*24;
-		$dtt1_end = time() - 60*60;
-		$dtt2_start = $dtt1_start + 60*60;
-		$dtt2_end = $dtt1_end + 60*60*24;
-
-
-		$dtt1 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt1_start, 'DTT_EVT_end' => $dtt1_end ) );
-		$dtt2 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt2_start, 'DTT_EVT_end' => $dtt2_end ) );
+		//for test we want a datetime beginning one hour before now and ending now (-1min), and a datetime starting now and ending one hour from now.
+		$this->factory->datetime->set_properties_and_relations( null );
+		$dtt1 = $this->factory->datetime->create(
+			array(
+				'DTT_EVT_start' => time() - DAY_IN_SECONDS,
+				'DTT_EVT_end'   => time() - HOUR_IN_SECONDS
+			)
+		);
+		$this->factory->datetime->set_properties_and_relations( null );
+		$dtt2 = $this->factory->datetime->create(
+			array(
+				'DTT_EVT_start' => time() - DAY_IN_SECONDS + HOUR_IN_SECONDS,
+				'DTT_EVT_end'   => time() - HOUR_IN_SECONDS + ( 2 * DAY_IN_SECONDS )
+			)
+		);
 
 		//verify
 		$this->assertInstanceOf( 'EE_Event', $event );
@@ -402,3 +408,4 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 	}
 
 }
+// Location: tests/testcases/core/db_models/EEM_Datetime_Test.php
