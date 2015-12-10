@@ -42,9 +42,11 @@ class EE_UnitTest_Factory_For_Status extends EE_UnitTest_Factory_for_Model_Objec
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array();
 			$model = EE_Registry::instance()->load_model( $called_class);
-			$foreign_key = $model->get_foreign_key_to( 'Status' );
-			if ( $foreign_key instanceof EE_Foreign_Key_Field_Base ) {
-				$this->_default_properties['STS_ID'] = $foreign_key->get_default_value();
+			if ( $called_class !== 'Status' ) {
+				$foreign_key = $model->get_foreign_key_to( 'Status' );
+				if ( $foreign_key instanceof EE_Foreign_Key_Field_Base ) {
+					$this->_default_properties[ 'STS_ID' ] = $foreign_key->get_default_value();
+				}
 			}
 		}
 		// and set some sensible default relations
