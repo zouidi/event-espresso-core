@@ -198,7 +198,7 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 
 
 	public function __construct() {
-		//echo "\n\n ************ " . __LINE__ . ") " . __METHOD__ . "() " . spl_object_hash( $this ) . " ************ \n\n ";
+
 		parent::__construct();
 
 		$factories = get_class_vars( 'EE_UnitTest_Factory' );
