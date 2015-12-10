@@ -64,7 +64,7 @@ class EEM_Country extends EEM_Base {
 				'CNT_cur_sign_b4' => new EE_Boolean_Field('CNT_cur_sign_b4', __('Currency Sign Before Number','event_espresso'), false, true),
 				'CNT_cur_dec_plc' => new EE_Integer_Field('CNT_cur_dec_plc', __('Currency Decimal Places','event_espresso'), false, 2),
 				'CNT_cur_dec_mrk' => new EE_Plain_Text_Field('CNT_cur_dec_mrk', __('Currency Decimal Mark','event_espresso'), false, '.'),
-				'CNT_cur_thsnds' => new EE_Plain_Text_Field('CNT_cur_thsnds', __('Currency Thousands Seperator','event_espresso'), false, ','),
+				'CNT_cur_thsnds' => new EE_Plain_Text_Field('CNT_cur_thsnds', __('Currency Thousands Separator','event_espresso'), false, ','),
 				'CNT_tel_code' => new EE_Plain_Text_Field('CNT_tel_code', __('Country Telephone Code','event_espresso'), false, ''),
 				'CNT_is_EU' => new EE_Boolean_Field('CNT_is_EU', __('Country is Member of EU','event_espresso'), false, false)
 			));
