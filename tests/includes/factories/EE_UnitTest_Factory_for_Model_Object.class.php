@@ -118,8 +118,9 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 *          or non-empty array to override default properties and manually set related objects and their properties,
 	 */
 	public function __construct( EE_UnitTest_Factory $factory, $custom_properties_and_relations ) {
-		$this->_model 	= EE_Registry::instance()->load_model( $this->model_name() );
-		$this->_factory = $factory;
+		$this->_model 		= EE_Registry::instance()->load_model( $this->model_name() );
+		$this->_factory 	= $factory;
+		$this->_save_to_db 	= $this->set_save_to_db( true );
 		$this->_custom_properties_and_relations = $custom_properties_and_relations;
 		parent::__construct( $factory );
 	}
@@ -328,11 +329,19 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @return array
 	 */
 	public function default_generation_definitions() {
+		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() <br />";
 		if ( empty( $this->default_generation_definitions ) ) {
 			//echo "\n\n * empty( default_generation_definitions ): for " . get_called_class();
 			$this->_set_default_properties_and_relations( $this->factory_type() );
 			//$this->set_properties_and_relations();
+			$this->default_generation_definitions = $this->_default_properties;
 		}
+		//if ( $this->object_class() === 'EE_Country' ) {
+		//	echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
+		//	echo "\n object_class(): " . $this->object_class() . "\n";
+		//	echo "\n default_generation_definitions: \n";
+		//	var_dump( $this->default_generation_definitions );
+		//}
 		return $this->default_generation_definitions;
 	}
 
@@ -377,6 +386,23 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 
 
 	/**
+	 * _set_save_to_db
+	 *
+	 * @param bool         $save_to_db
+	 */
+	public function set_save_to_db( $save_to_db = true ) {
+		$model_save = array(
+			'EE_Country'  => false,
+			'EE_Currency' => false,
+			'EE_Status'   => false,
+		);
+		$save_to_db = isset( $model_save[ $this->object_class() ] ) ? $model_save[ $this->object_class() ] : $save_to_db;
+		$this->_save_to_db = filter_input( $save_to_db, FILTER_VALIDATE_BOOLEAN );
+	}
+
+
+
+	/**
 	 * _set_properties_and_relations
 	 *
 	 * @param array | null $custom_properties_and_relations
@@ -386,9 +412,9 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @param bool         $save_to_db
 	 */
 	public function set_properties_and_relations( $custom_properties_and_relations = null, $save_to_db = true ) {
-		$this->_save_to_db = filter_input( $save_to_db, FILTER_VALIDATE_BOOLEAN );
 		//echo "\n " . __LINE__ . ") " . __METHOD__ . "() FOR " . get_called_class();
 		//echo "\n   " . $this->factory_type() . ' ' . spl_object_hash( $this );
+		$this->set_save_to_db( $save_to_db );
 		//echo "\n\n CUSTOM_PROPERTIES_AND_RELATIONS: ";
 		//var_dump( $custom_properties_and_relations );
 		$this->_custom_properties_and_relations = ! is_null( $custom_properties_and_relations )
@@ -448,6 +474,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @return \EE_Base_Class
 	 */
 	public function create_object( $model_fields_and_values = array() ) {
+		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() of type: " . $this->object_class();
 		//echo "\n " . __LINE__ . ") " . __METHOD__ . "() " . $this->factory_type() . ' ' . spl_object_hash( $this );
 		if ( $model_fields_and_values instanceof WP_Error ) {
 			echo $model_fields_and_values->get_error_message();
@@ -478,6 +505,9 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		//echo "\n FINAL OBJECT CLASS: " . get_class( $object );
 		//echo "\n SPL_OBJECT_HASH: " . spl_object_hash( $object ) . "\n\n";
 		//var_dump( $object );
+		if ( $this->_save_to_db ) {
+			$object->save();
+		}
 		return $object;
 	}
 
@@ -502,18 +532,20 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			$object = $this->get_object_by_id( $model_fields_and_values[ $primary_key ] );
 		}
 		if ( ! $object instanceof $object_class ) {
-			//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
-			//echo "\n OBJECT_CLASS: " . $object_class . "\n";
-			//echo "\n model_fields_and_values: \n";
-			//var_dump( $model_fields_and_values );
+			//if ( $object_class === 'EE_Country' ) {
+			//	echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
+			//	echo "\n OBJECT_CLASS: " . $object_class . "\n";
+			//	echo "\n model_fields_and_values: \n";
+			//	var_dump( $model_fields_and_values );
+			//}
 			$object = call_user_func_array(
 				array( $object_class, 'new_instance' ),
 				array( $model_fields_and_values, $this->_timezone, $this->_date_time_formats )
 			);
 			//echo "\n\n NEW_INSTANCE: " . get_class( $object );
-			//if ( $this->_save_to_db ) {
+			if ( $this->_save_to_db ) {
 				$object->save();
-			//}
+			}
 			//echo "\n   NEW " . get_class( $object ) . " ID: " . $object->ID();
 			//echo "\n   SPL_OBJECT_HASH: " . spl_object_hash( $object ) . "\n";
 		}
@@ -562,10 +594,12 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @return string
  	 */
 	protected function _find_primary_key_in_model_fields( EEM_Base $model, $model_fields_and_values ) {
-		$primary_key = $model->primary_key_name();
-		foreach ( $model_fields_and_values as $field => $values ) {
-			if ( $field === $primary_key ) {
-				return $field;
+		if ( $model->has_primary_key_field() ) {
+			$primary_key = $model->primary_key_name();
+			foreach ( $model_fields_and_values as $field => $values ) {
+				if ( $field === $primary_key ) {
+					return $field;
+				}
 			}
 		}
 		return '';
@@ -667,9 +701,9 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 				$object->_add_relation_to( $related_object, $relation_name );
 				//echo "\n   " . get_class( $object ) . " ID: " . $object->ID();
 				//echo "\n   " . get_class( $related_object ) . " ID: " . $related_object->ID() . "\n";
-				//if ( $this->_save_to_db ) {
+				if ( $this->_save_to_db ) {
 					$object->save();
-				//}
+				}
 			}
 		} /*else {
 			//echo "\n This " . get_class( $object ) . " has NO related objects!";
