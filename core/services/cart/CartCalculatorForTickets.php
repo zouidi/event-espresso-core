@@ -1,8 +1,8 @@
 <?php
 namespace EventEspresso\core\services\cart;
 
-use EventEspresso\core\interfaces\CartInterface;
-use EventEspresso\core\interfaces\CartCalculatorInterface;
+use EventEspresso\core\interfaces\cart\CartInterface;
+use EventEspresso\core\interfaces\cart\CartCalculatorInterface;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
@@ -66,9 +66,9 @@ class CartCalculatorForTickets implements CartCalculatorInterface {
 		$ticketCartItems = $this->cart->getTicketCartItems();
 		foreach ( $ticketCartItems as $ticketCartItem ) {
 			$this->cartTotal->ticketCount += $ticketCartItem->quantity();
-			$ticket_price = $ticketCartItem->calculatePrice();
-			$this->cartTotal->totalTicketAmount += $ticket_price;
-			$this->cartTotal->preTaxSubtotal += $ticket_price;
+			$ticketTotal = $ticketCartItem->calculatePrice();
+			$this->cartTotal->ticketTotal += $ticketTotal;
+			$this->cartTotal->preTaxSubtotal += $ticketTotal;
 		}
 	}
 
