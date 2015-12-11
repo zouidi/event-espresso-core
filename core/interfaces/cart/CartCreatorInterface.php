@@ -9,7 +9,14 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 
 interface CartCreatorInterface {
 
-	function newCart();
+
+	/**
+	 * createCart
+	 *
+	 * @param  CartCalculatorRepositoryInterface $cartCalculatorRepository
+	 * @return CartInterface
+	 */
+	public function getNewCart( CartCalculatorRepositoryInterface $cartCalculatorRepository );
 
 }
 // End of file CartCreatorInterface.php
