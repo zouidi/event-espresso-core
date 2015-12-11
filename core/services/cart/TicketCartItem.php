@@ -67,6 +67,15 @@ class TicketCartItem extends CartItem {
 	}
 
 
+
+	/**
+	 * @return bool
+	 */
+	public function isTaxable() {
+		return $this->getItem()->taxable() ? true : false;
+	}
+
+
 }
 // End of file TicketCartItem.php
 // Location: /TicketCartItem.php
