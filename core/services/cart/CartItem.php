@@ -59,6 +59,8 @@ abstract class CartItem {
 
 	abstract public function calculatePrice();
 
+	abstract public function isTaxable();
+
 
 
 	/**
