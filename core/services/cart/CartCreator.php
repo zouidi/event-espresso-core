@@ -2,6 +2,8 @@
 namespace EventEspresso\core\services\cart;
 
 use EventEspresso\core\interfaces\cart\CartInterface;
+use EventEspresso\core\interfaces\cart\CartCreatorInterface;
+use EventEspresso\core\interfaces\cart\CartCalculatorRepositoryInterface;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
@@ -20,7 +22,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @since 		$VID:$
  *
  */
-class CartCreator {
+class CartCreator implements CartCreatorInterface{
 
 	/**
 	 * @type CartItemRepository $cartItemRepository
@@ -48,10 +50,10 @@ class CartCreator {
 	/**
 	 * createCart
 	 *
-	 * @param 	CartCalculatorRepository $cartCalculatorRepository
+	 * @param    CartCalculatorRepositoryInterface $cartCalculatorRepository
 	 * @return 	CartInterface
 	 */
-	protected function newCart( CartCalculatorRepository $cartCalculatorRepository ) {
+	public function getNewCart( CartCalculatorRepositoryInterface $cartCalculatorRepository ) {
 		return new Cart(
 			$this->generateID(),
 			$this->cartItemRepository,
