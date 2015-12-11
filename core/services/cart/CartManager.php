@@ -112,7 +112,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  * @return CartInterface
 	  */
 	 protected function createCart() {
-		 $cart = $this->cartCreator->newCart( $this->cartCalculators );
+		 $cart = $this->cartCreator->getNewCart( $this->cartCalculators );
 		 if ( $this->cartRepository->addCart( $cart ) ) {
 			 return $cart;
 		 }
