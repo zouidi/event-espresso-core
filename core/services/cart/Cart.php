@@ -5,6 +5,8 @@ namespace EventEspresso\Core\Services\Cart;
 use EventEspresso\Core;
 use EventEspresso\core\interfaces\cart\CartInterface;
 use EventEspresso\core\interfaces\cart\DiscountInterface;
+use EventEspresso\core\interfaces\cart\SurchargeInterface;
+use EventEspresso\core\interfaces\cart\CartCalculatorRepositoryInterface;
 use EventEspresso\core\interfaces\EEI_Ticket;
 //use EventEspresso\Core\Libraries\Repositories\EE_Object_Repository;
 //use EventEspresso\Core\Libraries\Repositories\ObjectInfoArrayKeyStrategy;
@@ -69,7 +71,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	 function __construct(
 		 $ID,
 		 CartItemRepository $cartItemRepository,
-		 CartCalculatorRepository $cartCalculatorRepository,
+		 CartCalculatorRepositoryInterface $cartCalculatorRepository,
 		 CartTotal $cartTotal,
 		 \DateTime $created = null
 	 ) {
@@ -164,9 +166,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  * @return bool
 	  */
 	 public function addTicket( EEI_Ticket $ticket ) {
-		 return $this->items->addItem(
-			 new TicketCartItem( $ticket, $this )
-		 );
+		 return $this->addItem( $ticket, 'Ticket' );
 	 }
 
 
@@ -175,13 +175,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  * @return EEI_Ticket[]
 	  */
 	 public function getTickets() {
-		 $tickets = array();
-		 foreach ( $this->items as $item ) {
-			 if ( $item instanceof TicketCartItem ) {
-				 $tickets[] = $item->getItem();
-			 }
-		 }
-		 return $tickets;
+		 return $this->getItems( 'Ticket' );
 	 }
 
 
@@ -190,13 +184,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  * @return TicketCartItem[]
 	  */
 	 public function getTicketCartItems() {
-		 $ticketCartItems = array();
-		 foreach ( $this->items as $item ) {
-			 if ( $item instanceof TicketCartItem ) {
-				 $ticketCartItems[] = $item;
-			 }
-		 }
-		 return $ticketCartItems;
+		 return $this->getCartItems( 'Ticket' );
 	 }
 
 
@@ -206,9 +194,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  * @return bool
 	  */
 	 public function addDiscount( DiscountInterface $discount ) {
-		 return $this->items->addItem(
-			 new DiscountCartItem( $discount, $this )
-		 );
+		 return $this->addItem( $discount, 'Discount' );
 	 }
 
 
@@ -217,13 +203,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  * @return DiscountInterface[]
 	  */
 	 public function getDiscounts() {
-		 $tickets = array();
-		 foreach ( $this->items as $item ) {
-			 if ( $item instanceof DiscountCartItem ) {
-				 $tickets[] = $item->getItem();
-			 }
-		 }
-		 return $tickets;
+		 return $this->getItems( 'Discount' );
 	 }
 
 
@@ -232,13 +212,109 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  * @return DiscountCartItem[]
 	  */
 	 public function getDiscountCartItems() {
-		 $ticketCartItems = array();
+		 return $this->getCartItems( 'Discount' );
+	 }
+
+
+
+	 /**
+	  * @param SurchargeInterface $surcharge
+	  * @return bool
+	  */
+	 public function addSurcharge( SurchargeInterface $surcharge ) {
+		 return $this->addItem( $surcharge, 'Surcharge' );
+	 }
+
+
+
+	 /**
+	  * @return SurchargeInterface[]
+	  */
+	 public function getSurcharges() {
+		 return $this->getItems( 'Surcharge' );
+	 }
+
+
+
+	 /**
+	  * @return SurchargeCartItem[]
+	  */
+	 public function getSurchargeCartItems() {
+		 return $this->getCartItems( 'Surcharge' );
+	 }
+
+
+
+	 /**
+	  * @access protected
+	  * @param  string $item
+	  * @param  string $type
+	  * @return bool
+	  * @throws \EE_Error
+	  */
+	 protected function addItem( $item, $type = 'Ticket' ) {
+		 $cartItemClass = $this->getCartItemClass( $type );
+		 return $this->items->addItem(
+			 new $cartItemClass( $item, $this )
+		 );
+	 }
+
+
+
+	 /**
+	  * @access protected
+	  * @param  string $type
+	  * @return array
+	  * @throws \EE_Error
+	  */
+	 protected function getItems( $type = 'Ticket' ) {
+		 $cartItemClass = $this->getCartItemClass( $type );
+		 $items = array();
 		 foreach ( $this->items as $item ) {
-			 if ( $item instanceof DiscountCartItem ) {
-				 $ticketCartItems[] = $item;
+			 if ( $item instanceof $cartItemClass ) {
+				 $items[] = $item->getItem();
 			 }
 		 }
-		 return $ticketCartItems;
+		 return $items;
+	 }
+
+
+
+	 /**
+	  * @access protected
+	  * @param  string $type
+	  * @return CartItem[]
+	  * @throws \EE_Error
+	  */
+	 protected function getCartItems( $type = 'Ticket' ) {
+		 $cartItemClass = $this->getCartItemClass( $type );
+		 $cartItems = array();
+		 foreach ( $this->items as $item ) {
+			 if ( $item instanceof $cartItemClass ) {
+				 $cartItems[] = $item;
+			 }
+		 }
+		 return $cartItems;
+	 }
+
+
+
+	 /**
+	  * @param  string $type
+	  * @return string
+	  * @throws \EE_Error
+	  */
+	 public function getCartItemClass( $type = 'Ticket' ) {
+		 $itemClass = $type . 'CartItem';
+		 if ( ! class_exists( $itemClass ) ) {
+			 throw new \EE_Error(
+				 sprintf(
+					 __( '"%1$s" is missing or not a valid CartItem class.', 'event_espresso' ),
+					 $itemClass
+				 )
+			 );
+		 }
+		 return $itemClass;
 	 }
 
 
@@ -246,6 +322,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	 /**
 	  * calculateCartTotal
 	  *
+	  * @access protected
 	  * @return CartTotal
 	  */
 	 protected function calculateCartTotal() {
@@ -258,7 +335,8 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 		 // ya gotta ADD IT UP! ADD IT UP!
 		 $this->cartTotal->grandTotal =
 			 $this->cartTotal->preTaxSubtotal
-			 - $this->cartTotal->totalDiscount
+			 + $this->cartTotal->surchargeTotal
+			 - $this->cartTotal->discountTotal
 			 + $this->cartTotal->taxSubtotal;
 		 // no negative values please
 		 $this->cartTotal->grandTotal = max( 0, $this->cartTotal->grandTotal );
