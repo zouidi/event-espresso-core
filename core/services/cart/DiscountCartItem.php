@@ -67,6 +67,15 @@ class DiscountCartItem extends CartItem {
 	}
 
 
+
+	/**
+	 * @return bool
+	 */
+	public function isTaxable() {
+		return $this->getItem()->taxable() ? true : false;
+	}
+
+
 }
 // End of file DiscountCartItem.php
 // Location: /DiscountCartItem.php
