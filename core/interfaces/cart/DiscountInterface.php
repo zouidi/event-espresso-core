@@ -21,15 +21,6 @@ interface DiscountInterface {
 
 
 	/**
-	 * monetary value of discount.
-	 *
-	 * @return float
-	 */
-	function amount();
-
-
-
-	/**
 	 * Gets the discount name.
 	 *
 	 * @return string
@@ -44,6 +35,24 @@ interface DiscountInterface {
 	 * @return string
 	 */
 	function description();
+
+
+
+	/**
+	 * monetary value of discount.
+	 *
+	 * @return float
+	 */
+	function amount();
+
+
+
+	/**
+	 * whether discount is applied before or after taxes are calculated
+	 *
+	 * @return float
+	 */
+	function isTaxable();
 
 }
 // End of file DiscountInterface.php
