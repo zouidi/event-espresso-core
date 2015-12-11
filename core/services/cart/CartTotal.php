@@ -20,17 +20,33 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  */
 class CartTotal {
 
-	/** @var float */
-	public $preTaxSubtotal = 0;
-
-	/** @var float */
-	public $totalTicketAmount = 0;
 
 	/** @var int */
 	public $ticketCount = 0;
 
 	/** @var float */
-	public $totalDiscount = 0;
+	public $ticketTotal = 0;
+
+	/** @var int */
+	public $productCount = 0;
+
+	/** @var float */
+	public $productTotal = 0;
+
+	/** @var float */
+	public $surchargeTotal = 0;
+
+	/** @var float */
+	public $discountTotal = 0;
+
+	/** @var float */
+	public $preTaxSubtotal = 0;
+
+	/** @var float */
+	public $totalTaxable = 0;
+
+	/** @var float */
+	public $totalNonTaxable = 0;
 
 	/** @var float */
 	public $taxSubtotal = 0;
