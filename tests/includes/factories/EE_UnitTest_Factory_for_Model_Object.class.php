@@ -517,10 +517,11 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		//var_dump( $this->_related_model_object_properties );
 		//$object = $this->create_object_and_relations( $model_fields_and_values, $this->_related_model_object_properties );
 		$object = $this->create_object_and_relations( $this->default_generation_definitions(), $this->_related_model_object_properties );
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
-		//echo "\n FINAL OBJECT CLASS: " . get_class( $object );
-		//echo "\n SPL_OBJECT_HASH: " . spl_object_hash( $object ) . "\n\n";
-		//var_dump( $object );
+		if ( ! $object instanceof EE_Base_Class ) {
+			echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
+			echo "\n FINAL OBJECT CLASS: " . get_class( $object );
+			var_dump( $object );
+		}
 		if ( $this->_save_to_db ) {
 			$object->save();
 		}
