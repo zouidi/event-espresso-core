@@ -165,7 +165,9 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$this->assertEquals( 'win', $att2->fname() );
 		$this->assertEquals( 'three', $att3->fname() );
 		global $wpdb;
-		$name_in_db = $wpdb->get_var( "select 'ATT_fname' FROM {$wpdb->prefix}esp_attendee_meta WHERE ATT_ID = " . $att1->ID() );
+		$name_in_db = $wpdb->get_var(
+			"SELECT ATT_fname FROM {$wpdb->prefix}esp_attendee_meta WHERE ATT_ID = " . $att1->ID()
+		);
 		$this->assertEquals( 'win_again', $name_in_db );
 
 		//also test to make sure there are no errors when there was nothing to update in the entity map
