@@ -120,7 +120,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	public function __construct( EE_UnitTest_Factory $factory, $custom_properties_and_relations ) {
 		$this->_model 		= EE_Registry::instance()->load_model( $this->model_name() );
 		$this->_factory 	= $factory;
-		$this->_save_to_db 	= $this->set_save_to_db( true );
+		$this->set_save_to_db( true );
 		$this->_custom_properties_and_relations = $custom_properties_and_relations;
 		parent::__construct( $factory );
 	}
