@@ -42,14 +42,15 @@ class EE_UnitTest_Factory_For_Payment extends EE_UnitTest_Factory_for_Model_Obje
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
 				'PAY_timestamp' => time(),
+				'STS_ID' => EEM_Payment::status_id_pending,
 			);
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
 			$this->_default_relations = array(
-				'Status' => array(
-					'STS_ID' => EEM_Payment::status_id_pending,
-				),
+				//'Status' => array(
+				//	'STS_ID' => EEM_Payment::status_id_pending,
+				//),
 				'Transaction'          => array(),
 				'Payment_Method'       => array(),
 				'Registration' 		   => array(),
