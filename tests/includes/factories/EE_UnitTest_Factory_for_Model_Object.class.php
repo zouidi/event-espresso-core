@@ -329,10 +329,12 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @return array
 	 */
 	public function default_generation_definitions() {
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() <br />";
+		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() \n";
 		if ( empty( $this->default_generation_definitions ) ) {
 			//echo "\n\n * empty( default_generation_definitions ): for " . get_called_class();
 			$this->_set_default_properties_and_relations( $this->factory_type() );
+			//echo "\n default_generation_definitions: \n";
+			//var_dump( $this->default_generation_definitions );
 			//$this->set_properties_and_relations();
 			$this->default_generation_definitions = $this->_default_properties;
 		}
@@ -397,7 +399,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			'EE_Status'   => false,
 		);
 		$save_to_db = isset( $model_save[ $this->object_class() ] ) ? $model_save[ $this->object_class() ] : $save_to_db;
-		$this->_save_to_db = filter_input( $save_to_db, FILTER_VALIDATE_BOOLEAN );
+		$this->_save_to_db = filter_var( $save_to_db, FILTER_VALIDATE_BOOLEAN );
 	}
 
 
@@ -444,6 +446,8 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		}
 		//echo "\n MERGED_PROPERTIES_AND_RELATIONS: ";
 		//var_dump( $merged_properties_and_relations );
+		//echo "\n this->_model->relation_settings(): ";
+		//var_dump( $this->_model->relation_settings() );
 		// default args for creating model objects
 		// NOTE: WP_UnitTest_Factory_For_Thing can only handle scalar property values,
 		// so we need to remove all of the related object property arrays,
@@ -452,6 +456,12 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			$merged_properties_and_relations,
 			$this->_model->relation_settings()
 		);
+		// BUT !!!! We also need to remove any many relations using an asterisk in the relation name
+		foreach ( $this->default_generation_definitions as $key => $value ) {
+			if ( strpos( $key, '*' ) !== false ) {
+				unset( $this->default_generation_definitions[ $key ] );
+			}
+		}
 		//echo "\n DEFAULT_GENERATION_DEFINITIONS: ";
 		//var_dump( $this->default_generation_definitions );
 		// and now we do the exact opposite of above
@@ -462,6 +472,12 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			$merged_properties_and_relations,
 			$this->_model->relation_settings()
 		);
+		// BUT !!!! We also need to include any many relations using an asterisk in the relation name
+		foreach ( $merged_properties_and_relations as $key => $value ) {
+			if ( ! isset( $this->_related_model_object_properties[ $key ] ) && strpos( $key, '*' ) !== false ) {
+				$this->_related_model_object_properties[ $key ] = $value;
+			}
+		}
 	}
 
 
@@ -492,12 +508,12 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		//	? $model_fields_and_values
 		//	: $this->default_generation_definitions();
 		//$model_fields_and_values = array_merge( $this->default_generation_definitions(), $model_fields_and_values );
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() <br />";
+		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() \n";
 		//echo "\n MODEL_FIELDS_AND_VALUES: ";
 		//var_dump( $model_fields_and_values );
-		//echo "\n default_generation_definitions(): ";
+		//echo "\n default_generation_definitions(): \n";
 		//var_dump( $this->default_generation_definitions() );
-		//echo "\n _related_model_object_properties: ";
+		//echo "\n _related_model_object_properties: \n";
 		//var_dump( $this->_related_model_object_properties );
 		//$object = $this->create_object_and_relations( $model_fields_and_values, $this->_related_model_object_properties );
 		$object = $this->create_object_and_relations( $this->default_generation_definitions(), $this->_related_model_object_properties );
@@ -664,7 +680,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	public function generate_related_objects( EE_Base_Class $object, $properties_and_relations ) {
 		if ( ! empty( $properties_and_relations ) ) {
 			$timezone_and_formats = array( 'timezone', 'formats' );
-			//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() <br />";
+			//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() \n";
 			//echo "\n properties_and_relations: ";
 			//var_dump( $properties_and_relations );
 			//die();
@@ -676,7 +692,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 				$model_fields = array();
 				$related_models = array();
 				//if ( $relation_name == 0 ) {
-					//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() <br />";
+					//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() \n";
 					//echo "\n properties_and_relations: ";
 					//var_dump( $properties_and_relations );
 					//die();
