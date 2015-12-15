@@ -42,16 +42,17 @@ class EEM_WP_User extends EEM_Base {
 				'display_name' => new EE_Plain_Text_Field( 'display_name', __( 'Display Name', 'event_espresso' ), false, '' )
 			));
 		$this->_model_relations = array(
-			'Attendee' => new EE_Has_Many_Relation(),
-			'Change_Log' => new EE_Has_Many_Relation(),
-			'Event'=>new EE_Has_Many_Relation(),
-			'Payment_Method' => new EE_Has_Many_Relation(),
-			'Price' => new EE_Has_Many_Relation(),
-			'Price_Type' => new EE_Has_Many_Relation(),
-			'Question'=>new EE_Has_Many_Relation(),
-			'Question_Group' => new EE_Has_Many_Relation(),
-			'Ticket' => new EE_Has_Many_Relation(),
-			'Venue' => new EE_Has_Many_Relation(),
+			'Attendee'               => new EE_Has_Many_Relation(),
+			'Change_Log'             => new EE_Has_Many_Relation(),
+			'Event'					 => new EE_Has_Many_Relation(),
+			'Message_Template_Group' => new EE_Has_Many_Relation(),
+			'Payment_Method'         => new EE_Has_Many_Relation(),
+			'Price'                  => new EE_Has_Many_Relation(),
+			'Price_Type'             => new EE_Has_Many_Relation(),
+			'Question'				 => new EE_Has_Many_Relation(),
+			'Question_Group'         => new EE_Has_Many_Relation(),
+			'Ticket'                 => new EE_Has_Many_Relation(),
+			'Venue'                  => new EE_Has_Many_Relation(),
 		);
 		$this->_wp_core_model = true;
 		$this->_caps_slug = 'users';
