@@ -1,18 +1,6 @@
 <?php if (!defined('EVENT_ESPRESSO_VERSION') )
 	exit('NO direct script access allowed');
 /**
- * Event Espresso
- *
- * Event Registration and Management Plugin for Wordpress
- *
- * @package		Event Espresso
- * @author		Seth Shoultes
- * @copyright	(c)2009-2012 Event Espresso All Rights Reserved.
- * @license		@link http://eventespresso.com/support/terms-conditions/  ** see Plugin Licensing * *
- * @link		http://www.eventespresso.com
- * @version		4.1
- *
- * ------------------------------------------------------------------------
  *
  * EEM_Message_Template_Group
  *
@@ -41,7 +29,7 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 		$this->_fields = array(
 			'Message_Template_Group' => array(
 				'GRP_ID' => new EE_Primary_Key_Int_Field('GRP_ID', __('Message Template Group ID', 'event_espresso')),
-				'MTP_name' => new EE_Plain_Text_Field( 'MTP_name', __('The name of the temlpate group', 'event_espresso'), FALSE, '' ),
+				'MTP_name' => new EE_Plain_Text_Field( 'MTP_name', __('The name of the template group', 'event_espresso'), FALSE, '' ),
 				'MTP_description' => new EE_Simple_HTML_Field( 'MTP_description', __('A brief description about this template.', 'event_espresso' ), FALSE, '' ),
 				'MTP_user_id'=> new EE_WP_User_Field('MTP_user_id', __('Template Creator ID', 'event_espresso'), FALSE, get_current_user_id() ),
 				'MTP_messenger'=>new EE_Plain_Text_Field('MTP_messenger', __('Messenger Used for Template', 'event_espresso'), FALSE, 'email' ),
@@ -56,7 +44,7 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 			'Message_Template' => new EE_Has_Many_Relation(),
 			'Event' => new EE_HABTM_Relation('Event_Message_Template'),
 			'WP_User' => new EE_Belongs_To_Relation(),
-			);
+		);
 		foreach( $this->_cap_contexts_to_cap_action_map as $context => $action ){
 			$this->_cap_restriction_generators[ $context ] = new EE_Restriction_Generator_Global( 'MTP_is_global');
 		}
@@ -69,9 +57,14 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 
 	/**
 	 * get_all_trashed_message_templates_by_event
+	 *
 	 * @access public
-	 * @param int $EVT_ID specific event id
-	 * @return array   message template objects that are attached to a specific event.
+	 * @param int    $EVT_ID specific event id
+	 * @param string $orderby
+	 * @param string $order
+	 * @param null   $limit
+	 * @param bool   $count
+	 * @return array message template objects that are attached to a specific event.
 	 */
 	public function get_all_trashed_message_templates_by_event($EVT_ID, $orderby = 'GRP_ID', $order = 'ASC', $limit = NULL, $count = FALSE) {
 		$query_params = array( array('Event.EVT_ID' => $EVT_ID), 'order_by' => array($orderby => $order), 'limit' => $limit );
@@ -84,6 +77,9 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 	 * get_all_message_templates_by_messenger
 	 *
 	 * @access public
+	 * @param        $messenger
+	 * @param string $orderby
+	 * @param string $order
 	 * @return array all (including trashed or inactive) message template group objects for the given messenger
 	 */
 	public function get_all_message_templates_by_messenger($messenger, $orderby = 'GRP_ID', $order = 'ASC' ) {
@@ -114,8 +110,15 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 
 	/**
 	 * get_all_active_message_templates groups
+	 *
 	 * @access public
-	 * @return array  all active (non_trashed, active) message template objects
+	 * @param string $orderby
+	 * @param string $order
+	 * @param null   $limit
+	 * @param bool   $count
+	 * @param bool   $global
+	 * @param bool   $user_check
+	 * @return array all active (non_trashed, active) message template objects
 	 */
 	public function get_all_active_message_templates($orderby = 'GRP_ID', $order = 'ASC', $limit = NULL, $count = FALSE, $global = TRUE, $user_check = FALSE ) {
 		$_where = $global ? array('MTP_is_global' => TRUE ) : array('MTP_is_global' => FALSE );
@@ -133,12 +136,15 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 
 
 
-
 	/**
-	 * 	retrieve ALL message_template groups from db regardless of wht
+	 *    retrieve ALL message_template groups from db regardless of wht
 	 *
-	 * 	@access	public
-	 * 	@return	mixed array on success, FALSE on fail
+	 * @access    public
+	 * @param string $orderby
+	 * @param string $order
+	 * @param null   $limit
+	 * @param bool   $count
+	 * @return mixed array on success, FALSE on fail
 	 */
 	public function get_all_message_templates($orderby = 'GRP_ID', $order = 'ASC', $limit = NULL, $count = FALSE) {
 
@@ -161,10 +167,12 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 	 * @return  EE_Message_Template_Group[]
 	 */
 	public function get_all_custom_templates_by_event( $EVT_ID, $query_params = array() ) {
-		$_where = array( 'Event.EVT_ID' => $EVT_ID );
+		$_where = array_merge(
+			$query_params,
+			array( 'Event.EVT_ID' => $EVT_ID )
+		);
 		return $this->get_all( array( $_where ) );
 	}
-
 
 
 
@@ -173,7 +181,12 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 	 * this returns ONLY the template groups where ALL contexts are trashed and none of the group are non-trashed
 	 *
 	 * @access public
-	 * @return EE_Message_Template_Group[] message template groups.
+	 * @param string $orderby
+	 * @param string $order
+	 * @param null   $limit
+	 * @param bool   $count
+	 * @param bool   $global
+	 * @return \EE_Message_Template_Group[] message template groups.
 	 */
 	public function get_all_trashed_grouped_message_templates($orderby = 'GRP_ID', $order = 'ASC', $limit = NULL, $count = FALSE, $global = TRUE) {
 		$_where = $global ? array('MTP_is_global' => TRUE ) : array('MTP_is_global' => FALSE );
@@ -187,17 +200,18 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 
 
 
-
 	/**
 	 * this returns the message template group(s) for a given event, messenger, and message template
-	 * @param  string  $messenger
-	 * @param  string  $message_type
-	 * @param  string  $orderby      pointless at this point but still included
-	 * @param  string  $order
-	 * @param  mixed (array|null) $limit array($offset, $num)
-	 * @param  bool   $count        true = just return count, false = objects
-	 * @param  bool   $active  		ignore "active" or not. (default only return active)
-	 * @return mixed (int|EE_Message_Template_Group[])                depending on $count.
+	 *
+	 * @param  string             $messenger
+	 * @param  string             $message_type
+	 * @param  int             	  $evt_id
+	 * @param  string             $orderby pointless at this point but still included
+	 * @param  string             $order
+	 * @param  mixed (array|null) $limit   array($offset, $num)
+	 * @param  bool               $count   true = just return count, false = objects
+	 * @param  bool               $active  ignore "active" or not. (default only return active)
+	 * @return \mixed[]) depending on $count.
 	 */
 	public function get_event_message_templates_by_m_and_mt_and_evt( $messenger, $message_type, $evt_id, $orderby = 'GRP_ID', $order = 'ASC', $limit = NULL, $count = FALSE, $active = TRUE ) {
 
@@ -226,7 +240,7 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 	 * @param  mixed (array|null) $limit array($offset, $num)
 	 * @param  bool   $count        true = just return count, false = objects
 	 * @param  bool   $active  		ignore "active" or not. (default only return active) - 'all' means return both inactive AND inactive.
-	 * @return ARRAY               message template objects that are global (i.e. non-event)
+	 * @return array               message template objects that are global (i.e. non-event)
 	 */
 	public function get_global_message_template_by_m_and_mt($messenger, $message_type, $orderby = 'GRP_ID', $order = 'ASC', $limit = NULL, $count = FALSE, $active = TRUE ) {
 		$_where = array(
@@ -255,15 +269,17 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 	 * @return EE_Message_Template_Group[]
 	 */
 	public function get_custom_message_template_by_m_and_mt( $messenger, $message_type, $query_params = array() ) {
-		$_where = array(
-			'MTP_is_global' => FALSE,
-			'MTP_messenger' => $messenger,
-			'MTP_message_type' => $message_type
-			);
+		$_where = array_merge(
+			$query_params,
+			array(
+				'MTP_is_global' 	=> false,
+				'MTP_messenger' 	=> $messenger,
+				'MTP_message_type' 	=> $message_type
+			)
+		);
 
 		return $this->get_all( array( $_where ) );
 	}
-
 
 
 
@@ -271,11 +287,17 @@ class EEM_Message_Template_Group extends EEM_Soft_Delete_Base {
 	 * This sends things to the validator for the given messenger and message type.
 	 *
 	 *
-	 * @param  array $fields the incoming fields to check.  Note this array is in the formatted fields from the form fields setup.  So we need to reformat this into an array of expected field refs by the validator.  Note also that this is not only the fields for the Message Template Group but ALSO for Message Template.
-	 * @param string $context The context the fields were obtained from.
-	 * @param string $messenger The messenger we are validating
-	 * @param string $message_type The message type we are validating.
-	 * @return mixed (bool|array)         If the fields all check out then we return true otherwise error messages are returned (indexed by field name);
+	 * @param  array $fields 		the incoming fields to check.
+	 *                       		Note this array is in the formatted fields from the form fields setup.
+	 *                       		So we need to reformat this into an array of expected field refs by the validator.
+	 *                       		Note also that this is not only the fields for the Message Template Group
+	 *                       		but ALSO for Message Template.
+	 * @param string $context      	The context the fields were obtained from.
+	 * @param string $messenger    	The messenger we are validating
+	 * @param string $message_type 	The message type we are validating.
+	 * @return mixed 		 		If the fields all check out then we return true
+	 *                       		otherwise error messages are returned (indexed by field name);
+	 * @throws \EE_Error
 	 */
 	public function validate($fields, $context, $messenger, $message_type) {
 
