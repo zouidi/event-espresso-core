@@ -76,6 +76,16 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 	public $line_item_chained = null;
 
 	/**
+	 * @type EE_UnitTest_Factory_For_Message_Template $message_template
+	 */
+	public $message_template = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Message_Template $message_template_chained
+	 */
+	public $message_template_chained = null;
+
+	/**
 	 * @type EE_UnitTest_Factory_For_Message_Template_Group $message_template_group
 	 */
 	public $message_template_group = null;
