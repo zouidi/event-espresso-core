@@ -14,7 +14,7 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 	/**
 	 * @type int
 	 */
-	public static $counter = 0;
+	public static $counter = 1;
 
 	/**
 	 * EE_Test_Factories extend the EE_UnitTest_Factory_for_Model_Object class,
@@ -74,6 +74,16 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 	 * @type EE_UnitTest_Factory_For_Line_item $line_item_chained
 	 */
 	public $line_item_chained = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Message_Template_Group $message_template_group
+	 */
+	public $message_template_group = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Message_Template_Group $message_template_group_chained
+	 */
+	public $message_template_group_chained = null;
 
 	/**
 	 * @type EE_UnitTest_Factory_For_Payment $payment
