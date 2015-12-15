@@ -68,3 +68,4 @@ class EEM_Message_Template_Caps_Test extends EE_UnitTestCase{
 }
 
 // End of file EEM_Message_Template_Test.php
+// Location: tests/testcases/core/db_models/EEM_Message_Template_Caps_Test.php
