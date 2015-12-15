@@ -54,26 +54,20 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	 * @return \EE_Transaction
 	 */
 	protected function _generate_transaction_and_registrations( $txn_total = 10.00, $reg_count = 0 ) {
-		/** @type EE_Transaction $transaction */
-		$transaction = $this->new_model_obj_with_dependencies(
-			'Transaction',
-			array(
-				'STS_ID'    => EEM_Transaction::incomplete_status_code,
-				'TXN_total' => $txn_total,
-				'TXN_paid'  => 0,
-			)
-		);
-		if ( $reg_count ) {
-			$this->factory->registration->create_many(
-				$reg_count,
-				array(
-					'TXN_ID'          => $transaction->ID(),
-					'STS_ID'          => EEM_Registration::status_id_pending_payment,
-					'REG_final_price' => $txn_total / $reg_count,
-				)
+		$registrations= array();
+		for ( $x = 0; $x < $reg_count; $x++ ) {
+			$registrations[ 'Registration' . str_repeat( '*', $x ) ] = array(
+				'REG_final_price' => $txn_total / $reg_count,
+				'STS_ID' => EEM_Registration::status_id_pending_payment,
 			);
 		}
-		return $transaction;
+		$this->factory->transaction->set_properties_and_relations(
+			array_merge(
+				array( 'TXN_total' => $txn_total ),
+				$registrations
+			)
+		);
+		return $this->factory->transaction->create_object();
 	}
 
 
@@ -284,6 +278,7 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	public function test_get_REG_IDs_to_apply_payment_to_for_specific_registrations_and_new_payment() {
 		$this->_admin_page = new Transactions_Admin_Page_Mock();
 		$this->_setup_standard_transaction_and_payment( 40.00, 4, 10.00 );
+		$this->assertEquals( 4, count( $this->_transaction->registrations() ) );
 		// get 2 out of the four registrations
 		$registrations = $this->_get_x_number_of_registrations_from_transaction( $this->_transaction, 2 );
 		// pass those REG IDs via the $_REQUEST data
