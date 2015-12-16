@@ -5,18 +5,18 @@ if (!defined('EVENT_ESPRESSO_VERSION'))
 /**
  * This scenario creates an event that has:
  * - Three Datetimes
- *      - D1 - reg limit 3 		( T1, T3, T4 ) 	<< can only sell 3 max : Tickets 1, 3 & 4 sold out after 3 sales
- *      - D2 - reg limit 2 		( T2, T3 )    	<< can only sell 2 max : Tickets 2 & 3 sold out after 2 sales
- *      - D3 - reg limit 10 	( T1, T4 ) 		<< can only sell 3 max : Tickets 1 & 4 sold out after 3 sales
+ *      - D1 - reg limit 3 		( TA, TC, TD ) 	<< can only sell 3 max : Tickets A, C & D sold out after 3 sales
+ *      - D2 - reg limit 2 		( TB, TC )    	<< can only sell 2 max : Tickets B & C sold out after 2 sales
+ *      - D3 - reg limit 10 	( TA, TD ) 		<< can only sell 3 max : Tickets A & D sold out after 3 sales
  * - Four Tickets
- *      - T1 - qty 2 ( D1, D3 ) 	<< can only sell 2 max due to TKT qty ( which sells out Ticket 1 )
- *      - T2 - qty 2 ( D2 )        	<< can only sell 2 max due to TKT qty && DT reg limit ( which sells out T2 && D2 )
- *      - T3 - qty 2 ( D1, D2 ) 	<< can only sell 2 max due to TKT qty ( which sells out Ticket 3 )
- *      - T4 - qty 2 ( D1, D3 ) 	<< can only sell 2 max due to TKT qty ( which sells out Ticket 4 )
+ *      - TA - qty 2 ( D1, D3 ) 	<< can only sell 2 max due to TKT qty ( which sells out Ticket A )
+ *      - TB - qty 2 ( D2 )        	<< can only sell 2 max due to TKT qty && DT reg limit ( which sells out TB && D2 )
+ *      - TC - qty 2 ( D1, D2 ) 	<< can only sell 2 max due to TKT qty ( which sells out Ticket C )
+ *      - TD - qty 2 ( D1, D3 ) 	<< can only sell 2 max due to TKT qty ( which sells out Ticket D )
  *
  *  FASTEST SELLOUT:
- * 		- 2 T2 (or T3) tickets for D2 ( T2 & T3 sold out + D2 sold out )
- * 		- 1 T1 (or T4) ticket for D1 ( T1 & T4 sold out + D1 & D3 sold out )
+ * 		- 2 TB (or TC) tickets for D2 ( TB & TC sold out + D2 sold out )
+ * 		- 1 TA (or TD) ticket for D1 ( TA & TD sold out + D1 & D3 sold out )
  *
  *  MAX SELLOUT:
  * 		- 3 T1 (or T4) tickets for D1 (or D3) ( T1, T3 & T4 sold out + D1 & D3 sold out )
@@ -37,12 +37,16 @@ class EE_Event_Scenario_G extends EE_Test_Scenario {
 	protected function _set_up_expected(){
 		$this->_expected_values = array(
 			'total_available_spaces' => 5,
-			'total_remaining_spaces' => 3
+			'total_remaining_spaces' => 5,
 		);
 	}
 
 
 	protected function _set_up_scenario(){
+		$TKT_A = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket A', 'TKT_qty' => 2 ) );
+		$TKT_B = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket B', 'TKT_qty' => 2 ) );
+		$TKT_C = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket C', 'TKT_qty' => 2 ) );
+		$TKT_D = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket D', 'TKT_qty' => 2 ) );
 		$event = $this->generate_objects_for_scenario(
 			array(
 				'Event' => array(
@@ -51,40 +55,33 @@ class EE_Event_Scenario_G extends EE_Test_Scenario {
 						'DTT_name'      => 'Datetime 1',
 						'DTT_reg_limit' => 3,
 						'Ticket'    => array(
-							'TKT_name' => 'Ticket 1',
-							'TKT_qty'  => 2,
+							'TKT_ID' => $TKT_A->ID()
 						),
 						'Ticket*'   => array(
-							'TKT_name' => 'Ticket 3',
-							'TKT_qty'  => 2,
+							'TKT_ID' => $TKT_C->ID()
 						),
 						'Ticket**'  => array(
-							'TKT_name' => 'Ticket 4',
-							'TKT_qty'  => 2,
+							'TKT_ID' => $TKT_D->ID()
 						),
 					),
 					'Datetime*'   => array(
 						'DTT_name'      => 'Datetime 2',
 						'DTT_reg_limit' => 2,
 						'Ticket'    => array(
-							'TKT_name' => 'Ticket 2',
-							'TKT_qty'  => 2,
+							'TKT_ID' => $TKT_B->ID()
 						),
 						'Ticket*'   => array(
-							'TKT_name' => 'Ticket 3',
-							'TKT_qty'  => 2,
+							'TKT_ID' => $TKT_C->ID()
 						),
 					),
 					'Datetime**'  => array(
 						'DTT_name'      => 'Datetime 3',
 						'DTT_reg_limit' => 10,
 						'Ticket'    => array(
-							'TKT_name' => 'Ticket 1',
-							'TKT_qty'  => 2,
+							'TKT_ID' => $TKT_A->ID()
 						),
 						'Ticket*'   => array(
-							'TKT_name' => 'Ticket 4',
-							'TKT_qty'  => 2,
+							'TKT_ID' => $TKT_D->ID()
 						),
 					),
 				),
