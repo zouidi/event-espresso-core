@@ -5,12 +5,12 @@ if (!defined('EVENT_ESPRESSO_VERSION'))
 /**
  * This scenario creates an event that has:
  * - Two Datetimes
- *      - D1 - reg limit 15 	( TA, TB ) 			<< can only sell 15 max : Tickets A & B sold out after 15 sales
- *      - D2 - reg limit 17    	( TA, TB, TC ) 	<< can only sell 15 max : Tickets A & B sold out after 15 sales
+ *      - D1 - reg limit 15 	( TA, TB ) 		<< can only sell 15 max : Tickets A & B sold out after 15 sales
+ *      - D2 - reg limit 17    	( TA, TB, TC ) 	<< can only sell 17 max : Tickets A & B sold out after 15 sales
  * - Three Tickets
- *      - TA - qty 23 	( D1, D2 )    << can only sell 15 max due to D1 reg limit ( which sells out Tickets A & B )
+ *      - TA - qty 23 	( D1, D2 )  << can only sell 15 max due to D1 reg limit ( which sells out Tickets A & B )
  *      - TB - qty 5 	( D1, D2 ) 	<< can only sell 5 max due to TB qty ( which sells out Tickets A & B )
- *      - TC - qty 15 	( D2 ) 			<< can only sell 15 max due to TC qty
+ *      - TC - qty 15 	( D2 ) 		<< can only sell 15 max due to TC qty
  *
  *  MAX SELLOUT:
  *    	5 TB tickets for D1 ( TB sold out )
@@ -38,6 +38,9 @@ class EE_Event_Scenario_C extends EE_Test_Scenario {
 
 
 	protected function _set_up_scenario(){
+		$TKT_A = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket A', 'TKT_qty' => 23 ) );
+		$TKT_B = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket B', 'TKT_qty' => 5 ) );
+		$TKT_C = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket C', 'TKT_qty' => 15 ) );
 		$event = $this->generate_objects_for_scenario(
 			array(
 				'Event' => array(
@@ -46,28 +49,23 @@ class EE_Event_Scenario_C extends EE_Test_Scenario {
 						'DTT_name'      => 'Datetime 1',
 						'DTT_reg_limit' => 15,
 						'Ticket'        => array(
-							'TKT_name' => 'Ticket A',
-							'TKT_qty'  => 23,
+							'TKT_ID' => $TKT_A->ID()
 						),
 						'Ticket*'       => array(
-							'TKT_name' => 'Ticket B',
-							'TKT_qty'  => 5,
-						),
-						'Ticket**'       => array(
-							'TKT_name' => 'Ticket C',
-							'TKT_qty'  => 15,
+							'TKT_ID' => $TKT_B->ID()
 						),
 					),
 					'Datetime*' => array(
 						'DTT_name'      => 'Datetime 2',
 						'DTT_reg_limit' => 17,
 						'Ticket'        => array(
-							'TKT_name' => 'Ticket A',
-							'TKT_qty'  => 23,
+							'TKT_ID' => $TKT_A->ID()
 						),
 						'Ticket*'       => array(
-							'TKT_name' => 'Ticket B',
-							'TKT_qty'  => 5,
+							'TKT_ID' => $TKT_B->ID()
+						),
+						'Ticket**' => array(
+							'TKT_ID' => $TKT_C->ID()
 						),
 					),
 				),
