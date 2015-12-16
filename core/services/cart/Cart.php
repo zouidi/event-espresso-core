@@ -102,7 +102,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	 /**
 	  * @param boolean $open
 	  */
-	 public function setOpen( $open ) {
+	 public function setOpen( $open = true ) {
 		 $this->open = filter_var( $open, FILTER_VALIDATE_BOOLEAN );
 	 }
 
@@ -162,11 +162,13 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 
 	 /**
-	  * @param EEI_Ticket $ticket
+	  * @param EEI_Ticket 		$ticket
+	  * @param int        		$quantity
+	  * @param CartItemOption[] $options
 	  * @return bool
 	  */
-	 public function addTicket( EEI_Ticket $ticket ) {
-		 return $this->addItem( $ticket, 'Ticket' );
+	 public function addTicket( EEI_Ticket $ticket, $quantity = 1, $options = array() ) {
+		 return $this->addItem( $ticket, $quantity, $options, 'Ticket' );
 	 }
 
 
@@ -191,10 +193,12 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 	 /**
 	  * @param DiscountInterface $discount
+	  * @param int               $quantity
+	  * @param CartItemOption[]  $options
 	  * @return bool
 	  */
-	 public function addDiscount( DiscountInterface $discount ) {
-		 return $this->addItem( $discount, 'Discount' );
+	 public function addDiscount( DiscountInterface $discount, $quantity = 1, $options = array() ) {
+		 return $this->addItem( $discount, $quantity, $options, 'Discount' );
 	 }
 
 
@@ -219,11 +223,13 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 	 /**
 	  * @param SurchargeInterface $surcharge
+	  * @param int                $quantity
+	  * @param CartItemOption[]   $options
 	  * @return bool
 	  */
-	 public function addSurcharge( SurchargeInterface $surcharge ) {
-		 return $this->addItem( $surcharge, 'Surcharge' );
-	 }
+	 public function addSurcharge( SurchargeInterface $surcharge, $quantity = 1, $options = array() ) {
+		 return $this->addItem( $surcharge, $quantity, $options, 'Surcharge' );
+ 	}
 
 
 
@@ -247,16 +253,30 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 	 /**
 	  * @access protected
-	  * @param  string $item
-	  * @param  string $type
+	  * @param  string 			$item
+	  * @param int     			$quantity
+	  * @param CartItemOption[] $options
+	  * @param  string 			$type
 	  * @return bool
 	  * @throws \EE_Error
 	  */
-	 protected function addItem( $item, $type = 'Ticket' ) {
+	 protected function addItem( $item, $quantity, $options, $type = 'Ticket' ) {
 		 $cartItemClass = $this->getCartItemClass( $type );
-		 return $this->items->addItem(
-			 new $cartItemClass( $item, $this )
-		 );
+		 $cartItem = new $cartItemClass( $item, $this );
+		 if ( ! $cartItem instanceof CartItem ) {
+			 throw new \EE_Error(
+				 sprintf(
+					 __( '"%1$s" is not a valid CartItem class.', 'event_espresso' ),
+					 $cartItemClass
+				 )
+			 );
+		 }
+		 foreach ( $options as $option ) {
+			 if ( $option instanceof CartItemOption ) {
+				 $cartItem->addCartItemOption( $option );
+			 }
+		 }
+		 return $this->items->addItem( $cartItem, $quantity );
 	 }
 
 
@@ -306,10 +326,10 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 	  */
 	 public function getCartItemClass( $type = 'Ticket' ) {
 		 $itemClass = $type . 'CartItem';
-		 if ( ! class_exists( $itemClass ) ) {
+		 if ( ! class_exists( $itemClass ) || ! is_subclass_of( $itemClass, 'CartItem' ) ) {
 			 throw new \EE_Error(
 				 sprintf(
-					 __( '"%1$s" is missing or not a valid CartItem class.', 'event_espresso' ),
+					 __( 'The "%1$s" class is either missing or not a valid CartItem class.', 'event_espresso' ),
 					 $itemClass
 				 )
 			 );
