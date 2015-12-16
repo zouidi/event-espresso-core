@@ -27,13 +27,15 @@ class CartItemRepository extends EE_Object_Collection {
 
 	/**
 	 * @param CartItem $item
+	 * @param int      $quantity
 	 * @return bool
 	 */
-	public function addItem( CartItem $item ) {
+	public function addItem( CartItem $item, $quantity = 1 ) {
 		if ( $this->has( $item ) ) {
-			$item->setQuantity( $item->quantity() + 1 );
+			$item->setQuantity( $item->quantity() + $quantity );
 			return true;
 		}
+		$item->setQuantity( $quantity );
 		return $this->add( $item, $item->SKU() );
 	}
 
