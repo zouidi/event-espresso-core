@@ -40,6 +40,10 @@ class EE_Event_Scenario_A extends EE_Test_Scenario {
 
 
 	protected function _set_up_scenario(){
+		$TKT_A = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket A', 'TKT_qty'  => 30 ) );
+		$TKT_B = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket B', 'TKT_qty'  => 5 ) );
+		$TKT_C = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket C', 'TKT_qty'  => 15 ) );
+		$TKT_D = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket D', 'TKT_qty'  => 10 ) );
 		$event = $this->generate_objects_for_scenario(
 			array(
 				'Event' => array(
@@ -48,44 +52,36 @@ class EE_Event_Scenario_A extends EE_Test_Scenario {
 						'DTT_name'      => 'Datetime 1',
 						'DTT_reg_limit' => 5,
 						'Ticket'        => array(
-							'TKT_name' => 'Ticket A',
-							'TKT_qty'  => 30,
+							'TKT_ID' => $TKT_A->ID()
 						),
 						'Ticket*'       => array(
-							'TKT_name' => 'Ticket B',
-							'TKT_qty'  => 5,
+							'TKT_ID' => $TKT_B->ID()
 						),
 						'Ticket**'      => array(
-							'TKT_name' => 'Ticket C',
-							'TKT_qty'  => 15,
+							'TKT_ID' => $TKT_C->ID()
 						),
 					),
 					'Datetime*'  => array(
 						'DTT_name'      => 'Datetime 2',
 						'DTT_reg_limit' => 20,
 						'Ticket'        => array(
-							'TKT_name' => 'Ticket A',
-							'TKT_qty'  => 30,
+							'TKT_ID' => $TKT_A->ID()
 						),
 						'Ticket*'       => array(
-							'TKT_name' => 'Ticket B',
-							'TKT_qty'  => 5,
+							'TKT_ID' => $TKT_B->ID()
 						),
 						'Ticket**'       => array(
-							'TKT_name' => 'Ticket D',
-							'TKT_qty'  => 10,
+							'TKT_ID' => $TKT_D->ID()
 						),
 					),
 					'Datetime**' => array(
 						'DTT_name'      => 'Datetime 3',
 						'DTT_reg_limit' => 12,
 						'Ticket'        => array(
-							'TKT_name' => 'Ticket A',
-							'TKT_qty'  => 30,
+							'TKT_ID' => $TKT_A->ID()
 						),
 						'Ticket*' => array(
-							'TKT_name' => 'Ticket D',
-							'TKT_qty'  => 10,
+							'TKT_ID' => $TKT_D->ID()
 						),
 					),
 				),
