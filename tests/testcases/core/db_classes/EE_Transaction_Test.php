@@ -45,7 +45,10 @@ class EE_Transaction_Test extends EE_UnitTestCase{
 	}
 	public function test_payment_method(){
 		/** @type EE_Transaction $t */
-		$t = $this->new_model_obj_with_dependencies('Transaction');
+		$t = $this->new_model_obj_with_dependencies(
+			'Transaction',
+			array( 'Payment_Method' => array() )
+		);
 		$this->assertNotEquals(0,$t->payment_method_ID());
 
 		$pm = $t->payment_method();
@@ -98,4 +101,4 @@ class EE_Transaction_Test extends EE_UnitTestCase{
 }
 
 // End of file EE_Transaction_Test.php
-// Location: wp-content/plugins/event-espresso-core/tests/testcases/core/db_classes/EE_Transaction_Test.php
+// Location:/tests/testcases/core/db_classes/EE_Transaction_Test.php
