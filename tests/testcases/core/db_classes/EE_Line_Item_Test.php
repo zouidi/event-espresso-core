@@ -46,7 +46,7 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 		$this->assertNotEquals( 0, $txn->tax_total() );
 		$this->assertEquals( $total_including_taxes, $total_line_item->total() );
 	}
-	
+
 	/**
 	 * @group 8964
 	 * Uses a particular number and quantity that has been shown to cause rounding problems
@@ -54,38 +54,32 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 	 * the total for both transactions was NOT the same as 1 transaction for 2 ticket purchases)
 	 */
 	function test_recalculate_pre_tax_total__rounding_issues() {
-		EE_Registry::instance()->load_helper( 'Line_Item' );
-		$flat_base_price_type_id = EEM_Price_Type::instance()->get_var( array( array( 'PRT_name' => 'Base Price' ) ) );
-		$percent_surcharge_price_type_id = EEM_Price_Type::instance()->get_var( array( array( 'PRT_name' => 'Percent Surcharge' ) ) );
-		$base_price = $this->new_model_obj_with_dependencies( 
-				'Price', 
-				array(
-					'PRT_ID' => $flat_base_price_type_id,
-					'PRC_amount' => 21.67
-				));
-		$percent_surcharge = $this->new_model_obj_with_dependencies( 
-				'Price',
-				array(
-					'PRT_ID' => $percent_surcharge_price_type_id,
-					'PRC_amount' => 20
-				));
-		$ticket = $this->new_model_obj_with_dependencies(
-				'Ticket',
-				array(
-					'TKT_price' => $base_price->amount() + ( $base_price->amount() * $percent_surcharge->amount() / 100 ),
-					'TKT_taxable' => false
-				));
-		$ticket->_add_relation_to( $base_price, 'Price' );
-		$ticket->_add_relation_to( $percent_surcharge, 'Price' );
-		$event = $this->new_model_obj_with_dependencies( 'Event' );
-		$datetime = $this->new_model_obj_with_dependencies( 'Datetime' );
-		$ticket->_add_relation_to( $datetime, 'Datetime' );
-		
+		$base_price = 21.67;
+		$percent_surcharge = 20;
+		$this->factory->ticket->set_properties_and_relations(
+			array(
+				'TKT_price'   => $base_price + ( $base_price * $percent_surcharge / 100 ),
+				'TKT_taxable' => false,
+				'Price' => array(
+					'PRT_ID' 	 => 1,
+					'PRC_amount' => $base_price
+				),
+				'Price*' => array(
+					'PRT_ID' 	 => 4,
+					'PRC_amount' => $percent_surcharge
+				),
+				'Datetime' => array(
+					'Event' => array()
+				)
+			)
+		);
+		/** @type EE_Ticket $ticket */
+		$ticket = $this->factory->ticket->create_object();
 		$quantity = 2;
+		EE_Registry::instance()->load_helper( 'Line_Item' );
 		$total_line_item = EEH_Line_Item::add_ticket_purchase( EEH_Line_Item::create_total_line_item(), $ticket, $quantity);
-		
 		$this->assertEquals( $ticket->price() * $quantity, $total_line_item->total() );
-		
+
 	}
 	/**
 	 * * also test that if you call this in order to get the taxable total, that it doesn't update
@@ -322,7 +316,7 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 				));
 		//so when we ask their parent for the taxable total, it should only
 		//factor in the taxable portion of the percent item
-		//only half of the 10 dollar discount (so 5) should be facotred into taxes
+		//only half of the 10 dollar discount (so 5) should be factored into taxes
 		//so the taxable total should be the taxable ticket (10) minus half the discount (5)
 		//so it should equal 5
 		$this->assertEquals( 0, $parent_li->taxable_total() );
@@ -355,3 +349,4 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 }
 
 // End of file EE_Line_Item_Test.php
+// Location: tests/testcases/core/db_classes/EE_Line_Item_Test.php
