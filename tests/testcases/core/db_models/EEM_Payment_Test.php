@@ -57,15 +57,28 @@ class EEM_Payment_Test extends EE_UnitTestCase {
 
 		// let's setup the args for our payments in an array, then we can just loop through to grab them and set things up.
 		$payment_args = array(
-			array( 'PAY_timestamp' => $two_days_ago->format( $full_format ) , 'timezone' => 'America/Toronto', 'formats' => $formats ),
-			array( 'PAY_timestamp' => $one_hour_from_now->format( $full_format ) , 'timezone' => 'America/Toronto', 'formats' => $formats ),
-			array( 'PAY_timestamp' => $now_clone_for_other->sub( new DateInterval( 'PT2H' ) )->format( $full_format ) , 'timezone' => 'America/Toronto', 'formats' => $formats ),
-			array( 'PAY_timestamp' => $two_days_from_now->format( $full_format) , 'timezone' => 'America/Toronto', 'formats' => $formats ),
-			array( 'PAY_timestamp' => $two_days_ago->format( $full_format ) , 'timezone' => 'America/Toronto', 'formats' => $formats ),
+			array( 'PAY_timestamp' => $two_days_ago->format( $full_format ) ),
+			array( 'PAY_timestamp' => $one_hour_from_now->format( $full_format ) ),
+			array( 'PAY_timestamp' => $now_clone_for_other->sub( new DateInterval( 'PT2H' ) )->format( $full_format ) ),
+			array( 'PAY_timestamp' => $two_days_from_now->format( $full_format ) ),
+			array( 'PAY_timestamp' => $two_days_ago->format( $full_format ) ),
 		);
 
+		$counter = 1;
 		foreach( $payment_args as $payment_arg ) {
-			$this->factory->payment->create( $payment_arg );
+			$this->factory->payment->create(
+				array_merge(
+					array(
+						'timezone' 	=> 'America/Toronto',
+						'formats' 	=> $formats,
+						'Payment_Method' => array(
+							'PMD_ID' => '*PMD1',
+						),
+					),
+					$payment_arg
+				)
+			);
+			$counter++;
 		}
 
 		$this->assertEquals( 5, EEM_Payment::instance()->count() );
@@ -104,4 +117,6 @@ class EEM_Payment_Test extends EE_UnitTestCase {
 	}
 
 
-} //end class EEM_Payment
+}
+//end class EEM_Payment
+// Location: tests/testcases/core/db_models/EEM_Payment_Test.php
