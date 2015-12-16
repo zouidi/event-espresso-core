@@ -38,6 +38,9 @@ class EE_Event_Scenario_B extends EE_Test_Scenario {
 
 
 	protected function _set_up_scenario(){
+		$TKT_A = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket A', 'TKT_qty' => 23 ) );
+		$TKT_B = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket B', 'TKT_qty' => 5 ) );
+		$TKT_C = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket C', 'TKT_qty' => 15 ) );
 		$event = $this->generate_objects_for_scenario(
 			array(
 				'Event' => array(
@@ -46,24 +49,20 @@ class EE_Event_Scenario_B extends EE_Test_Scenario {
 						'DTT_name'      => 'Datetime 1',
 						'DTT_reg_limit' => 15,
 						'Ticket'        => array(
-							'TKT_name' => 'Ticket A',
-							'TKT_qty'  => 23,
+							'TKT_ID' => $TKT_A->ID()
 						),
 						'Ticket*'       => array(
-							'TKT_name' => 'Ticket B',
-							'TKT_qty'  => 5,
+							'TKT_ID' => $TKT_B->ID()
 						),
 					),
 					'Datetime*'  => array(
 						'DTT_name'      => 'Datetime 2',
 						'DTT_reg_limit' => 17,
 						'Ticket'        => array(
-							'TKT_name' => 'Ticket A',
-							'TKT_qty'  => 23,
+							'TKT_ID' => $TKT_A->ID()
 						),
 						'Ticket*'       => array(
-							'TKT_name' => 'Ticket C',
-							'TKT_qty'  => 15,
+							'TKT_ID' => $TKT_C->ID()
 						),
 					),
 				),
