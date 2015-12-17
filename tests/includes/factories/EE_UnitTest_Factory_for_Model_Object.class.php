@@ -602,6 +602,9 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		) {
 			//echo "\n\n CACHE RELATED OBJECT where: {$this->_primary_key} = " . $model_fields_and_values[ $primary_key ];
 			$this->_object_cache[ $model_fields_and_values[ $primary_key ] ] = $object;
+			if ( ! $object->ID() && $this->_save_to_db ) {
+				$object->save();
+			}
 		}
 		$related_model_objects = $this->_set_relations_for_foreign_keys_in_model_fields(
 			$this->_model,
@@ -879,6 +882,23 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 */
 	public function get_object_by_id( $ID ) {
 		return $this->_model->get_one_by_ID( $ID );
+	}
+
+
+
+	/**
+	 * @return void
+	 */
+	public function reset() {
+		$this->_timezone = '';
+		$this->_date_time_formats = array();
+		$this->_custom_properties_and_relations = null;
+		$this->_default_properties = null;
+		$this->_default_relations = null;
+		$this->_related_model_object_properties = array();
+		$this->_save_to_db = true;
+		$this->_primary_key = '';
+		$this->_object_cache = array();
 	}
 
 
