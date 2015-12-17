@@ -142,9 +142,11 @@ class EE_Event_Test extends EE_UnitTestCase{
 		$scenarios = $this->scenarios->get_scenarios_by_type( 'event' );
 		foreach ( $scenarios as $scenario ) {
 			if ( $scenario->get_expected( 'total_available_spaces') ) {
+				/** @type EE_Event $event */
+				$event = $scenario->get_scenario_object();
 				$this->assertEquals(
 					$scenario->get_expected( 'total_available_spaces' ),
-					$scenario->get_scenario_object()->total_available_spaces(),
+					$event->total_available_spaces(),
 					'Testing ' . $scenario->name
 				);
 			}
@@ -162,9 +164,9 @@ class EE_Event_Test extends EE_UnitTestCase{
 			if ( $scenario->skip() ) {
 				continue;
 			}
-			/** @type EE_Event $event */
-			$event = $scenario->get_scenario_object();
 			if ( $scenario->get_expected( 'total_remaining_spaces' ) !== false ) {
+				/** @type EE_Event $event */
+				$event = $scenario->get_scenario_object();
 				$this->assertEquals(
 					$scenario->get_expected( 'total_remaining_spaces' ),
 					$event->spaces_remaining_for_sale(),
