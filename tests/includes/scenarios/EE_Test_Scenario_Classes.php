@@ -131,6 +131,7 @@ abstract class EE_Test_Scenario {
 	public function generate_objects_for_scenario( $scenario_data_arrays = array() ) {
 		$generated_objects = array();
 		foreach ( $scenario_data_arrays as $factory => $scenario_data ) {
+			//echo "\n\n\n FACTORY: " . $factory;
 			$factory = $this->_eeTest->factory->get_factory_for_model( $factory );
 			$factory->set_properties_and_relations( $scenario_data );
 			$generated_objects[] = $factory->create_object();
@@ -188,7 +189,6 @@ abstract class EE_Test_Scenario {
 			for ( $x = 1; $x <= $qty; $x++ ) {
 				$registration = EE_Registration::new_instance(
 					array(
-						'STS_ID'   => EEM_Registration::status_id_approved,
 						'REG_date' => time() - DAY_IN_SECONDS,
 						'REG_code' => $transaction->ID() . "-" . $ticket->ID() . "-$x-test",
 						'TXN_ID'   => $transaction->ID(),
@@ -197,7 +197,11 @@ abstract class EE_Test_Scenario {
 					)
 				);
 				$registration->save();
+				// don't change reg status until there is an ID
+				$registration->set_status( EEM_Registration::status_id_approved );
+				$registration->save();
 			}
+			$ticket->save();
 		}
 	}
 
@@ -241,6 +245,36 @@ abstract class EE_Test_Scenario {
 	 * @param array $arguments
 	 */
 	public function run_additional_logic( $arguments = array() ) {
+	}
+
+
+
+	public function visualize_scenario_object_keys() {
+		if ( $this->_scenario_object instanceof EE_Event ) {
+			echo "\n\nEvent->ID(): " . $this->_scenario_object->ID();
+			$datetimes = $this->_scenario_object->datetimes();
+			foreach ( $datetimes as $datetime ) {
+				if ( $datetime instanceof EE_Datetime ) {
+					echo "\n datetime->ID(): " . $datetime->ID();
+					$tickets = $datetime->tickets();
+					foreach ( $tickets as $ticket ) {
+						if ( $ticket instanceof EE_Ticket ) {
+							echo "\n  ticket->ID(): " . $ticket->ID();
+							$ticket_datetimes = $ticket->datetimes();
+							foreach ( $ticket_datetimes as $ticket_datetime ) {
+								if ( $ticket_datetime instanceof EE_Datetime ) {
+									echo "\n   ticket_datetime->ID(): " . $ticket_datetime->ID();
+									$ticket_datetime_event = $ticket_datetime->event();
+									if ( $ticket_datetime_event instanceof EE_Event ) {
+										echo "\n    ticket_datetime_event->ID(): " . $ticket_datetime_event->ID();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 
@@ -421,5 +455,7 @@ class EE_Test_Scenario_Factory {
 		}
 		return $scenario;
 	}
+
+
 
 }
