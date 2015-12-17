@@ -294,6 +294,26 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 
 
 
+	/**
+	 * @return void
+	 */
+	public function reset_all_factories() {
+		$factories = get_class_vars( 'EE_UnitTest_Factory' );
+		foreach ( $factories as $factory => $value ) {
+			$class = 'EE_UnitTest_Factory_For_' . str_replace( ' ', '_', ucwords( str_replace( '_', ' ', $factory ) ) );
+			if (
+				class_exists( $class )
+				&& property_exists( $this, $factory )
+				&& $this->{$factory} instanceof EE_UnitTest_Factory_for_Model_Object
+			) {
+				$this->{$factory}->reset();
+				$this->{$factory}->set_properties_and_relations( null );
+			}
+		}
+	}
+
+
+
 }
 
 
