@@ -44,10 +44,6 @@ class EE_Event_Scenario_I extends EE_Test_Scenario {
 	 * @throws \Exception
 	 */
 	protected function _set_up_scenario(){
-		$TKT_A = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket A', 'TKT_qty' => 6 ) );
-		$TKT_B = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket B', 'TKT_qty' => 6 ) );
-		$TKT_C = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket C', 'TKT_qty' => 6 ) );
-		$TKT_D = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket D', 'TKT_qty' => 6 ) );
 		$event = $this->generate_objects_for_scenario(
 			array(
 				'Event' => array(
@@ -60,16 +56,20 @@ class EE_Event_Scenario_I extends EE_Test_Scenario {
 						'DTT_reg_limit' => 25,
 						'DTT_sold'      => 0,
 						'Ticket'    => array(
-							'TKT_ID' => $TKT_A->ID()
+							'TKT_name' => 'Ticket 1',
+							'TKT_qty' => 6
 						),
 						'Ticket*'   => array(
-							'TKT_ID' => $TKT_B->ID()
+							'TKT_name' => 'Ticket 2',
+							'TKT_qty' => 6
 						),
 						'Ticket**'  => array(
-							'TKT_ID' => $TKT_C->ID()
+							'TKT_name' => 'Ticket 3',
+							'TKT_qty' => 6
 						),
 						'Ticket***' => array(
-							'TKT_ID' => $TKT_D->ID()
+							'TKT_name' => 'Ticket 4',
+							'TKT_qty' => 6
 						),
 					),
 				),
@@ -77,6 +77,7 @@ class EE_Event_Scenario_I extends EE_Test_Scenario {
 		);
 		//assign the event object as the scenario object
 		$this->_scenario_object = reset( $event );
+		//$this->visualize_scenario_object_keys();
 	}
 
 
@@ -115,7 +116,10 @@ class EE_Event_Scenario_I extends EE_Test_Scenario {
 		$qty = isset( $arguments['qty'] ) ? $arguments[ 'qty' ] : 0;
 		$tkt_id = isset( $arguments['tkt_id'] ) ? $arguments[ 'tkt_id' ] : 0;
 		if ( $qty && $tkt_id ) {
-			$this->_sell_tickets( $this->_get_event_ticket( $tkt_id ), $qty );
+			$ticket = $this->_get_event_ticket( $tkt_id );
+			if ( $ticket instanceof EE_Ticket ) {
+				$this->_sell_tickets( $ticket, $qty );
+			}
 		}
 	}
 
