@@ -108,6 +108,7 @@ abstract class EE_Test_Scenario {
 		if ( $this->is_initialized() ) {
 			return;
 		}
+		$this->_eeTest->factory->reset_all_factories();
 		$this->_set_up_scenario();
 		$this->_set_up_expected();
 		$this->_initialized = true;
@@ -431,6 +432,7 @@ class EE_Test_Scenario_Factory {
 		if ( $scenarios && $initialize) {
 			foreach ( $scenarios as $scenario ) {
 				if ( $scenario instanceof EE_Test_Scenario ) {
+					//echo "\n\n EE_Test_Scenario: " . $scenario->name . "";
 					$scenario->initialize();
 				}
 			}
