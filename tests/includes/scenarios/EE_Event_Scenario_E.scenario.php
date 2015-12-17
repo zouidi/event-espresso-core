@@ -17,8 +17,9 @@ if (!defined('EVENT_ESPRESSO_VERSION'))
  *      - TE - qty 30 	( D4 )
  *
  *  MAX SELLOUT:
- *        12 TD tickets for D3 ( D3 sold out + TA & TD sold out )
- *        18 TB tickets for D2 ( D4 sold out cuz 12 TD + 18 TB = 30 reg limit, so TB, TC sold out )
+ *        12 TA tickets for D3 ( D3 sold out + TA & TD sold out )
+ *         8 TB tickets for D2 ( D2 sold out + TB sold out )
+ *        22 TE tickets for D4 ( D4 sold out + TC & TE sold out )
  *
 *@package    Event Espresso
  * @subpackage tests/scenarios
@@ -34,18 +35,13 @@ class EE_Event_Scenario_E extends EE_Test_Scenario {
 
 	protected function _set_up_expected(){
 		$this->_expected_values = array(
-			'total_available_spaces' => 30,
-			'total_remaining_spaces' => 30
+			'total_available_spaces' => 42,
+			'total_remaining_spaces' => 42
 		);
 	}
 
 
 	protected function _set_up_scenario(){
-		$TKT_A = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket A', 'TKT_qty' => 12 ) );
-		$TKT_B = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket B', 'TKT_qty' => 20 ) );
-		$TKT_C = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket C', 'TKT_qty' => 30 ) );
-		$TKT_D = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket D', 'TKT_qty' => 12 ) );
-		$TKT_E = $this->_eeTest->factory->ticket->create_object( array( 'TKT_name' => 'Ticket D', 'TKT_qty' => 30 ) );
 		$event = $this->generate_objects_for_scenario(
 			array(
 				'Event' => array(
@@ -54,52 +50,61 @@ class EE_Event_Scenario_E extends EE_Test_Scenario {
 						'DTT_name'      => 'Datetime 1',
 						'DTT_reg_limit' => 55,
 						'Ticket'        => array(
-							'TKT_ID' => $TKT_A->ID()
+							'TKT_ID' => '*TA',
+							'TKT_name' => 'Ticket A',
+							'TKT_qty' => 12
 						),
 						'Ticket*'       => array(
-							'TKT_ID' => $TKT_B->ID()
+							'TKT_ID' => '*TB',
+							'TKT_name' => 'Ticket B',
+							'TKT_qty' => 20
 						),
 						'Ticket**'      => array(
-							'TKT_ID' => $TKT_C->ID()
+							'TKT_ID' => '*TC',
+							'TKT_name' => 'Ticket C',
+							'TKT_qty' => 30
 						),
 						'Ticket***'      => array(
-							'TKT_ID' => $TKT_D->ID()
+							'TKT_ID' => '*TD',
+							'TKT_name' => 'Ticket D',
+							'TKT_qty' => 12
 						),
 					),
 					'Datetime*'  => array(
 						'DTT_name'      => 'Datetime 2',
 						'DTT_reg_limit' => 20,
 						'Ticket'        => array(
-							'TKT_ID' => $TKT_A->ID()
+							'TKT_ID' => '*TA',
 						),
 						'Ticket*'       => array(
-							'TKT_ID' => $TKT_B->ID()
+							'TKT_ID' => '*TB',
 						),
 					),
 					'Datetime**' => array(
 						'DTT_name'      => 'Datetime 3',
 						'DTT_reg_limit' => 12,
 						'Ticket'        => array(
-							'TKT_ID' => $TKT_A->ID()
+							'TKT_ID' => '*TA',
 						),
 						'Ticket*'       => array(
-							'TKT_ID' => $TKT_D->ID()
+							'TKT_ID' => '*TD',
 						),
 					),
 					'Datetime***' => array(
 						'DTT_name'      => 'Datetime 4',
 						'DTT_reg_limit' => 30,
 						'Ticket'       => array(
-							'TKT_ID' => $TKT_B->ID()
+							'TKT_ID' => '*TB',
 						),
 						'Ticket*'      => array(
-							'TKT_ID' => $TKT_C->ID()
+							'TKT_ID' => '*TC',
 						),
 						'Ticket**'      => array(
-							'TKT_ID' => $TKT_D->ID()
+							'TKT_ID' => '*TD',
 						),
 						'Ticket***' => array(
-							'TKT_ID' => $TKT_E->ID()
+							'TKT_name' => 'Ticket D',
+							'TKT_qty' => 30
 						),
 					),
 				),
