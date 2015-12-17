@@ -5,10 +5,10 @@ if (!defined('EVENT_ESPRESSO_VERSION'))
 /**
  * This scenario creates an event that has:
  * - Two Datetimes
- *      - D1 - reg limit 12 	( T1 ) 	<< can only sell 12 max : Ticket 1 sold out after 12 sales
- *      - D2 - reg limit 12 	( T1 ) 	<< can only sell 12 max : Ticket 1 sold out after 12 sales
+ *      - D1 - reg limit 12 	( TA ) 	<< can only sell 12 max : Ticket A sold out after 12 sales
+ *      - D2 - reg limit 12 	( TA ) 	<< can only sell 12 max : Ticket A sold out after 12 sales
  * - One Tickets
- *      - T1 - qty 12 ( D1, D2 ) 	<< can only sell 12 max due to TKT qty
+ *      - TA - qty 12 ( D1, D2 ) 	<< can only sell 12 max due to TKT qty
  *
 *@package    Event Espresso
  * @subpackage tests/scenarios
@@ -39,7 +39,7 @@ class EE_Event_Scenario_H extends EE_Test_Scenario {
 	 * @throws \Exception
 	 */
 	protected function _set_up_scenario(){
-		$event = $this->generate_objects_for_scenario(
+		$objects = $this->generate_objects_for_scenario(
 			array(
 				'Event' => array(
 					'EVT_name' => 'Test Scenario EVT H - Two Classes',
@@ -50,10 +50,10 @@ class EE_Event_Scenario_H extends EE_Test_Scenario {
 						'DTT_EVT_end'   => time() + ( 7.5 * DAY_IN_SECONDS ),
 						'DTT_reg_limit' => 12,
 						'DTT_sold'      => 0,
-						'Ticket'    => array(
-							'TKT_name' => 'Ticket 1',
-							'TKT_qty'  => 12,
-							'TKT_sold' => 0,
+						'Ticket' => array(
+							'TKT_ID' => '*TA', // <<<<<<<<<<<< PRIMARY KEY ALIAS so same object gets used elsewhere
+							'TKT_name' => 'Ticket A',
+							'TKT_qty' => 12
 						),
 					),
 					'Datetime*'   => array(
@@ -62,17 +62,17 @@ class EE_Event_Scenario_H extends EE_Test_Scenario {
 						'DTT_EVT_end'   => time() + ( 14.5 * DAY_IN_SECONDS ),
 						'DTT_reg_limit' => 12,
 						'DTT_sold'      => 0,
-						'Ticket'    => array(
-							'TKT_name' => 'Ticket 1',
-							'TKT_qty'  => 12,
-							'TKT_sold' => 0,
+						'Ticket' => array(
+							'TKT_ID' => '*TA', // <<<<<<<<<<<< PRIMARY KEY ALIAS so same object gets used elsewhere
+							'TKT_name' => 'Ticket A',
+							'TKT_qty' => 12
 						),
 					),
 				),
 			)
 		);
 		//assign the event object as the scenario object
-		$this->_scenario_object = reset( $event );
+		$this->_scenario_object = reset( $objects );
 		$this->_sell_tickets( $this->_get_event_ticket() , 6 );
 	}
 
