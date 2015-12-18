@@ -63,19 +63,44 @@ class EE_Payment_Processor_Test extends EE_UnitTestCase{
 	}
 
 	public function test_update_txn_based_on_payment(){
+		$total = 10.00;
 		//create a txn, and an UNSAVED payment. then call this.
-		/** @type EE_Transaction $txn */
-		$txn = $this->new_model_obj_with_dependencies('Transaction', array( 'STS_ID' => EEM_Transaction::incomplete_status_code, 'TXN_total' => 10.00 ) );
-		$ticket = $this->get_ticket_mock();
 		$user = $this->get_wp_user_mock( 'administrator' );
-		$event = $this->get_event_mock( $user );
-		$registration = $this->get_registration_mock( $txn, $ticket, $event, 10.00 );
-		$txn->_add_relation_to( $registration, 'Registration' );
+		/** @type EE_Transaction $txn */
+		$txn = $this->new_model_obj_with_dependencies(
+			'Transaction',
+			array(
+				'TXN_total' => $total,
+				'STS_ID' => EEM_Transaction::incomplete_status_code,
+				'Registration'  => array(
+					'REG_final_price' => $total,
+					'REG_count'       => EEM_Registration::PRIMARY_REGISTRANT_COUNT,
+					'Attendee'        => array(),
+					'Ticket'          => array(
+						'TKT_price' => $total,
+						'Datetime'  => array(
+							'DTT_EVT_start' => current_time( 'timestamp' ) + 60 * 60,
+							'DTT_EVT_end'   => current_time( 'timestamp' ) + 5 * 60 * 60,
+							'Event' => array(
+								'EVT_wp_user' => $user->ID
+							)
+						)
+					)
+				)
+			)
+		);
 		/** @type EE_Payment $payment */
-		$payment = $this->new_model_obj_with_dependencies( 'Payment', array( 'TXN_ID' => $txn->ID(), 'STS_ID' => EEM_Payment::status_id_approved, 'PAY_amount' => 10.00,  ), FALSE );
+		$payment = $this->new_model_obj_with_dependencies(
+			'Payment',
+			array(
+				'TXN_ID' => $txn->ID(),
+				'STS_ID' => EEM_Payment::status_id_approved,
+				'PAY_amount' => 10.00
+			),
+			FALSE
+		);
 		// simulate payment save performed in EE_PMT_Base::process_payment()
 		$payment->save();
-		//$this->new_model_obj_with_dependencies( 'Registration', array( 'TXN_ID' => $txn->ID(), 'REG_count' => 1 ) );
 		$this->assertEquals( EEM_Payment::status_id_approved, $payment->status() );
 
 		/** @type EE_Payment_Processor $payment_processor */
@@ -255,28 +280,34 @@ class EE_Payment_Processor_Test extends EE_UnitTestCase{
 	 * @return EE_Transaction
 	 */
 	protected function _new_typical_transaction(){
-		/** @type EE_Transaction $transaction */
-		$transaction = $this->new_model_obj_with_dependencies( 'Transaction', array( 'TXN_total'=>10.00 ) );
-		$ticket = $this->get_ticket_mock();
+		$total = 10.00;
 		$user = $this->get_wp_user_mock( 'administrator' );
-		$event = $this->get_event_mock( $user );
-		$registration = $this->get_registration_mock( $transaction, $ticket, $event, 10.00 );
-		$transaction->_add_relation_to( $registration, 'Registration' );
-		/** @type EE_Datetime $dtt */
-		$dtt = $this->new_model_obj_with_dependencies( 'Datetime', array(
-			'EVT_ID'=> $event->ID(),
-			'DTT_EVT_start'=> current_time( 'timestamp' ) + 60 * 60,
-			'DTT_EVT_end' => current_time( 'timestamp' ) + 5 * 60 * 60 ) );
-
-		$dtt->_add_relation_to( $ticket, 'Ticket' );
-		$transaction->set_reg_steps(
+		return $this->new_model_obj_with_dependencies(
+			'Transaction',
 			array(
-				'attendee_information' => TRUE,
-				'payment_options' => TRUE,
-				'finalize_registration' => current_time( 'timestamp' ),
+				'TXN_total' => $total,
+				'TXN_reg_steps' => array(
+					'attendee_information'  => true,
+					'payment_options'       => true,
+					'finalize_registration' => current_time( 'timestamp' ),
+				),
+				'Registration' => array(
+					'REG_final_price' => $total,
+					'REG_count'       => EEM_Registration::PRIMARY_REGISTRANT_COUNT,
+					'Attendee'        => array(),
+					'Ticket'          => array(
+						'TKT_price'   => $total,
+						'Datetime'    => array(
+							'DTT_EVT_start' => current_time( 'timestamp' ) + 60 * 60,
+							'DTT_EVT_end'   => current_time( 'timestamp' ) + 5 * 60 * 60,
+							'Event' => array(
+								'EVT_wp_user' => $user->ID
+							)
+						)
+					)
+				)
 			)
 		);
-		return $transaction;
 	}
 
 
@@ -293,49 +324,6 @@ class EE_Payment_Processor_Test extends EE_UnitTestCase{
 
 	}
 
-
-
-	/**
-	 * @param float $TKT_price
-	 * @return \EE_Ticket
-	 */
-	public function get_ticket_mock( $TKT_price = 10.00 ) {
-		return $this->new_model_obj_with_dependencies( 'Ticket', array( 'TKT_price' => $TKT_price ) );
-	}
-
-
-
-	/**
-	 * @param \WP_User $EVT_wp_user
-	 * @return \EE_Event
-	 */
-	public function get_event_mock( WP_User $EVT_wp_user = null ) {
-		return $this->new_model_obj_with_dependencies( 'Event', array( 'EVT_wp_user' => $EVT_wp_user->ID ) );
-	}
-
-
-
-	/**
-	 * @param \EE_Transaction $transaction
-	 * @param \EE_Ticket $ticket
-	 * @param \EE_Event $event
-	 * @param float $REG_final_price
-	 * @return \EE_Registration
-	 * @throws \EE_Error
-	 */
-	public function get_registration_mock( EE_Transaction $transaction, EE_Ticket $ticket, EE_Event $event,
-		$REG_final_price = 10.00 ) {
-		return $this->new_model_obj_with_dependencies(
-			'Registration',
-			array(
-				'TXN_ID'          => $transaction->ID(),
-				'TKT_ID'          => $ticket->ID(),
-				'EVT_ID'          => $event->ID(),
-				'REG_final_price' => $REG_final_price,
-				'REG_count'       => EEM_Registration::PRIMARY_REGISTRANT_COUNT
-			)
-		);
-	}
 
 	/**
 	 * @group 7201
@@ -364,3 +352,4 @@ class EE_Payment_Processor_Test extends EE_UnitTestCase{
 }
 
 // End of file EE_Payment_Processor_Test.php
+// Location: tests/testcases/core/EE_Payment_Processor_Test.php
