@@ -41,11 +41,10 @@ class EE_UnitTest_Factory_For_Message_Template extends EE_UnitTest_Factory_for_M
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'MTP_template_field' => sprintf( 'Field Name %d', EE_UnitTest_Factory::$counter ),
-				'MTP_context'        => sprintf( 'Message Type Context %d', EE_UnitTest_Factory::$counter ),
-				'MTP_content'        => sprintf( 'The field content for template %d', EE_UnitTest_Factory::$counter ),
+				'MTP_template_field' => new WP_UnitTest_Generator_Sequence( 'Field Name %d', 1 ),
+				'MTP_context'        => new WP_UnitTest_Generator_Sequence( 'Message Type Context %d', 1 ),
+				'MTP_content'        => new WP_UnitTest_Generator_Sequence( 'The field content for template %d', 1 ),
 			);
-			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
