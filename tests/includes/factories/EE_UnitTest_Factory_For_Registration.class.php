@@ -48,10 +48,10 @@ class EE_UnitTest_Factory_For_Registration extends EE_UnitTest_Factory_for_Model
 				'REG_final_price' => 0,
 				'REG_paid'        => 0,
 				'REG_session'     => uniqid(),
-				'REG_code'        => "1-1-" . self::$counter . "-" . substr( uniqid(), 0, 4 ),
-				'REG_url_link'    => self::$counter . md5( 'ticket' . microtime() ),
-				'REG_count'       => 1,
-				'REG_group_size'  => 1,
+				'REG_code'        => new WP_UnitTest_Generator_Sequence( "1-1-%d-" . substr( uniqid(), 0, 4 ) ),
+				'REG_url_link'    => new WP_UnitTest_Generator_Sequence( '%s' . md5( 'ticket' . microtime() ) ),
+				'REG_count'       => new WP_UnitTest_Generator_Sequence( '%s', 1 ),
+				'REG_group_size'  => new WP_UnitTest_Generator_Sequence( '%s', 1 ),
 				'STS_ID' 		  => EEM_Registration::status_id_pending_payment,
 			);
 			self::$counter++;
@@ -59,11 +59,11 @@ class EE_UnitTest_Factory_For_Registration extends EE_UnitTest_Factory_for_Model
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
 			$this->_default_relations = array(
-				'Event'                => array(),
-				'Attendee'             => array(),
-				'Transaction'          => array(),
-				'Ticket'               => array(
-					'Datetime' => array()
+				'Event' 		=> array(),
+				'Attendee' 		=> array(),
+				'Transaction' 	=> array(),
+				'Ticket' 		=> array(
+					'Datetime' 	=> array()
 				),
 				//'Status'               => array(
 				//	'STS_ID'   => EEM_Registration::status_id_pending_payment,
