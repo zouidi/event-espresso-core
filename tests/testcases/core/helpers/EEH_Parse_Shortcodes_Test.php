@@ -46,22 +46,34 @@ class EEH_Parse_Shortcodes_Test extends EE_UnitTestCase {
 	 * This will hold the created ticket object on setup which can then be used to grab expected
 	 * data from.
 	 *
-	 * @var null
+	 * @var EE_Ticket
 	 */
 	protected $_ticket = null;
 
 
 
+	/**
+	 * @throws \EE_Error
+	 */
 	public function setUp() {
 		parent::setUp();
 
 		//all shortcode parse tests will require a full event to be setup with some datetimes and tickets.
-		$price = $this->factory->price_chained->create_object( array('PRC_name' => 'Not Free Price', 'PRC_amount' => '125.00' ) );
-		$this->_ticket = $this->factory->ticket_chained->create_object( array( 'PRC_ID' => $price->ID() ) );
-		//update ticket price
-		$this->_ticket->set( 'TKT_price', '125.00' );
-		$this->_ticket->set( 'TKT_name', 'Podracing Entry' );
-		$this->_ticket->set( 'TKT_description', 'One entry in the event.' );
+		$this->factory->ticket->set_properties_and_relations(
+			array(
+				'TKT_name' => 'Podracing Entry',
+				'TKT_description' => 'One entry in the event.',
+				'TKT_price' => 125.00,
+				'Price' => array(
+					'PRC_name' 	 => 'Not Free Price',
+					'PRC_amount' => 125.00
+				),
+				'Datetime' => array(
+					'Event' => array()
+				),
+			)
+		);
+		$this->_ticket = $this->factory->ticket->create_object();
 		$this->_datetime = $this->_ticket->first_datetime();
 		$this->_event = $this->_datetime->event();
 
@@ -362,4 +374,6 @@ class EEH_Parse_Shortcodes_Test extends EE_UnitTestCase {
 
 
 
-} //end class EEH_Parse_Shortcodes_Test
+}
+//end class EEH_Parse_Shortcodes_Test
+// Location: tests/testcases/core/helpers/EEH_Parse_Shortcodes_Test.php
