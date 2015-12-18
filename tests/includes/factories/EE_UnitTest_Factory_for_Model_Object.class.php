@@ -448,12 +448,12 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		// which could be an array which actually does define all properties and relations,
 		// or NOTHING (null)... which means we'll just end up with the default properties
 		if ( empty( $this->_custom_properties_and_relations ) && is_array( $this->_custom_properties_and_relations ) ) {
-			$merged_properties_and_relations = array_merge(
+			$merged_properties_and_relations = $this->_object_safe_array_merge_recursive(
 				$this->default_properties( $this->factory_type() ),
 				$this->default_relations()
 			);
 		} else {
-			$merged_properties_and_relations = array_merge(
+			$merged_properties_and_relations = $this->_object_safe_array_merge_recursive(
 				$this->default_properties( $this->factory_type() ),
 				(array)$this->_custom_properties_and_relations
 			);
@@ -492,6 +492,58 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 				$this->_related_model_object_properties[ $key ] = $value;
 			}
 		}
+	}
+
+
+
+	/**
+	 * recursive array merging that doesn't try to convert objects to arrays
+	 * borrowed from: http://php.net/manual/en/function.array-merge-recursive.php#73843
+	 *
+	 *
+	 * @param $array1
+	 * @param $array2
+	 * @return array
+	 */
+	protected function _object_safe_array_merge_recursive( $array1, $array2 ) {
+		$arrays = func_get_args();
+		$remains = $arrays;
+		// We walk through each arrays and put value in the results (without
+		// considering previous value).
+		$result = array();
+		// loop available array
+		foreach ( $arrays as $array ) {
+			// The first remaining array is $array. We are processing it. So
+			// we remove it from remaining arrays.
+			array_shift( $remains );
+			// We don't care non array param, like array_merge since PHP 5.0.
+			if ( is_array( $array ) ) {
+				// Loop values
+				foreach ( $array as $key => $value ) {
+					if ( is_array( $value ) ) {
+						// we gather all remaining arrays that have such key available
+						$args = array();
+						foreach ( $remains as $remain ) {
+							if ( array_key_exists( $key, $remain ) ) {
+								array_push( $args, $remain[ $key ] );
+							}
+						}
+						if ( count( $args ) > 2 ) {
+							// put the recursion
+							$result[ $key ] = call_user_func_array( __FUNCTION__, $args );
+						} else {
+							foreach ( $value as $value_key => $value_value ) {
+								$result[ $key ][ $value_key ] = $value_value;
+							}
+						}
+					} else {
+						// simply put the value
+						$result[ $key ] = $value;
+					}
+				}
+			}
+		}
+		return $result;
 	}
 
 
@@ -558,7 +610,9 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		$object = null;
 		$object_class = $this->object_class();
 		//echo "\n create object of class: " . $object_class;
-		$model_fields_and_values = $this->_parse_timezone_and_formats_in_model_fields( $model_fields_and_values );
+		$model_fields_and_values = $this->_parse_timezones_formats_and_sequences_in_model_fields(
+			$model_fields_and_values
+		);
 		$primary_key = $this->_find_primary_key_in_model_fields( $this->_model, $model_fields_and_values );
 		if ( ! empty( $primary_key ) && ! empty( $model_fields_and_values[ $primary_key ] ) ) {
 			//echo "\n\n FIND RELATED OBJECT where: {$this->_primary_key} = " . $model_fields_and_values[ $primary_key ];
@@ -572,12 +626,10 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			}
 		}
 		if ( ! $object instanceof $object_class ) {
-			//if ( $object_class === 'EE_Country' ) {
-			//	echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
-			//	echo "\n OBJECT_CLASS: " . $object_class . "\n";
-			//	echo "\n model_fields_and_values: \n";
-			//	var_dump( $model_fields_and_values );
-			//}
+			//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
+			//echo "\n OBJECT_CLASS: " . $object_class/* . "\n"*/;
+			//echo "\n model_fields_and_values: \n";
+			//var_dump( $model_fields_and_values );
 			//echo "\n  CREATE NEW ";
 			$object = call_user_func_array(
 				array( $object_class, 'new_instance' ),
@@ -622,12 +674,12 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 
 
 	/**
-	 * _parse_timezone_and_formats_in_model_fields
+	 * _parse_timezones_formats_and_sequences_in_model_fields
 	 *
 	 * @param array $model_fields_and_values
 	 * @return array
  	 */
-	protected function _parse_timezone_and_formats_in_model_fields( $model_fields_and_values ) {
+	protected function _parse_timezones_formats_and_sequences_in_model_fields( $model_fields_and_values ) {
 		//timezone?
 		if ( isset( $model_fields_and_values[ 'timezone' ] ) ) {
 			$this->set_timezone( $model_fields_and_values[ 'timezone' ] );
@@ -637,6 +689,11 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		if ( isset( $model_fields_and_values[ 'formats' ] ) && is_array( $model_fields_and_values[ 'formats' ] ) ) {
 			$this->set_date_time_formats( $model_fields_and_values[ 'formats' ] );
 			unset( $model_fields_and_values[ 'formats' ] );
+		}
+		foreach ( $model_fields_and_values as $field => $value ) {
+			if ( $value instanceof WP_UnitTest_Generator_Sequence ) {
+				$model_fields_and_values[ $field ] = $value->next();
+			}
 		}
 		return $model_fields_and_values;
 	}
@@ -882,6 +939,24 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 */
 	public function get_object_by_id( $ID ) {
 		return $this->_model->get_one_by_ID( $ID );
+	}
+
+
+
+	/**
+	 * @param       $count
+	 * @param array $args
+	 * @param null  $generation_definitions
+	 * @return array
+	 */
+	function create_many( $count, $args = array(), $generation_definitions = NULL ) {
+		$results = array();
+		for ( $i = 0; $i < $count; $i++ ) {
+			// reset factory properties and relations by passing null
+			$this->set_properties_and_relations( null );
+			$results[] = $this->create_object( $args );
+		}
+		return $results;
 	}
 
 
