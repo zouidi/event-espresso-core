@@ -61,7 +61,7 @@ class EE_Registration_Test extends EE_UnitTestCase{
 	}
 
 	function test_answer_value_to_question() {
-		$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'Attendee' => array() ) );
+		$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'Attendee' => null, ) );
 		$q1 = $this->new_model_obj_with_dependencies( 'Question' );
 		//also grab the default first name question
 		$q2 = EEM_Question::instance()->get_Question_ID_from_system_string( EEM_Attendee::system_question_fname );
@@ -82,7 +82,7 @@ class EE_Registration_Test extends EE_UnitTestCase{
 	 */
 	function test_can_checkin() {
 		//setup a registration
-		$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'Event' => array() ) );
+		$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'Event' => null ) );
 
 		$t = $this->new_ticket();
 
