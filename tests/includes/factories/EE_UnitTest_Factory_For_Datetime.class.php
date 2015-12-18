@@ -37,12 +37,11 @@ class EE_UnitTest_Factory_For_Datetime extends EE_UnitTest_Factory_for_Model_Obj
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'DTT_name'        => sprintf( 'Datetime %s', EE_UnitTest_Factory::$counter ),
-				'DTT_description' => sprintf( 'Datetime Description %s', EE_UnitTest_Factory::$counter ),
+				'DTT_name'        => new WP_UnitTest_Generator_Sequence( 'Datetime %s', 1 ),
+				'DTT_description' => new WP_UnitTest_Generator_Sequence( 'Datetime Description %s', 1 ),
 				'DTT_EVT_start'   => strtotime( '+1 month', current_time( 'timestamp' ) ),
 				'DTT_EVT_end'     => strtotime( '+2 months', current_time( 'timestamp' ) ),
 			);
-			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
