@@ -41,13 +41,11 @@ class EE_UnitTest_Factory_For_Message_Template_Group extends EE_UnitTest_Factory
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'MTP_name' 			=> sprintf( 'Message Template Group %d', EE_UnitTest_Factory::$counter ),
-				'MTP_description'  	=> sprintf( 'Message Template Group %d description', EE_UnitTest_Factory::$counter ),
-				'MTP_messenger'    	=> sprintf( 'MTP_messenger_%d', EE_UnitTest_Factory::$counter ),
-				'MTP_message_type' 	=> sprintf( 'MTP_message_type_%d', EE_UnitTest_Factory::$counter ),
-				//'MTP_user_id'      	=> get_current_user_id(),
+				'MTP_name' 			=> new WP_UnitTest_Generator_Sequence( 'Message Template Group %d', 1 ),
+				'MTP_description'  	=> new WP_UnitTest_Generator_Sequence( 'Message Template Group %d description', 1 ),
+				'MTP_messenger'    	=> new WP_UnitTest_Generator_Sequence( 'MTP_messenger_%d', 1 ),
+				'MTP_message_type' 	=> new WP_UnitTest_Generator_Sequence( 'MTP_message_type_%d', 1 ),
 			);
-			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
