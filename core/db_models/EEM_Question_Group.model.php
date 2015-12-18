@@ -28,8 +28,8 @@ class EEM_Question_Group extends EEM_Soft_Delete_Base {
 	const system_address = 2;
   	// private instance of the Attendee object
 	protected static $_instance = NULL;
-        
-        
+
+
 	protected function __construct( $timezone = NULL ) {
 		$this->singular_item = __('Question Group','event_espresso');
 		$this->plural_item = __('Question Groups','event_espresso');
@@ -52,10 +52,11 @@ class EEM_Question_Group extends EEM_Soft_Delete_Base {
 			)
 		);
 		$this->_model_relations = array(
-			'Question'=>new EE_HABTM_Relation('Question_Group_Question'),
-			'Event'=>new EE_HABTM_Relation('Event_Question_Group'),
-			'Event_Question_Group'=>new EE_Has_Many_Relation(),
-			'WP_User' => new EE_Belongs_To_Relation(),
+			'Question'                => new EE_HABTM_Relation( 'Question_Group_Question' ),
+			'Event'                   => new EE_HABTM_Relation( 'Event_Question_Group' ),
+			'Event_Question_Group'    => new EE_Has_Many_Relation(),
+			'WP_User'                 => new EE_Belongs_To_Relation(),
+			'Question_Group_Question' => new EE_Has_Many_Relation(),
 		);
 		//this model is generally available for reading
 		$this->_cap_restriction_generators[ EEM_Base::caps_read ] = new EE_Restriction_Generator_Public();
