@@ -38,11 +38,10 @@ class EE_UnitTest_Factory_For_Payment_Method extends EE_UnitTest_Factory_for_Mod
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'PMD_name' => sprintf( 'Unit Pay %d', EE_UnitTest_Factory::$counter ),
-				'PMD_slug' => sprintf( 'unit-pay-%d', EE_UnitTest_Factory::$counter ),
+				'PMD_name' => new WP_UnitTest_Generator_Sequence( 'Unit Pay %d', 1 ),
+				'PMD_slug' => new WP_UnitTest_Generator_Sequence( 'unit-pay-%d', 1 ),
 				'PMD_type' => 'Invoice',
 			);
-			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
