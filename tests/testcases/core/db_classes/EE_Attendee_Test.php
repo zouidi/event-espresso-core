@@ -61,6 +61,9 @@ class EE_Attendee_Test extends EE_UnitTestCase{
 		$key = $att->get_billing_info_postmeta_name( $payment_method );
 		$this->assertEquals('billing_info_Admin_Only', $key );
 	}
+
+
+
 	public function test_save_and_clean_billing_info_for_payment_method(){
 		$pm = EE_Payment_Method::new_instance(array( 'PMD_type'=>'Aim' ) );
 		$pm->save();
@@ -88,20 +91,25 @@ class EE_Attendee_Test extends EE_UnitTestCase{
 		$form->receive_form_submission( array(
 			$form_name => $form_values  ) );
 		$this->assertTrue( $form->is_valid(), 'error was: ' . $form->get_validation_error_string()  );
-		$p = $this->new_model_obj_with_dependencies('Payment', array( 'PMD_ID'=>$pm->ID() ) );
-		$reg = $this->new_model_obj_with_dependencies(
-			'Registration',
+
+		$this->factory->registration->set_properties_and_relations(
 			array(
-				'TXN_ID' => $p->TXN_ID(),
-				'Attendee' => array()
+				'Attendee'    => array(),
+				'Transaction' => array(
+					'Payment' => array(
+						'PMD_ID' => $pm->ID()
+					)
+				),
 			)
 		);
+		/** @type EE_Registration $reg */
+		$reg = $this->factory->registration->create_object();
 		$att = $reg->attendee();
 		$att->save_and_clean_billing_info_for_payment_method( $form, $pm );
-		//ok so now it should ahve been saved. Let's verify that
+		//ok so now it should have been saved. Let's verify that
 		$billing_info_form = $att->billing_info_for_payment_method( $pm );
 		$this->assertInstanceOf( 'EE_Billing_Attendee_Info_Form', $billing_info_form );
-		//it should ahve been cleaned too, so lets tweak teh form values ot what they should be
+		//it should have been cleaned too, so lets tweak teh form values ot what they should be
 		$form_values[ 'credit_card' ] = 'XXXXXXXXX0027';
 		$form_values[ 'cvv' ] = 'XXX';
 		$form_values[ 'exp_month' ] = '';
