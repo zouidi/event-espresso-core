@@ -38,11 +38,10 @@ class EE_UnitTest_Factory_For_Event extends EE_UnitTest_Factory_for_Model_Object
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'EVT_name'       => sprintf( 'Event %d', EE_UnitTest_Factory::$counter ),
-				'EVT_desc'       => sprintf( 'Event Content %d', EE_UnitTest_Factory::$counter ),
-				'EVT_short_desc' => sprintf( 'Event Excerpt %d', EE_UnitTest_Factory::$counter ),
+				'EVT_name'       => new WP_UnitTest_Generator_Sequence( 'Event %s', 1 ),
+				'EVT_desc'       => new WP_UnitTest_Generator_Sequence( 'Event Content %s', 1 ),
+				'EVT_short_desc' => new WP_UnitTest_Generator_Sequence( 'Event Excerpt %s', 1 ),
 			);
-			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
