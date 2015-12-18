@@ -45,11 +45,10 @@ class EE_UnitTest_Factory_For_Price extends EE_UnitTest_Factory_for_Model_Object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
 				'PRT_ID' 	 => 1,
-				'PRC_name'   => sprintf( 'Price %s', EE_UnitTest_Factory::$counter ),
-				'PRC_desc'   => sprintf( 'Price Description %s', EE_UnitTest_Factory::$counter ),
+				'PRC_name'   => new WP_UnitTest_Generator_Sequence( 'Price %s', 1 ),
+				'PRC_desc'   => new WP_UnitTest_Generator_Sequence( 'Price Description %s', 1 ),
 				'PRC_amount' => 0,
 			);
-			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
