@@ -7,9 +7,9 @@ class EE_HABTM_Relation extends EE_Model_Relation_Base{
 	 * which joins EE_Event and EE_Question_Group
 	 * @var EEM_Base
 	 */
-	private $_joining_model_name;
+	protected $_joining_model_name;
 
-	private $_model_relation_chain_to_join_model = NULL;
+	protected $_model_relation_chain_to_join_model = NULL;
 
 	/**
 	 * Object representing the relationship between two models. HasAndBelongsToMany relations always use a join-table
