@@ -317,7 +317,6 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 */
 	public function default_properties( $called_class ) {
 		if ( empty( $this->_default_properties ) ) {
-			//echo "\n\n * empty( _default_properties ): for " . get_called_class() . " on the " . $this->factory_type() . " factory";
 			$this->_set_default_properties_and_relations( $called_class );
 		}
 		return $this->_default_properties;
@@ -330,9 +329,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 */
 	public function default_relations() {
 		if ( empty( $this->_default_relations ) ) {
-			//echo "\n\n * empty( _default_relations ): for " . get_called_class();
 			$this->_set_default_properties_and_relations( $this->factory_type() );
-			//$this->set_properties_and_relations();
 		}
 		return $this->_default_relations;
 	}
@@ -343,21 +340,10 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @return array
 	 */
 	public function default_generation_definitions() {
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() \n";
 		if ( empty( $this->default_generation_definitions ) ) {
-			//echo "\n\n * empty( default_generation_definitions ): for " . get_called_class();
 			$this->_set_default_properties_and_relations( $this->factory_type() );
-			//echo "\n default_generation_definitions: \n";
-			//var_dump( $this->default_generation_definitions );
-			//$this->set_properties_and_relations();
 			$this->default_generation_definitions = $this->_default_properties;
 		}
-		//if ( $this->object_class() === 'EE_Country' ) {
-		//	echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
-		//	echo "\n object_class(): " . $this->object_class() . "\n";
-		//	echo "\n default_generation_definitions: \n";
-		//	var_dump( $this->default_generation_definitions );
-		//}
 		return $this->default_generation_definitions;
 	}
 
@@ -372,27 +358,13 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 */
 	protected function _resolve_default_relations( $called_class ) {
 		if ( ! is_null( $this->_custom_properties_and_relations ) ) {
-			//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() for $called_class";
-			//echo "\n\n " . $this->factory_type() . " factory _default_relations: ";
-			//var_dump( $this->_default_relations );
 			foreach ( $this->_default_relations as $relation => $properties ) {
 				if ( $relation !== $called_class && empty( $properties ) ) {
-					//echo "\n\n > ADD default_properties from the  $relation  factory to the  " . $this->factory_type() . " factory's _default_relations";
-					//echo " \n  {{ " . __LINE__ . ") " . __METHOD__ . "() }}";
 					$factory_model = $this->_get_model_factory( $relation );
 					$default_properties = $factory_model->default_properties( $this->factory_type() );
-					//echo "\n >> default_properties for $relation on the " . $this->factory_type() . " factory";
-					//echo " \n  {{ " . __LINE__ . ") " . __METHOD__ . "() }} \n";
-					//var_dump( $default_properties );
 					$this->_default_relations[ $relation ] = $default_properties;
-				} /*else {
-					//echo "\n\n >> skipping reverse relation to the  $relation  factory";
-				}*/
+				}
 			}
-			//echo "\n RESOLVED_DEFAULT_RELATIONS for : " . $this->factory_type() . "\n";
-			//var_dump( $this->_default_relations );
-			//return $this->_default_relations;
-			//$this->_default_relations  = $resolved_relations;
 			if ( ! is_null( $this->_default_relations )) {
 				$this->_default_properties = array_merge( $this->_default_properties, $this->_default_relations );
 			}
@@ -407,6 +379,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @param bool         $save_to_db
 	 */
 	public function set_save_to_db( $save_to_db = true ) {
+		// don't save these models
 		$model_save = array(
 			'EE_Country'  => false,
 			'EE_Currency' => false,
@@ -428,18 +401,11 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @param bool         $save_to_db
 	 */
 	public function set_properties_and_relations( $custom_properties_and_relations = null, $save_to_db = true ) {
-		//echo "\n " . __LINE__ . ") " . __METHOD__ . "() FOR " . get_called_class();
-		//echo "\n   " . $this->factory_type() . ' ' . spl_object_hash( $this );
 		$this->set_save_to_db( $save_to_db );
-		//echo "\n\n CUSTOM_PROPERTIES_AND_RELATIONS: ";
-		//var_dump( $custom_properties_and_relations );
 		$this->_custom_properties_and_relations = ! is_null( $custom_properties_and_relations )
 			? $custom_properties_and_relations
 			: $this->_custom_properties_and_relations;
-		//echo "\n\n _custom_properties_and_relations: ";
-		//var_dump( $this->_custom_properties_and_relations );
-		//echo "\n\n default_properties( factory_type() ): ";
-		//var_dump( $this->default_properties( $this->factory_type() ) );
+
 		// If incoming $properties_and_relations is an empty array,
 		// then it means we want ALL default properties AND relations,
 		// so we merge the default related object properties with the default relations.
@@ -458,10 +424,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 				(array)$this->_custom_properties_and_relations
 			);
 		}
-		//echo "\n MERGED_PROPERTIES_AND_RELATIONS: ";
-		//var_dump( $merged_properties_and_relations );
-		//echo "\n this->_model->relation_settings(): ";
-		//var_dump( $this->_model->relation_settings() );
+
 		// default args for creating model objects
 		// NOTE: WP_UnitTest_Factory_For_Thing can only handle scalar property values,
 		// so we need to remove all of the related object property arrays,
@@ -476,8 +439,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 				unset( $this->default_generation_definitions[ $key ] );
 			}
 		}
-		//echo "\n DEFAULT_GENERATION_DEFINITIONS: ";
-		//var_dump( $this->default_generation_definitions );
+
 		// and now we do the exact opposite of above
 		// and generate an array with JUST the related object properties
 		// and NONE of the root level fields and values
@@ -556,8 +518,6 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @return \EE_Base_Class
 	 */
 	public function create_object( $model_fields_and_values = array() ) {
-		//echo "\n\n" . __LINE__ . ") " . __METHOD__ . "() of type: " . $this->object_class();
-		//echo "\n " . __LINE__ . ") " . __METHOD__ . "() " . $this->factory_type() . ' ' . spl_object_hash( $this );
 		if ( $model_fields_and_values instanceof WP_Error ) {
 			echo $model_fields_and_values->get_error_message();
 			echo "\n FULL WP_Error: \n";
@@ -567,21 +527,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		if ( ! empty( $model_fields_and_values ) ) {
 			$this->set_properties_and_relations( $model_fields_and_values );
 		}
-		//echo "\n " . __LINE__ . ") " . __METHOD__ . "() " . $this->factory_type();
-		//echo "\n empty( model_fields_and_values ): ";
-		//var_dump( empty( $model_fields_and_values ) );
-		//$model_fields_and_values = ! empty( $model_fields_and_values )
-		//	? $model_fields_and_values
-		//	: $this->default_generation_definitions();
-		//$model_fields_and_values = array_merge( $this->default_generation_definitions(), $model_fields_and_values );
-		//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() \n";
-		//echo "\n MODEL_FIELDS_AND_VALUES: ";
-		//var_dump( $model_fields_and_values );
-		//echo "\n default_generation_definitions(): \n";
-		//var_dump( $this->default_generation_definitions() );
-		//echo "\n _related_model_object_properties: \n";
-		//var_dump( $this->_related_model_object_properties );
-		//$object = $this->create_object_and_relations( $model_fields_and_values, $this->_related_model_object_properties );
+
 		$object = $this->create_object_and_relations( $this->default_generation_definitions(), $this->_related_model_object_properties );
 		if ( ! $object instanceof EE_Base_Class ) {
 			echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
@@ -606,53 +552,35 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @return \EE_Base_Class
 	 */
 	public function create_object_and_relations( $model_fields_and_values, $related_model_objects ) {
-		//echo "\n\n" . __LINE__ . ") " . __METHOD__ . "()";
 		$object = null;
 		$object_class = $this->object_class();
-		//echo "\n create object of class: " . $object_class;
 		$model_fields_and_values = $this->_parse_timezones_formats_and_sequences_in_model_fields(
 			$model_fields_and_values
 		);
 		$primary_key = $this->_find_primary_key_in_model_fields( $this->_model, $model_fields_and_values );
 		if ( ! empty( $primary_key ) && ! empty( $model_fields_and_values[ $primary_key ] ) ) {
-			//echo "\n\n FIND RELATED OBJECT where: {$this->_primary_key} = " . $model_fields_and_values[ $primary_key ];
 			// check for primary key alias in cached objects
 			if ( isset( $this->_object_cache[ $model_fields_and_values[ $primary_key ] ] )) {
-				//echo "\n  IN OBJECT CACHE";
 				$object = $this->_object_cache[ $model_fields_and_values[ $primary_key ] ];
 			} else {
-				//echo "\n  IN DATABASE";
 				$object = $this->get_object_by_id( $model_fields_and_values[ $primary_key ] );
 			}
 		}
 		if ( ! $object instanceof $object_class ) {
-			//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() ";
-			//echo "\n OBJECT_CLASS: " . $object_class/* . "\n"*/;
-			//echo "\n model_fields_and_values: \n";
-			//var_dump( $model_fields_and_values );
-			//echo "\n  CREATE NEW ";
 			$object = call_user_func_array(
 				array( $object_class, 'new_instance' ),
 				array( $model_fields_and_values, $this->_timezone, $this->_date_time_formats )
 			);
-			//echo "\n\n NEW_INSTANCE: " . get_class( $object );
 			if ( $this->_save_to_db ) {
 				$object->save();
 			}
-			//echo "\n   NEW " . get_class( $object ) . " ID: " . $object->ID();
-			//echo "\n   SPL_OBJECT_HASH: " . spl_object_hash( $object ) . "\n";
-		} /*else {
-			echo "\n  FOUND ";
-		}*/
-		//echo "OBJECT: " . get_class( $object );
-		//echo "\n  _primary_key: " . $this->_primary_key . ' = ' . $object->ID();
+		}
 		// if primary key was using an alias like TKT_ID = *T1 then cache it
 		if (
 			isset( $model_fields_and_values[ $primary_key ] )
 			&& strpos( $model_fields_and_values[ $primary_key ], '*' ) !== false
 			&& empty( $this->_object_cache[ $model_fields_and_values[ $primary_key ] ] )
 		) {
-			//echo "\n\n CACHE RELATED OBJECT where: {$this->_primary_key} = " . $model_fields_and_values[ $primary_key ];
 			$this->_object_cache[ $model_fields_and_values[ $primary_key ] ] = $object;
 			if ( ! $object->ID() && $this->_save_to_db ) {
 				$object->save();
@@ -663,11 +591,6 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			$model_fields_and_values,
 			$related_model_objects
 		);
-		//if ( ! empty( $related_model_objects ) ) {
-		//	echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
-		//	$this->generate_related_objects( $object, $related_model_objects );
-		//	die();
-		//}
 		return $this->generate_related_objects( $object, $related_model_objects );
 	}
 
@@ -690,6 +613,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			$this->set_date_time_formats( $model_fields_and_values[ 'formats' ] );
 			unset( $model_fields_and_values[ 'formats' ] );
 		}
+		// get values for fields using WP_UnitTest_Generator_Sequence
 		foreach ( $model_fields_and_values as $field => $value ) {
 			if ( $value instanceof WP_UnitTest_Generator_Sequence ) {
 				$model_fields_and_values[ $field ] = $value->next();
@@ -738,7 +662,6 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 		$related_model_objects = array()
 	) {
 		foreach ( $model_fields_and_values as $field => $values ) {
-			//echo "\n field: " . $field . "\n";
 			if ( $field === 'OBJ_ID' ) {
 				continue;
 			}
@@ -750,7 +673,6 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			) {
 				$related_model_name = $field_obj->get_model_names_pointed_to();
 				$related_model_name = reset( $related_model_name );
-				//echo "\n RELATED_MODEL_NAME: " . $related_model_name;
 				if ( ! empty( $related_model_name ) )  {
 					if ( isset( $related_model_objects[ $related_model_name ] ) ) {
 						$related_model_objects[ $related_model_name ] = array_merge(
@@ -761,9 +683,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 						$related_model_objects[ $related_model_name ] = array( $field => $values );
 					}
 				}
-			} /*else {
-				//echo "\n   field: " . $field;
-			}*/
+			}
 		}
 		return $related_model_objects;
 	}
@@ -780,32 +700,11 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 */
 	public function generate_related_objects( EE_Base_Class $object, $properties_and_relations ) {
 		if ( ! empty( $properties_and_relations ) ) {
-			//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() \n";
 			$timezone_and_formats = array( 'timezone', 'formats' );
-			//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() \n";
-			//echo "\n properties_and_relations: ";
-			//var_dump( $properties_and_relations );
-			//die();
 			foreach ( $properties_and_relations as $relation_name => $model_properties_and_relations ) {
-				//echo "\n\n" . __LINE__ . ") " . __METHOD__ . "()";
-				//echo "\n relation_name: " . $relation_name;
-				//echo "\n properties_and_relations: \n";
-				//var_dump( $properties_and_relations );
 				$model_fields = array();
 				$related_models = array();
-				//if ( $relation_name == 0 ) {
-					//echo "\n\n " . __LINE__ . ") " . __METHOD__ . "() \n";
-					//echo "\n properties_and_relations: ";
-					//var_dump( $properties_and_relations );
-					//die();
-				//}
 				$relation_name = $this->_prep_model_or_class_name( $relation_name );
-				//if ( ! is_array( $model_properties_and_relations ) ) {
-				//	echo "\n  RELATION_NAME: " . $relation_name;
-				//	echo "\n model_properties_and_relations: \n";
-				//	var_dump( $model_properties_and_relations );
-				//}
-
 				// if it doesn't already exist, add our primary key as a foreign key
 				// assuming that any related models will have a relation pointing back at this model.
 				// if it's NOT a field, it won't get added to the $model_fields array,
@@ -813,35 +712,21 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 				if ( ! isset( $model_properties_and_relations[ $this->_primary_key ] ) ) {
 					$model_properties_and_relations[ $this->_primary_key ] = $object->ID();
 				}
-
-				//$relation_name = strpos( $relation_name, 'WP_User' ) === 4 ? 'WP_User' : $relation_name;
 				$model = EE_Registry::instance()->load_model( $relation_name );
 				foreach ( $model_properties_and_relations as $field_or_model => $value_or_properties ) {
-					//echo "\n  field_or_model: " . $field_or_model . ' : ';
-					//var_dump( $value_or_properties );
 					if ( $model->has_field( $field_or_model ) || in_array( $field_or_model, $timezone_and_formats ) ) {
 						$model_fields[ $field_or_model ] = $value_or_properties;
 					} else if ( $field_or_model !== $this->_primary_key ) {
 						$related_models[ $field_or_model ] = $value_or_properties;
 					}
 				}
-				//foreach ( $model_fields as $field_name => $model_field ) {
-					//echo "\n field_name: " . $field_name;
-					//echo "\n model_field: \n";
-					//var_dump( $model_field );
-				//}
 				$related_object = $this->_generate_related_object( $relation_name, $model_fields, $related_models );
-				//echo "\n  ADD RELATION FROM " . get_class( $object ) . " TO " . $relation_name;
 				$object->_add_relation_to( $related_object, $relation_name );
-				//echo "\n   " . get_class( $object ) . " ID: " . $object->ID();
-				//echo "\n   " . get_class( $related_object ) . " ID: " . $related_object->ID() . "\n";
 				if ( $this->_save_to_db ) {
 					$object->save();
 				}
 			}
-		} /*else {
-			//echo "\n This " . get_class( $object ) . " has NO related objects!";
-		}*/
+		}
 		return $object;
 	}
 
@@ -857,9 +742,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @throws \Exception
 	 */
 	protected function _generate_related_object( $model_name, $model_fields, $related_models ) {
-		//echo "\n " . __LINE__ . ") " . __METHOD__ . "()";
 		$factory_model = $this->_get_model_factory( $model_name );
-		//echo "\nGENERATE RELATED OBJECT USING THE $model_name FACTORY";
 		$related_object = $factory_model->create_object_and_relations( $model_fields, $related_models );
 		$related_object_class = $this->_prefix_class_name( $model_name );
 		if ( ! $related_object instanceof $related_object_class ) {
