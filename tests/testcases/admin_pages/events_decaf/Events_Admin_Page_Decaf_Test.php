@@ -225,4 +225,6 @@ class Events_Admin_Page_Decaf_Test extends EE_UnitTestCase {
 
 
 
-} // end class Events_Admin_Page_Decaf
+}
+// end class Events_Admin_Page_Decaf
+// Location: tests/testcases/admin_pages/events_decaf/Events_Admin_Page_Decaf_Test.php
