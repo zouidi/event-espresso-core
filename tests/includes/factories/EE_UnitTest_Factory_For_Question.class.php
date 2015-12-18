@@ -38,7 +38,7 @@ class EE_UnitTest_Factory_For_Question extends EE_UnitTest_Factory_for_Model_Obj
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'QST_display_text' => "can you count to ten?",
+				'QST_display_text' => new WP_UnitTest_Generator_Sequence( "can you count to %s?", 10 ),
 			);
 		}
 		// and set some sensible default relations
