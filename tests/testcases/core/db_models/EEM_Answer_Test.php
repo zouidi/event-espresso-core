@@ -35,7 +35,7 @@ class EEM_Answer_Test extends EE_UnitTestCase{
 	}
 	function test_get_attendee_property_answer_value(){
 		/** @type EE_Registration $r */
-		$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'Attendee' => array() ) );
+		$r = $this->new_model_obj_with_dependencies( 'Registration', array( 'Attendee' => null ) );
 		EEM_Attendee::reset()->get_one_by_ID( $r->attendee_ID() );
 		$this->assertEquals( $r->attendee()->fname(), EEM_Answer::instance()->get_attendee_property_answer_value( $r,  EEM_Attendee::system_question_fname ) );
 	}
@@ -47,7 +47,7 @@ class EEM_Answer_Test extends EE_UnitTestCase{
 				'Answer' => array(
 					'Question' => array()
 				),
-				'Attendee' => array(),
+				'Attendee' => null,
 			)
 		);
 		$answers = $r->answers();
