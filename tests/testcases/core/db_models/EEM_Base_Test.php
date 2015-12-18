@@ -723,7 +723,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$next_events = EEM_Event::instance()->next_x( $event->ID(), 'EVT_ID', 4, array(), 'EVT_ID' );
 
 		$this->assertEquals( 4, count( $next_events ) );
-		$this->assertTrue( property_exists( $next_events[0], 'EVT_ID' ) );
+		$this->assertTrue( array_key_exists( 'EVT_ID', $next_events[0] ) );
 	}
 
 
@@ -750,7 +750,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$previous_events = EEM_Event::instance()->previous_x( $event->ID(), 'EVT_ID', 4, array(), 'EVT_ID' );
 
 		$this->assertEquals( 4, count( $previous_events ) );
-		$this->assertTrue( property_exists( $previous_events[3], 'EVT_ID' ) );
+		$this->assertTrue( array_key_exists( 'EVT_ID', $previous_events[3] ) );
 	}
 
 
