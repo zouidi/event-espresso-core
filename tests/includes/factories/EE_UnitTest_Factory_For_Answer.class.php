@@ -38,9 +38,8 @@ class EE_UnitTest_Factory_For_Answer extends EE_UnitTest_Factory_for_Model_Objec
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'ANS_value' => EE_UnitTest_Factory::$counter . " potato",
+				'ANS_value' => new WP_UnitTest_Generator_Sequence( "%s bottles of beer on the wall", 21 ),
 			);
-			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
