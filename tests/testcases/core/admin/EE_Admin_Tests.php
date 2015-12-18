@@ -231,8 +231,8 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 	function test_dashboard_glance_items() {
 		//add some events and registrations
 		$this->factory->event->create_many(10);
-		$this->factory->registration->create_many(5, array( 'STS_ID' => EEM_Registration::status_id_not_approved ) );
-		$this->factory->registration->create_many(3);
+		$this->factory->registration->create_many(5, array( 'STS_ID' => EEM_Registration::status_id_approved ) );
+		$this->factory->registration->create_many(3, array( 'STS_ID' => EEM_Registration::status_id_incomplete ) );
 
 		//expected events dashboard items
 		EE_Registry::instance()->load_helper('URL');
@@ -334,3 +334,4 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 	}
 
 }
+// Location: tests/testcases/core/admin/EE_Admin_Tests.php
