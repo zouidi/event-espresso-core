@@ -40,12 +40,11 @@ protected function _set_default_properties_and_relations( $called_class ) {
 	// set some sensible defaults for this model object
 	if ( empty( $this->_default_properties ) ) {
 		$this->_default_properties = array(
-			'TKT_name'        => sprintf( 'Ticket %s', EE_UnitTest_Factory::$counter ),
-			'TKT_description' => sprintf( 'Ticket Description %s', EE_UnitTest_Factory::$counter ),
+			'TKT_name'        => new WP_UnitTest_Generator_Sequence( 'Ticket %s', 1 ),
+			'TKT_description' => new WP_UnitTest_Generator_Sequence( 'Ticket Description %s', 1 ),
 			'TKT_start_date'  => strtotime( '+1 month' ),
 			'TKT_end_date'    => strtotime( '+2 months' )
 		);
-		EE_UnitTest_Factory::$counter++;
 	}
 	// and set some sensible default relations
 	if ( empty( $this->_default_relations ) ) {
