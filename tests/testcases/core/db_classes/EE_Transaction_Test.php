@@ -47,7 +47,7 @@ class EE_Transaction_Test extends EE_UnitTestCase{
 		/** @type EE_Transaction $t */
 		$t = $this->new_model_obj_with_dependencies(
 			'Transaction',
-			array( 'Payment_Method' => array() )
+			array( 'Payment_Method' => null )
 		);
 		$this->assertNotEquals(0,$t->payment_method_ID());
 
