@@ -2626,7 +2626,7 @@ abstract class EEM_Base extends EE_Base{
 						$query_key,
 						get_class($this),
 //						print_r( $this->_allowed_query_params, TRUE )
-						implode( ',', $this->_allowed_query_params )
+						implode( ', ', $this->_allowed_query_params )
 					)
 				);
 			}
