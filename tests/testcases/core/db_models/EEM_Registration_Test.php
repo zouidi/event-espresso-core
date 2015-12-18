@@ -140,7 +140,7 @@ class EEM_Registration_Test extends EE_UnitTestCase {
 				array(
 					'REG_date' => time(),
 					// include TXN relation this time but leave array empty to use all defaults
-					'Transaction' => array()
+					'Transaction' => null
 				)
 			);
 			$this->factory->registration->create_object();
