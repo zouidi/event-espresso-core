@@ -25,27 +25,47 @@ class EEM_Question_Group_Question_Caps_Test extends EE_UnitTestCase{
 	 * and then you can edit others if you have that cap
 	 */
 	function test_get_all__caps__edit() {
-		//verify we only start off with NO question gruops or question group questions
+		//verify we only start off with NO question groups or question group questions
 		EEM_Question_Group::instance()->delete_permanently( EEM_Question_Group::instance()->alter_query_params_so_deleted_and_undeleted_items_included(), false );
 		$this->assertEquals( 0, EEM_Question_Group::instance()->count( EEM_Question_Group::instance()->alter_query_params_so_deleted_and_undeleted_items_included() ) );
 		EEM_Question_Group_Question::instance()->delete( array(), false );
 		$this->assertEquals( 0, EEM_Question_Group_Question::instance()->count() );
 		global $current_user;
+		/** @type WP_User $user */
 		$user = $this->factory->user->create_and_get();
-
-
-
-		$qg1 = $this->new_model_obj_with_dependencies( 'Question_Group', array( 'QSG_system' => 0, 'QSG_wp_user' => $user->ID ) );
-		$qg2_system = $this->new_model_obj_with_dependencies( 'Question_Group', array( 'QSG_system' => 3, 'QSG_wp_user' => $user->ID ) );
-		$qg3_others = $this->new_model_obj_with_dependencies( 'Question_Group', array( 'QSG_system' => 0, 'QSG_wp_user' => 9999 ) );
-		$qg4_others_system = $this->new_model_obj_with_dependencies( 'Question_Group', array( 'QSG_system' => 4, 'QSG_wp_user' => 9999 ) );
-		$q = $this->new_model_obj_with_dependencies( 'Question' );
-		$qgq1 = $this->new_model_obj_with_dependencies( 'Question_Group_Question', array( 'QST_ID' => $q->ID(), 'QSG_ID' => $qg1->ID() ) );
-		$qgq2 = $this->new_model_obj_with_dependencies( 'Question_Group_Question', array( 'QST_ID' => $q->ID(), 'QSG_ID' => $qg2_system->ID() ) );
-		$qgq3 = $this->new_model_obj_with_dependencies( 'Question_Group_Question', array( 'QST_ID' => $q->ID(), 'QSG_ID' => $qg3_others->ID() ) );
-		$qgq4 = $this->new_model_obj_with_dependencies( 'Question_Group_Question', array( 'QST_ID' => $q->ID(), 'QSG_ID' => $qg4_others_system->ID() ) );
-
-		//I am not yet logged in, so I shouldnt be able to edit any
+		/** @type EE_Question_Group_Question $qgq1 */
+		$this->factory->question_group_question->set_properties_and_relations(
+			array(
+				'Question'       => array( 'QST_ID' => '*Q1' ),
+				'Question_Group' => array( 'QSG_system' => 0, 'QSG_wp_user' => $user->ID ),
+			)
+		);
+		$qgq1 = $this->factory->question_group_question->create_object();
+		/** @type EE_Question_Group_Question $qgq2 */
+		$this->factory->question_group_question->set_properties_and_relations(
+			array(
+				'Question'       => array( 'QST_ID' => '*Q1' ),
+				'Question_Group' => array( 'QSG_system' => 3, 'QSG_wp_user' => $user->ID ),
+			)
+		);
+		$qgq2 = $this->factory->question_group_question->create_object();
+		/** @type EE_Question_Group_Question $qgq3 */
+		$this->factory->question_group_question->set_properties_and_relations(
+			array(
+				'Question'       => array( 'QST_ID' => '*Q1' ),
+				'Question_Group' => array( 'QSG_system' => 0, 'QSG_wp_user' => 9999 ),
+			)
+		);
+		$qgq3 = $this->factory->question_group_question->create_object();
+		/** @type EE_Question_Group_Question $qgq4 */
+		$this->factory->question_group_question->set_properties_and_relations(
+			array(
+				'Question'       => array( 'QST_ID' => '*Q1' ),
+				'Question_Group' => array( 'QSG_system' => 4, 'QSG_wp_user' => 9999 ),
+			)
+		);
+		$qgq4 = $this->factory->question_group_question->create_object();
+		//I am not yet logged in, so I shouldn't be able to edit any
 		$this->assertEquals( 0, EEM_Question_Group_Question::instance()->count( array( 'caps' => EEM_Base::caps_edit ) ) );
 
 		//now log in and see I can edit my own
@@ -68,3 +88,4 @@ class EEM_Question_Group_Question_Caps_Test extends EE_UnitTestCase{
 }
 
 // End of file EEM_Question_Test.php
+// Location: tests/testcases/core/db_models/EEM_Question_Group_Question_Caps_Test.php
