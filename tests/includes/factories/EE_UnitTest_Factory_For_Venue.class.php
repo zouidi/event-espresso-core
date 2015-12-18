@@ -38,11 +38,10 @@ class EE_UnitTest_Factory_For_Venue extends EE_UnitTest_Factory_for_Model_Object
 		// set some sensible defaults for this model object
 		if ( empty( $this->_default_properties ) ) {
 			$this->_default_properties = array(
-				'VNU_name'       => "Venue " . EE_UnitTest_Factory::$counter,
-				'VNU_desc'       => "Venue Content " . EE_UnitTest_Factory::$counter,
-				'VNU_short_desc' => "Venue Excerpt " . EE_UnitTest_Factory::$counter,
+				'VNU_name'       => new WP_UnitTest_Generator_Sequence( "Venue %s", 1 ),
+				'VNU_desc'       => new WP_UnitTest_Generator_Sequence( "Venue Content %s", 1 ),
+				'VNU_short_desc' => new WP_UnitTest_Generator_Sequence( "Venue Excerpt %s", 1 ),
 			);
-			EE_UnitTest_Factory::$counter++;
 		}
 		// and set some sensible default relations
 		if ( empty( $this->_default_relations ) ) {
