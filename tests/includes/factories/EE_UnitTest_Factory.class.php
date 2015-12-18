@@ -10,12 +10,6 @@
  */
 class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 
-
-	/**
-	 * @type int
-	 */
-	public static $counter = 1;
-
 	/**
 	 * EE_Test_Factories extend the EE_UnitTest_Factory_for_Model_Object class,
 	 * which extends the WP_UnitTest_Factory_for_Thing abstract class
@@ -134,6 +128,36 @@ class EE_UnitTest_Factory extends WP_UnitTest_Factory {
 	 * @type EE_UnitTest_Factory_For_Price_Type $price_type_chained
 	 */
 	public $price_type_chained = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Question $question
+	 */
+	public $question = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Question $question_chained
+	 */
+	public $question_chained = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Question_Group $question_group
+	 */
+	public $question_group = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Question_Group $question_group_chained
+	 */
+	public $question_group_chained = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Question_Group_Question $question_group_question
+	 */
+	public $question_group_question = null;
+
+	/**
+	 * @type EE_UnitTest_Factory_For_Question_Group_Question $question_group_question_chained
+	 */
+	public $question_group_question_chained = null;
 
 	/**
 	 * @type EE_UnitTest_Factory_For_Registration $registration
