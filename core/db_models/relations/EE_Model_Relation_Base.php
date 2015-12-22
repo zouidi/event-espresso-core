@@ -57,9 +57,19 @@ abstract class EE_Model_Relation_Base{
 	function _construct_finalize_set_models($this_model_name, $other_model_name){
 		$this->_this_model_name = $this_model_name;
 		$this->_other_model_name = $other_model_name;
-		if(is_string($this->_blocking_delete)){
-			throw new EE_Error(sprintf(__("When instantiating the relation of type %s from %s to %s, the \$block_deletes argument should be a boolean, not a string (%s)", "event_espresso"),
-						get_class($this),$this_model_name,$other_model_name,$this->_blocking_delete));
+		if ( is_string( $this->_blocking_delete ) ) {
+			throw new EE_Error(
+				sprintf(
+					__(
+						'When instantiating the relation of type %1$s from %2$s to %3$s, the $block_deletes argument should be a boolean, not a string (%4$s)',
+						"event_espresso"
+					),
+					get_class( $this ),
+					$this_model_name,
+					$other_model_name,
+					$this->_blocking_delete
+				)
+			);
 		}
 	}
 
