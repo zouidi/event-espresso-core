@@ -3718,11 +3718,6 @@ abstract class EEM_Base extends EE_Base{
 			if(empty( $this_model_fields_n_values[$this->primary_key_name()] )){
 				return NULL;
 			}
-		}else if($this->unique_indexes()){
-			$first_column = reset($this_model_fields_n_values);
-			if(empty($first_column)){
-				return NULL;
-			}
 		}
 
 		// if there is no primary key or the object doesn't already exist in the entity map, then create a new instance
