@@ -586,11 +586,16 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 				$object->save();
 			}
 		}
-		$related_model_objects = $this->_set_relations_for_foreign_keys_in_model_fields(
-			$this->_model,
-			$model_fields_and_values,
-			$related_model_objects
-		);
+		if ( $this->_model->get_this_model_name() === 'Extra_Join' ) {
+			//relations are set up for "Extra_Join" relations simply by creating the object
+			$related_model_objects = array();
+		} else {
+			$related_model_objects = $this->_set_relations_for_foreign_keys_in_model_fields(
+				$this->_model,
+				$model_fields_and_values,
+				$related_model_objects
+			);
+		}
 		return $this->generate_related_objects( $object, $related_model_objects );
 	}
 
@@ -654,7 +659,7 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @param array    $model_fields_and_values
 	 * @param array    $related_model_objects
 	 * @return array
-	 * @throws \EE_Error
+	 * @throws \Exception
 	 */
 	protected function _set_relations_for_foreign_keys_in_model_fields(
 		EEM_Base $model,
