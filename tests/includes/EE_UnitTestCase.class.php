@@ -739,93 +739,94 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		echo "\n\n NO SOUP FOR YOU !!!: " . "\n";
 		echo "\n " . $model_name . " is an invalid model !!!";
 		return null;
-		global $auto_made_thing_seed;
-		if($auto_made_thing_seed === NULL){
-			$auto_made_thing_seed = 1;
-		}
-		$model = EE_Registry::instance()->load_model($model_name);
 
-		//set the related model foreign keys
-		foreach($model->relation_settings() as $related_model_name => $relation){
-			if($relation instanceof EE_Belongs_To_Any_Relation){
-				continue;
-			}elseif( $related_model_name == 'Country' ){
-				//we already have lots of countries. lets not make any more
-				//what's more making them is tricky: the primary key needs to be a unique
-				//2-character string but not an integer (else it confuses the country
-				//form input validation)
-				if( ! isset( $args['CNT_ISO' ] )){
-					$args[ 'CNT_ISO' ] = 'US';
-				}
-			}elseif( $related_model_name == 'Status' ){
-				$fk = $model->get_foreign_key_to($related_model_name);
-				if( ! isset( $args[ $fk->get_name() ] ) ){
-					//only set the default if they haven't specified anything
-					$args[ $fk->get_name() ] = $fk->get_default_value();
-				}
-			}elseif($relation instanceof EE_Belongs_To_Relation) {
-				$obj = $this->new_model_obj_with_dependencies($related_model_name);
-				$fk = $model->get_foreign_key_to($related_model_name);
-				if( ! isset( $args[ $fk->get_name() ] )){
-					$args[$fk->get_name()] = $obj->ID();
-				}
-
-			}
-		}
-
-		//set any other fields which haven't yet been set
-		foreach($model->field_settings() as $field_name => $field){
-			$value = NULL;
-			if(in_array( $field_name, array(
-				'EVT_timezone_string',
-				'PAY_redirect_url',
-				'PAY_redirect_args',
-				'parent') ) ){
-				$value = NULL;
-			}elseif($field instanceof EE_Enum_Integer_Field ||
-					$field instanceof EE_Enum_Text_Field ||
-					$field instanceof EE_Boolean_Field ||
-					$field_name == 'PMD_type' ||
-					$field->get_name() == 'CNT_cur_dec_mrk' ||
-					$field->get_name() == 'CNT_cur_thsnds' ||
-					$field->get_name() == 'CNT_tel_code'){
-				$value = $field->get_default_value();
-			}elseif( $field instanceof EE_Integer_Field ||
-					$field instanceof EE_Float_Field ||
-					$field instanceof EE_Foreign_Key_Field_Base ||
-					$field instanceof EE_Primary_Key_String_Field ||
-					$field->get_name() == 'STA_abbrev' ||
-					$field->get_name() == 'CNT_ISO3' ||
-					$field->get_name() == 'CNT_cur_code'){
-				$value = $auto_made_thing_seed;
-			}elseif( $field instanceof EE_Primary_Key_String_Field ){
-				$value = "$auto_made_thing_seed";
-			}elseif( $field instanceof EE_Text_Field_Base ){
-				$value = $auto_made_thing_seed."_".$field->get_name();
-			}
-			if( ! array_key_exists( $field_name, $args ) && $value !== NULL){
-				$args[$field->get_name()] = $value;
-			}
-		}
-		//and finally make the model obj
-		$classname = 'EE_'.$model_name;
-		$model_obj = $classname::new_instance($args);
-		if($save){
-			$success = $model_obj->save();
-			if( ! $success ){
-				global $wpdb;
-				throw new EE_Error(
-					sprintf(
-						__( 'Could not save %1$s using %2$s. Error was %3$s', 'event_espresso' ),
-						$model_name,
-						json_encode($args),
-						$wpdb->last_error
-					)
-				);
-			}
-		}
-		$auto_made_thing_seed++;
-		return $model_obj;
+		//global $auto_made_thing_seed;
+		//if($auto_made_thing_seed === NULL){
+		//	$auto_made_thing_seed = 1;
+		//}
+		//$model = EE_Registry::instance()->load_model($model_name);
+		//
+		////set the related model foreign keys
+		//foreach($model->relation_settings() as $related_model_name => $relation){
+		//	if($relation instanceof EE_Belongs_To_Any_Relation){
+		//		continue;
+		//	}elseif( $related_model_name == 'Country' ){
+		//		//we already have lots of countries. lets not make any more
+		//		//what's more making them is tricky: the primary key needs to be a unique
+		//		//2-character string but not an integer (else it confuses the country
+		//		//form input validation)
+		//		if( ! isset( $args['CNT_ISO' ] )){
+		//			$args[ 'CNT_ISO' ] = 'US';
+		//		}
+		//	}elseif( $related_model_name == 'Status' ){
+		//		$fk = $model->get_foreign_key_to($related_model_name);
+		//		if( ! isset( $args[ $fk->get_name() ] ) ){
+		//			//only set the default if they haven't specified anything
+		//			$args[ $fk->get_name() ] = $fk->get_default_value();
+		//		}
+		//	}elseif($relation instanceof EE_Belongs_To_Relation) {
+		//		$obj = $this->new_model_obj_with_dependencies($related_model_name);
+		//		$fk = $model->get_foreign_key_to($related_model_name);
+		//		if( ! isset( $args[ $fk->get_name() ] )){
+		//			$args[$fk->get_name()] = $obj->ID();
+		//		}
+		//
+		//	}
+		//}
+		//
+		////set any other fields which haven't yet been set
+		//foreach($model->field_settings() as $field_name => $field){
+		//	$value = NULL;
+		//	if(in_array( $field_name, array(
+		//		'EVT_timezone_string',
+		//		'PAY_redirect_url',
+		//		'PAY_redirect_args',
+		//		'parent') ) ){
+		//		$value = NULL;
+		//	}elseif($field instanceof EE_Enum_Integer_Field ||
+		//			$field instanceof EE_Enum_Text_Field ||
+		//			$field instanceof EE_Boolean_Field ||
+		//			$field_name == 'PMD_type' ||
+		//			$field->get_name() == 'CNT_cur_dec_mrk' ||
+		//			$field->get_name() == 'CNT_cur_thsnds' ||
+		//			$field->get_name() == 'CNT_tel_code'){
+		//		$value = $field->get_default_value();
+		//	}elseif( $field instanceof EE_Integer_Field ||
+		//			$field instanceof EE_Float_Field ||
+		//			$field instanceof EE_Foreign_Key_Field_Base ||
+		//			$field instanceof EE_Primary_Key_String_Field ||
+		//			$field->get_name() == 'STA_abbrev' ||
+		//			$field->get_name() == 'CNT_ISO3' ||
+		//			$field->get_name() == 'CNT_cur_code'){
+		//		$value = $auto_made_thing_seed;
+		//	}elseif( $field instanceof EE_Primary_Key_String_Field ){
+		//		$value = "$auto_made_thing_seed";
+		//	}elseif( $field instanceof EE_Text_Field_Base ){
+		//		$value = $auto_made_thing_seed."_".$field->get_name();
+		//	}
+		//	if( ! array_key_exists( $field_name, $args ) && $value !== NULL){
+		//		$args[$field->get_name()] = $value;
+		//	}
+		//}
+		////and finally make the model obj
+		//$classname = 'EE_'.$model_name;
+		//$model_obj = $classname::new_instance($args);
+		//if($save){
+		//	$success = $model_obj->save();
+		//	if( ! $success ){
+		//		global $wpdb;
+		//		throw new EE_Error(
+		//			sprintf(
+		//				__( 'Could not save %1$s using %2$s. Error was %3$s', 'event_espresso' ),
+		//				$model_name,
+		//				json_encode($args),
+		//				$wpdb->last_error
+		//			)
+		//		);
+		//	}
+		//}
+		//$auto_made_thing_seed++;
+		//return $model_obj;
 
 	}
 
