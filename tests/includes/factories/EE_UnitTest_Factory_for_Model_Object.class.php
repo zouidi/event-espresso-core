@@ -110,6 +110,17 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 */
 	protected $_object_cache = array();
 
+	/**
+	 * basically a counter for the number of objects being created for this factory
+	 * for example: if an objects relation settings included references to:
+	 *    'Ticket' => array(),
+	 *    'Ticket*' => array(),
+	 *    'Ticket**' => array(),
+	 * then this counts the number of related items of the same class
+	 *
+	 * @var int
+	 */
+	protected $_cache_key = 1;
 
 
 	/**
