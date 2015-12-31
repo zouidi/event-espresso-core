@@ -40,13 +40,15 @@ class EE_Object_Collection extends \SplObjectStorage implements EEI_Collection {
 
 	/**
 	 * @param ObjectInfoStrategyInterface $object_info_strategy
+	 * @param string                      $interface
 	 */
-	function __construct( ObjectInfoStrategyInterface $object_info_strategy = null ) {
+	function __construct( ObjectInfoStrategyInterface $object_info_strategy = null, $interface = '' ) {
 		// so that object info strategy can access objects, rewind, etc
 		$object_info_strategy->setCollection( $this );
 		$this->object_info_strategy = $object_info_strategy instanceof ObjectInfoStrategyInterface
 			? $object_info_strategy
 			: new ObjectInfoSingleKeyStrategy();
+		$this->interface = $interface;
 	}
 
 
