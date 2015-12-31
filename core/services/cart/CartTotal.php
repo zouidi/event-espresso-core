@@ -52,7 +52,7 @@ class CartTotal {
 	public $taxSubtotal = 0;
 
 	/** @var float */
-	public $Subtotal = 0;
+	public $subtotal = 0;
 
 	/** @var float */
 	public $grandTotal = 0;
