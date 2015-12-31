@@ -48,7 +48,7 @@ abstract class CartItem {
 	public function __construct( Cart $cart ) {
 		$this->setCreated();
 		$this->cart = $cart;
-		$this->cartItemOptions = new EE_Object_Collection();
+		$this->cartItemOptions = new EE_Object_Collection( null, 'CartItemOption' );
 	}
 
 
