@@ -23,7 +23,7 @@ class EE_CPT_Where_Conditions extends EE_Default_Where_Conditions{
 	 * @param string $meta_field_to_chk
 	 * @param array $custom_where_conditions
 	 */
-	function __construct( $post_type, $meta_field_to_chk, $custom_where_conditions = array() ){
+	function __construct( $post_type, $meta_field_to_chk = '', $custom_where_conditions = array() ){
 		$this->_post_type = $post_type;
 		$this->_meta_field = $meta_field_to_chk;
 		parent::__construct( $custom_where_conditions );
