@@ -116,11 +116,13 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 *    'Ticket' => array(),
 	 *    'Ticket*' => array(),
 	 *    'Ticket**' => array(),
-	 * then this counts the number of related items of the same class
+	 * then this counts the number of related items of the same class,
+	 * which in this case would be 3
 	 *
 	 * @var int
 	 */
 	protected $_cache_key = 1;
+
 
 
 	/**
@@ -156,10 +158,23 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @param string $model_object_name
 	 */
 	protected function set_model_object_name( $model_object_name ) {
+		$this->_set_object_cache_key( $model_object_name );
 		$model_object_name = $this->_prep_model_or_class_name( $model_object_name );
 		$this->set_factory_type( $model_object_name );
 		$this->set_model_name( $model_object_name );
 		$this->set_object_class( $model_object_name );
+	}
+
+
+
+	/**
+	 * will increment the object key cache anytime an asterisk is found in the model name
+	 * @param string $model_object_name
+	 */
+	protected function _set_object_cache_key( $model_object_name ) {
+		if ( strpos( $model_object_name, '*' ) ) {
+			$this->_cache_key++;
+		}
 	}
 
 
@@ -563,29 +578,11 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 	 * @return \EE_Base_Class
 	 */
 	public function create_object_and_relations( $model_fields_and_values, $related_model_objects ) {
-		$object = null;
-		$object_class = $this->object_class();
 		$model_fields_and_values = $this->_parse_timezones_formats_and_sequences_in_model_fields(
 			$model_fields_and_values
 		);
 		$primary_key = $this->_find_primary_key_in_model_fields( $this->_model, $model_fields_and_values );
-		if ( ! empty( $primary_key ) && ! empty( $model_fields_and_values[ $primary_key ] ) ) {
-			// check for primary key alias in cached objects
-			if ( isset( $this->_object_cache[ $model_fields_and_values[ $primary_key ] ] )) {
-				$object = $this->_object_cache[ $model_fields_and_values[ $primary_key ] ];
-			} else {
-				$object = $this->get_object_by_id( $model_fields_and_values[ $primary_key ] );
-			}
-		}
-		if ( ! $object instanceof $object_class ) {
-			$object = call_user_func_array(
-				array( $object_class, 'new_instance' ),
-				array( $model_fields_and_values, $this->_timezone, $this->_date_time_formats )
-			);
-			if ( $this->_save_to_db ) {
-				$object->save();
-			}
-		}
+		$object = $this->_get_object( $model_fields_and_values, $primary_key );
 		// if primary key was using an alias like TKT_ID = *T1 then cache it
 		if (
 			isset( $model_fields_and_values[ $primary_key ] )
@@ -608,6 +605,41 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			);
 		}
 		return $this->generate_related_objects( $object, $related_model_objects );
+	}
+
+
+
+	/**
+	 * _get_object
+	 *
+	 * @param array $model_fields_and_values
+	 * @param string $primary_key
+	 * @return \EE_Base_Class
+	 * @throws \Exception
+	 */
+	protected function _get_object( $model_fields_and_values, $primary_key ) {
+		$object = null;
+		$object_class = $this->object_class();
+		if ( ! empty( $primary_key ) && ! empty( $model_fields_and_values[ $primary_key ] ) ) {
+			// check for primary key alias in cached objects
+			if ( isset( $this->_object_cache[ $model_fields_and_values[ $primary_key ] ] ) ) {
+				$object = $this->_object_cache[ $model_fields_and_values[ $primary_key ] ];
+			} else if ( isset( $model_fields_and_values[ $primary_key ] ) ) {
+				$object = $this->get_object_by_id( $model_fields_and_values[ $primary_key ] );
+			} else if ( isset( $this->_object_cache[ $this->_cache_key ] ) ) {
+				$object = $this->_object_cache[ $this->_cache_key ];
+			}
+		}
+		if ( ! $object instanceof $object_class ) {
+			$object = call_user_func_array(
+				array( $object_class, 'new_instance' ),
+				array( $model_fields_and_values, $this->_timezone, $this->_date_time_formats )
+			);
+			if ( $this->_save_to_db ) {
+				$object->save();
+			}
+		}
+		return $object;
 	}
 
 
