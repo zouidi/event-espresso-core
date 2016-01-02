@@ -593,7 +593,12 @@ abstract class EE_UnitTest_Factory_for_Model_Object extends WP_UnitTest_Factory_
 			if ( ! $object->ID() && $this->_save_to_db ) {
 				$object->save();
 			}
+
+		} else if ( ! isset( $this->_object_cache[ $this->_cache_key ] ) ) {
+			// also cache objects using the cache key
+			$this->_object_cache[ $this->_cache_key ] = $object;
 		}
+
 		if ( $this->_model->get_this_model_name() === 'Extra_Join' ) {
 			//relations are set up for "Extra_Join" relations simply by creating the object
 			$related_model_objects = array();
