@@ -1159,8 +1159,18 @@ final class EE_Config {
 		}
 		// does the module exist ?
 		if ( ! is_readable( $module_path . DS . $module_class . $module_ext )) {
-			$msg = sprintf( __( 'The requested %s module file could not be found or is not readable due to file permissions.', 'event_espresso' ), $module );
-			EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
+			EE_Error::add_error(
+				sprintf(
+					__(
+						'The requested %1$s module file could not be found or is not readable due to file permissions.%2$sPlease ensure that the following file path is correct:%2$s %3$s',
+						'event_espresso'
+					),
+					$module,
+					'<br />',
+					$module_path
+				),
+				__FILE__, __FUNCTION__, __LINE__
+			);
 			return FALSE;
 		}
 		// load the module class file
