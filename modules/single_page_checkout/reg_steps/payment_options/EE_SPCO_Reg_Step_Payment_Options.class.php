@@ -1077,13 +1077,16 @@ class EE_SPCO_Reg_Step_Payment_Options extends EE_SPCO_Reg_Step {
 				break;
 
 			default:
-				$payment_successful = $this->_process_payment();
+				//double-check payment is actually due. It's possible the situation changed because
+				//of a server-timeout during a previous request or change by admin
+				$payment_successful = $this->checkout->amount_owing > 0 ? $this->_process_payment() : true;
 				if ( $payment_successful ) {
 					$this->checkout->continue_reg = true;
 					$this->_maybe_set_completed( $this->checkout->payment_method );
 				} else {
 					$this->checkout->continue_reg = false;
 				}
+				die;
 				return $payment_successful;
 
 		}
