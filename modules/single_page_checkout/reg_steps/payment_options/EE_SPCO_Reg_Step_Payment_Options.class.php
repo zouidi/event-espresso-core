@@ -1086,7 +1086,6 @@ class EE_SPCO_Reg_Step_Payment_Options extends EE_SPCO_Reg_Step {
 				} else {
 					$this->checkout->continue_reg = false;
 				}
-				die;
 				return $payment_successful;
 
 		}

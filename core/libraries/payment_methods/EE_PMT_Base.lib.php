@@ -363,11 +363,18 @@ abstract class EE_PMT_Base{
 					array_merge(
 						$duplicate_properties,
 						array(
-							'PAY_timestamp' 			=> time(),
-							'PAY_txn_id_chq_nmbr' 	=> null,
-							'PAY_po_number' 			=> null,
-							'PAY_extra_accntng' 		=> null,
-							'PAY_details' 					=> null,
+							'PAY_timestamp' => time(),
+							'PAY_txn_id_chq_nmbr' => null,
+							'PAY_po_number' => null,
+							'PAY_extra_accntng' => null,
+							'PAY_details' => null,
+							'PAY_gateway_response' => apply_filters( 
+								'FHEE__EE_PMT_Base__process_payment__PAY_details', 
+								sprintf(
+									__( 'No response from %1$s. An administrator should verify the payment status before you reattempt payment.', 'event_espresso' ),
+									$this->pretty_name() 
+								) 
+							)
 						)
 					)
 				);
