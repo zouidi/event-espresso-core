@@ -134,6 +134,8 @@ jQuery(document).ready( function($) {
 		form_is_valid : false,
 		// amount to be paid during this TXN
 		payment_amount : 0,
+		//url to send the user to if things to badly
+		reg_status_url : null,
 
 
 
@@ -935,9 +937,13 @@ jQuery(document).ready( function($) {
 			//clear additional_post_data
 			SPCO.additional_post_data = '';
 			// alert( 'next_step = ' + next_step );
-			if ( typeof response === 'object' ) {
+			if ( typeof response === 'object' && response !== null ) {
 				// trigger a custom event so that other JS functions can add listeners for the "spco_process_response" event
 				SPCO.main_container.trigger( 'spco_process_response', [ next_step, response ] );
+				//check if the reg status url was set, if so remember it. We may want it if things blow up
+				if( typeof response.reg_status_url !== 'undefined' ) {
+					SPCO.reg_status_url = response.reg_status_url;
+				}
 				//  check for payment_amount
 				if ( typeof response.payment_amount !== 'undefined' ) {
 					SPCO.payment_amount = parseFloat( response.payment_amount );
@@ -993,8 +999,14 @@ jQuery(document).ready( function($) {
 				}
 
             } else {
+				
 				var msg = SPCO.generate_message_object( '', SPCO.tag_message_for_debugging( 'process_response', eei18n.invalid_json_response ), '' );
 				SPCO.scroll_to_top_and_display_messages( SPCO.main_container, msg, true  );
+				//error handling time. Can we send them to the thank you page so they know what's up?
+				if( SPCO.reg_status_url !== null ) {
+					window.location.replace( SPCO.reg_status_url );
+					$('#espresso-ajax-loading').show();
+				}
 			}
 			$( '.hide-if-no-js' ).removeClass( 'hide-if-no-js' );
 		},

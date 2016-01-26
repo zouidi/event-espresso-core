@@ -78,6 +78,12 @@ class EE_SPCO_JSON_Response {
 	 *  @var array
 	 */
 	protected $_validation_rules = array();
+	
+	/**
+	 * In case there is an error, we can send users here to see their full registration status
+	 * @var string 
+	 */
+	protected $_reg_status_url = null;
 
 
 
@@ -167,6 +173,10 @@ class EE_SPCO_JSON_Response {
 		// because it is easier and cleaner in the Javascript to deal with this way
 		if ( ! empty( $return_data )) {
 			$JSON_response['return_data'] = $return_data;
+		}
+		
+		if( ! empty( $this->reg_status_url() ) ) {
+			$JSON_response[ 'reg_status_url' ] = $this->reg_status_url();
 		}
 		// filter final array
 		$JSON_response = apply_filters( 'FHEE__EE_SPCO_JSON_Response___toString__JSON_response', $JSON_response );
@@ -355,6 +365,22 @@ class EE_SPCO_JSON_Response {
 		return $this->_redirect_url;
 	}
 
+	
+	/**
+	 * 
+	 * @param string $url
+	 */
+	public function set_reg_status_url( $url ) {
+		$this->_reg_status_url = $url;
+	}
+	
+	/**
+	 * Gets the URL of the thank you page, assuming its available
+	 * @return string
+	 */
+	public function reg_status_url() {
+		return $this->_reg_status_url;
+	}
 
 
 	/**

@@ -671,6 +671,18 @@ class EE_SPCO_Reg_Step_Attendee_Information extends EE_SPCO_Reg_Step {
 			EE_Error::add_error( $error_msg, __FILE__, __FUNCTION__, __LINE__ );
 			return FALSE;
 		}
+		//set the reg status URL, where we'll send registrants if somehow things blow up
+		if ( $this->checkout->transaction_has_primary_registrant() ) {
+			// setup URL for redirect
+			if( $this->checkout->json_response instanceof EE_SPCO_JSON_Response ) {
+				$this->checkout->json_response->set_reg_status_url(
+					add_query_arg(
+						array( 'e_reg_url_link' => $this->checkout->transaction->primary_registration()->reg_url_link() ),
+						$this->checkout->thank_you_page_url
+					)
+				);
+			}
+		}
 		// mark this reg step as completed
 		$this->set_completed();
 		$this->_set_success_message( __('The Attendee Information Step has been successfully completed.', 'event_espresso' ));
