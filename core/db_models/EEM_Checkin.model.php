@@ -64,7 +64,7 @@ class EEM_Checkin extends EEM_Base {
 		parent::__construct( $timezone );
 
 	}
-
-
+	
+	
 
 }

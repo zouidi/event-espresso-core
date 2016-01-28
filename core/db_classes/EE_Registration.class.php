@@ -917,8 +917,8 @@ class EE_Registration extends EE_Soft_Delete_Base_Class implements EEI_Registrat
 
 
 	/**
-	 * Returns the number of times this registration has checked into any of the datetimes
-	 * its available for
+	 * Returns the number of checkin/checkout actions the registrant performed
+	 * @deprecated in 4.8.32. Its name is misleading and not terribly useful anyways
 	 * @return int
 	 */
 	public function count_checkins() {
@@ -929,6 +929,8 @@ class EE_Registration extends EE_Soft_Delete_Base_Class implements EEI_Registrat
 
 	/**
 	 * Returns the number of current Check-ins this registration is checked into for any of the datetimes the registration is for.  Note, this is ONLY checked in (does not include checkedout)
+	 * @deprecated in 4.8.32. It isn't quite useful because usually you will want to 
+	 * know how many checkins were done to unique datetimes, not checkins in general
 	 * @return int
 	 */
 	public function count_checkins_not_checkedout() {
