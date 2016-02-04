@@ -461,14 +461,14 @@ final class EE_Registry {
 		);
 
 		// check if class has already been loaded, and return it if it has been
-		if ( isset( $class_abbreviations[ $class_name ] ) && ! is_null( $this->$class_abbreviations[ $class_name ] )) {
-			return $this->$class_abbreviations[ $class_name ];
+		if ( isset( $class_abbreviations[ $class_name ] ) && ! is_null( $this->{$class_abbreviations[ $class_name ]} )) {
+			return $this->{$class_abbreviations[ $class_name ]};
 		} else if ( isset ( $this->{$class_name} )) {
 			return $this->{$class_name};
-		} else if ( isset ( $this->LIB->$class_name )) {
-			return $this->LIB->$class_name;
-		} else if ( $class_prefix == 'addon' && isset ( $this->addons->$class_name )) {
-			return $this->addons->$class_name;
+		} else if ( isset ( $this->LIB->{$class_name} )) {
+			return $this->LIB->{$class_name};
+		} else if ( $class_prefix == 'addon' && isset ( $this->addons->{$class_name} )) {
+			return $this->addons->{$class_name};
 		}
 
 		// assume all paths lead nowhere
@@ -572,13 +572,13 @@ final class EE_Registry {
 		if ( isset( $class_obj )) {
 			// return newly instantiated class
 			if ( isset( $class_abbreviations[ $class_name ] )) {
-				$this->$class_abbreviations[ $class_name ] = $class_obj;
+				$this->{$class_abbreviations[ $class_name ]} = $class_obj;
 			} else if ( EEH_Class_Tools::has_property( $this, $class_name )) {
 				$this->{$class_name} = $class_obj;
 			} else if ( $class_prefix == 'addon' && $cache  ) {
-				$this->addons->$class_name = $class_obj;
+				$this->addons->{$class_name} = $class_obj;
 			} else if ( !$from_db && $cache  ) {
-				$this->LIB->$class_name = $class_obj;
+				$this->LIB->{$class_name} = $class_obj;
 			}
 			return $class_obj;
 		}
