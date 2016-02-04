@@ -241,9 +241,9 @@ class EEH_Activation {
 
 		foreach ( $critical_pages as $critical_page ) {
 			// is critical page ID set in config ?
-			if ( EE_Registry::instance()->CFG->core->$critical_page['id'] !== FALSE ) {
+			if ( EE_Registry::instance()->CFG->core->{$critical_page['id']} !== FALSE ) {
 				// attempt to find post by ID
-				$critical_page['post'] = get_post( EE_Registry::instance()->CFG->core->$critical_page['id'] );
+				$critical_page['post'] = get_post( EE_Registry::instance()->CFG->core->{$critical_page['id']} );
 			}
 			// no dice?
 			if ( $critical_page['post'] == NULL ) {
@@ -265,9 +265,9 @@ class EEH_Activation {
 				EEH_Activation::_track_critical_page_post_shortcodes( $critical_page );
 			}
 			// check that Post ID matches critical page ID in config
-			if ( isset( $critical_page['post']->ID ) && $critical_page['post']->ID != EE_Registry::instance()->CFG->core->$critical_page['id'] ) {
+			if ( isset( $critical_page['post']->ID ) && $critical_page['post']->ID != EE_Registry::instance()->CFG->core->{$critical_page['id']} ) {
 				//update Config with post ID
-				EE_Registry::instance()->CFG->core->$critical_page['id'] = $critical_page['post']->ID;
+				EE_Registry::instance()->CFG->core->{$critical_page['id']} = $critical_page['post']->ID;
 				if ( ! EE_Config::instance()->update_espresso_config( FALSE, FALSE ) ) {
 					$msg = __( 'The Event Espresso critical page configuration settings could not be updated.', 'event_espresso' );
 					EE_Error::add_error( $msg, __FILE__, __FUNCTION__, __LINE__ );
