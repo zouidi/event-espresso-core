@@ -102,7 +102,7 @@ class EEM_Registration extends EEM_Soft_Delete_Base {
 		$this->_fields = array(
 			'Registration'=>array(
 				'REG_ID'=>new EE_Primary_Key_Int_Field('REG_ID', __('Registration ID','event_espresso')),
-				'EVT_ID'=>new EE_Foreign_Key_Int_Field('EVT_ID', __('Even tID','event_espresso'), false, 0, 'Event'),
+				'EVT_ID'=>new EE_Foreign_Key_Int_Field('EVT_ID', __('Event ID','event_espresso'), false, 0, 'Event'),
 				'ATT_ID'=>new EE_Foreign_Key_Int_Field('ATT_ID', __('Attendee ID','event_espresso'), false, 0, 'Attendee'),
 				'TXN_ID'=>new EE_Foreign_Key_Int_Field('TXN_ID', __('Transaction ID','event_espresso'), false, 0, 'Transaction'),
 				'TKT_ID'=>new EE_Foreign_Key_Int_Field('TKT_ID', __('Ticket ID','event_espresso'), false, 0, 'Ticket'),
@@ -286,15 +286,20 @@ class EEM_Registration extends EEM_Soft_Delete_Base {
 			$where['Event.EVT_wp_user'] = get_current_user_id();
 		}
 
+		$offset = get_option( 'gmt_offset' );
+		$query_interval = $offset < 0
+			? 'DATE_SUB(REG_date, INTERVAL ' . $offset*-1 . ' HOUR)'
+			: 'DATE_ADD(REG_date, INTERVAL ' . $offset . ' HOUR)';
+
 		$results = $this->_get_all_wpdb_results(
 				array(
 					$where,
 					'group_by'=>'regDate',
-					'order_by'=>array('REG_date'=>'DESC')
+					'order_by'=>array('REG_date'=>'ASC')
 				),
 				OBJECT,
 				array(
-					'regDate'=>array('DATE(Registration.REG_date)','%s'),
+					'regDate'=>array( 'DATE(' . $query_interval . ')','%s'),
 					'total'=>array('count(REG_ID)','%d')
 				));
 		return $results;

@@ -1018,6 +1018,7 @@ class Transactions_Admin_Page extends EE_Admin_Page {
 				$this->_maybe_send_notifications( $payment );
 				//prepare to render page
 				$json_response_data[ 'return_data' ] = $this->_build_payment_json_response( $payment, $REG_IDs );
+				do_action( 'AHEE__Transactions_Admin_Page__apply_payments_or_refund__after_recording', $transaction, $payment );
 			} else {
 				EE_Error::add_error(
 					__( 'A valid Transaction for this payment could not be retrieved.', 'event_espresso' ),
@@ -1027,6 +1028,7 @@ class Transactions_Admin_Page extends EE_Admin_Page {
 		} else {
 			EE_Error::add_error( __( 'The payment form data could not be processed. Please try again.', 'event_espresso' ), __FILE__, __FUNCTION__, __LINE__ );
 		}
+
 		$notices = EE_Error::get_notices( FALSE, FALSE, FALSE );
 		echo json_encode( array_merge( $json_response_data, $notices ));
 		die();
@@ -1185,11 +1187,13 @@ class Transactions_Admin_Page extends EE_Admin_Page {
 		// payments have a type value of 1 and refunds have a type value of -1
 		// so multiplying amount by type will give a positive value for payments, and negative values for refunds
 		$amount = $valid_data[ 'type' ] < 0 ? $amount * -1 : $amount;
+		// for some reason the date string coming in has extra spaces between the date and time.  This fixes that.
+		$date = $valid_data['date'] ? preg_replace( '/\s+/', ' ', $valid_data['date'] ) : date( 'Y-m-d g:i a', current_time( 'timestamp' ) );
 		$payment = EE_Payment::new_instance(
 			array(
 				'TXN_ID' 								=> $valid_data[ 'TXN_ID' ],
 				'STS_ID' 								=> $valid_data[ 'status' ],
-				'PAY_timestamp' 				=> $valid_data[ 'date' ],
+				'PAY_timestamp' 				=> $date,
 				'PAY_source'           			=> EEM_Payment_Method::scope_admin,
 				'PMD_ID'               				=> $valid_data[ 'PMD_ID' ],
 				'PAY_amount'           			=> $amount,
@@ -1200,8 +1204,9 @@ class Transactions_Admin_Page extends EE_Admin_Page {
 				'PAY_ID'               				=> $PAY_ID
 			),
 			'',
-			array( 'Y-m-d', 'H:i a' )
+			array( 'Y-m-d', 'g:i a' )
 		);
+
 		if ( ! $payment->save() ) {
 			EE_Error::add_error(
 				sprintf(
