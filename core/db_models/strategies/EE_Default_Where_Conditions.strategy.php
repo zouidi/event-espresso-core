@@ -1,16 +1,19 @@
-<?php if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
+<?php
+if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
-
-/*
- * EE_Default_Where_Conditions
+/**
  *
+ * Class EE_Default_Where_Conditions
+  * 
  * Strategy to be used for getting default where conditions for EEM_Base children.
  * Should be initialized and set on construction of model
  *
- * @package			Event Espresso
- * @subpackage		core/db_models/strategies/
- * @author				Michael Nelson
+ * @package         Event Espresso
+ * @subpackage    core/db_models
+ * @author				Mike Nelson
+ * @since		 	    4.6.0
+ *
  */
 class EE_Default_Where_Conditions{
 	/**
@@ -69,21 +72,9 @@ class EE_Default_Where_Conditions{
 	 */
 	function get_minimum_where_conditions( $model_relation_chain = null ){
 		return $this->prepare_where_conditions_for_querying(
-			array_replace_recursive(
-				$this->_get_minimum_where_conditions(),
-				$this->get_where_conditions_provided()
-			),
+			$this->get_where_conditions_provided(),
 			$model_relation_chain
 		);
-	}
-
-	/**
-	 * Returns the set of bare minimum where conditions that need to be used with ALL model queries.
-	 * Array keys should be the field names (without model relation chains.
-	 * @return array
-	 */
-	protected function _get_minimum_where_conditions() {
-		return array();
 	}
 
 	/**

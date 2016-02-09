@@ -42,7 +42,7 @@ class EE_Registration extends EE_Soft_Delete_Base_Class implements EEI_Registrat
 	 * @return EE_Registration
 	 */
 	public static function new_instance( $props_n_values = array(), $timezone = null, $date_formats = array() ) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__ );
+		$has_object = parent::_check_for_object( $props_n_values, __CLASS__, $timezone, $date_formats );
 		return $has_object ? $has_object : new self( $props_n_values, false, $timezone, $date_formats );
 	}
 
@@ -1293,6 +1293,19 @@ class EE_Registration extends EE_Soft_Delete_Base_Class implements EEI_Registrat
 	public function pretty_price_paid() {
 		EE_Error::doing_it_wrong( 'EE_Registration::pretty_price_paid()', __( 'This method is deprecated, please use EE_Registration::pretty_final_price() instead.', 'event_espresso' ), '4.7.0' );
 		return $this->pretty_final_price();
+	}
+
+
+
+
+	/**
+	 * This grabs the payment method corresponding to the last payment made for the amount owing on the registration.
+	 * Note: if there are no payments on the registration there will be no payment method returned.
+	 *
+	 * @return EE_Payment_Method|null
+	 */
+	public function payment_method() {
+		return EEM_Payment_Method::instance()->get_last_used_for_registration( $this );
 	}
 
 

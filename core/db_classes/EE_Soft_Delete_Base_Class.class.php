@@ -28,49 +28,49 @@
  */
 abstract class EE_Soft_Delete_Base_Class extends EE_Base_Class {
 
-	/**
-	 * Performs a soft delete (archive) fo this object
-         * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
-	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
-	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
-	 * @return boolean success
-	 */
-	public function delete( $allow_blocking = true) {
-		return $this->delete_or_restore( TRUE );
-	}
-
-
 
 	/**
-	 * Permanently deletes this object (not just archive)
-         * @param boolean $allow_blocking if TRUE, matched objects will only be deleted if there is no related model info
-	 * that blocks it (ie, there' sno other data that depends on this data); if false, deletes regardless of other objects
-	 * which may depend on it. Its generally advisable to always leave this as TRUE, otherwise you could easily corrupt your DB
-	 * @return boolean success
+	 * Overrides parent _delete() so that we do soft deletes.
+	 * @param boolean $allow_blocking ignored, because we never block soft deletes
+	 * @return bool|int
 	 */
-	public function delete_permanently( $allow_blocking = true) {
-		return $this->get_model()->delete_permanently_by_ID( $this->ID(), $allow_blocking ) ? true : false;
+	protected function _delete( $allow_blocking = true ) {
+		return $this->delete_or_restore();
 	}
-
 
 
 	/**
 	 * Deletes or restores this object.
 	 * @param bool $delete true=>delete, false=>restore
-	 * @return bool
+	 * @return bool|int
 	 */
-	public function delete_or_restore( $delete = TRUE ) {
+	public function delete_or_restore( $delete = true ) {
+		/**
+		 * Called just before trashing (soft delete) or restoring a trashed item.
+		 *
+		 * @param EE_Base_Class $model_object about to be trashed or restored
+		 * @param bool          $delete       true the item is being trashed, false the item is being restored.
+		 */
+		do_action( 'AHEE__EE_Soft_Delete_Base_Class__delete_or_restore__before', $this, $delete );
 		$model = $this->get_model();
-		return $model->delete_or_restore_by_ID( $delete, $this->ID() );
+		$result = $model->delete_or_restore_by_ID( $delete, $this->ID() );
+		/**
+		 * Called just after trashing (soft delete) or restoring a trashed item.
+		 * @param EE_Base_Class $model_object that was just trashed or restored.
+		 * @param bool          $delete       true the item is being trashed, false the item is being restored.
+		 * @param bool|int $result
+		 */
+		do_action( 'AHEE__EE_Soft_Delete_Base_Class__delete_or_restore__after', $this, $delete, $result );
+		return $result;
 	}
 
 
 
 	/**
 	 * Performs a restoration (un-deletes) this object
-	 * @return boolean
+	 * @return bool|int
 	 */
 	public function restore() {
-		return $this->delete_or_restore( FALSE );
+		return $this->delete_or_restore( false );
 	}
 }
