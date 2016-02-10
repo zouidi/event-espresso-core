@@ -187,15 +187,7 @@ final class EE_Module_Request_Router {
 			EE_Error::add_error( sprintf( __( 'EED_Module is an abstract parent class an can not be instantiated. Please provide a proper module name.', 'event_espresso' ), $module_name ), __FILE__, __FUNCTION__, __LINE__ );
 			return NULL;
 		}
-		// let's pause to reflect on this...
-		$mod_reflector = new ReflectionClass( $module_name );
-		// ensure that class is actually a module
-		if ( ! $mod_reflector->isSubclassOf( 'EED_Module' )) {
-			EE_Error::add_error( sprintf( __( 'The requested %s module is not of the class EED_Module.', 'event_espresso' ), $module_name ), __FILE__, __FUNCTION__, __LINE__ );
-			return NULL;
-		}
-		// instantiate and return module class
-		return $mod_reflector->newInstance();
+		return EE_Registry::instance()->load_module( $module_name );
 	}
 
 
@@ -212,14 +204,25 @@ final class EE_Module_Request_Router {
 	private function _module_router( $module_name, $method ) {
 		// instantiate module class
 		$module = EE_Module_Request_Router::module_factory( $module_name );
-		if ( $module instanceof EED_Module ) {
-			// and call whatever action the route was for
-			try {
-				call_user_func( array( $module, $method ), $this->WP_Query );
-			} catch ( EE_Error $e ) {
-				$e->get_error();
-				return NULL;
-			}
+		// ensure that class is actually a module
+		if ( ! $module instanceof EED_Module ) {
+			EE_Error::add_error(
+				sprintf(
+					__( 'The requested %s module is not of the class EED_Module.', 'event_espresso' ),
+					$module_name
+				),
+				__FILE__,
+				__FUNCTION__,
+				__LINE__
+			);
+			return null;
+		}
+		// and call whatever action the route was for
+		try {
+			call_user_func( array( $module, $method ), $this->WP_Query );
+		} catch ( EE_Error $e ) {
+			$e->get_error();
+			return NULL;
 		}
 		return $module;
 	}
