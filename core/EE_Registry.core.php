@@ -431,6 +431,27 @@ final class EE_Registry {
 	}
 
 
+
+	/**
+	 *    load_module
+	 *
+	 * @param string $module_class   - full class name  ie:  My_Class
+	 * @return EED_Module
+	 */
+	public function load_module ( $module_class ) {
+		if ( ! isset( EE_Registry::instance()->modules->{$module_class} ) ) {
+			return null;
+		}
+		if ( EE_Registry::instance()->modules->{$module_class} instanceof EED_Module ) {
+			return EE_Registry::instance()->modules->{$module_class};
+		}
+		$module_path = EE_Registry::instance()->modules->{$module_class};
+		$module_path = str_replace( basename( $module_path ), '', $module_path );
+		// retrieve instantiated class
+		return $this->_load( $module_path, 'EED_', $module_class, 'module' );
+	}
+
+
 	/**
 	 *    loads and tracks classes
 	 *
@@ -539,24 +560,24 @@ final class EE_Registry {
 			// instantiate the class and add to the LIB array for tracking
 			// EE_Base_Classes are instantiated via new_instance by default (models call them via new_instance_from_db)
 			if ( $reflector->getConstructor() === NULL || $reflector->isAbstract() || $load_only ) {
-//				$instantiation_mode = 0;
+				//$instantiation_mode = 0;
 				// no constructor = static methods only... nothing to instantiate, loading file was enough
 				return TRUE;
 			} else if ( $from_db && method_exists( $class_name, 'new_instance_from_db' ) ) {
-//				$instantiation_mode = 1;
+				//$instantiation_mode = 1;
 				$class_obj =  call_user_func_array( array( $class_name, 'new_instance_from_db' ), $arguments );
 			} else if ( method_exists( $class_name, 'new_instance' ) ) {
-//				$instantiation_mode = 2;
+				//$instantiation_mode = 2;
 				$class_obj =  call_user_func_array( array( $class_name, 'new_instance' ), $arguments );
-			} else if ( method_exists( $class_name, 'instance' )) {
-//				$instantiation_mode = 3;
-				$class_obj =  call_user_func_array( array( $class_name, 'instance' ), $arguments );
+			} else if ( method_exists( $class_name, 'instance' ) && ! $reflector->isSubclassOf( 'EED_Module' ) ) {
+				//$instantiation_mode = 3;
+				$class_obj = call_user_func_array( array( $class_name, 'instance' ), $arguments );
 			} else if ( $reflector->isInstantiable() ) {
-//				$instantiation_mode = 4;
+				//$instantiation_mode = 4;
 				$class_obj =  $reflector->newInstance( $arguments );
 			} else if ( ! $load_only ) {
 				// heh ? something's not right !
-//				$instantiation_mode = 5;
+				//$instantiation_mode = 5;
 				throw new EE_Error(
 					sprintf(
 						__('The %s file %s could not be instantiated.','event_espresso'),
