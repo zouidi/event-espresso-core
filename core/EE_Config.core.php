@@ -1316,6 +1316,7 @@ final class EE_Config {
 		do_action( 'AHEE__EE_Config__register_forward',$route,$status,$forward );
 		if ( ! isset( EE_Config::$_module_route_map[ $key ][ $route ] ) ||  empty( $route )) {
 			$msg = sprintf( __( 'The module route %s for this forward has not been registered.', 'event_espresso' ), $route );
+			$msg .= print_r( EE_Config::$_module_route_map, true );
 			EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
 			return FALSE;
 		}
@@ -1324,21 +1325,33 @@ final class EE_Config {
 			EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
 			return FALSE;
 		}
-		if ( is_array( $forward )) {
-			if ( ! isset( $forward[1] )) {
-				$msg = sprintf( __( 'A class method for the %s forwarding route has not been supplied.', 'event_espresso' ), $route );
-				EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
-				return FALSE;
-			}
-			if ( ! method_exists( $forward[0], $forward[1] )) {
-				$msg = sprintf( __( 'The class method %s for the %s forwarding route is in invalid.', 'event_espresso' ), $forward[1], $route );
-				EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
-				return FALSE;
-			}
-		} else if ( ! function_exists( $forward )) {
-			$msg = sprintf( __( 'The function %s for the %s forwarding route is in invalid.', 'event_espresso' ), $forward, $route );
+		if ( ! is_array( $forward )) {
+			$msg = sprintf(
+				__( 'The "%1$s" forwarding route for the existing "%2$s=%3$s" forwarding route is in invalid.', 'event_espresso' ),
+				print_r( $forward, true ),
+				$key,
+				$route
+			);
+			EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
+			return false;
+		}
+		if ( empty( $forward[ 0 ] ) ) {
+			$msg = sprintf(
+				__( 'A valid "key" for the "%2$s=%3$s" forwarding route is in invalid.', 'event_espresso' ),
+				$key,
+				$route
+			);
 			EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
 			return FALSE;
+		}
+		if ( empty( $forward[ 1 ] ) ) {
+			$msg = sprintf(
+				__( 'A valid "route" for the "%2$s=%3$s" forwarding route is in invalid.', 'event_espresso' ),
+				$key,
+				$route
+			);
+			EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
+			return false;
 		}
 		EE_Config::$_module_forward_map[ $key ][ $route ][ absint( $status ) ] = $forward;
 		return TRUE;
@@ -1349,16 +1362,22 @@ final class EE_Config {
 	/**
 	 * 	get_forward - get forwarding route
 	 *
-	 *  @access 	public
-	 *  @param 	string 		$route - "pretty" public alias for module method
-	 *  @param 	integer	$status - integer value corresponding  to status constant strings set in module parent class, allows different forwards to be served based on status
-	 *  @param    string 		$key - url param key indicating a route is being called
-	 *  @return 	string
+	 * @access public
+	 * @param string  $route     "pretty" public alias for module method
+	 * @param integer $status    integer value corresponding  to status constant strings set in module parent class,
+	 *                           allows different forwards to be served based on status
+	 * @param string  $key       url param key indicating a route is being called
+	 * @return string
 	 */
 	public static function get_forward( $route = NULL, $status = 0, $key = 'ee' ) {
 		do_action( 'AHEE__EE_Config__get_forward__begin',$route,$status );
-		if ( isset( EE_Config::$_module_forward_map[ $key ][ $route ][ $status ] )) {
-			return apply_filters( 'FHEE__EE_Config__get_forward', EE_Config::$_module_forward_map[ $key ][ $route ][ $status ], $route,$status );
+		if ( isset( EE_Config::$_module_forward_map[ $key ][ $route ] ) ) {
+			if ( isset( EE_Config::$_module_forward_map[ $key ][ $route ][ $status ] )) {
+				$forward = EE_Config::$_module_forward_map[ $key ][ $route ][ $status ];
+			} else {
+				$forward = EE_Config::$_module_forward_map[ $key ][ $route ];
+			}
+			return apply_filters( 'FHEE__EE_Config__get_forward', $forward, $route, $status );
 		}
 		return NULL;
 	}
