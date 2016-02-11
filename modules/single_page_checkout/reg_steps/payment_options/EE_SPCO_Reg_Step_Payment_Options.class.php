@@ -534,10 +534,10 @@ class EE_SPCO_Reg_Step_Payment_Options extends EE_SPCO_Reg_Step {
 
 
 	/**
-	 *    _apply_registration_payments_to_amount_owing
+	 * _apply_registration_payments_to_amount_owing
 	 *
-	 * @access    protected
-	 * @return    void
+	 * @access protected
+	 * @param  EE_Registration[] $registrations
 	 */
 	protected function _apply_registration_payments_to_amount_owing( $registrations ) {
 		$payments = array();
@@ -1361,9 +1361,8 @@ class EE_SPCO_Reg_Step_Payment_Options extends EE_SPCO_Reg_Step {
 				$payment_method = $this->checkout->available_payment_methods[ $this->checkout->selected_method_of_payment ];
 			} else {
 				// load EEM_Payment_Method
-				EE_Registry::instance()->load_model( 'Payment_Method' );
 				/** @type EEM_Payment_Method $EEM_Payment_Method */
-				$EEM_Payment_Method = EE_Registry::instance()->LIB->EEM_Payment_Method;
+				$EEM_Payment_Method = EE_Registry::instance()->load_model( 'Payment_Method' );
 				$payment_method = $EEM_Payment_Method->get_one_by_slug( $this->checkout->selected_method_of_payment );
 			}
 			// verify $payment_method
