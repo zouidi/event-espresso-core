@@ -34,11 +34,26 @@ class EED_Gateway_Data_Router extends EED_Module {
 	 * @return    void
 	 */
 	public static function set_hooks() {
-		require_once( plugin_dir_path(__FILE__ ) . DS . 'EE_Gateway_Response.php' );
-		// route requests to domain.com/?ee_gateway_route=receive_ipn  to  EED_Gateway_Data_Router::receive_ipn()
-		EE_Config::register_route( 'receive_ipn', 'EED_Gateway_Data_Router', 'receive_ipn', 'ee_gateway_route' );
-		// route requests to domain.com/?ee_gateway_route=gateway_response  to  EED_Gateway_Data_Router::process_gateway_response()
-		EE_Config::register_route( 'gateway_response', 'EED_Gateway_Data_Router', 'process_gateway_response', 'ee_gateway_route' );
+		require_once( plugin_dir_path(__FILE__ ) . DS . 'GatewayResponse.php' );
+		// route requests to domain.com/?ee_gateway_response=receive_ipn  to  EED_Gateway_Data_Router::receive_ipn()
+		EE_Config::register_route( 'receive_ipn', 'EED_Gateway_Data_Router', 'receive_ipn', 'ee_gateway_response' );
+		// route requests to domain.com/?ee_gateway_response=receive  to  EED_Gateway_Data_Router::receive_gateway_response()
+		EE_Config::register_route(
+			'receive',                  // << route param "pretty" value
+			'EED_Gateway_Data_Router',  // this class
+			'receive_gateway_response', // method to route request to
+			'ee_gateway_response'       // << custom route key
+		);
+		EE_Config::register_forward(
+			'receive',                      // << FROM: route param "pretty" value - must match existing route
+			EED_Module::process_forward,    // << STATUS : If the "FROM: route param" listed immediately above this,
+											// returns this value, then forward to the "TO: route" in the array below
+			array(
+				'spco',                     // << TO: custom route key - must match existing route
+				'process_gateway_response'  // << TO: route param "pretty" value - must match existing route
+			),
+			'ee_gateway_response'           // << FROM: custom route key - must match existing route
+		);
 	}
 
 
@@ -72,27 +87,58 @@ class EED_Gateway_Data_Router extends EED_Module {
 
 
 
-	public function process_gateway_response() {
-		$gateway_response = new \EventEspresso\modules\gateway_data_router\EE_Gateway_Response();
+	public function receive_gateway_response() {
+		// create an instance of our DTO (Data Transfer Object)
+		$gateway_response = new \EventEspresso\modules\gateway_data_router\GatewayResponse();
+		// array of parameters we are looking for where keys represent the $_REQUEST key
+		// and values represent the keys we will use internally for setting and getting the data
 		$request_param_map = array(
 			'spco_txn' => 'transaction_id',
 			'selected_method_of_payment' => 'selected_method_of_payment',
 		);
+		// cycle thru each of the above data parameters
 		foreach ( $request_param_map as $request_param => $dto_property ) {
+			// first look in the $_POST array, then if not found, look in the $_GET array
 			foreach ( array( $_POST, $_GET ) as $data_source ) {
+				// but only if the array isn't empty
 				if ( ! empty( $data_source ) ) {
+					// and the parameter exists
 					if ( ! empty( $data_source[ $request_param ] ) ) {
-						$setter = 'set_' . $dto_property;
-						if ( method_exists( $gateway_response, $setter ) ) {
-							$gateway_response->{$setter}( $data_source[ $request_param ] );
+						// now check that the internal key matches one for our DTO
+						if ( $gateway_response->has( $dto_property ) ) {
+							// and set the value (validation will occur within the DTO)
+							$gateway_response->set( $dto_property, $data_source[ $request_param ] );
 							continue;
 						}
 					}
 				}
 			}
-			// didn't find parameter in the request? let's look in the session then
-
+			// didn't find parameter in the request? then let's look in the session...
+			$session = EE_Session::instance();
+			if ( $session instanceof EE_Session ) {
+				if ( ! $gateway_response->get('session_id') ) {
+					$gateway_response->set( 'session_id', $session->id() );
+				}
+				if ( $session->checkout() instanceof EE_Checkout ) {
+					if ( ! $gateway_response->get('selected_method_of_payment') ) {
+						$gateway_response->set(
+							'selected_method_of_payment',
+							$session->checkout()->selected_method_of_payment
+						);
+					}
+					if ( ! $gateway_response->get('transaction_id') ) {
+						$gateway_response->set( 'transaction_id', $session->checkout()->transaction->ID() );
+					}
+					if ( ! $gateway_response->get('transaction') ) {
+						$gateway_response->set( 'transaction', $session->checkout()->transaction );
+					}
+				}
+			}
 		}
+		if ( $gateway_response->valid() ) {
+			$gateway_response->setStatus( EED_Module::process_forward );
+		}
+		return $gateway_response;
 	}
 
 
