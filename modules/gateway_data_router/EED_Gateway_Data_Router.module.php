@@ -159,8 +159,52 @@ class EED_Gateway_Data_Router extends EED_Module {
 		}
 		return $gateway_response;
 	}
-
-
+	
+	/**
+	 * Gets the URL for IPNs for this paymetn method (or a generic one)
+	 * @param EE_Payment_Method $pm
+	 * @return string
+	 */
+	public static function get_static_ipn_url_for_payment_method( EE_Payment_Method $pm = null ) {
+		$url = add_query_arg( 
+			array( 
+				'ee_gateway_response' => 'receive_ipn', 
+			),
+			site_url()
+		);
+		if( $pm instanceof EE_Payment_Method ) {
+			$url = add_query_arg( 
+				array( 
+					'ee_payment_method' => $pm->slug()
+				),
+				$url
+			);
+		}
+		return $url; 
+	}
+	
+	/**
+	 * Gets the return URL payment methods should use if they can't set it dynamically
+	 * @param EE_Payment_Method $pm
+	 * @return string
+	 */
+	public static function get_static_return_url( EE_Payment_Method $pm = null ) {
+		$url = add_query_arg( 
+			array( 
+				'ee_gateway_response' => 'receive', 
+			),
+			site_url()
+		);
+		if( $pm instanceof EE_Payment_Method ) {
+			$url = add_query_arg( 
+				array( 
+					'ee_payment_method' => $pm->slug()
+				),
+				$url
+			);
+		}
+		return $url; 
+	}
 }
 // End of file EED_Gateway_Data_Router.module.php
 // Location: /EED_Gateway_Data_Router.module.php
