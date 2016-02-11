@@ -1468,12 +1468,9 @@ class EE_SPCO_Reg_Step_Payment_Options extends EE_SPCO_Reg_Step {
 
 			case EE_PMT_Base::offsite :
 				$return_url = add_query_arg(
-					array(
-						'action' => 'process_gateway_response',
-						'selected_method_of_payment' => $this->checkout->selected_method_of_payment,
-						'spco_txn' => $this->checkout->transaction->ID(),
-					),
-					$this->reg_step_url()
+					//ee_gateway_response=receive
+					array( 'ee_gateway_response' => 'receive' ),
+					site_url()
 				);
 				break;
 
