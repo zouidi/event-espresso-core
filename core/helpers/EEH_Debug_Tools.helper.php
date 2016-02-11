@@ -457,10 +457,11 @@ class EEH_Debug_Tools{
 		$var_name = ucwords( str_replace( array( '$', '_' ), array( '', ' ' ), $var_name ) );
 		ob_start();
 		echo '<' . $heading_tag . ' style="color:#2EA2CC; margin:25px 0 0;"><b>' . $var_name . '</b>';
-		echo '<span style="color:#999"> : </span><span style="color:#E76700">';
+		echo '<span style="color:#999"> : </span></' . $heading_tag . '>';
+		echo '<pre style="display:inline-block; color:#444; font-size:.8em; line-height:1.5em; padding: 1em 2em; width: auto; min-width: 50%;">';
 		var_dump( $var );
-		echo '</span><br /><span style="font-size:9px;font-weight:normal;color:#666;line-height: 12px;">' . $file;
-		echo '<br />line no: ' . $line . '</span></' . $heading_tag . '>';
+		echo '</pre><br /><span style="font-size:9px;font-weight:normal;color:#666;line-height: 12px;">' . $file;
+		echo '<br />line no: ' . $line . '</span>';
 		$result = ob_get_clean();
 		if ( $die ) {
 			die( $result );
