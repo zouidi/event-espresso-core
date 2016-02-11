@@ -27,6 +27,7 @@ class GatewayResponse extends ForwardedModuleResponse {
 	 */
 	public function __construct(
 	) {
+		// plz see the ForwardedModuleResponse::$dataMap description for details regarding this
 		$this->setDataMap(
 			array(
 				'session_id'                 => array( 'sanitize_text_field' ),
@@ -41,6 +42,9 @@ class GatewayResponse extends ForwardedModuleResponse {
 
 
 	/**
+	 * overrides the parent valid() method which merely checks that the data array is not empty,
+	 * but we want to ensure that these critical parameters are set before forwarding this object
+	 *
 	 * @return bool
 	 */
 	public function valid() {
