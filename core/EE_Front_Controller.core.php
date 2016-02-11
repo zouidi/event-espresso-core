@@ -32,11 +32,9 @@ final class EE_Front_Controller {
 	private static $_instance = NULL;
 
 	/**
-	 * 	$_template_path
-	 *	@var 	string		$_template_path
-	 * 	@access 	public
+	 * @var    string $_template_path
 	 */
-	private $_template_path = NULL;
+	private $_template_path = '';
 
 	/**
 	 * 	$_template
@@ -327,21 +325,9 @@ final class EE_Front_Controller {
 			$Module_Request_Router = EE_Registry::instance()->load_core( 'Module_Request_Router' );
 			// verify object
 			if ( $Module_Request_Router instanceof EE_Module_Request_Router ) {
-				// cycle thru module routes
-				while ( $route = $Module_Request_Router->get_route( $WP_Query )) {
-					// determine module and method for route
-					$module = $Module_Request_Router->resolve_route( $route[0], $route[1] );
-					if( $module instanceof EED_Module ) {
-						// get registered view for route
-						$this->_template_path = $Module_Request_Router->get_view( $route );
-						// grab module name
-						$module_name = $module->module_name();
-						// map the module to the module objects
-						EE_Registry::instance()->modules->{$module_name} = $module;
-					}
-				}
+				// get registered module view for request defined route
+				$this->_template_path = $Module_Request_Router->resolve_module_routes_and_return_view( $WP_Query );
 			}
-			//d( EE_Registry::instance()->modules );
 		}
 	}
 
