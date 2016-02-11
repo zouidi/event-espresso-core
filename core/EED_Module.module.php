@@ -24,6 +24,24 @@
 abstract class EED_Module extends EE_Configurable {
 
 	/**
+	 * for use in ForwardedModuleResponse objects to indicate
+	 * that the response DTO is NOT valid and should NOT be forwarded
+	 *
+	 * @see EED_Module::get_forward_class_constants()
+	 */
+	const no_forward      = 0;
+
+	/**
+	 * for use in ForwardedModuleResponse objects to indicate
+	 * that the response DTO is valid and can be forwarded
+	 *
+	 * @see EED_Module::get_forward_class_constants()
+	 */
+	const process_forward = 1;
+
+
+
+	/**
 	 * 	instance of the EED_Module object
 	 * 	@access 	protected
 	 *	@var 	EED_Module $_instance
@@ -114,6 +132,21 @@ abstract class EED_Module extends EE_Configurable {
 	 */
 	public function module_name() {
 		return get_class( $this );
+	}
+
+
+
+	/**
+	 * get_forward_constants
+	 *
+	 * @access    public
+	 * @return    array
+	 */
+	public static function get_forward_class_constants() {
+		return array(
+			EED_Module::no_forward,
+			EED_Module::process_forward
+		);
 	}
 
 
