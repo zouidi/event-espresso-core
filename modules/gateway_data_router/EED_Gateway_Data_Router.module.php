@@ -82,7 +82,26 @@ class EED_Gateway_Data_Router extends EED_Module {
 
 
 	public function receive_ipn() {
-
+		if ( EE_Registry::instance()->REQ->is_set('e_reg_url_link' )){
+			$current_txn = EE_Registry::instance()->load_model( 'Transaction' )->get_transaction_from_reg_url_link();
+		} else {
+			$current_txn = null;
+		}
+		//EE_Registry::instance()->load_helper( 'Debug_Tools' );
+		//EEH_Debug_Tools::log( __CLASS__, __FUNCTION__, __LINE__, array( $current_txn ), true, 	'EE_Transaction: ' . $current_txn->ID() );
+		$payment_method_slug = EE_Registry::instance()->REQ->get( 'ee_payment_method', NULL );
+		if( $payment_method_slug ) {
+			$payment_method = EEM_Payment_Method::instance()->get_one_by_slug( $payment_method_slug );
+		}else{
+			$payment_method = null;
+		}
+		/** @type EE_Payment_Processor $payment_processor */
+		$payment_processor = EE_Registry::instance()->load_core('Payment_Processor');
+		$payment_processor->process_ipn( $_REQUEST, $current_txn, $payment_method );
+		//allow gateways to add a filter to stop rendering the page
+		if( apply_filters( 'FHEE__EES_Espresso_Txn_Page__run__exit', FALSE ) ){
+			exit;
+		}
 	}
 
 
