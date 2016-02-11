@@ -32,10 +32,15 @@ final class EE_Module_Request_Router {
 	private static $_previous_routes = array();
 
 	/**
-	 * 	@var 	WP_Query	$WP_Query
-	 *  @access 	public
+	 * 	@var EventEspresso\modules\ForwardedModuleResponse $forwarded_module_response
 	 */
-	public $WP_Query = NULL;
+	protected $forwarded_module_response = null;
+
+	/**
+	 * @var    WP_Query $WP_Query
+	 * @access    public
+	 */
+	public $WP_Query = null;
 
 
 
@@ -51,33 +56,67 @@ final class EE_Module_Request_Router {
 
 
 	/**
-	 *    get_route
+	 * resolve_module_routes_and_return_view
 	 *
-	 *    on the first call  to this method, it checks the EE_Request_Handler for a "route"
-	 *    on subsequent calls to this method, instead of checking the EE_Request_Handler for a route,
-	 *    it checks the previous routes array, and checks if the last called route has any forwarding routes registered for it
+	 * cycles thru all registered routes trying to find a match for the current request,
+	 * in order to ultimately return a template path
 	 *
 	 * @access    public
 	 * @param WP_Query $WP_Query
-	 * @return    string | NULL
+	 * @return    string
 	 */
-	public function get_route( WP_Query $WP_Query ) {
+	public function resolve_module_routes_and_return_view( WP_Query $WP_Query ) {
 		$this->WP_Query = $WP_Query;
+		$status = EED_Module::no_forward;
+		// cycle thru module routes
+		while ( $route = $this->get_route( $status ) ) {
+			// determine module and method for route
+			$this->forwarded_module_response = $this->resolve_route( $route[ 0 ], $route[ 1 ] );
+			if ( $this->forwarded_module_response instanceof EventEspresso\modules\ForwardedModuleResponse ) {
+				$status = $this->forwarded_module_response->status();
+			} else {
+				$status = EED_Module::no_forward;
+				$this->forwarded_module_response = null;
+			}
+			// get registered view for route
+			$template_path = $this->get_view( $route, $status );
+			if ( ! empty( $template_path ) ) {
+				return $template_path;
+			}
+		}
+		return '';
+	}
+
+
+
+	/**
+	 *    get_route
+	 *
+	 * on the first call  to this method, it checks the EE_Request_Handler for a "route"
+	 * on subsequent calls to this method, instead of checking the EE_Request_Handler for a route,
+	 * it checks the previous routes array, and checks if the last called route has any forwarding routes registered for it
+	 *
+	 * @access public
+	 * @param  int $status
+	 * @return NULL|string
+	 * @throws \EE_Error
+	 */
+	public function get_route( $status ) {
+		$current_route = null;
 		// assume this if first route being called
 		$previous_route = FALSE;
 		// but is it really ???
 		if ( ! empty( self::$_previous_routes )) {
 			// get last run route
-			$previous_routes = array_values( self::$_previous_routes );
-			$previous_route = array_pop( $previous_routes );
+			$previous_route = end( self::$_previous_routes );
 		}
 		//  has another route already been run ?
 		if ( $previous_route ) {
 			// check if  forwarding has been set
-			$current_route = $this->get_forward( $previous_route );
+			$current_route = $this->get_forward( $previous_route, $status );
 			try {
 				//check for recursive forwarding
-				if ( isset( self::$_previous_routes[ $current_route ] )) {
+				if ( isset( $current_route[1], self::$_previous_routes[ $current_route[ 1 ] ] )) {
 					throw new EE_Error(
 						sprintf(
 							__('An error occurred. The %s route has already been called, and therefore can not be forwarded to, because an infinite loop would be created and break the interweb.','event_espresso'),
@@ -90,26 +129,22 @@ final class EE_Module_Request_Router {
 				return NULL;
 			}
 		} else {
-			// first route called
-			$current_route = NULL;
 			// grab all routes
 			$routes = EE_Registry::instance()->CFG->get_routes();
 			//d( $routes );
 			foreach( $routes as $key => $route ) {
 				// check request for module route
 				if ( EE_Registry::instance()->REQ->is_set( $key )) {
-					//echo '<b style="color:#2EA2CC;">key : <span style="color:#E76700">' . $key . '</span></b><br />';
 					$current_route = sanitize_text_field( EE_Registry::instance()->REQ->get( $key ));
 					if ( $current_route ) {
 						$current_route = array( $key, $current_route );
-						//echo '<b style="color:#2EA2CC;">current_route : <span style="color:#E76700">' . $current_route . '</span></b><br />';
 						break;
 					}
 				}
 			}
 		}
 		// sorry, but I can't read what you route !
-		if ( empty( $current_route )) {
+		if ( empty( $current_route ) || ! isset( $current_route[ 0 ], $current_route[ 1 ] ) ) {
 			return NULL;
 		}
 		//add route to previous routes array
@@ -132,7 +167,6 @@ final class EE_Module_Request_Router {
 	public function resolve_route( $key, $current_route ) {
 		// get module method that route has been mapped to
 		$module_method = EE_Config::get_route( $current_route, $key );
-		//EEH_Debug_Tools::printr( $module_method, '$module_method  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span>', 'auto' );
 		// verify result was returned
 		if ( empty( $module_method )) {
 			$msg = sprintf( __( 'The requested route %s could not be mapped to any registered modules.', 'event_espresso' ), $current_route );
@@ -191,15 +225,17 @@ final class EE_Module_Request_Router {
 	}
 
 
+
 	/**
-	 *    _module_router
+	 * _module_router
 	 *
-	 *    this method instantiates modules and calls the method that was defined when the route was registered
+	 * this method instantiates modules and calls the method that was defined when the route was registered
 	 *
-	 * @access    private
-	 * @param   string  $module_name
-	 * @param   string  $method
-	 * @return    EED_Module | NULL
+	 * @access private
+	 * @param  string $module_name
+	 * @param  string $method
+	 * @return mixed
+	 * @throws \EE_Error
 	 */
 	private function _module_router( $module_name, $method ) {
 		// instantiate module class
@@ -217,40 +253,58 @@ final class EE_Module_Request_Router {
 			);
 			return null;
 		}
+		// grab module name
+		$module_name = $module->module_name();
+		// map the module to the module objects
+		EE_Registry::instance()->modules->{$module_name} = $module;
 		// and call whatever action the route was for
 		try {
-			call_user_func( array( $module, $method ), $this->WP_Query );
+			$args = $method === 'run' ? $this->WP_Query : $this->forwarded_module_response;
+			return call_user_func( array( $module, $method ), $args );
 		} catch ( EE_Error $e ) {
 			$e->get_error();
-			return NULL;
+			return null;
 		}
-		return $module;
 	}
 
 
 
 	/**
-	 *    get_forward
+	 * get_forward
 	 *
-	 * @access    public
-	 * @param $current_route
-	 * @return    string
+	 * @access public
+	 * @param  array $current_route
+	 * @param  int $status
+	 * @return string
 	 */
-	public function get_forward( $current_route ) {
-		return EE_Config::get_forward( $current_route );
+	public function get_forward( array $current_route, $status ) {
+		$route = null;
+		$key = 'ee';
+		if ( is_array( $current_route ) ) {
+			$key = isset( $current_route[ 0 ] ) ? $current_route[ 0 ] : $key;
+			$route = isset( $current_route[ 1 ] ) ? $current_route[ 1 ] : $route;
+		}
+		return EE_Config::get_forward( $route, $status, $key );
 	}
 
 
 
 	/**
-	 *    get_view
+	 * get_view
 	 *
-	 * @access    public
-	 * @param $current_route
-	 * @return    string
+	 * @access public
+	 * @param  array $current_route
+	 * @param  int   $status
+	 * @return string
 	 */
-	public function get_view( $current_route ) {
-		return EE_Config::get_view( $current_route );
+	public function get_view( array $current_route, $status ) {
+		$route = null;
+		$key = 'ee';
+		if ( is_array( $current_route ) ) {
+			$key = isset( $current_route[ 0 ] ) ? $current_route[ 0 ] : $key;
+			$route = isset( $current_route[ 1 ] ) ? $current_route[ 1 ] : $route;
+		}
+		return EE_Config::get_view( $route, $status, $key );
 	}
 
 
