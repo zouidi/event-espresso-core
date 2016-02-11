@@ -1375,11 +1375,11 @@ final class EE_Config {
 			if ( isset( EE_Config::$_module_forward_map[ $key ][ $route ][ $status ] )) {
 				$forward = EE_Config::$_module_forward_map[ $key ][ $route ][ $status ];
 			} else {
-				$forward = EE_Config::$_module_forward_map[ $key ][ $route ];
+				$forward = null;
 			}
 			return apply_filters( 'FHEE__EE_Config__get_forward', $forward, $route, $status );
 		}
-		return NULL;
+		return null;
 	}
 
 
