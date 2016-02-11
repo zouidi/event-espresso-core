@@ -72,6 +72,12 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 */
 	public static function set_hooks() {
 		EED_Single_Page_Checkout::set_definitions();
+		EE_Config::register_route(
+			'process_gateway_response',
+			'EED_Single_Page_Checkout',
+			'process_gateway_response',
+			'spco'
+		);
 	}
 
 
@@ -100,6 +106,24 @@ class EED_Single_Page_Checkout  extends EED_Module {
 		add_action( 'wp_ajax_nopriv_display_spco_reg_step', array( 'EED_Single_Page_Checkout', 'display_reg_step' ));
 		add_action( 'wp_ajax_update_reg_step', array( 'EED_Single_Page_Checkout', 'update_reg_step' ));
 		add_action( 'wp_ajax_nopriv_update_reg_step', array( 'EED_Single_Page_Checkout', 'update_reg_step' ));
+	}
+
+
+
+	/**
+	 * process_gateway_response
+	 *
+	 * @param \EventEspresso\modules\gateway_data_router\GatewayResponse $gateway_response
+	 */
+	public function process_gateway_response(
+		EventEspresso\modules\gateway_data_router\GatewayResponse $gateway_response = null
+	) {
+		EE_Registry::instance()->REQ->set( 'step', 'payment_options' );
+		EE_Registry::instance()->REQ->set( 'action', 'process_gateway_response' );
+		EE_Registry::instance()->REQ->set( 'selected_method_of_payment', $gateway_response->get('selected_method_of_payment') );
+		EE_Registry::instance()->REQ->set( 'spco_txn', $gateway_response->get('transaction_id') );
+		EED_Single_Page_Checkout::instance()->load_reg_steps();
+		EED_Single_Page_Checkout::instance()->_initialize();
 	}
 
 
