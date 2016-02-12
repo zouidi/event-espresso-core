@@ -1467,11 +1467,8 @@ class EE_SPCO_Reg_Step_Payment_Options extends EE_SPCO_Reg_Step {
 		switch ( $payment_method->type_obj()->payment_occurs() ) {
 
 			case EE_PMT_Base::offsite :
-				$return_url = add_query_arg(
-					//ee_gateway_response=receive
-					array( 'ee_gateway_response' => 'receive' ),
-					site_url()
-				);
+				// ee_gateway_response=user_return
+				$return_url = \EED_Gateway_Data_Router::get_static_return_url();
 				break;
 
 			case EE_PMT_Base::onsite :
