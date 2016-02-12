@@ -37,15 +37,15 @@ class EED_Gateway_Data_Router extends EED_Module {
 		require_once( plugin_dir_path(__FILE__ ) . DS . 'GatewayResponse.php' );
 		// route requests to domain.com/?ee_gateway_response=receive_ipn  to  EED_Gateway_Data_Router::receive_ipn()
 		EE_Config::register_route( 'receive_ipn', 'EED_Gateway_Data_Router', 'receive_ipn', 'ee_gateway_response' );
-		// route requests to domain.com/?ee_gateway_response=receive  to  EED_Gateway_Data_Router::receive_gateway_response()
+		// route requests to domain.com/?ee_gateway_response=user_return  to  EED_Gateway_Data_Router::receive_gateway_response()
 		EE_Config::register_route(
-			'receive',                  // << route param "pretty" value
-			'EED_Gateway_Data_Router',  // this class
-			'receive_gateway_response', // method to route request to
-			'ee_gateway_response'       // << custom route key
+			'user_return',                      // << route param "pretty" value
+			'EED_Gateway_Data_Router',          // this class
+			'process_user_return_from_gateway', // method to route request to
+			'ee_gateway_response'               // << custom route key
 		);
 		EE_Config::register_forward(
-			'receive',                      // << FROM: route param "pretty" value - must match existing route
+			'user_return',                  // << FROM: route param "pretty" value - must match existing route
 			EED_Module::process_forward,    // << STATUS : If the "FROM: route param" listed immediately above this,
 											// returns this value, then forward to the "TO: route" in the array below
 			array(
@@ -83,7 +83,9 @@ class EED_Gateway_Data_Router extends EED_Module {
 
 	public function receive_ipn() {
 		if ( EE_Registry::instance()->REQ->is_set('e_reg_url_link' )){
-			$current_txn = EE_Registry::instance()->load_model( 'Transaction' )->get_transaction_from_reg_url_link();
+			/** @type EEM_Transaction $EEM_Transaction */
+			$EEM_Transaction = EE_Registry::instance()->load_model( 'Transaction' );
+			$current_txn = $EEM_Transaction->get_transaction_from_reg_url_link();
 		} else {
 			$current_txn = null;
 		}
@@ -106,7 +108,7 @@ class EED_Gateway_Data_Router extends EED_Module {
 
 
 
-	public function receive_gateway_response() {
+	public function process_user_return_from_gateway() {
 		// create an instance of our DTO (Data Transfer Object)
 		$gateway_response = new \EventEspresso\modules\gateway_data_router\GatewayResponse();
 		// array of parameters we are looking for where keys represent the $_REQUEST key
@@ -159,51 +161,51 @@ class EED_Gateway_Data_Router extends EED_Module {
 		}
 		return $gateway_response;
 	}
-	
+
 	/**
-	 * Gets the URL for IPNs for this paymetn method (or a generic one)
+	 * Gets the URL for IPNs for this payment method (or a generic one)
 	 * @param EE_Payment_Method $pm
 	 * @return string
 	 */
 	public static function get_static_ipn_url_for_payment_method( EE_Payment_Method $pm = null ) {
-		$url = add_query_arg( 
-			array( 
-				'ee_gateway_response' => 'receive_ipn', 
+		$url = add_query_arg(
+			array(
+				'ee_gateway_response' => 'receive_ipn',
 			),
 			site_url()
 		);
 		if( $pm instanceof EE_Payment_Method ) {
-			$url = add_query_arg( 
-				array( 
+			$url = add_query_arg(
+				array(
 					'ee_payment_method' => $pm->slug()
 				),
 				$url
 			);
 		}
-		return $url; 
+		return $url;
 	}
-	
+
 	/**
 	 * Gets the return URL payment methods should use if they can't set it dynamically
 	 * @param EE_Payment_Method $pm
 	 * @return string
 	 */
 	public static function get_static_return_url( EE_Payment_Method $pm = null ) {
-		$url = add_query_arg( 
-			array( 
-				'ee_gateway_response' => 'receive', 
+		$url = add_query_arg(
+			array(
+				'ee_gateway_response' => 'user_return',
 			),
 			site_url()
 		);
 		if( $pm instanceof EE_Payment_Method ) {
-			$url = add_query_arg( 
-				array( 
+			$url = add_query_arg(
+				array(
 					'ee_payment_method' => $pm->slug()
 				),
 				$url
 			);
 		}
-		return $url; 
+		return $url;
 	}
 }
 // End of file EED_Gateway_Data_Router.module.php
