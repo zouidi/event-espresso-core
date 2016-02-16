@@ -98,7 +98,6 @@ class EE_DMS_Core_4_7_0 extends EE_Data_Migration_Script_Base{
 		$table_name='esp_answer';
 		$sql=" ANS_ID INT UNSIGNED NOT NULL AUTO_INCREMENT,
 					REG_ID INT UNSIGNED NOT NULL,
-					QSG_ID INT UNSIGNED NOT NULL,
 					QST_ID INT UNSIGNED NOT NULL,
 					ANS_value TEXT NOT NULL,
 					PRIMARY KEY  (ANS_ID),
