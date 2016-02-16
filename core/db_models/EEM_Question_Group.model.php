@@ -24,8 +24,11 @@
 require_once ( EE_MODELS . 'EEM_Soft_Delete_Base.model.php' );
 require_once( EE_CLASSES . 'EE_Question_Group.class.php');
 class EEM_Question_Group extends EEM_Soft_Delete_Base {
+
 	const system_personal = 1;
 	const system_address = 2;
+	const system_purchase_agent = 3;
+
   	// private instance of the Attendee object
 	protected static $_instance = NULL;
 
