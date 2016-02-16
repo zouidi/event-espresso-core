@@ -73,6 +73,7 @@ class TableDataGenerator {
 	 * @param array  $filepaths
 	 * @param string $namespace
 	 * @param string $subclass_of
+	 * @param mixed  $arguments
 	 * @param array  $exclude
 	 * @return array
 	 */
@@ -101,6 +102,7 @@ class TableDataGenerator {
 				}
 			}
 		}
+		// todo add sorting property to each table data generator class and run array through custom sorting algorithm
 		return $table_data_generators;
 	}
 
