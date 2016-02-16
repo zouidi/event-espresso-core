@@ -46,6 +46,7 @@ class EE_DMS_Core_4_8_0 extends EE_Data_Migration_Script_Base{
 		$this->_migration_stages = array(
 			new EE_DMS_4_8_0_pretax_totals(),
 			new EE_DMS_4_8_0_event_subtotals(),
+			new EE_DMS_4_8_0_answer_question_group(),
 		);
 		parent::__construct();
 	}
@@ -96,6 +97,7 @@ class EE_DMS_Core_4_8_0 extends EE_Data_Migration_Script_Base{
 		$table_name='esp_answer';
 		$sql=" ANS_ID INT UNSIGNED NOT NULL AUTO_INCREMENT,
 					REG_ID INT UNSIGNED NOT NULL,
+					QSG_ID INT UNSIGNED NOT NULL,
 					QST_ID INT UNSIGNED NOT NULL,
 					ANS_value TEXT NOT NULL,
 					PRIMARY KEY  (ANS_ID),
@@ -663,7 +665,7 @@ class EE_DMS_Core_4_8_0 extends EE_Data_Migration_Script_Base{
 	public function migration_page_hooks(){
 
 	}
-	
+
 	/**
 	 * verifies each of the new countries exists that somehow we missed in 4.1
 	 */
