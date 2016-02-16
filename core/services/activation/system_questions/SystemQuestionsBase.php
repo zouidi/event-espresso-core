@@ -27,6 +27,13 @@ abstract class SystemQuestionsBase {
 	 */
 	protected $wp_user_id = 0;
 
+	/**
+	 * the order that the table data should be added
+	 *
+	 * @var int $table_insert_order
+	 */
+	protected $table_insert_order = 0;
+
 
 
 	/**
@@ -36,12 +43,48 @@ abstract class SystemQuestionsBase {
 	 * @throws \Exception
 	 */
 	public function __construct( $wp_user_id ) {
-		$this->wp_user_id = absint( $wp_user_id );
+		$this->setWpUserId( $wp_user_id );
 		if ( empty( $this->wp_user_id ) ) {
 			throw new \Exception(
 				__( 'A valid WP User ID is required in order to generate tables and default data', 'event_espresso' )
 			);
 		}
+	}
+
+
+
+	/**
+	 * @return int
+	 */
+	public function tableInsertOrder() {
+		return $this->table_insert_order;
+	}
+
+
+
+	/**
+	 * @param int $table_insert_order
+	 */
+	public function setTableInsertOrder( $table_insert_order ) {
+		$this->table_insert_order = absint( $table_insert_order );
+	}
+
+
+
+	/**
+	 * @return int
+	 */
+	public function wpUserId() {
+		return $this->wp_user_id;
+	}
+
+
+
+	/**
+	 * @param int $wp_user_id
+	 */
+	public function setWpUserId( $wp_user_id ) {
+		$this->wp_user_id = absint( $wp_user_id );
 	}
 
 
