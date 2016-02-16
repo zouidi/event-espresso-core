@@ -20,6 +20,17 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  */
 class SystemQuestionsPersonal extends SystemQuestionsBase {
 
+
+
+	/**
+	 * @return int
+	 */
+	public function tableInsertOrder() {
+		return 1;
+	}
+
+
+
 	/**
 	 * represents the value for one of the constants on EEM_Question_Group for this System Question Group
 	 *
