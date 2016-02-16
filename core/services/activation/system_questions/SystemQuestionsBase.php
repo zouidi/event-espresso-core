@@ -27,13 +27,6 @@ abstract class SystemQuestionsBase {
 	 */
 	private $wp_user_id = 0;
 
-	/**
-	 * the order that the table data should be added
-	 *
-	 * @var int $table_insert_order
-	 */
-	private $table_insert_order = 0;
-
 
 
 	/**
@@ -49,24 +42,6 @@ abstract class SystemQuestionsBase {
 				__( 'A valid WP User ID is required in order to generate tables and default data', 'event_espresso' )
 			);
 		}
-	}
-
-
-
-	/**
-	 * @return int
-	 */
-	public function tableInsertOrder() {
-		return $this->table_insert_order;
-	}
-
-
-
-	/**
-	 * @param int $table_insert_order
-	 */
-	public function setTableInsertOrder( $table_insert_order ) {
-		$this->table_insert_order = absint( $table_insert_order );
 	}
 
 
@@ -97,6 +72,13 @@ abstract class SystemQuestionsBase {
 	public function getQuestionGroupDataTypes() {
 		return array( '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d' );
 	}
+
+
+
+	/**
+	 * @return int
+	 */
+	abstract public function tableInsertOrder();
 
 
 
