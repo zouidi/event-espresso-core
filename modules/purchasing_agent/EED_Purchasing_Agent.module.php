@@ -21,7 +21,7 @@ class EED_Purchasing_Agent extends EED_Module {
 
 
 	/**
-	 * @type EE_Purchasing_Agent $_purchasing_agent
+	 * @type EventEspresso\modules\purchasing_agent\PurchasingAgentForm $_purchasing_agent
 	 */
 	protected static $_purchasing_agent = null;
 
@@ -31,6 +31,7 @@ class EED_Purchasing_Agent extends EED_Module {
 	 * All frontend hooks.
 	 */
 	public static function set_hooks() {
+		EED_Purchasing_Agent::set_definitions();
 		//hook into spco for styles and scripts.
 		add_action(
 			'AHEE__EED_Single_Page_Checkout__enqueue_styles_and_scripts__attendee_information',
@@ -56,6 +57,7 @@ class EED_Purchasing_Agent extends EED_Module {
 	 * All admin hooks (and ajax)
 	 */
 	public static function set_hooks_admin() {
+		EED_Purchasing_Agent::set_definitions();
 		if ( EE_FRONT_AJAX ) {
 			add_filter(
 				'FHEE__EE_SPCO_Reg_Step_Attendee_Information__generate_reg_form__reg_form',
@@ -69,9 +71,24 @@ class EED_Purchasing_Agent extends EED_Module {
 				10,
 				1
 			);
+			add_filter(
+				'FHEE__Single_Page_Checkout___check_form_submission__request_params',
+				array( 'EED_Purchasing_Agent', 'process_attendee_information' ),
+				1,
+				2
+			);
 		}
 	}
 
+
+
+	/**
+	 * set_definitions
+	 */
+	public static function set_definitions() {
+		define( 'EE_PURCHASING_AGENT_PATH', plugin_dir_path( __FILE__ ) );
+		define( 'EE_PURCHASING_AGENT_URL', plugin_dir_url( __FILE__ ) );
+	}
 
 
 	/**
@@ -87,9 +104,18 @@ class EED_Purchasing_Agent extends EED_Module {
 	 * used to register and enqueue scripts for purchasing agent integration with spco.
 	 */
 	public static function enqueue_scripts_styles() {
+		// add some style
+		wp_register_style(
+			'ee_purchasing_agent',
+			EE_PURCHASING_AGENT_URL . 'ee-purchasing-agent.css',
+			array(),
+			EVENT_ESPRESSO_VERSION
+		);
+		wp_enqueue_style( 'ee_purchasing_agent' );
+		// and make it dance
 		wp_register_script(
 			'ee_purchasing_agent',
-			plugin_dir_url( __FILE__ ) . 'ee-purchasing-agent.js',
+			EE_PURCHASING_AGENT_URL . 'ee-purchasing-agent.js',
 			array( 'single_page_checkout' ),
 			EVENT_ESPRESSO_VERSION,
 			true
@@ -100,13 +126,13 @@ class EED_Purchasing_Agent extends EED_Module {
 
 
 	/**
-	 * @return EE_Purchasing_Agent
+	 * @return EventEspresso\modules\purchasing_agent\PurchasingAgentForm
 	 */
 	protected static function _get_purchasing_agent() {
-		if ( ! EED_Purchasing_Agent::$_purchasing_agent instanceof EE_Purchasing_Agent ) {
-			require( plugin_dir_path( __FILE__ ) . 'EE_Purchasing_Agent.class.php' );
+		if ( ! EED_Purchasing_Agent::$_purchasing_agent instanceof EventEspresso\modules\purchasing_agent\PurchasingAgentForm ) {
+			require( EE_PURCHASING_AGENT_PATH . 'EE_Purchasing_Agent.class.php' );
 			$attendee = EED_Purchasing_Agent::get_attendee_for_user( get_current_user_id() );
-			EED_Purchasing_Agent::$_purchasing_agent = new EE_Purchasing_Agent( $attendee );
+			EED_Purchasing_Agent::$_purchasing_agent = new EventEspresso\modules\purchasing_agent\PurchasingAgentForm( $attendee );
 		}
 		return EED_Purchasing_Agent::$_purchasing_agent;
 	}
