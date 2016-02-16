@@ -3,21 +3,21 @@
 }
 /**
  *
- * EE_DMS_4_7_0_answer_question_group
+ * EE_DMS_4_8_0_answer_question_group
  *
  * @package			Event Espresso
  * @subpackage
  * @author				Brent Christensen
  *
  */
-class EE_DMS_4_7_0_answer_question_group extends EE_Data_Migration_Script_Stage_Table{
+class EE_DMS_4_8_0_answer_question_group extends EE_Data_Migration_Script_Stage_Table{
 
 
 
 	/**
 	 * Just initializes the status of the migration
 	 *
-	 * @return EE_DMS_4_7_0_answer_question_group
+	 * @return EE_DMS_4_8_0_answer_question_group
 	 */
 	public function __construct() {
 		global $wpdb;
@@ -80,4 +80,4 @@ class EE_DMS_4_7_0_answer_question_group extends EE_Data_Migration_Script_Stage_
 
 
 }
-// End of file EE_DMS_4_7_0_answer_question_group.dmsstage.php
+// End of file EE_DMS_4_8_0_answer_question_group.dmsstage.php
