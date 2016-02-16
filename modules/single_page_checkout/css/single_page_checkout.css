@@ -244,6 +244,7 @@
 	margin:2em 0;
 }
 #ee-single-page-checkout-dv label {
+	box-sizing: border-box;
 	display: block;
 }
 #ee-single-page-checkout-dv input:not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=file]) {
@@ -265,7 +266,7 @@
 	top: -1px;
 	width: 13px;
 	height: 13px;
-	padding: 0;
+	padding: 0 0 .5em;
 	margin:0 .5em;
 	vertical-align: middle;
 	*overflow: hidden;
@@ -292,18 +293,23 @@
 
 #ee-single-page-checkout-dv .nano-lbl {
 	width: 3.1%; min-width:60px; max-width:100%;
+	display: inline-block;
 }
 #ee-single-page-checkout-dv .micro-lbl {
 	width: 6.2%; min-width:120px; max-width:100%;
+	display: inline-block;
 }
 #ee-single-page-checkout-dv .tiny-lbl {
 	width: 12.4%; min-width:180px; max-width:100%;
+	display: inline-block;
 }
 #ee-single-page-checkout-dv .small-lbl {
 	width: 24.4%; min-width:240px; max-width:100%;
+	display: inline-block;
 }
 #ee-single-page-checkout-dv .medium-lbl {
 	width: 49%; min-width:360px; max-width:100%;
+	display: inline-block;
 }
 #ee-single-page-checkout-dv .big-lbl {
 	width:99%; min-width:360px; max-width:100%;
@@ -453,4 +459,9 @@
 	border:1px solid #ccc !important;
 	background:#ccc !important;
 	box-shadow:none !important;
+}
+
+div.ee-reg-qstn,
+div.ee-billing-qstn {
+	margin: 0 0 1em;
 }
