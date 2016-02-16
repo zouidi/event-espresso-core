@@ -42,13 +42,15 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 	 * @return void
 	 */
 	protected function loadSystemQuestionTableDataGenerators() {
-		$this->table_data_generators = $this->loadTableDataGenerators(
+		$table_data_generators = $this->loadTableDataGenerators(
 			glob( plugin_dir_path( __FILE__ ) . 'SystemQuestions*.php' ),
 			'EventEspresso\\core\\services\\activation\\system_questions\\',
 			'EventEspresso\\core\\services\\activation\\system_questions\\SystemQuestionsBase',
-			$this->wp_user_id,
+			$this->wpUserId(),
 			array( 'SystemQuestionsBase' )
 		);
+		// todo add sorting property to each SystemQuestions* class and run array through custom sorting algorithm
+		$this->setTableDataGenerators( $table_data_generators );
 	}
 
 
@@ -82,7 +84,7 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 		$table_name = TableDataGenerator::tableNameWithPrefix( 'esp_question_group' );
 		$existing_question_groups = $this->getExistingSystemQuestionGroups( $table_name );
 		$QSG_IDs = array();
-		foreach ( $this->table_data_generators as $classname => $table_data_generator ) {
+		foreach ( $this->tableDataGenerators() as $classname => $table_data_generator ) {
 			if ( $table_data_generator instanceof SystemQuestionsBase ) {
 				$QSG_system = $table_data_generator->getQSGConstant();
 				\EEH_Debug_Tools::printr( $classname, '$classname', __FILE__, __LINE__ );
@@ -114,7 +116,7 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 		$table_name = TableDataGenerator::tableNameWithPrefix( 'esp_question_group' );
 		$existing_question_groups = $this->getExistingSystemQuestionGroups( $table_name );
 		$QSG_IDs = array();
-		foreach ( $this->table_data_generators as $classname => $table_data_generator ) {
+		foreach ( $this->tableDataGenerators() as $classname => $table_data_generator ) {
 			if ( $table_data_generator instanceof SystemQuestionsBase ) {
 				$QSG_system = $table_data_generator->getQSGConstant();
 				if ( in_array( (string)$QSG_system, $existing_question_groups ) ) {
