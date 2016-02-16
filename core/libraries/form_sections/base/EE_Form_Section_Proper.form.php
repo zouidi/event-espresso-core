@@ -237,6 +237,37 @@ class EE_Form_Section_Proper extends EE_Form_Section_Validatable{
 
 
 	/**
+	 * finds the subsection specified by its name. Will drill down recursively through subsections
+	 *
+	 * @param string                 $subsection_to_find
+	 * @param EE_Form_Section_Proper[] $subsections
+	 * @return \EE_Form_Section_Base
+	 */
+	public function find_subsection( $subsection_to_find, $subsections = array() ){
+		// if subsections were not specified then use those from this form
+		$subsections = is_array( $subsections ) && ! empty( $subsections )
+			? $subsections
+			: $this->_subsections;
+		// loop through each subsection
+		foreach( $subsections as $subsection_name => $subsection ){
+			// found a match? then return it
+			if ( $subsection_to_find == $subsection_name ) {
+				return $subsection;
+			}
+			// if this is not a form type that can have subsections, then skip to the next item
+			if ( ! $subsection instanceof EE_Form_Section_Proper ) {
+				continue;
+			}
+			// search through the subsections of this subsection's subsections, la la la SUBSECTIONS!!!
+			return $this->find_subsection( $subsection_to_find, $subsection->subsections() );
+		}
+		// found nuttin
+		return null;
+	}
+
+
+
+	/**
 	 * Gets all the validatable subsections of this form section
 	 * @return EE_Form_Section_Validatable[]
 	 */
@@ -715,8 +746,8 @@ class EE_Form_Section_Proper extends EE_Form_Section_Validatable{
 	 * @param array $inputs_to_exclude values are the input names
 	 * @return void
 	 */
-	public function exclude($inputs_to_exclude = array()){
-		foreach($inputs_to_exclude as $input_to_exclude_name){
+	public function exclude( array $inputs_to_exclude = array() ){
+		foreach( (array)$inputs_to_exclude as $input_to_exclude_name){
 			unset($this->_subsections[$input_to_exclude_name]);
 		}
 	}
