@@ -72,7 +72,6 @@ class SystemQuestionsPersonal extends SystemQuestionsBase {
 	 * @return array
 	 */
 	public function getSystemQuestions(){
-
 		return array(
 			'fname' => array(
 				'QST_display_text'  => __( 'First Name', 'event_espresso' ),
@@ -111,7 +110,6 @@ class SystemQuestionsPersonal extends SystemQuestionsBase {
 				'QST_deleted'       => 0
 			),
 		);
-
 	}
 
 
