@@ -201,10 +201,12 @@ class TableDataGenerator {
 			throw new \Exception(
 				sprintf(
 					__(
-						'An unknown error occurred while inserting data into table "%1$s".',
+						'An unknown error occurred while attempting to insert the following data into table "%1$s".%3$s %2$s',
 						'event_espresso'
 					),
-					$table_name
+					$table_name,
+					print_r( $data, true ),
+					'<br />'
 				)
 			);
 		}
