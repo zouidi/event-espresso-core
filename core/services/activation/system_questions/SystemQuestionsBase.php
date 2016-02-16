@@ -21,11 +21,18 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 abstract class SystemQuestionsBase {
 
 	/**
-	 * WP User ID of the table creator
+	 * WP User ID for the table creator
 	 *
 	 * @var int $wp_user_id
 	 */
 	private $wp_user_id = 0;
+
+	/**
+	 * db table primary key value for this System Question Group
+	 *
+	 * @var int $qsgID
+	 */
+	private $qsgID = 0;
 
 
 
@@ -65,12 +72,41 @@ abstract class SystemQuestionsBase {
 
 
 	/**
+	 * @return int
+	 */
+	public function qsgID() {
+		return $this->qsgID;
+	}
+
+
+
+	/**
+	 * @param int $qsgID
+	 */
+	public function setQsgID( $qsgID ) {
+		$this->qsgID = absint( $qsgID );
+	}
+
+
+
+	/**
 	 * returns an array defining the data types for the esp_question_group table
 	 *
 	 * @return array
 	 */
 	public function getQuestionGroupDataTypes() {
 		return array( '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d' );
+	}
+
+
+
+	/**
+	 * returns an array defining the data types for the esp_question table
+	 *
+	 * @return array
+	 */
+	public function getQuestionDataTypes() {
+		return array( '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%d', '%d' );
 	}
 
 
