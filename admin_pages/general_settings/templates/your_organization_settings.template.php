@@ -2,9 +2,9 @@
 	<?php
 		//we'll only show site-license keys if this is main_site() (which works for both multi-site and single-site wp installations)
 		if ( is_main_site() ) { ?>
-		<h4 class="ee-admin-settings-hdr" style="width:300px;">
+		<h2 class="ee-admin-settings-hdr" style="width:300px;">
 			<?php _e('Your Event Espresso License Key', 'event_espresso'); ?>
-		</h4>
+		</h2>
 
 		<table class="form-table">
 			<tbody>
@@ -17,7 +17,7 @@
 					<td>
 						<input name="site_license_key" id="site_license_key" size="10" class="regular-text" type="text" value="<?php echo $site_license_key; ?>" /><?php echo $site_license_key_verified; ?><br/>
 						<p class="description">
-							<?php _e('Adding a valid Support License Key will enable automatic update notifications and backend updates for Event Espresso Core and any installed addons. If this is a Development or Test site, <strong>DO NOT</strong> enter your Support License Key.'); ?>
+							<?php printf( __('Adding a valid Support License Key will enable automatic update notifications and backend updates for Event Espresso Core and any installed add-ons. If this is a Development or Test site, %sDO NOT%s enter your Support License Key.', 'event_espresso'), '<strong>', '</strong>' ); ?>
 						</p>
 					</td>
 				</tr>
@@ -29,9 +29,9 @@
 
 
 
-	<h4 id="contact_info_h4" class="ee-admin-settings-hdr">
+	<h2 id="contact_info_h4" class="ee-admin-settings-hdr">
 		<?php _e('Contact Information', 'event_espresso'); ?> <?php echo EEH_Template::get_help_tab_link('contact_info_info');?>
-	</h4>
+	</h2>
 
 	<table class="form-table">
 		<tbody>
@@ -132,9 +132,9 @@
 		</tbody>
 	</table>
 
-	<h4 class="ee-admin-settings-hdr">
+	<h2 class="ee-admin-settings-hdr">
 		<?php _e('Company Logo', 'event_espresso'); ?> <?php echo EEH_Template::get_help_tab_link('organization_logo_info');?>
-	</h4>
+	</h2>
 
 	<table class="form-table">
 		<tbody>
@@ -165,7 +165,7 @@
 						?>
 						<p id="default-logo-thumb">
 							<img id="current-image-thumb" src="<?php echo $organization_logo_url ?>" alt="" /><br />
-							<a id='remove-image' href='#' title='<?php _e('Remove Image', 'event_espresso'); ?>' onclick='return false;'>
+							<a id='remove-image' href='#' title='<?php esc_attr_e('Remove Image', 'event_espresso'); ?>' onclick='return false;'>
 								<?php _e('Remove Image', 'event_espresso'); ?>
 							</a>
 						</p>
@@ -178,9 +178,9 @@
 	</table>
 	<br/><br/>
 
-	<h4 class="ee-admin-settings-hdr">
+	<h2 class="ee-admin-settings-hdr">
 		<?php _e('Social Links', 'event_espresso'); ?> <?php echo EEH_Template::get_help_tab_link('social_links_info');?>
-	</h4>
+	</h2>
 	<p class="description"><?php _e('Enter any links to social accounts for your organization here', 'event_espresso'); ?></p>
 
 	<table class="form-table">
@@ -210,7 +210,7 @@
 			<tr>
 				<th>
 					<label for="organization_linkedin">
-						<?php _e('Linkedin', 'event_espresso'); ?>
+						<?php _e('LinkedIn', 'event_espresso'); ?>
 					</label>
 				</th>
 				<td>

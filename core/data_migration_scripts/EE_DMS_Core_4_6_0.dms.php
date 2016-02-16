@@ -105,13 +105,13 @@ class EE_DMS_Core_4_6_0 extends EE_Data_Migration_Script_Base{
 						ATT_ID BIGINT(20) UNSIGNED NOT NULL,
 						ATT_fname VARCHAR(45) NOT NULL,
 						ATT_lname VARCHAR(45) NOT	NULL,
-						ATT_address VARCHAR(45) DEFAULT	NULL,
-						ATT_address2 VARCHAR(45) DEFAULT	NULL,
+						ATT_address VARCHAR(255) DEFAULT	NULL,
+						ATT_address2 VARCHAR(255) DEFAULT	NULL,
 						ATT_city VARCHAR(45) DEFAULT	NULL,
 						STA_ID INT(10) DEFAULT	NULL,
 						CNT_ISO VARCHAR(45) DEFAULT	NULL,
 						ATT_zip VARCHAR(12) DEFAULT	NULL,
-						ATT_email VARCHAR(100) NOT NULL,
+						ATT_email VARCHAR(255) NOT NULL,
 						ATT_phone VARCHAR(45) DEFAULT NULL,
 							PRIMARY KEY  (ATTM_ID),
 								KEY ATT_fname (ATT_fname),
@@ -232,7 +232,7 @@ class EE_DMS_Core_4_6_0 extends EE_Data_Migration_Script_Base{
 				LIN_code VARCHAR(245) NOT NULL DEFAULT '',
 				TXN_ID INT(11) DEFAULT NULL,
 				LIN_name VARCHAR(245) NOT NULL DEFAULT '',
-				LIN_desc VARCHAR(245) DEFAULT NULL,
+				LIN_desc TEXT DEFAULT NULL,
 				LIN_unit_price DECIMAL(10,3) DEFAULT NULL,
 				LIN_percent DECIMAL(10,3) DEFAULT NULL,
 				LIN_is_taxable TINYINT(1) DEFAULT 0,
@@ -408,8 +408,8 @@ class EE_DMS_Core_4_6_0 extends EE_Data_Migration_Script_Base{
 					  REG_session VARCHAR(45) COLLATE utf8_bin NOT NULL,
 					  REG_code VARCHAR(45) COLLATE utf8_bin DEFAULT NULL,
 					  REG_url_link VARCHAR(64) COLLATE utf8_bin DEFAULT NULL,
-					  REG_count TINYINT(4) DEFAULT '1',
-					  REG_group_size TINYINT(4) DEFAULT '1',
+					  REG_count TINYINT UNSIGNED DEFAULT '1',
+					  REG_group_size TINYINT UNSIGNED DEFAULT '1',
 					  REG_att_is_going TINYINT(1) DEFAULT '0',
 					  REG_deleted TINYINT(1) DEFAULT '0',
 					  PRIMARY KEY  (REG_ID),
@@ -439,7 +439,7 @@ class EE_DMS_Core_4_6_0 extends EE_Data_Migration_Script_Base{
 		$table_name = 'esp_state';
 		$sql = "STA_ID smallint(5) UNSIGNED NOT NULL AUTO_INCREMENT,
 					  CNT_ISO VARCHAR(2) COLLATE utf8_bin NOT NULL,
-					  STA_abbrev VARCHAR(6) COLLATE utf8_bin NOT NULL,
+					  STA_abbrev VARCHAR(24) COLLATE utf8_bin NOT NULL,
 					  STA_name VARCHAR(100) COLLATE utf8_bin NOT NULL,
 					  STA_active TINYINT(1) DEFAULT '1',
 					  PRIMARY KEY  (STA_ID)";
@@ -483,8 +483,8 @@ class EE_DMS_Core_4_6_0 extends EE_Data_Migration_Script_Base{
 		$table_name = 'esp_venue_meta';
 		$sql = "VNUM_ID INT(11) NOT NULL AUTO_INCREMENT,
 			VNU_ID BIGINT(20) UNSIGNED NOT NULL DEFAULT 0,
-			VNU_address VARCHAR(100) DEFAULT NULL,
-			VNU_address2 VARCHAR(100) DEFAULT NULL,
+			VNU_address VARCHAR(255) DEFAULT NULL,
+			VNU_address2 VARCHAR(255) DEFAULT NULL,
 			VNU_city VARCHAR(100) DEFAULT NULL,
 			STA_ID INT(11) DEFAULT NULL,
 			CNT_ISO VARCHAR(2) DEFAULT NULL,
@@ -506,7 +506,7 @@ class EE_DMS_Core_4_6_0 extends EE_Data_Migration_Script_Base{
 		$sql = "PRC_ID INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 					  PRT_ID TINYINT(3) UNSIGNED NOT NULL,
 					  PRC_amount DECIMAL(10,3) NOT NULL DEFAULT '0.00',
-					  PRC_name VARCHAR(45) NOT NULL,
+					  PRC_name VARCHAR(245) NOT NULL,
 					  PRC_desc TEXT,
 					  PRC_is_default TINYINT(1) UNSIGNED NOT NULL DEFAULT '1',
 					  PRC_overrides INT(10) UNSIGNED DEFAULT NULL,
@@ -533,7 +533,7 @@ class EE_DMS_Core_4_6_0 extends EE_Data_Migration_Script_Base{
 		$table_name = "esp_ticket";
 		$sql = "TKT_ID INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 					  TTM_ID INT(10) UNSIGNED NOT NULL,
-					  TKT_name VARCHAR(100) NOT NULL DEFAULT '',
+					  TKT_name VARCHAR(245) NOT NULL DEFAULT '',
 					  TKT_description TEXT NOT NULL,
 					  TKT_qty MEDIUMINT(8) DEFAULT NULL,
 					  TKT_sold MEDIUMINT(8) NOT NULL DEFAULT 0,
@@ -609,10 +609,9 @@ class EE_DMS_Core_4_6_0 extends EE_Data_Migration_Script_Base{
 
 			$SQL = "SELECT COUNT( * ) FROM $table_name";
 			$existing_payment_methods = $wpdb->get_var($SQL);
-			if ( ! $existing_payment_methods ) {
-				//make sure we hae payment method records for the following
-				//so admins can record payments for them from the admin page
-				$default_admin_only_payment_methods = array(
+			$default_admin_only_payment_methods = apply_filters( 
+					'FHEE__EEH_Activation__add_default_admin_only_payments__default_admin_only_payment_methods', 
+					array(
 					__("Bank", 'event_espresso')=>  __("Bank Draft", 'event_espresso'),
 					__("Cash", 'event_espresso')=>  __("Cash Delivered Physically", 'event_espresso'),
 					__("Check", 'event_espresso')=>  __("Paper Check", 'event_espresso'),
@@ -621,38 +620,41 @@ class EE_DMS_Core_4_6_0 extends EE_Data_Migration_Script_Base{
 					__("Invoice", 'event_espresso')=>  __("Invoice received with monies included", 'event_espresso'),
 					__("Money Order", 'event_espresso')=>'',
 					__("Paypal", 'event_espresso')=>  __("Paypal eCheck, Invoice, etc", 'event_espresso'),
-				);
+					__('Other', 'event_espresso') => __('Other method of payment', 'event_espresso')
+				) );
+			//make sure we hae payment method records for the following
+			//so admins can record payments for them from the admin page
 
-				foreach($default_admin_only_payment_methods as $nicename => $description){
-					$slug = sanitize_key($nicename);
-				//check that such a payment method exists
-					$exists = $wpdb->get_var($wpdb->prepare("SELECT count(*) FROM $table_name WHERE PMD_slug = %s",$slug));
-					if( ! $exists){
-						$values = array(
-									'PMD_type'=>'Admin_Only',
-									'PMD_name'=>$nicename,
-									'PMD_admin_name'=>$nicename,
-									'PMD_admin_desc'=>$description,
-									'PMD_slug'=>$slug,
-									'PMD_wp_user'=>$user_id,
-									'PMD_scope'=>serialize(array('ADMIN')),
-								);
-						$success = $wpdb->insert(
-								$table_name,
-								$values,
-								array(
-									'%s',//PMD_type
-									'%s',//PMD_name
-									'%s',//PMD_admin_name
-									'%s',//PMD_admin_desc
-									'%s',//PMD_slug
-									'%d',//PMD_wp_user
-									'%s',//PMD_scope
-								)
-								);
-						if( ! $success ){
-							$this->add_error(sprintf(__("Could not insert new admin-only payment method with values %s during migration", "event_espresso"),$this->_json_encode($values)));
-						}
+
+			foreach($default_admin_only_payment_methods as $nicename => $description){
+				$slug = sanitize_key($nicename);
+			//check that such a payment method exists
+				$exists = $wpdb->get_var($wpdb->prepare("SELECT count(*) FROM $table_name WHERE PMD_slug = %s",$slug));
+				if( ! $exists){
+					$values = array(
+								'PMD_type'=>'Admin_Only',
+								'PMD_name'=>$nicename,
+								'PMD_admin_name'=>$nicename,
+								'PMD_admin_desc'=>$description,
+								'PMD_slug'=>$slug,
+								'PMD_wp_user'=>$user_id,
+								'PMD_scope'=>serialize(array('ADMIN')),
+							);
+					$success = $wpdb->insert(
+							$table_name,
+							$values,
+							array(
+								'%s',//PMD_type
+								'%s',//PMD_name
+								'%s',//PMD_admin_name
+								'%s',//PMD_admin_desc
+								'%s',//PMD_slug
+								'%d',//PMD_wp_user
+								'%s',//PMD_scope
+							)
+							);
+					if( ! $success ){
+						$this->add_error(sprintf(__("Could not insert new admin-only payment method with values %s during migration", "event_espresso"),$this->_json_encode($values)));
 					}
 				}
 			}

@@ -107,7 +107,7 @@ class Registration_Form_Question_Groups_Admin_List_Table extends EE_Admin_List_T
 		$system_group = $item->get('QSG_system');
 		$has_questions_with_answers = $item->has_questions_with_answers();
 		$lock_icon = $system_group === 0 && $this->_view == 'trash' && $has_questions_with_answers ? 'ee-lock-icon ee-alternate-color' : 'ee-lock-icon ee-system-lock';
-		return $system_group > 0 || ( $system_group === 0 && $this->_view == 'trash' && $has_questions_with_answers ) || ! EE_Registry::instance()->CAP->current_user_can( 'ee_delete_question_groups', 'espresso_registration_form_trash_question_groups' ) ? '<span class="' . $lock_icon . '"></span>'  . sprintf( '<input type="hidden" name="hdnchk[%1$d]" value="%1$d" />', $item->ID() )  : sprintf( '<input type="checkbox" id="QSG_ID[%1$d]" name="checkbox[%1$d]" value="%1$d" />', $item->ID() );
+		return $system_group > 0 || ( $system_group === 0 && $this->_view == 'trash' && $has_questions_with_answers ) || ! EE_Registry::instance()->CAP->current_user_can( 'ee_delete_question_groups', 'espresso_registration_form_trash_question_groups', $item->ID() ) ? '<span class="' . $lock_icon . '"></span>'  . sprintf( '<input type="hidden" name="hdnchk[%1$d]" value="%1$d" />', $item->ID() )  : sprintf( '<input type="checkbox" id="QSG_ID[%1$d]" name="checkbox[%1$d]" value="%1$d" />', $item->ID() );
 	}
 
 
@@ -116,7 +116,9 @@ class Registration_Form_Question_Groups_Admin_List_Table extends EE_Admin_List_T
 
 
 	public function column_id(EE_Question_Group $item) {
-		return $item->ID();
+		$content = $item->ID();
+		$content .= '  <span class="show-on-mobile-view-only">' .$item->name() . '</span>';
+		return $content;
 	}
 
 
@@ -157,21 +159,21 @@ class Registration_Form_Question_Groups_Admin_List_Table extends EE_Admin_List_T
 
 		if (  EE_Registry::instance()->CAP->current_user_can( 'ee_edit_question_group', 'espresso_registration_form_edit_question_group', $item->ID() ) ) {
 			$actions = array(
-				'edit' => '<a href="' . $edit_link . '" title="' . __('Edit Question Group', 'event_espresso') . '">' . __('Edit', 'event_espresso') . '</a>'
+				'edit' => '<a href="' . $edit_link . '" title="' . esc_attr__('Edit Question Group', 'event_espresso') . '">' . __('Edit', 'event_espresso') . '</a>'
 			);
 		}
 		if ( $item->get('QSG_system') < 1 && $this->_view != 'trash' &&  EE_Registry::instance()->CAP->current_user_can( 'ee_delete_question_group', 'espresso_registration_form_trash_question_group', $item->ID() ) ) {
-			$actions['delete'] = '<a href="' . $trash_link . '" title="' . __('Delete Question Group', 'event_espresso') . '">' . __('Trash', 'event_espresso') . '</a>';
+			$actions['delete'] = '<a href="' . $trash_link . '" title="' . esc_attr__('Delete Question Group', 'event_espresso') . '">' . __('Trash', 'event_espresso') . '</a>';
 		}
 
 		if ( $this->_view == 'trash' ) {
 
 			if (  EE_Registry::instance()->CAP->current_user_can( 'ee_delete_question_group', 'espresso_registration_form_restore_question_group', $item->ID() ) ) {
-				$actions['restore'] = '<a href="' . $restore_link . '" title="' . __('Restore Question Group', 'event_espresso') . '">' . __('Restore', 'event_espresso') . '</a>';
+				$actions['restore'] = '<a href="' . $restore_link . '" title="' . esc_attr__('Restore Question Group', 'event_espresso') . '">' . __('Restore', 'event_espresso') . '</a>';
 			}
 
 			if ( !$item->has_questions_with_answers() &&  EE_Registry::instance()->CAP->current_user_can( 'ee_delete_question_group', 'espresso_registration_form_delete_question_group', $item->ID() ) ) {
-				$actions['delete_permanently'] = '<a href="' . $delete_link . '" title="' . __('Delete Question Group Permanently', 'event_espresso') . '">' . __('Delete Permanently', 'event_espresso') . '</a>';
+				$actions['delete'] = '<a href="' . $delete_link . '" title="' . esc_attr__('Delete Question Group Permanently', 'event_espresso') . '">' . __('Delete Permanently', 'event_espresso') . '</a>';
 			}
 		}
 

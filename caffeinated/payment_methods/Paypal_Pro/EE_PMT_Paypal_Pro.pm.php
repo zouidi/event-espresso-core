@@ -36,6 +36,7 @@ class EE_PMT_Paypal_Pro extends EE_PMT_Base{
 		$this->_gateway = new EEG_Paypal_Pro();
 		$this->_pretty_name = __("Paypal Pro", 'event_espresso');
 		$this->_default_description = __( 'Please provide the following billing information.', 'event_espresso' );
+		$this->_requires_https = true;
 		parent::__construct($pm_instance);
 	}
 
@@ -50,15 +51,22 @@ class EE_PMT_Paypal_Pro extends EE_PMT_Base{
 			'extra_meta_inputs'=>array(
 //				'paypal_email'=>new EE_Email_Input(), not actually used
 				'username'=>new EE_Text_Input(array(
-					'html_label_text'=>  sprintf(__("Paypal API Username %s", "event_espresso"),$this->get_help_tab_link())
+					'html_label_text'=>  sprintf(__("Paypal API Username %s", "event_espresso"),$this->get_help_tab_link()),
+					'required' => true
 				)),
 				'password'=>new EE_Text_Input(array(
-					'html_label_text'=>  sprintf(__("Paypal API Password %s", "event_espresso"),$this->get_help_tab_link())
+					'html_label_text'=>  sprintf(__("Paypal API Password %s", "event_espresso"),$this->get_help_tab_link()),
+					'required' => true
 				)),
 				'signature'=>new EE_Text_Input(array(
-					'html_label_text'=>  sprintf(__("Paypal API Signature %s", "event_espresso"),$this->get_help_tab_link())
+					'html_label_text'=>  sprintf(__("Paypal API Signature %s", "event_espresso"),$this->get_help_tab_link()),
+					'required' => true
 				)),
-				'credit_card_types'=>new EE_Checkbox_Multi_Input($this->card_types_supported(), array( 'html_label_text' => __( 'Card Types Supported', 'event_espresso' ))),
+				'credit_card_types'=>new EE_Checkbox_Multi_Input(
+						$this->card_types_supported(),
+						array(
+							'html_label_text' => __( 'Card Types Supported', 'event_espresso' ),
+							'required' => true )),
 				)
 			)
 		);
@@ -92,14 +100,14 @@ class EE_PMT_Paypal_Pro extends EE_PMT_Base{
 						array_intersect_key( EE_PMT_Paypal_Pro::card_types_supported(), array_flip( $allowed_types )),
 						array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn', 'html_label_text' => __( 'Card Type', 'event_espresso' ))
 					),
-					'exp_month'=>new EE_Month_Input(
-						TRUE, array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )
+					'exp_month'=>new EE_Credit_Card_Month_Input(
+						TRUE, array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn', 'html_label_text' =>  __( 'Expiry Month', 'event_espresso' )  )
 					),
 					'exp_year'=>new EE_Credit_Card_Year_Input(
-						array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn'  )
+						array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn', 'html_label_text' => __( 'Expiry Year', 'event_espresso' )  )
 					),
 					'cvv'=>new EE_CVV_Input(
-						array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )
+						array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn', 'html_label_text' => __( 'CVV', 'event_espresso' ) )
 					),
 				)
 			)
@@ -175,6 +183,7 @@ class EE_PMT_Paypal_Pro extends EE_PMT_Base{
 	protected function _get_billing_values_from_form( $billing_form ){
 		$billing_values = parent::_get_billing_values_from_form( $billing_form );
 		$billing_values[ 'country' ] = $billing_form->get_input_value( 'country' );
+		$billing_values[ 'credit_card_type' ] = $billing_form->get_input_value( 'credit_card_type' );
 		return $billing_values;
 	}
 

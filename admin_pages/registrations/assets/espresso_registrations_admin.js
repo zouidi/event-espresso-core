@@ -4,8 +4,8 @@ jQuery(document).ready(function($) {
 
 	// clear firefox and safari cache
 	$(window).unload( function() {});
-	
-	
+
+
 	$('#reg-admin-attendee-questions-submit').prop( 'disabled', true );
 
 
@@ -21,7 +21,7 @@ jQuery(document).ready(function($) {
 			yearRange: "-80:+20"
 		});
 	}
-	
+
 
 	$('#entries-per-page-slct').change( function() {
 		var per_page = $(this).val();
@@ -29,32 +29,32 @@ jQuery(document).ready(function($) {
 		$('#registrations-overview-frm').submit();
 	});
 
-	
-	$( '.reg-admin-attendee-questions-input-td' ).each(function() {
+
+	$( '.question-group-questions, .reg-admin-attendee-questions-input-td' ).each(function() {//also select deprecated .reg-admin-attendee-questions-input-td
 		$(this).find('input').prop( 'disabled', true );
 		$(this).find('select').prop( 'disabled', true );
 		$(this).find('textarea').prop( 'disabled', true );
 	});
-	
+
 	$('#reg-admin-attendee-questions-frm').on( 'click', '.reg-admin-edit-attendee-question-lnk', function(e) {
 		e.preventDefault();
-		$(this).closest('table').find('.reg-admin-attendee-questions-input-td' ).each(function() {
+		$(this).closest('table').find('td, .reg-admin-attendee-questions-input-td' ).each(function() {//also select deprecated .reg-admin-attendee-questions-input-td
 			$(this).removeClass('disabled-input');
 			$(this).find('input').prop( 'disabled', false ).addClass('editable-input');
 			$(this).find('select').prop( 'disabled', false ).addClass('editable-input');
 			$(this).find('textarea').prop( 'disabled', false ).addClass('editable-input');
 		});
+		$('#reg-admin-attendee-questions-submit').prop( 'disabled', false );
 	});
-	
+
 	$('#reg-admin-attendee-questions-frm').on( 'change', '.editable-input', function(e) {
 		$(this).removeClass('editable-input').addClass('edited-input');
 		var edit_lnk = $(this).closest('table').find('.reg-admin-edit-attendee-question-td' ).html();
 		edit_lnk = '<span class="reminder-spn">' + eei18n.update_att_qstns + '<span><span class="hidden">' + edit_lnk + '<span>';
 		$(this).closest('table').find('.reg-admin-edit-attendee-question-td' ).html( edit_lnk );
-		$('#reg-admin-attendee-questions-submit').prop( 'disabled', false );
 	});
-	
-	
+
+
 
 	/**
 	 * catch the Check-in status triggers
@@ -95,6 +95,7 @@ jQuery(document).ready(function($) {
 							$(setup.where).html(content);
 						} else {
 							$(setup.where).html(resp.notices);
+							$('.espresso-notices').show();
 							thisitem.attr('class', content);
 						}
 					}
@@ -115,6 +116,27 @@ jQuery(document).ready(function($) {
 	} catch(err) {
 		//won't do anything just wanna make sure .validate only runs when the jQuery validate plugin is present
 	}
+
+
+	/** Hide/unhide expired events in event dropdown **/
+	var non_expired_opts = '', full_opts = '';
+	if ( full_opts === '' ) {
+		full_opts = $( '#event_id', '#post-body-content').children();
+		non_expired_opts = $( '#event_id', '#post-body-content' ).children().not( '.ee-expired-event' );
+
+		//on load let's just show non_expired
+		$('#event_id', '#post-body-content').html( non_expired_opts );
+		$('#event_id', '#post-body-content').find( 'option[value=0]').prop('selected',true);
+	}
+	$('#js-ee-hide-expired-events', '#post-body-content').click( function() {
+		if ( $(this).prop('checked') ) {
+			$('#event_id', '#post-body-content').html( non_expired_opts );
+			$('#event_id', '#post-body-content').find( 'option[value=0]').prop('selected',true);
+		} else {
+			$('#event_id', '#post-body-content').html( full_opts );
+			$('#event_id', '#post-body-content').find( 'option[value=0]').prop('selected',true);
+		}
+	});
 });
 
 /**

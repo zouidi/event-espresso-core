@@ -15,7 +15,8 @@
  * @subpackage 	tests
  */
 class EEH_Activation_Test extends EE_UnitTestCase {
-
+	const current_cron_task_name = 'current_one';
+	const expired_cron_task_name = 'expired_one';
 
 
 	/**
@@ -61,6 +62,53 @@ class EEH_Activation_Test extends EE_UnitTestCase {
 		//doublecheck we still don't html in the active messengers array
 		$active_messengers = EEH_MSG_Template::get_active_messengers_in_db();
 		$this->assertFalse( isset( $active_messengers['html'] ) );
+	}
+
+
+
+
+
+	/**
+	 * This tests the generate_default_message_templates method with using the
+	 * FHEE__EE_messenger__get_default_message_types__default_types filter to add a
+	 * bogus message_type string.  No errors should be triggered, and the invalid default mt
+	 * should NOT be added to the active array for the messenger.
+	 *
+	 * @since 4.6
+	 * @group 7595
+	 */
+	public function test_filtered_default_message_types_on_activation() {
+		EE_Registry::instance()->load_helper( 'MSG_Template' );
+		EE_Registry::instance()->load_helper( 'Activation' );
+
+		//let's clear out all active messengers to get an accurate test of initial generation of message templates.
+		global $wpdb;
+		$mtpg_table = $wpdb->prefix . 'esp_message_template_group';
+		$mtp_table = $wpdb->prefix . 'esp_message_template';
+		$evt_mtp_table = $wpdb->prefix . 'esp_event_message_template';
+		$query = "DELETE FROM  $mtpg_table WHERE 'GRP_ID' > 0";
+		$wpdb->query( $query );
+		$query = "DELETE FROM $mtp_table WHERE 'MTP_ID' > 0";
+		$wpdb->query($query);
+		$query = "DELETE FROM $evt_mtp_table WHERE 'EMT_ID' > 0";
+		$wpdb->query( $query );
+		EEH_MSG_Template::update_active_messengers_in_db(array() );
+
+
+		//set a filter for the invalid message type
+		add_filter( 'FHEE__EE_messenger__get_default_message_types__default_types', function( $default_types, $messenger ) {
+			$default_types[] = 'bogus_message_type';
+			return $default_types;
+		}, 10, 2);
+
+		//activate messages... if there's any problems then errors will trigger a fail.
+		EEH_Activation::generate_default_message_templates();
+
+		//all went well so let's make sure the activated system does NOT have our invalid message type string.
+		$active_messengers = EEH_MSG_Template::get_active_messengers_in_db();
+		foreach( $active_messengers as $messenger => $settings ) {
+			$this->assertFalse( isset( $settings['settings'][$messenger . '-message_types']['bogus_message_type'] ), sprintf( 'The %s messenger should not have "bogus_message_type" active on it but it does.', $messenger ) );
+		}
 	}
 
 
@@ -118,5 +166,31 @@ class EEH_Activation_Test extends EE_UnitTestCase {
 		$new_expected_id = reset( $users_created_after_reset );
 		$this->assertEquals( EEH_Activation::get_default_creator_id(), $new_expected_id );
 
+	}
+
+	function test_get_cron_tasks__old() {
+		add_filter( 'FHEE__EEH_Activation__get_cron_tasks', array( $this, 'change_cron_tasks' ) );
+		$old_cron_tasks = EEH_Activation::get_cron_tasks( 'old' );
+		$this->assertArrayHasKey( self::expired_cron_task_name, $old_cron_tasks );
+		$this->assertArrayNotHasKey( self::current_cron_task_name, $old_cron_tasks );
+	}
+	function test_get_cron_tasks__all() {
+		add_filter( 'FHEE__EEH_Activation__get_cron_tasks', array( $this, 'change_cron_tasks' ) );
+		$old_cron_tasks = EEH_Activation::get_cron_tasks( 'all' );
+		$this->assertArrayHasKey( self::expired_cron_task_name, $old_cron_tasks );
+		$this->assertArrayHasKey( self::current_cron_task_name, $old_cron_tasks );
+	}
+	/**
+	 * Makes it so this function can be independent on what the current cron tasks actually are
+	 * (because they'll likely change, whereas some of these functions just want to check that
+	 * we are retrieving cron tasks correctly)
+	 * @param type $old_cron_tasks
+	 * @return array
+	 */
+	function change_cron_tasks( $old_cron_tasks ) {
+		return array(
+			self::current_cron_task_name => 'hourly',
+			self::expired_cron_task_name => EEH_Activation::cron_task_no_longer_in_use
+		);
 	}
 } //end class EEH_Activation_Test

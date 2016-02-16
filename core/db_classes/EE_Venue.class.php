@@ -30,23 +30,28 @@ class EE_Venue extends EE_CPT_Base implements EEI_Address {
 
 	/**
 	 *
-	 * @param array $props_n_values
-	 * @return EE_Venue
+	 * @param array $props_n_values  incoming values
+	 * @param string $timezone  incoming timezone (if not set the timezone set for the website will be
+	 *                          		used.)
+	 * @param array $date_formats  incoming date_formats in an array where the first value is the
+	 *                             		    date_format and the second value is the time format
+	 * @return EE_Attendee
 	 */
-	public static function new_instance( $props_n_values = array() ) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__ );
-		return $has_object ? $has_object : new self( $props_n_values );
+	public static function new_instance( $props_n_values = array(), $timezone = null, $date_formats = array() ) {
+		$has_object = parent::_check_for_object( $props_n_values, __CLASS__, $timezone, $date_formats );
+		return $has_object ? $has_object : new self( $props_n_values, false, $timezone, $date_formats );
 	}
 
 
 
 	/**
-	 *
-	 * @param array $props_n_values
-	 * @return EE_Venue
+	 * @param array $props_n_values  incoming values from the database
+	 * @param string $timezone  incoming timezone as set by the model.  If not set the timezone for
+	 *                          		the website will be used.
+	 * @return EE_Attendee
 	 */
-	public static function new_instance_from_db( $props_n_values = array() ) {
-		return new self( $props_n_values, TRUE );
+	public static function new_instance_from_db( $props_n_values = array(), $timezone = null ) {
+		return new self( $props_n_values, TRUE, $timezone );
 	}
 
 
@@ -146,12 +151,25 @@ class EE_Venue extends EE_CPT_Base implements EEI_Address {
 		return $this->get( 'STA_ID' );
 	}
 
+
+
+	/**
+	 * @return string
+	 */
+	public function state_abbrev() {
+		return $this->state_obj() instanceof EE_State ? $this->state_obj()->abbrev() : __( 'Unknown', 'event_espresso' );
+	}
+
+
+
 	/**
 	 * @return string
 	 */
 	public function state_name() {
 		return $this->state_obj() instanceof EE_State ? $this->state_obj()->name() :  __( 'Unknown', 'event_espresso' );
 	}
+
+
 
 	/**
 	 * Gets the state for this venue
@@ -164,12 +182,30 @@ class EE_Venue extends EE_CPT_Base implements EEI_Address {
 
 
 	/**
+	 * either displays the state abbreviation or the state name, as determined
+	 * by the "FHEE__EEI_Address__state__use_abbreviation" filter.
+	 * defaults to abbreviation
+	 * @return string
+	 */
+	public function state() {
+		if ( apply_filters( 'FHEE__EEI_Address__state__use_abbreviation', true, $this->state_obj() ) ) {
+			return $this->state_abbrev();
+		} else {
+			return $this->state_name();
+		}
+	}
+
+
+
+	/**
 	 * country_ID
 	 * @return string
 	 */
 	function country_ID() {
 		return $this->get( 'CNT_ISO' );
 	}
+
+
 
 	/**
 	 * @return string
@@ -178,6 +214,8 @@ class EE_Venue extends EE_CPT_Base implements EEI_Address {
 		return $this->country_obj() instanceof EE_Country ? $this->country_obj()->name() :  __( 'Unknown', 'event_espresso' );
 	}
 
+
+
 	/**
 	 * Gets the country of this venue
 	 * @return EE_Country
@@ -185,6 +223,23 @@ class EE_Venue extends EE_CPT_Base implements EEI_Address {
 	function country_obj() {
 		return $this->get_first_related( 'Country' );
 	}
+
+
+
+	/**
+	 * either displays the country ISO2 code or the country name, as determined
+	 * by the "FHEE__EEI_Address__country__use_abbreviation" filter.
+	 * defaults to abbreviation
+	 * @return string
+	 */
+	public function country() {
+		if ( apply_filters( 'FHEE__EEI_Address__country__use_abbreviation', true, $this->country_obj() ) ) {
+			return $this->country_ID();
+		} else {
+			return $this->country_name();
+		}
+	}
+
 
 
 	/**
@@ -295,7 +350,7 @@ class EE_Venue extends EE_CPT_Base implements EEI_Address {
 			$query_params = array(
 				array(
 					'status' => 'publish',
-					'Datetime.DTT_EVT_start' => array( '>', current_time( 'mysql' ))
+					'Datetime.DTT_EVT_start' => array( '>',  EEM_Datetime::instance()->current_time_for_query( 'DTT_EVT_start' ) )
 				)
 			);
 		}

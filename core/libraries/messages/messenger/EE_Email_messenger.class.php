@@ -170,7 +170,7 @@ class EE_Email_messenger extends EE_messenger  {
 		$this->_test_settings_fields = array(
 			'to' => array(
 				'input' => 'text',
-				'label' => __('To', 'event_espresso'),
+				'label' => __('Send a test email to', 'event_espresso'),
 				'type' => 'email',
 				'required' => TRUE,
 				'validation' => TRUE,
@@ -327,6 +327,7 @@ class EE_Email_messenger extends EE_messenger  {
 			'declined_registration',
 			'cancelled_registration',
 			'pending_approval',
+			'registration_summary',
 			'payment_reminder',
 			'payment_declined',
 			'payment_refund'
@@ -387,7 +388,7 @@ class EE_Email_messenger extends EE_messenger  {
 		//but wait!  Header's for the from is NOT reliable because some plugins don't respect From: as set in the header.
 		add_filter( 'wp_mail_from',  array( $this, 'set_from_address' ), 100 );
 		add_filter( 'wp_mail_from_name', array( $this, 'set_from_name' ), 100 );
-		return $headers;
+		return apply_filters( 'FHEE__EE_Email_messenger___headers', $headers, $this->_incoming_message_type, $this );
 	}
 
 
@@ -457,7 +458,7 @@ class EE_Email_messenger extends EE_messenger  {
 	/**
 	 * setup body for email
 	 *
-	 * @param bool $preview will etermine whether this is preview template or not.
+	 * @param bool $preview will determine whether this is preview template or not.
 	 * @return string formatted body for email.
 	 */
 	protected function _body( $preview = FALSE ) {
@@ -469,23 +470,25 @@ class EE_Email_messenger extends EE_messenger  {
 			);
 		$body =  $this->_get_main_template( $preview );
 
-		//now if this isn't a preview, let's setup the body so it has inline styles
-		if ( !$preview ) {
-			require_once EE_LIBRARIES . 'messages/messenger/assets/email/CssToInlineStyles.php';
-			$CSS = new CssToInlineStyles( $body );
-			$CSS->setUseInlineStylesBlock();
-			$body = ltrim( $CSS->convert(), ">\n" ); //for some reason the library has a bracket and new line at the beginning.  This takes care of that.
-		} else if ( $preview && defined('DOING_AJAX' ) ) {
-			require_once EE_LIBRARIES . 'messages/messenger/assets/email/CssToInlineStyles.php';
-			$style = file_get_contents( $this->get_variation( $this->_tmp_pack,  $this->_incoming_message_type->name, FALSE, 'main', $this->_variation ) );
-			$CSS = new CssToInlineStyles( utf8_decode($body), $style );
-			$body = ltrim( $CSS->convert(), ">\n" );
+		/**
+		 * This filter allows one to bypass the CSSToInlineStyles tool and leave the body untouched.
+		 *
+		 * @type    bool    $preview    Indicates whether a preview is being generated or not.
+		 * @return  bool    true  indicates to use the inliner, false bypasses it.
+		 */
+		if ( apply_filters( 'FHEE__EE_Email_messenger__apply_CSSInliner ', true, $preview ) ) {
 
-			//let's attempt to fix width's for ajax preview
-			/*$i_width = '/width:[ 0-9%]+;|width:[ 0-9px]+;/';
-			$s_width = '/width="[ 0-9]+"/';
-			$body = preg_replace( $i_width, 'width:100%;', $body );
-			$body = preg_replace( $s_width, 'width=100%', $body );/**/
+			//require CssToInlineStyles library and its dependencies via composer autoloader
+			require_once EE_THIRD_PARTY . 'cssinliner/vendor/autoload.php';
+
+			//now if this isn't a preview, let's setup the body so it has inline styles
+			if ( ! $preview || ( $preview && defined( 'DOING_AJAX' ) ) ) {
+				$style = file_get_contents( $this->get_variation( $this->_tmp_pack, $this->_incoming_message_type->name, FALSE, 'main', $this->_variation ), TRUE );
+				$CSS = new TijsVerkoyen\CssToInlineStyles\CssToInlineStyles( $body, $style );
+				$body = ltrim( $CSS->convert( true ), ">\n" ); //for some reason the library has a bracket and new line at the beginning.  This takes care of that.
+				$body = ltrim( $body, "<?" ); //see https://events.codebasehq.com/projects/event-espresso/tickets/8609
+			}
+
 		}
 		return $body;
 	}

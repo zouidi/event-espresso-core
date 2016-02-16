@@ -114,6 +114,16 @@ abstract class EE_message_type extends EE_Messages_Base {
 	protected $_single_message = FALSE;
 
 
+	/**
+	 * This will hold an array of specific reg_ids that are receiving messages.
+	 * @since 4.7.x
+	 * @var array
+	 */
+	protected $_regs_for_sending = array();
+
+
+
+
 
 	/**
 	 * This holds the data passed to this class from the controller and also the final processed data.
@@ -562,6 +572,7 @@ abstract class EE_message_type extends EE_Messages_Base {
 	 *
 	 * @return void
 	 * @access protected
+	 * @throws EE_Error
 	 */
 	protected function _init_data() {
 
@@ -602,6 +613,7 @@ abstract class EE_message_type extends EE_Messages_Base {
 
 	/**
 	 * processes the data object so we get
+	 * @throws EE_Error
 	 * @return void
 	 */
 	protected function _process_data() {
@@ -677,7 +689,7 @@ abstract class EE_message_type extends EE_Messages_Base {
 			//make sure non admin context does not include the event_author shortcodes
 			if ( $context != 'admin' ) {
 				if( ($key = array_search('event_author', $this->_valid_shortcodes[$context] ) ) !== false) {
-				    unset($this->_valid_shortcodes[$context][$key]);
+					unset($this->_valid_shortcodes[$context][$key]);
 				}
 			}
 		}
@@ -685,11 +697,11 @@ abstract class EE_message_type extends EE_Messages_Base {
 		//make sure admin context does not include the recipient_details shortcodes IF we have admin context hooked in message types might not have that context.
 		if ( !empty( $this->_valid_shortcodes['admin'] ) ) {
 			if( ($key = array_search('recipient_details', $this->_valid_shortcodes['admin'] ) ) !== false) {
-				    unset($this->_valid_shortcodes['admin'][$key]);
+					unset($this->_valid_shortcodes['admin'][$key]);
 				}
 			//make sure admin context does not include the recipient_details shortcodes
 			if( ($key = array_search('recipient_list', $this->_valid_shortcodes['admin'] ) ) !== false) {
-				    unset($this->_valid_shortcodes['admin'][$key]);
+					unset($this->_valid_shortcodes['admin'][$key]);
 				}
 		}
 	}
@@ -769,7 +781,7 @@ abstract class EE_message_type extends EE_Messages_Base {
 
 
 	/**
-	 * Takes care of setting up the addresee object(s) for the registered attendees
+	 * Takes care of setting up the addressee object(s) for the registered attendees
 	 *
 	 * @access protected
 	 * @return array of EE_Addressee objects
@@ -779,14 +791,27 @@ abstract class EE_message_type extends EE_Messages_Base {
 		//we just have to loop through the attendees.  We'll also set the attached events for each attendee.
 		//use to verify unique attendee emails... we don't want to sent multiple copies to the same attendee do we?
 		$already_processed = array();
+
 		foreach ( $this->_data->attendees as $att_id => $details ) {
 			//set the attendee array to blank on each loop;
 			$aee = array();
 
 			if ( isset( $this->_data->reg_obj ) && ( $this->_data->reg_obj->attendee_ID() != $att_id ) && $this->_single_message ) continue;
 
-			if ( in_array( $details['attendee_email'], $already_processed ) )
+			//is $this->_regs_for_sending present?  If so, let's make sure we ONLY generate addressee for registrations in that array.
+			if ( ! empty( $this->_regs_for_sending ) && is_array( $this->_regs_for_sending ) ) {
+				$regs_allowed = array_intersect_key( array_flip( $this->_regs_for_sending ), $details['reg_objs'] );
+				if ( empty( $regs_allowed ) ) {
+					continue;
+				}
+			}
+
+			if (
+				in_array( $details['attendee_email'], $already_processed )
+				&& apply_filters( 'FHEE__EE_message_type___attendee_addressees__prevent_duplicate_email_sends', true, $data, $this )
+			) {
 				continue;
+			}
 
 			$already_processed[] = $details['attendee_email'];
 
@@ -808,7 +833,7 @@ abstract class EE_message_type extends EE_Messages_Base {
 			}
 
 			//note the FIRST reg object in this array is the one we'll use for this attendee as the primary registration for this attendee.
-			$aee['reg_obj'] = array_shift($this->_data->attendees[$att_id]['reg_objs']);
+			$aee['reg_obj'] = reset($this->_data->attendees[$att_id]['reg_objs']);
 
 			$aee['attendees'] = $this->_data->attendees;
 
@@ -831,7 +856,6 @@ abstract class EE_message_type extends EE_Messages_Base {
 	protected function _get_templates() {
 		//defaults
 		$EVT_ID = $mtpg = $global_mtpg = NULL;
-		$templates = array();
 
 		$template_qa = array(
 			'MTP_is_active' => TRUE,
@@ -845,10 +869,13 @@ abstract class EE_message_type extends EE_Messages_Base {
 				$EVT_ID = $event['ID'];
 			}
 		}
-
+		// is there a Group ID in the incoming request?
+		EE_Registry::instance()->load_core( 'Request_Handler' );
+		// if not, set a default value of false
+		$GRP_ID = EE_Registry::instance()->REQ->get( 'GRP_ID', false );
 		//if this is a preview then we just get whatever message group is for the preview and skip this part!
-		if ( $this->_preview && EE_Registry::instance()->REQ->is_set('GRP_ID')  ) {
-			$mtpg = EEM_Message_Template_Group::instance()->get_one_by_ID( EE_Registry::instance()->REQ->get('GRP_ID') );
+		if ( $this->_preview && $GRP_ID ) {
+			$mtpg = EEM_Message_Template_Group::instance()->get_one_by_ID( $GRP_ID );
 		} else {
 			//not a preview or test send so lets continue on our way!
 			//is there an evt_id?  If so let's get that. template.
@@ -863,8 +890,8 @@ abstract class EE_message_type extends EE_Messages_Base {
 			//is there a 'GRP_ID' ? if so let's get that.
 
 			//if global template is NOT an override, and there is a 'GRP_ID' in the request, then we'll assume a specific template has ben requested.
-			if ( EE_Registry::instance()->REQ->is_set('GRP_ID') ) {
-				$mtpg = EEM_Message_Template_Group::instance()->get_one_by_ID( EE_Registry::instance()->REQ->get('GRP_ID') );
+			if ( $GRP_ID ) {
+				$mtpg = EEM_Message_Template_Group::instance()->get_one_by_ID( $GRP_ID );
 			}
 
 
@@ -874,6 +901,12 @@ abstract class EE_message_type extends EE_Messages_Base {
 			$global_mtpg = EEM_Message_Template_Group::instance()->get_one( array( $template_qa ) );
 
 			$mtpg = $mtpg instanceof EE_Message_Template_Group && ! $global_mtpg->get( 'MTP_is_override' ) ? $mtpg : $global_mtpg;
+		}
+
+		if ( ! $mtpg instanceof EE_Message_Template_Group ) {
+			//get out because we can't process anything, there are no message template groups
+			// and thus some sort of bad setup issues.
+			return false;
 		}
 
 		$this->_GRP_ID = $mtpg->ID();
@@ -933,13 +966,19 @@ abstract class EE_message_type extends EE_Messages_Base {
 		if ( ( isset( $this->_templates['to'][$context] ) && empty( $this->_templates['to'][$context] ) ) && !$this->_preview )
 			return false;
 
+		if ( empty( $this->_templates ) ) {
+			//unable to setup any messages because there are no templates.  Some sort of catastrophic setup
+			//issue exists
+			return false;
+		}
+
 		foreach ( $this->_templates as $field => $ctxt ) {
 			//let's setup the valid shortcodes for the incoming context.
 			$valid_shortcodes = $mt_shortcodes[$context];
 			//merge in valid shortcodes for the field.
 			$shortcodes = isset($m_shortcodes[$field]) ? $m_shortcodes[$field] : $valid_shortcodes;
 			if ( isset( $this->_templates[$field][$context] ) ) {
-				$message->$field = $this->_shortcode_replace->parse_message_template($this->_templates[$field][$context], $addressee, $shortcodes, $this, $this->_active_messenger, $context, $this->_GRP_ID );
+				$message->{$field} = $this->_shortcode_replace->parse_message_template($this->_templates[$field][$context], $addressee, $shortcodes, $this, $this->_active_messenger, $context, $this->_GRP_ID );
 			}
 		}
 		return $message;

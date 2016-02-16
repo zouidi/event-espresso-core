@@ -53,13 +53,14 @@ class EEM_Checkin extends EEM_Base {
 				'REG_ID'=>new EE_Foreign_Key_Int_Field('REG_ID', 'Registration Id', false, 0, 'Registration'),
 				'DTT_ID'=>new EE_Foreign_Key_Int_Field('DTT_ID', 'Datetime Id', false, 0, 'Datetime'),
 				'CHK_in'=>new EE_Boolean_Field('CHK_in', 'Whether a person has checked in or checked out', false, true),
-				'CHK_timestamp'=>new EE_Datetime_Field('CHK_timestamp', __('When the row was modified','event_espresso'), false, current_time('timestamp'), $timezone )
+				'CHK_timestamp'=>new EE_Datetime_Field('CHK_timestamp', __('When the row was modified','event_espresso'), false, time(), $timezone )
 			)
 		);
 		$this->_model_relations = array(
 			'Registration'=>new EE_Belongs_To_Relation(),
 			'Datetime'=>new EE_Belongs_To_Relation()
 		);
+		$this->_model_chain_to_wp_user = 'Registration.Event';
 		parent::__construct( $timezone );
 
 	}

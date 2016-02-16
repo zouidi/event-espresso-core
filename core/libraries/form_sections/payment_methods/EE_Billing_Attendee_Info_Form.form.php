@@ -24,16 +24,16 @@ class EE_Billing_Attendee_Info_Form extends EE_Billing_Info_Form{
 	public function __construct( EE_Payment_Method $payment_method, $options_array= array()){
 		$options_array['subsections'] = array_merge(
 			array(
-				'first_name' 	=> new EE_Text_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )),
-				'last_name'		=> new EE_Text_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )),
-				'email'				=> new EE_Email_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )),
-				'address'			=> new EE_Text_Input( array( 'html_label_text'=>  __( 'Address', 'event_espresso'), 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )),
-				'address2'		=> new EE_Text_Input( array( 'html_label_text'=> __( 'Address 2', 'event_espresso'), 'html_class' => 'ee-billing-qstn' )),
-				'city'					=> new EE_Text_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )),
-				'state' 				=> new EE_State_Select_Input( NULL, array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )),
-				'country' 			=> new EE_Country_Select_Input( NULL, array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )),
-				'zip'					=> new EE_Text_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn' )),
-				'phone'			=> new EE_Text_Input( array( 'html_class' => 'ee-billing-qstn' )),
+				'first_name' 	=> new EE_Text_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn ee-billing-qstn-fname', 'html_label_text' => __( 'First Name', 'event_espresso' ) ) ),
+				'last_name'		=> new EE_Text_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn ee-billing-qstn-lname', 'html_label_text' => __( 'Last Name', 'event_espresso' ) ) ),
+				'email'				=> new EE_Email_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn ee-billing-qstn-email', 'html_label_text' => __( 'Email', 'event_espresso' ) ) ),
+				'address'			=> new EE_Text_Input( array( 'html_label_text'=>  __( 'Address', 'event_espresso'), 'required'=>TRUE, 'html_class' => 'ee-billing-qstn ee-billing-qstn-address' )),
+				'address2'		=> new EE_Text_Input( array( 'html_label_text'=> __( 'Address 2', 'event_espresso'), 'html_class' => 'ee-billing-qstn ee-billing-qstn-address2' )),
+				'city'					=> new EE_Text_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn ee-billing-qstn-city', 'html_label_text' => __( 'City', 'event_espresso' ) ) ),
+				'state' 				=> apply_filters( 'FHEE__EE_Billing_Attendee_Info_Form__state_field', new EE_State_Select_Input( NULL, array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn ee-billing-qstn-state', 'html_label_text' => __( 'State', 'event_espresso' ) ) ) ),
+				'country' 			=> apply_filters( 'FHEE__EE_Billing_Attendee_Info_Form__country_field', new EE_Country_Select_Input( NULL, array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn ee-billing-qstn-country', 'html_label_text' => __( 'Country', 'event_espresso' ) ) ) ),
+				'zip'					=> new EE_Text_Input( array( 'required'=>TRUE, 'html_class' => 'ee-billing-qstn ee-billing-qstn-zip', 'html_label_text' => __( 'Zip', 'event_espresso' ) ) ),
+				'phone'			=> new EE_Text_Input( array( 'html_class' => 'ee-billing-qstn ee-billing-qstn-phone', 'html_label_text' => __( 'Phone', 'event_espresso' ) )),
 			),
 			isset( $options_array['subsections'] ) ? $options_array['subsections'] : array()
 		);
@@ -44,25 +44,28 @@ class EE_Billing_Attendee_Info_Form extends EE_Billing_Info_Form{
 
 	/**
 	 * Sets the defaults for the billing form according to the attendee's details
-	 * @param int | \EE_Attendee $attendee
+	 * @param EE_Attendee $attendee
 	 */
 	public function populate_from_attendee( $attendee ){
 		$attendee = EEM_Attendee::instance()->ensure_is_obj($attendee);
 		/** @var $attendee EE_Attendee */
-		$state = $attendee->state_obj();
-		$country = $attendee->country_obj();
-		$this->populate_defaults(array(
-			'first_name'=>$attendee->fname(),
-			'last_name'=>$attendee->lname(),
-			'email'=>$attendee->email(),
-			'address'=>$attendee->address(),
-			'address2'=>$attendee->address2(),
-			'city'=>$attendee->city(),
-			'state'=> $state ? $attendee->state_obj()->name() : '',
-			'country'=> $country ? $attendee->country_obj()->name() : '',
-			'zip'=>$attendee->zip(),
-			'phone'=>$attendee->phone(),
-		));
+		$this->populate_defaults( 
+				apply_filters( 'FHEE__EE_Billing_Attendee_Info_Form__populate_from_attendee',
+					array(
+						'first_name'=>$attendee->fname(),
+						'last_name'=>$attendee->lname(),
+						'email'=>$attendee->email(),
+						'address'=>$attendee->address(),
+						'address2'=>$attendee->address2(),
+						'city'=>$attendee->city(),
+						'state'=> $attendee->state_ID(),
+						'country'=> $attendee->country_ID(),
+						'zip'=>$attendee->zip(),
+						'phone'=>$attendee->phone(),
+					),
+					$attendee )
+				
+				);
 	}
 
 

@@ -26,6 +26,11 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 	 */
 	protected $_html_label_class;
 	/**
+	 * any additional html attributes that you may want to add
+	 * @var string
+	 */
+	protected $_html_other_attributes;
+	/**
 	 * style for teh html label tag
 	 * @var string
 	 */
@@ -137,11 +142,9 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 	 * }
 	 */
 	public function __construct( $input_args = array() ){
+		$input_args = apply_filters( 'FHEE__EE_Form_Input_Base___construct__input_args', $input_args, $this );
 		// the following properties must be cast as arrays
 		$set_as_array = array(
-			'display_strategy',
-			'normalization_strategy',
-			'sensitive_data_removal_strategy',
 			'validation_strategies'
 		);
 		// loop thru incoming options
@@ -154,9 +157,9 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 					// ensure value is an array
 					$value = is_array( $value ) ? $value : array( $value );
 					// and merge with existing values
-					$this->$_key = array_merge( $this->$_key, $value );
+					$this->{$_key} = array_merge( $this->{$_key}, $value );
 				} else {
-					$this->$_key = $value;
+					$this->{$_key} = $value;
 				}
 			}
 		}
@@ -218,6 +221,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 				$this->_html_label_text = ucwords( str_replace("_"," ",$name));
 			}
 		}
+		do_action( 'AHEE__EE_Form_Input_Base___construct_finalize__end', $this, $parent_form_section, $name );
 	}
 
 	 /**
@@ -315,7 +319,30 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 	 * @return void
 	 */
 	protected function _add_validation_strategy( EE_Validation_Strategy_Base $validation_strategy ){
+		$validation_strategy->_construct_finalize( $this );
 		$this->_validation_strategies[ get_class($validation_strategy) ] = $validation_strategy;
+
+	}
+
+	/**
+	 * Adds a new validation strategy onto the form input
+	 * @param EE_Validation_Strategy_Base $validation_strategy
+	 * @return void
+	 */
+	public function add_validation_strategy( EE_Validation_Strategy_Base $validation_strategy ) {
+		$this->_add_validation_strategy( $validation_strategy );
+	}
+
+	/**
+	 * The classname of the validation strategy to remove
+	 * @param string $validation_strategy_classname
+	 */
+	public function remove_validation_strategy( $validation_strategy_classname ) {
+		foreach( $this->_validation_strategies as $key => $validation_strategy ){
+			if( is_subclass_of( $validation_strategy, $validation_strategy_classname ) ){
+				unset( $this->_validation_strategies[ $key ] );
+			}
+		}
 	}
 	/**
 	 * Gets the HTML, JS, and CSS necessary to display this field according
@@ -334,6 +361,25 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 	public function get_html_for_input(){
 		return  $this->_get_display_strategy()->display();
 	}
+
+
+
+	/**
+	 * @return string
+	 */
+	public function html_other_attributes() {
+		return ! empty( $this->_html_other_attributes ) ? ' ' . $this->_html_other_attributes : '';
+	}
+
+
+
+	/**
+	 * @param string $html_other_attributes
+	 */
+	public function set_html_other_attributes( $html_other_attributes ) {
+		$this->_html_other_attributes = $html_other_attributes;
+	}
+
 	/**
 	 * Gets the HTML for displaying the label for this form input
 	 * according to the form section's layout strategy

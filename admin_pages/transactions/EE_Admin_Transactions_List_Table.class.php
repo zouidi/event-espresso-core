@@ -65,13 +65,11 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 			);
 
 		$this->_columns = array(
-			'STS_ID' => '',
 			'TXN_ID' => __( 'ID', 'event_espresso' ),
 			'TXN_timestamp'	=> __( 'Transaction Date', 'event_espresso' ),
 			'TXN_total' => __( 'Total', 'event_espresso' ),
 			'TXN_paid' => __( 'Paid', 'event_espresso' ),
 			'ATT_fname' => __( 'Primary Registrant', 'event_espresso' ),
-			'ATT_email' => __( 'Email Address', 'event_espresso' ),
 			'event_name' => __( 'Event', 'event_espresso' ),
 			'actions' => __( 'Actions', 'event_espresso' )
 		);
@@ -83,7 +81,21 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 			'TXN_timestamp'	=> array( 'TXN_timestamp'=> TRUE ) //true means its already sorted
 		);
 
+		$this->_primary_column = 'TXN_ID';
+
 		$this->_hidden_columns = array();
+	}
+
+
+
+	protected function _get_row_class( $item ) {
+		$class = parent::_get_row_class( $item );
+		//add status class
+		$class .= ' ee-status-strip txn-status-' . $item->status_ID();
+		if ( $this->_has_checkbox_column ) {
+			$class .= ' has-checkbox-column';
+		}
+		return $class;
 	}
 
 
@@ -97,8 +109,8 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 	 */
 	protected function _get_table_filters() {
 		$filters = array();
-		$start_date = isset( $this->_req_data['txn-filter-start-date'] ) ? wp_strip_all_tags( $this->_req_data['txn-filter-start-date'] ) : date( 'D M j, Y', strtotime( '-10 year' ));
-		$end_date = isset( $this->_req_data['txn-filter-end-date'] ) ? wp_strip_all_tags( $this->_req_data['txn-filter-end-date'] ) : date( 'D M j, Y' );
+		$start_date = isset( $this->_req_data['txn-filter-start-date'] ) ? wp_strip_all_tags( $this->_req_data['txn-filter-start-date'] ) : date( 'm/d/Y', strtotime( '-10 year' ));
+		$end_date = isset( $this->_req_data['txn-filter-end-date'] ) ? wp_strip_all_tags( $this->_req_data['txn-filter-end-date'] ) : date( 'm/d/Y' );
 		ob_start();
 		?>
 		<label for="txn-filter-start-date">Display Transactions from </label>
@@ -129,18 +141,31 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 	 */
    function column_TXN_ID( EE_Transaction $item ){
     	$view_lnk_url = EE_Admin_Page::add_query_args_and_nonce( array( 'action'=>'view_transaction', 'TXN_ID'=>$item->ID() ), TXN_ADMIN_URL );
-				return '<a href="' . $view_lnk_url . '" title="Go to Transaction Details">' . $item->ID() . '</a>';
+	   $content = '<a href="' . $view_lnk_url . '" title="' . esc_attr__( 'Go to Transaction Details', 'event_espresso' ) . '">' . $item->ID() . '</a>';
+
+	   //txn timestamp
+	   $content .= '  <span class="show-on-mobile-view-only">' . $this->_get_txn_timestamp( $item ) . '</span>';
+	   return $content;
 	}
 
 
-	/**
-	 * 	column_STS_ID
-	 * @param \EE_Transaction $item
-	 * @return string
-	 */
-	function column_STS_ID( EE_Transaction $item ){
-		return '<span class="ee-status-strip ee-status-strip-td txn-status-' . $item->status_ID() . '"></span>';
+
+	protected function _get_txn_timestamp( EE_Transaction $item ) {
+		//txn timestamp
+		// is TXN less than 2 hours old ?
+		if (
+			( ( time() - EE_Registry::instance()->SSN->lifespan() )
+			< $item->datetime( false, true )
+			)
+		&& ( $item->failed() || $item->is_abandoned() )
+		) {
+			$timestamp = __( 'TXN in progress...', 'event_espresso' );
+	   } else {
+			$timestamp = $item->get_i18n_datetime( 'TXN_timestamp' );
+		}
+		return $timestamp;
 	}
+
 
 
 	/**
@@ -148,9 +173,11 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 	 * @param \EE_Transaction $item
 	 * @return string
 	 */
-	function column_cb( EE_Transaction $item ){
+	function column_cb($item ){
 		return sprintf( '<input type="checkbox" name="%1$s[]" value="%2$s" />', $this->_wp_list_args['singular'],  $item->ID());
 	}
+
+
 
 
 	/**
@@ -160,12 +187,9 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 	 */
 	function column_TXN_timestamp( EE_Transaction $item ){
 		$view_lnk_url = EE_Admin_Page::add_query_args_and_nonce( array( 'action'=>'view_transaction', 'TXN_ID'=>$item->ID() ), TXN_ADMIN_URL );
-		// is TXN less than 2 hours old ?
-		if ((( current_time( 'timestamp' ) - ( 2 * HOUR_IN_SECONDS ) ) < strtotime( $item->datetime() )) && ( $item->failed() || $item->is_abandoned() )) {
-			$txn_date = '<a href="'.$view_lnk_url.'" title="' . __( 'View Transaction Details for TXN #', 'event_espresso' ) . $item->ID() . '">' . __( 'TXN in progress...', 'event_espresso' ) .  '</a>';
-		} else {
-			$txn_date = '<a href="'.$view_lnk_url.'" title="' . __( 'View Transaction Details for TXN #', 'event_espresso' ) . $item->ID() . '">' . $item->datetime() .  '</a>';
-		}
+		$txn_date = '<a href="'.$view_lnk_url.'" title="' . esc_attr__( 'View Transaction Details for TXN #', 'event_espresso' ) . $item->ID() . '">' . $this->_get_txn_timestamp( $item ) . '</a>';
+		//status
+		$txn_date .= '<br><span class="ee-status-text-small">' . EEH_Template::pretty_status( $item->status_ID(), false, 'sentence' ) . '</span>';
 		return $txn_date;
 	}
 
@@ -177,11 +201,10 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 	 */
 	function column_TXN_total( EE_Transaction $item ){
 		if ( $item->get('TXN_total') > 0 ) {
-			return '<span class="txn-pad-rght">' . $item->get_pretty('TXN_total') . '</span>';
+			return '<span class="txn-pad-rght">' . apply_filters( 'FHEE__EE_Admin_Transactions_List_Table__column_TXN_total__TXN_total', $item->get_pretty('TXN_total'), $item ) . '</span>';
 		} else {
 			return '<span class="txn-overview-free-event-spn">' . __( 'free', 'event_espresso' ) . '</span>';
 		}
-
 	}
 
 
@@ -211,8 +234,14 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 			$transaction_paid = 0;
 		}
 
-		return '<span class="' . $span_class . ' txn-pad-rght">' . $transaction_paid !== 0 ? $item->get_pretty('TXN_paid') : $transaction_paid . '</span>';
+		$payment_method = $item->payment_method();
+		$payment_method_name = $payment_method instanceof EE_Payment_Method ? $payment_method->admin_name() : __( 'Unknown', 'event_espresso' );
 
+		$content = '<span class="' . $span_class . ' txn-pad-rght">' . $transaction_paid !== 0 ? $item->get_pretty('TXN_paid') : $transaction_paid . '</span>';
+		if ( $transaction_paid > 0 ) {
+			$content .= '<br><span class="ee-status-text-small">' . sprintf( __( '...via %s', 'event_espresso' ), $payment_method_name ) . '</span>';
+		}
+		return $content;
 	}
 
 
@@ -226,7 +255,9 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 		$attendee = $primary_reg->get_first_related('Attendee');
 		if ( $attendee instanceof EE_Attendee ) {
 			$edit_lnk_url = EE_Admin_Page::add_query_args_and_nonce( array( 'action'=>'view_registration', '_REG_ID'=>$primary_reg->ID() ), REG_ADMIN_URL );
-			return EE_Registry::instance()->CAP->current_user_can( 'ee_read_registration', 'espresso_registrations_view_registration', $primary_reg->ID() ) ? '<a href="'.$edit_lnk_url.'" title="' . __( 'View Registration Details', 'event_espresso' ) . '">' . $attendee->full_name() . '</a>' : $attendee->full_name();
+			$content = EE_Registry::instance()->CAP->current_user_can( 'ee_read_registration', 'espresso_registrations_view_registration', $primary_reg->ID() ) ? '<a href="'.$edit_lnk_url.'" title="' . esc_attr__( 'View Registration Details', 'event_espresso' ) . '">' . $attendee->full_name() . '</a>' : $attendee->full_name();
+			$content .= '<br>' . $attendee->email();
+			return $content;
 		}
 		return $item->failed() || $item->is_abandoned() ? __('no contact record.', 'event_espresso') : __('No contact record, because the transaction was abandoned or the registration process failed.', 'event_espresso');
 	}
@@ -262,10 +293,10 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 			//filter this view by transactions for this event
 			$txn_by_event_lnk = EE_Admin_Page::add_query_args_and_nonce( array( 'action' => 'default', 'EVT_ID' => $event->ID() ) );
 			if ( EE_Registry::instance()->CAP->current_user_can( 'ee_edit_event', 'espresso_events_edit', $event->ID() ) ) {
-				$actions['filter_by_event'] = '<a href="' . $txn_by_event_lnk . '" title="' . __('Filter transactions by this event', 'event_espresso') . '">' . __('View Transactions for this event', 'event_espresso') . '</a>';
+				$actions['filter_by_event'] = '<a href="' . $txn_by_event_lnk . '" title="' . esc_attr__('Filter transactions by this event', 'event_espresso') . '">' . __('View Transactions for this event', 'event_espresso') . '</a>';
 			}
 
-			return sprintf('%1$s %2$s', EE_Registry::instance()->CAP->current_user_can( 'ee_edit_event', 'espresso_events_edit', $event->ID() ) ? '<a href="' . $edit_event_url . '" title="' . sprintf( __( 'Edit Event: %s', 'event_espresso' ), $event->get('EVT_name') ) .'">' .  wp_trim_words( $event_name, 30, '...' ) . '</a>' : wp_trim_words( $event_name, 30, '...' ), $this->row_actions($actions) );
+			return sprintf('%1$s %2$s', EE_Registry::instance()->CAP->current_user_can( 'ee_edit_event', 'espresso_events_edit', $event->ID() ) ? '<a href="' . $edit_event_url . '" title="' . sprintf( esc_attr__( 'Edit Event: %s', 'event_espresso' ), $event->get('EVT_name') ) .'">' .  wp_trim_words( $event_name, 30, '...' ) . '</a>' : wp_trim_words( $event_name, 30, '...' ), $this->row_actions($actions) );
 		} else {
 			return __('The event associated with this transaction via the primary registration cannot be retrieved.', 'event_espresso');
 		}
@@ -293,7 +324,7 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 		//Build row actions
 		$view_lnk = '
 			<li>
-				<a href="'.$view_lnk_url.'" title="' . __( 'View Transaction Details', 'event_espresso' ) . '" class="tiny-text">
+				<a href="'.$view_lnk_url.'" title="' . esc_attr__( 'View Transaction Details', 'event_espresso' ) . '" class="tiny-text">
 					<span class="dashicons dashicons-cart"></span>
 				</a>
 			</li>';
@@ -303,7 +334,7 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 	if ( $attendee instanceof EE_Attendee && EEH_MSG_Template::is_mt_active( 'invoice' ) ) {
 		$dl_invoice_lnk = '
 		<li>
-			<a title="' . __( 'View Transaction Invoice', 'event_espresso' ) . '" target="_blank" href="'.$dl_invoice_lnk_url.'" class="tiny-text">
+			<a title="' . esc_attr__( 'View Transaction Invoice', 'event_espresso' ) . '" target="_blank" href="'.$dl_invoice_lnk_url.'" class="tiny-text">
 				<span class="dashicons dashicons-media-spreadsheet ee-icon-size-18"></span>
 			</a>
 		</li>';
@@ -315,7 +346,7 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 	if ( $attendee instanceof EE_Attendee && EEH_MSG_Template::is_mt_active( 'receipt' ) ) {
 		$dl_receipt_lnk = '
 		<li>
-			<a title="' . __( 'View Transaction Receipt', 'event_espresso' ) . '" target="_blank" href="'.$dl_receipt_lnk_url.'" class="tiny-text">
+			<a title="' . esc_attr__( 'View Transaction Receipt', 'event_espresso' ) . '" target="_blank" href="'.$dl_receipt_lnk_url.'" class="tiny-text">
 				<span class="dashicons dashicons-media-default ee-icon-size-18"></span>
 			</a>
 		</li>';
@@ -327,7 +358,7 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
       		if ( EEH_MSG_Template::is_mt_active( 'payment_reminder' ) ) {
 		$send_pay_lnk = $attendee instanceof EE_Attendee && EE_Registry::instance()->CAP->current_user_can( 'ee_send_message', 'espresso_transactions_send_payment_reminder' ) ? '
 			<li>
-				<a href="'.$send_pay_lnk_url.'" title="' . __( 'Send Payment Reminder', 'event_espresso' ) . '" class="tiny-text">
+				<a href="'.$send_pay_lnk_url.'" title="' . esc_attr__( 'Send Payment Reminder', 'event_espresso' ) . '" class="tiny-text">
 					<span class="dashicons dashicons-email-alt"></span>
 				</a>
 			</li>' : '';
@@ -338,7 +369,7 @@ class EE_Admin_Transactions_List_Table extends EE_Admin_List_Table {
 
 		$view_reg_lnk = EE_Registry::instance()->CAP->current_user_can( 'ee_read_registration', 'espresso_registrations_view_registration', $registration->ID() ) ? '
 			<li>
-				<a href="'.$view_reg_lnk_url.'" title="' . __( 'View Registration Details', 'event_espresso' ) . '" class="tiny-text">
+				<a href="'.$view_reg_lnk_url.'" title="' . esc_attr__( 'View Registration Details', 'event_espresso' ) . '" class="tiny-text">
 					<span class="dashicons dashicons-clipboard"></span>
 				</a>
 			</li>' : '';

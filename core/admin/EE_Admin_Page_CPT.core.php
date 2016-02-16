@@ -93,6 +93,11 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 	protected $_autosave_containers = array();
 	protected $_autosave_fields = array();
 
+	/**
+	 * Array mapping from admin actions to their equivalent wp core pages for custom post types. So when a user visits a page for an action, it will appear as if they were visiting the wp core page for that custom post type
+	 * @var array
+	 */
+	protected $_pagenow_map = null;
 
 
 
@@ -164,6 +169,13 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 		$this->_cpt_object = isset($this->_req_data['action']) && isset( $this->_cpt_routes[$this->_req_data['action']] ) ? get_post_type_object($this->_cpt_routes[$this->_req_data['action']]) : get_post_type_object( $page );
 
 		//tweak pagenow for page loading.
+		if( ! $this->_pagenow_map ) {
+			$this->_pagenow_map = array(
+				'create_new' => 'post-new.php',
+				'edit' => 'post.php',
+				'trash' => 'post.php'
+				);
+		}
 		add_action( 'current_screen', array( $this, 'modify_pagenow') );
 
 
@@ -192,16 +204,9 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 	 */
 	public function modify_pagenow( $current_screen ) {
 		global $pagenow;
-		//corresponding pagenow maps for our custom routes.
-		$pagenow_map = array(
-			'create_new' => 'post-new.php',
-			'edit' => 'post.php',
-			'trash' => 'post.php'
-			);
-
 		//possibly reset pagenow.
-		if ( ! empty( $this->_req_data['page'] ) && $this->_req_data['page'] == $this->page_slug && !empty( $this->_req_data['action'] ) && isset( $pagenow_map[$this->_req_data['action'] ] ) ) {
-			$pagenow = $pagenow_map[$this->_req_data['action']];
+		if ( ! empty( $this->_req_data['page'] ) && $this->_req_data['page'] == $this->page_slug && !empty( $this->_req_data['action'] ) && isset( $this->_pagenow_map[$this->_req_data['action'] ] ) ) {
+			$pagenow = $this->_pagenow_map[$this->_req_data['action']];
 		}
 	}
 
@@ -318,7 +323,7 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 		add_action('post_updated_messages', array( $this, 'post_update_messages' ), 10 );
 
 		//add shortlink button to cpt edit screens.  We can do this as a universal thing BECAUSE, cpts use the same format for shortlinks as posts!
-		add_filter( 'get_shortlink', array( $this, 'add_shortlink_button_to_editor' ), 10, 4 );
+		add_filter( 'pre_get_shortlink', array( $this, 'add_shortlink_button_to_editor' ), 10, 4 );
 
 		//This basically allows us to change the title of the "publish" metabox area on CPT pages by setting a 'publishbox' value in the $_labels property array in the child class.
 		if ( !empty($this->_labels['publishbox'] ) ) {
@@ -355,6 +360,12 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 			add_action('edit_form_after_title', array( $this, 'edit_form_after_title' ), 10 );
 
 
+		/**
+		 * Filtering WP's esc_url to capture urls pointing to core wp routes so they point to our route.
+		 */
+		add_filter( 'clean_url', array( $this, 'switch_core_wp_urls_with_ours' ), 10, 3 );
+
+
 		parent::_load_page_dependencies();
 
 		//notice we are ALSO going to load the pagenow hook set for this route (see _before_page_setup for the reset of the pagenow global ). This is for any plugins that are doing things properly and hooking into the load page hook for core wp cpt routes.
@@ -369,6 +380,41 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 		} catch ( EE_Error $e ) {
 			$e->get_error();
 		}
+	}
+
+
+
+
+	/**
+	 * Since we don't want users going to default core wp routes, this will check any wp urls run through the
+	 * esc_url() method and if we see a url matching a pattern for our routes, we'll modify it to point to OUR
+	 * route instead.
+	 *
+	 * @param string $good_protocol_url The escaped url.
+	 * @param string $original_url      The original url.
+	 * @param string $_context          The context sendt to the esc_url method.
+	 *
+	 * @return string possibly a new url for our route.
+	 */
+	public function switch_core_wp_urls_with_ours( $good_protocol_url, $original_url, $_context ) {
+		$routes_to_match = array(
+			0 => array(
+				'edit.php?post_type=espresso_attendees',
+				'admin.php?page=espresso_registrations&action=contact_list'
+				),
+			 1 => array(
+			 	'edit.php?post_type=' . $this->_cpt_object->name,
+			 	'admin.php?page=' . $this->_cpt_object->name
+				)
+			);
+
+		foreach( $routes_to_match as $route_matches ) {
+			if ( strpos( $good_protocol_url, $route_matches[0] ) !== false ) {
+				return str_replace( $route_matches[0], $route_matches[1], $good_protocol_url );
+
+			}
+		}
+		return $good_protocol_url;
 	}
 
 
@@ -1199,23 +1245,22 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 	 * @return string template for add new cpt form
 	 */
 	protected function _create_new_cpt_item() {
-		global $post, $title, $is_IE;
-		$this->_template_args['post_type'] = $this->_cpt_routes[$this->_req_action];
-		$this->_template_args['post_type_object'] = $this->_cpt_object;
-		$title = $this->_template_args['post_type_object']->labels->add_new_item;
-		$this->_template_args['editing'] = TRUE;
+		global $post, $title, $is_IE, $post_type, $post_type_object;
+		$post_type = $this->_cpt_routes[$this->_req_action];
+		$post_type_object = $this->_cpt_object;
+		$title = $post_type_object->labels->add_new_item;
+		$editing = TRUE;
 		wp_enqueue_script( 'autosave' );
-		$this->_template_args['post'] = $post = get_default_post_to_edit( $this->_cpt_routes[$this->_req_action], TRUE );
-		$this->_template_args['post_ID'] = $this->_template_args['post']->ID;
-		$this->_template_args['is_IE'] = $is_IE;
-		$template = WP_ADMIN_PATH . 'edit-form-advanced.php';
+		$post = $post = get_default_post_to_edit( $this->_cpt_routes[$this->_req_action], TRUE );
+		$post_ID = $post->ID;
+		$is_IE = $is_IE;
 
 		add_action( 'admin_print_styles', array( $this, 'add_new_admin_page_global' ) );
 
 		//modify the default editor title field with default title.
 		add_filter('enter_title_here', array( $this, 'add_custom_editor_default_title' ), 10 );
 
-		EEH_Template::display_template( $template, $this->_template_args );
+		include_once WP_ADMIN_PATH . 'edit-form-advanced.php';
 	}
 
 
@@ -1243,7 +1288,7 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 	 * @return string   template for edit cpt form
 	 */
 	protected function _edit_cpt_item() {
-		global $post, $title, $is_IE;
+		global $post, $title, $is_IE, $post_type, $post_type_object;
 		$post_id = isset( $this->_req_data['post'] ) ? $this->_req_data['post'] : NULL;
 		$post = !empty( $post_id ) ? get_post( $post_id, OBJECT, 'edit' ) : NULL;
 
@@ -1258,27 +1303,26 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 		}
 
 
-		$this->_template_args['editing'] = TRUE;
-		$this->_template_args['post_ID'] = $post_id;
-		$this->_template_args['post'] = $post;
-		$this->_template_args['post_type'] = $this->_cpt_routes[$this->_req_action];
-		$this->_template_args['post_type_object'] = $this->_cpt_object;
-		$this->_template_args['is_IE'] = $is_IE;
-		$last = wp_check_post_lock( $post->ID );
-		if ( $last ) {
-			add_action('admin_notices', '_admin_notice_post_locked' );
-		} else {
-			$this->_template_args['active_post_lock'] = wp_set_post_lock( $post->ID );
-			wp_enqueue_script('autosave');
+		$editing = TRUE;
+		$post_ID = $post_id;
+		$post = $post;
+		$post_type = $this->_cpt_routes[$this->_req_action];
+		$post_type_object = $this->_cpt_object;
+		$is_IE = $is_IE;
+
+		if ( ! wp_check_post_lock( $post->ID ) ) {
+			$active_post_lock = wp_set_post_lock( $post->ID );
+			//wp_enqueue_script('autosave');
 		}
 
 		$title = $this->_cpt_object->labels->edit_item;
 
+		add_action('admin_footer', '_admin_notice_post_locked' );
 
 		if ( isset( $this->_cpt_routes[$this->_req_data['action']] ) && !isset( $this->_labels['hide_add_button_on_cpt_route'][$this->_req_data['action']] ) ) {
 			$create_new_action = apply_filters( 'FHEE__EE_Admin_Page_CPT___edit_cpt_item__create_new_action', 'create_new', $this );
 
-			$this->_template_args['post_new_file'] = EE_Admin_Page::add_query_args_and_nonce( array('action' => $create_new_action, 'page' => $this->page_slug), 'admin.php' );
+			$post_new_file = EE_Admin_Page::add_query_args_and_nonce( array('action' => $create_new_action, 'page' => $this->page_slug), 'admin.php' );
 		}
 
 		if ( post_type_supports($this->_cpt_routes[$this->_req_action], 'comments') ) {
@@ -1291,8 +1335,7 @@ abstract class EE_Admin_Page_CPT extends EE_Admin_Page {
 		//modify the default editor title field with default title.
 		add_filter('enter_title_here', array( $this, 'add_custom_editor_default_title' ), 10 );
 
-		$template = WP_ADMIN_PATH . 'edit-form-advanced.php';
-		EEH_Template::display_template( $template, $this->_template_args );
+		include_once WP_ADMIN_PATH . 'edit-form-advanced.php';
 
 	}
 

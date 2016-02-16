@@ -21,6 +21,11 @@ class EE_SPCO_JSON_Response {
 	/**
 	 * @var string
 	 */
+	protected $_unexpected_errors = '';
+
+	/**
+	 * @var string
+	 */
 	protected $_attention = '';
 
 	/**
@@ -41,6 +46,11 @@ class EE_SPCO_JSON_Response {
 	/**
 	 * @var string
 	 */
+	protected $_registration_time_limit = '';
+
+	/**
+	 * @var string
+	 */
 	protected $_redirect_form = '';
 
 	/**
@@ -52,6 +62,11 @@ class EE_SPCO_JSON_Response {
 	 * @var string
 	 */
 	protected $_method_of_payment = '';
+
+	/**
+	 * @var float
+	 */
+	protected $_payment_amount;
 
 	/**
 	 * @var array
@@ -103,12 +118,27 @@ class EE_SPCO_JSON_Response {
 		if ( $this->errors() ) {
 			$JSON_response['errors'] = $this->errors();
 		}
+		if ( $this->unexpected_errors() ) {
+			$JSON_response['unexpected_errors'] = $this->unexpected_errors();
+		}
 		if ( $this->success() ) {
 			$JSON_response['success'] = $this->success();
+		}
+		// but if NO notices are set... at least set the "success" as a key so that the JS knows everything worked
+		if ( ! isset( $JSON_response[ 'attention' ] ) && ! isset( $JSON_response[ 'errors' ] ) && ! isset( $JSON_response[ 'success' ] ) ) {
+			$JSON_response['success'] = null;
 		}
 		// set redirect_url, IF it exists
 		if ( $this->redirect_url() ) {
 			$JSON_response['redirect_url'] = $this->redirect_url();
+		}
+		// set registration_time_limit, IF it exists
+		if ( $this->registration_time_limit() ) {
+			$JSON_response['registration_time_limit'] = $this->registration_time_limit();
+		}
+		// set payment_amount, IF it exists
+		if ( $this->payment_amount() !== null ) {
+			$JSON_response[ 'payment_amount' ] = $this->payment_amount();
 		}
 		// grab generic return data
 		$return_data = $this->return_data();
@@ -183,6 +213,24 @@ class EE_SPCO_JSON_Response {
 
 
 	/**
+	 * @return string
+	 */
+	public function unexpected_errors() {
+		return $this->_unexpected_errors;
+	}
+
+
+
+	/**
+	 * @param string $unexpected_errors
+	 */
+	public function set_unexpected_errors( $unexpected_errors ) {
+		$this->_unexpected_errors = $unexpected_errors;
+	}
+
+
+
+	/**
 	 * @param string $success
 	 */
 	public function set_success( $success ) {
@@ -214,6 +262,25 @@ class EE_SPCO_JSON_Response {
 	 */
 	public function method_of_payment() {
 		return $this->_method_of_payment;
+	}
+
+
+
+	/**
+	 * @return float
+	 */
+	public function payment_amount() {
+		return $this->_payment_amount;
+	}
+
+
+
+	/**
+	 * @param float $payment_amount
+	 */
+	public function set_payment_amount( $payment_amount ) {
+		EE_Registry::instance()->load_helper( 'Money' );
+		$this->_payment_amount = EEH_Money::convert_to_float_from_localized_money( $payment_amount );
 	}
 
 
@@ -286,6 +353,24 @@ class EE_SPCO_JSON_Response {
 	 */
 	public function redirect_url() {
 		return $this->_redirect_url;
+	}
+
+
+
+	/**
+	 * @return string
+	 */
+	public function registration_time_limit() {
+		return $this->_registration_time_limit;
+	}
+
+
+
+	/**
+	 * @param string $registration_time_limit
+	 */
+	public function set_registration_time_limit( $registration_time_limit ) {
+		$this->_registration_time_limit = $registration_time_limit;
 	}
 
 

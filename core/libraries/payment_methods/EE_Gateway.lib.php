@@ -22,6 +22,13 @@
  * @author			Mike Nelson
  *
  * ------------------------------------------------------------------------
+ * Class for processing payments. This has been designed in a way so that other WP Plugins
+ * can use this class for processing payments, and theoreitcally any of its children, provided they implement the
+ * interfaces it uses.
+ * The necessary interfaces to be implemented are contained in core/libaries/payment_methods/EEI_Payment_Method_Interfaces.php and
+ * EEI_Interfaces. After constructing a gateway object, you need to set all the properties which reference many of the
+ * needed helpers and models (see all the methods starting with "set_", eg seg_line_item_helper which should be passed an object
+ * which implements EEHI_Line_Item_Helper; etc).
  */
 abstract class EE_Gateway{
 	/**
@@ -66,7 +73,13 @@ abstract class EE_Gateway{
 	protected $_template = NULL;
 
 	/**
-	 * Used for manipulating the line item tree
+	 * Concrete class that implements EEHI_Money, used by most gateways
+	 * @var EEHI_Money
+	 */
+	protected $_money = NULL;
+
+	/**
+	 * Concrete class that implements EEHI_Line_Item, used for manipulating the line item tree
 	 * @var EEHI_Line_Item
 	 */
 	protected $_line_item;
@@ -130,6 +143,8 @@ abstract class EE_Gateway{
 		return $this->_supports_receiving_refunds;
 	}
 
+
+
 	/**
 	 * Tries to refund the payment specified, taking into account the extra
 	 * refund info. Note that if the gateway's _supports_sending_refunds is false,
@@ -139,9 +154,12 @@ abstract class EE_Gateway{
 	 * @return EE_Payment for the refund
 	 * @throws EE_Error
 	 */
-	public function do_direct_refund($payment,$refund_info = null){
+	public function do_direct_refund( EE_Payment $payment, $refund_info = null ) {
 		return NULL;
 	}
+
+
+
 	/**
 	 * Sets the payment method's settings so the gateway knows where to send the request
 	 * etc
@@ -150,18 +168,18 @@ abstract class EE_Gateway{
 	public function set_settings($settings_array){
 		foreach($settings_array as $name => $value){
 			$property_name = "_".$name;
-			$this->$property_name = $value;
+			$this->{$property_name} = $value;
 		}
 	}
 	/**
-	 * Sets the model which is used for querying for existing payments
+	 * See this class description
 	 * @param EEMI_Payment $payment_model
 	 */
 	public function set_payment_model($payment_model){
 		$this->_pay_model = $payment_model;
 	}
 	/**
-	 * Sets the payment log
+	 * See this class description
 	 * @param EEMI_Payment_Log $payment_log_model
 	 */
 	public function set_payment_log($payment_log_model){
@@ -169,7 +187,7 @@ abstract class EE_Gateway{
 	}
 
 	/**
-	 *
+	 * See this class description
 	 * @param EEHI_Template $template_helper
 	 */
 	public function set_template_helper($template_helper){
@@ -177,13 +195,20 @@ abstract class EE_Gateway{
 	}
 
 	/**
-	 *
+	 * See this class description
 	 * @param EEHI_Line_Item $line_item_helper
 	 */
 	public function set_line_item_helper( $line_item_helper ){
 		$this->_line_item = $line_item_helper;
 	}
 
+	/**
+	 * See this class description
+	 * @param EEHI_Money $money_helper
+	 */
+	public function set_money_helper( $money_helper ){
+		$this->_money = $money_helper;
+	}
 
 
 	/**
@@ -246,14 +271,18 @@ abstract class EE_Gateway{
 	 * @return boolean
 	 */
 	protected function _can_easily_itemize_transaction_for( EEI_Payment $payment ){
-		return  $this->_sum_items_and_taxes( $payment->transaction() ) == $payment->transaction()->total() &&
-					$payment->amount() == $payment->transaction()->total();
+		return  $this->_money->compare_floats(
+					$this->_sum_items_and_taxes( $payment->transaction() ),
+					$payment->transaction()->total() ) &&
+				$this->_money->compare_floats(
+					$payment->amount(),
+					$payment->transaction()->total() );
 	}
 
 	/**
 	 * Handles updating the transaction and any other related data based on the payment.
 	 * You may be tempted to do this as part of do_direct_payment or handle_payment_update,
-	 * but doing so on those functions might be too early. It's possibel that the changes
+	 * but doing so on those functions might be too early. It's possible that the changes
 	 * you make to teh transaction or registration or line items may just get overwritten
 	 * at that point. Instead, you should store any info you need on the payment during those
 	 * functions, and use that information at this step, which client code will decide
@@ -262,7 +291,7 @@ abstract class EE_Gateway{
 	 * @return void
 	 */
 	public function update_txn_based_on_payment( $payment ){
-		//maybe update the trasnaction or line items or registrations
+		//maybe update the transaction or line items or registrations
 		//but most gateways don't need to do this, because they only update the payment
 	}
 

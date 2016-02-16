@@ -172,6 +172,7 @@ class EE_Maintenance_Mode {
 	 * @return void
 	 */
 	public function set_maintenance_level($level){
+		do_action( 'AHEE__EE_Maintenance_Mode__set_maintenance_level', $level );
 		update_option(self::option_name_maintenance_mode, intval($level));
 	}
 
@@ -261,10 +262,16 @@ class EE_Maintenance_Mode {
 	 */
 	public function display_maintenance_mode_notice() {
 		// check if M-mode is engaged and for EE shortcode
-		if ( $this->real_level() && current_user_can( 'administrator' ) && ! is_admin() && ! ( defined( 'DOING_AJAX' ) && DOING_AJAX )) {
+		if (
+			$this->real_level() &&
+			current_user_can( 'administrator' ) &&
+			! is_admin() &&
+			! ( defined( 'DOING_AJAX' ) && DOING_AJAX )
+			&& EE_Registry::instance()->REQ->is_espresso_page()
+		) {
 			printf(
 				__( '%sclose%sEvent Registration is currently disabled because Event Espresso has been placed into Maintenance Mode. To change Maintenance Mode settings, click here %sEE Maintenance Mode Admin Page%s', 'event_espresso' ),
-				'<div id="ee-m-mode-admin-notice-dv" class=""><a class="close-espresso-notice" title="',
+				'<div id="ee-m-mode-admin-notice-dv" class="ee-really-important-notice-dv"><a class="close-espresso-notice" title="',
 				'">&times;</a><p>',
 				' &raquo; <a href="' . add_query_arg( array( 'page' => 'espresso_maintenance_settings' ), admin_url( 'admin.php' )) . '">',
 				'</a></p></div>'

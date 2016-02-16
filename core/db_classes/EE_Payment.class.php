@@ -26,22 +26,27 @@ class EE_Payment extends EE_Base_Class implements EEI_Payment{
 
 	/**
 	 *
-	 * @param array $props_n_values
+	 * @param array $props_n_values  incoming values
+	 * @param string $timezone  incoming timezone (if not set the timezone set for the website will be
+	 *                          		used.)
+	 * @param array $date_formats  incoming date_formats in an array where the first value is the
+	 *                             		    date_format and the second value is the time format
 	 * @return EE_Payment
 	 */
-	public static function new_instance( $props_n_values = array() ) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__ );
-		return $has_object ? $has_object : new self( $props_n_values );
+	public static function new_instance( $props_n_values = array(), $timezone = null, $date_formats = array() ) {
+		$has_object = parent::_check_for_object( $props_n_values, __CLASS__, $timezone, $date_formats );
+		return $has_object ? $has_object : new self( $props_n_values, false, $timezone, $date_formats );
 	}
 
 
 
 	/**
-	 * @param array $props_n_values
-	 * @param null  $timezone
+	 * @param array $props_n_values  incoming values from the database
+	 * @param string $timezone  incoming timezone as set by the model.  If not set the timezone for
+	 *                          		the website will be used.
 	 * @return EE_Payment
 	 */
-	public static function new_instance_from_db( $props_n_values = array(), $timezone = NULL ) {
+	public static function new_instance_from_db( $props_n_values = array(), $timezone = null ) {
 		return new self( $props_n_values, TRUE, $timezone );
 	}
 
@@ -285,6 +290,7 @@ class EE_Payment extends EE_Base_Class implements EEI_Payment{
 	/**
 	 *        get Payment Amount
 	 * @access        public
+	 * @return float
 	 */
 	public function amount() {
 		return $this->get( 'PAY_amount' );
@@ -487,6 +493,16 @@ class EE_Payment extends EE_Base_Class implements EEI_Payment{
 
 
 	/**
+	 * For determining if the payment is actually a refund ( ie: has a negative value )
+	 * @return boolean
+	 */
+	public function is_a_refund() {
+		return $this->amount() < 0 ? true : false;
+	}
+
+
+
+	/**
 	 * Get the status object of this object
 	 * @return EE_Status
 	 */
@@ -524,7 +540,9 @@ class EE_Payment extends EE_Base_Class implements EEI_Payment{
 	 * You can pass it special content to put inside the form, or use
 	 * the default inner content (or possibly generate this all yourself using
 	 * redirect_url() and redirect_args() or redirect_args_as_inputs()).
-	 * Creates a POST request by default, but if no redirect args are specified, creates a GET request instead.
+	 * Creates a POST request by default, but if no redirect args are specified, creates a GET request instead
+	 * (and any querystring variables in the redirect_url are converted into html inputs
+	 * so browsers submit them properly)
 	 * @param string $inside_form_html
 	 * @return string html
 	 */
@@ -544,7 +562,20 @@ class EE_Payment extends EE_Base_Class implements EEI_Payment{
 					'', '', 'text-align:center;'
 				);
 			}
-			$method = $this->redirect_args() ? 'POST' : 'GET';
+			$method = apply_filters( 
+				'FHEE__EE_Payment__redirect_form__method',
+				$this->redirect_args() ? 'POST' : 'GET',
+				$this
+			);
+			//if it's a GET request, we need to remove all the GET params in the querystring
+			//and put them into the form instead
+			if( $method == 'GET' ) {
+				$querystring = parse_url( $redirect_url, PHP_URL_QUERY );
+				$get_params = null;
+				parse_str( $querystring, $get_params );
+				$inside_form_html .= $this->_args_as_inputs( $get_params );
+				$redirect_url = str_replace( '?' . $querystring, '', $redirect_url );
+			}
 			$form = EEH_HTML::nl(1) . '<form method="' . $method . '" name="gateway_form" action="' . $redirect_url . '">';
 			$form .= EEH_HTML::nl(1) . $this->redirect_args_as_inputs();
 			$form .= $inside_form_html;
@@ -559,14 +590,25 @@ class EE_Payment extends EE_Base_Class implements EEI_Payment{
 
 
 	/**
-	 * Changes all the name-value pairs of
+	 * Changes all the name-value pairs of the redirect args into html inputs
+	 * and returns the html as a string
 	 * @return string
 	 */
 	function redirect_args_as_inputs(){
+		return $this->_args_as_inputs( $this->redirect_args() );
+	}
+	
+	/**
+	 * Converts a 1d array of key-value pairs into html hidden inputs
+	 * and returns the string of html
+	 * @param array $args key-value pairs
+	 * @return string
+	 */
+	protected function _args_as_inputs( $args ) {
 		$html = '';
-		if( $this->redirect_args() !== NULL && is_array( $this->redirect_args() )) {
+		if( $args !== NULL && is_array( $args )) {
 			EE_Registry::instance()->load_helper('HTML');
-			foreach($this->redirect_args() as $name => $value){
+			foreach( $args as $name => $value){
 				$html .= EEH_HTML::nl(0) . '<input type="hidden" name="' . $name . '" value="' . esc_attr( $value ) . '"/>';
 			}
 		}
@@ -597,7 +639,14 @@ class EE_Payment extends EE_Base_Class implements EEI_Payment{
 	 * @param        mixed $item
 	 */
 	private function _strip_all_tags_within_array( &$item ) {
-		$item = wp_strip_all_tags( $item );
+		if( is_object( $item ) ) {
+			$item = (array) $item;
+		}
+		if( is_array( $item ) ){
+			array_walk_recursive( $item, array( $this, '_strip_all_tags_within_array' ) );
+		}else{
+			$item = wp_strip_all_tags( $item );
+		}
 	}
 
 	/**
@@ -629,7 +678,20 @@ class EE_Payment extends EE_Base_Class implements EEI_Payment{
 		}
 		return  $this->_get_cached_property( $field_name, TRUE, $extra_cache_ref );
 	}
-}
 
+
+
+	/**
+	 * Gets details regarding which registrations this payment was applied to
+	 * @param array $query_params like EEM_Base::get_all
+	 * @return EE_Registration_Payment[]
+	 */
+	public function registration_payments( $query_params = array() ) {
+		return $this->get_many_related( 'Registration_Payment', $query_params );
+	}
+
+
+
+}
 /* End of file EE_Payment.class.php */
 /* Location: /includes/classes/EE_Payment.class.php */

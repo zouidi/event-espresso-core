@@ -468,7 +468,8 @@ class Messages_Admin_Page extends EE_Admin_Page {
 
 	//none of the below group are currently used for Messages
 	protected function _add_feature_pointers() {}
-	public function admin_init() {}
+	public function admin_init() {
+	}
 	public function admin_notices() {}
 	public function admin_footer_scripts() {}
 
@@ -509,11 +510,11 @@ class Messages_Admin_Page extends EE_Admin_Page {
 
 	public function edit_message_template_help_tab() {
 		$templatepath = EE_MSG_TEMPLATE_PATH . 'ee_msg_messages_templates_editor_help_tab.template.php';
-		$args['img1'] = '<img src="' . EE_MSG_ASSETS_URL . 'images/editor.png' . '" alt="' . __('Editor Title', 'event_espresso') . '" />';
-		$args['img2'] = '<img src="' . EE_MSG_ASSETS_URL . 'images/switch-context.png' . '" alt="' . __('Context Switcher and Preview', 'event_espresso') . '" />';
-		$args['img3'] = '<img class="left" src="' . EE_MSG_ASSETS_URL . 'images/form-fields.png' . '" alt="' . __('Message Template Form Fields', 'event_espresso') . '" />';
-		$args['img4'] = '<img class="right" src="' . EE_MSG_ASSETS_URL . 'images/shortcodes-metabox.png' . '" alt="' . __('Shortcodes Metabox', 'event_espresso') . '" />';
-		$args['img5'] = '<img class="right" src="' . EE_MSG_ASSETS_URL . 'images/publish-meta-box.png' . '" alt="' . __('Publish Metabox', 'event_espresso') . '" />';
+		$args['img1'] = '<img src="' . EE_MSG_ASSETS_URL . 'images/editor.png' . '" alt="' . esc_attr__('Editor Title', 'event_espresso') . '" />';
+		$args['img2'] = '<img src="' . EE_MSG_ASSETS_URL . 'images/switch-context.png' . '" alt="' . esc_attr__('Context Switcher and Preview', 'event_espresso') . '" />';
+		$args['img3'] = '<img class="left" src="' . EE_MSG_ASSETS_URL . 'images/form-fields.png' . '" alt="' . esc_attr__('Message Template Form Fields', 'event_espresso') . '" />';
+		$args['img4'] = '<img class="right" src="' . EE_MSG_ASSETS_URL . 'images/shortcodes-metabox.png' . '" alt="' . esc_attr__('Shortcodes Metabox', 'event_espresso') . '" />';
+		$args['img5'] = '<img class="right" src="' . EE_MSG_ASSETS_URL . 'images/publish-meta-box.png' . '" alt="' . esc_attr__('Publish Metabox', 'event_espresso') . '" />';
 		EEH_Template::display_template( $templatepath, $args);
 	}
 
@@ -536,10 +537,10 @@ class Messages_Admin_Page extends EE_Admin_Page {
 
 	public function settings_help_tab() {
 		$templatepath = EE_MSG_TEMPLATE_PATH . 'ee_msg_messages_settings_help_tab.template.php';
-		$args['img1'] = '<img class="inline-text" src="' . EE_MSG_ASSETS_URL . 'images/email-tab-active.png' . '" alt="' . __('Active Email Tab', 'event_espresso') . '" />';
-		$args['img2'] = '<img class="inline-text" src="' . EE_MSG_ASSETS_URL . 'images/email-tab-inactive.png' . '" alt="' . __('Inactive Email Tab', 'event_espresso') . '" />';
-		$args['img3'] = '<img class="inline-text" src="' . EE_MSG_ASSETS_URL . 'on-toggle.png' . '" alt="' . __('On Toggle Image', 'event_espresso') . '" />';
-		$args['img4'] = '<img class="inline-text" src="' . EE_MSG_ASSETS_URL . 'off-toggle.png' . '" alt="' . __('Off Toggle Image', 'event_espresso') . '" />';
+		$args['img1'] = '<img class="inline-text" src="' . EE_MSG_ASSETS_URL . 'images/email-tab-active.png' . '" alt="' . esc_attr__('Active Email Tab', 'event_espresso') . '" />';
+		$args['img2'] = '<img class="inline-text" src="' . EE_MSG_ASSETS_URL . 'images/email-tab-inactive.png' . '" alt="' . esc_attr__('Inactive Email Tab', 'event_espresso') . '" />';
+		$args['img3'] = '<div class="switch"><input id="ee-on-off-toggle-on" class="ee-on-off-toggle ee-toggle-round-flat" type="checkbox" checked="checked"><label for="ee-on-off-toggle-on"></label>';
+		$args['img4'] = '<div class="switch"><input id="ee-on-off-toggle-on" class="ee-on-off-toggle ee-toggle-round-flat" type="checkbox"><label for="ee-on-off-toggle-on"></label>';
 		EEH_Template::display_template( $templatepath, $args);
 	}
 
@@ -575,18 +576,20 @@ class Messages_Admin_Page extends EE_Admin_Page {
 
 
 	public function load_scripts_styles_edit_message_template() {
-		;
-		$this->_set_shortcodes();
-		EE_Registry::$i18n_js_strings['confirm_default_reset'] = sprintf( __('Are you sure you want to reset the %s %s message templates?  Remember continuing will reset the templates for all contexts in this messenger and message type group.', 'event_espresso'), $this->_message_template_group->messenger_obj()->label['singular'], $this->_message_template_group->message_type_obj()->label['singular'] );
-		EE_Registry::$i18n_js_strings['confirm_switch_template_pack'] = __('Switching the template pack for a messages template will reset the content for the template so the new layout is loaded.  Any custom content in the existing template will be lost. Are you sure you wish to do this?', 'event_espresso' );
 
+		$this->_set_shortcodes();
+
+		EE_Registry::$i18n_js_strings['confirm_default_reset'] = sprintf(
+			__('Are you sure you want to reset the %s %s message templates?  Remember continuing will reset the templates for all contexts in this messenger and message type group.', 'event_espresso'),
+			$this->_message_template_group->messenger_obj()->label['singular'],
+			$this->_message_template_group->message_type_obj()->label['singular']
+		);
+		EE_Registry::$i18n_js_strings['confirm_switch_template_pack'] = __('Switching the template pack for a messages template will reset the content for the template so the new layout is loaded.  Any custom content in the existing template will be lost. Are you sure you wish to do this?', 'event_espresso' );
 
 		wp_register_script('ee_msgs_edit_js', EE_MSG_ASSETS_URL . 'ee_message_editor.js', array('jquery'), EVENT_ESPRESSO_VERSION );
 
 		wp_enqueue_script('ee_admin_js');
 		wp_enqueue_script('ee_msgs_edit_js');
-
-		wp_localize_script( 'ee_msgs_edit_js', 'eei18n', EE_Registry::$i18n_js_strings );
 
 		//add in special css for tiny_mce
 		add_filter( 'mce_css', array( $this, 'wp_editor_css' ) );
@@ -647,7 +650,7 @@ class Messages_Admin_Page extends EE_Admin_Page {
 
 	protected function _custom_mtps_preview() {
 		$this->_admin_page_title = __('Custom Message Templates (Preview)', 'event_espresso');
-		$this->_template_args['preview_img'] = '<img src="' . EE_MSG_ASSETS_URL . 'images/custom_mtps_preview.png" alt="Preview Custom Message Templates screenshot" />';
+		$this->_template_args['preview_img'] = '<img src="' . EE_MSG_ASSETS_URL . 'images/custom_mtps_preview.png" alt="' . esc_attr__('Preview Custom Message Templates screenshot', 'event_espresso' ) . '" />';
 		$this->_template_args['preview_text'] = '<strong>'.__('Custom Message Templates is a feature that is only available in the caffeinated version of Event Espresso.  With the Custom Message Templates feature, you are able to create custom templates and set them per event.', 'event_espresso').'</strong>';
 		$this->display_admin_caf_preview_page( 'custom_message_types', FALSE );
 	}
@@ -919,6 +922,10 @@ class Messages_Admin_Page extends EE_Admin_Page {
 
 							$template_form_fields[$field_id]['db-col'] = 'MTP_content';
 
+							//shortcode selector
+							$field_name_to_use = $extra_field == 'main' ? 'content' : $extra_field;
+							$template_form_fields[$field_id]['append_content'] = $this->_get_shortcode_selector( $field_name_to_use, $field_id );
+
 							if ( isset( $extra_array['input'] ) && $extra_array['input'] == 'wp_editor' ) {
 								//we want to decode the entities
 								$template_form_fields[$field_id]['value'] = stripslashes( html_entity_decode( $template_form_fields[$field_id]['value'], ENT_QUOTES, "UTF-8") );
@@ -968,6 +975,9 @@ class Messages_Admin_Page extends EE_Admin_Page {
 					$template_form_fields[$field_id]['db-col'] = 'MTP_content';
 					$css_class = isset($field_setup_array['css_class']) ? $field_setup_array['css_class'] : '';
 					$template_form_fields[$field_id]['css_class'] = !empty( $v_fields ) && in_array( $template_field, $v_fields ) && isset( $validators[$template_field]['msg'] ) ? 'validate-error ' . $css_class : $css_class;
+
+					//shortcode selector
+					$template_form_fields[$field_id]['append_content'] = $this->_get_shortcode_selector( $template_field, $field_id );
 
 					if ( isset( $field_setup_array['input'] ) && $field_setup_array['input'] == 'wp_editor' ) {
 						//we want to decode the entities
@@ -1156,7 +1166,6 @@ class Messages_Admin_Page extends EE_Admin_Page {
 					);
 			}
 
-			//send to field generator
 
 			$template_fields = $this->_generate_admin_form_fields( $template_form_fields );
 			$sidebar_fields = $this->_generate_admin_form_fields( $sidebar_form_fields );
@@ -1182,6 +1191,7 @@ class Messages_Admin_Page extends EE_Admin_Page {
 			'extra' => $preview_button
 		);
 		$this->_set_context_switcher($message_template_group, $context_switcher_args);
+
 
 		//main box
 		$this->_template_args['template_fields'] = $template_fields;
@@ -1543,11 +1553,32 @@ class Messages_Admin_Page extends EE_Admin_Page {
 		//print out $test_settings_fields
 		if ( !empty( $test_settings_fields ) ) {
 			echo $test_settings_fields;
-			$test_settings_html = '<input type="submit" class="button-primary mtp-test-button alignright" name="test_button" value="' . __('Test Send', 'event_espresso') . '" />';
+			$test_settings_html = '<input type="submit" class="button-primary mtp-test-button alignright" name="test_button" value="' . __('Test Send', 'event_espresso') . '" /><div style="clear:both"></div>';
 		}
 
 		//and button
-		echo $test_settings_html . '<div class="publishing-action alignright resetbutton">' . $button . '</div><div style="clear:both"></div>';
+		echo $test_settings_html . '<p>' . __('Need to reset this message type and start over?', 'event_espresso') . '</p>' . '<div class="publishing-action alignright resetbutton">' . $button . '</div><div style="clear:both"></div>';
+	}
+
+
+
+
+	/**
+     * This returns the shortcode selector skeleton for a given context and field.
+     *
+     * @since 4.9.rc.000
+     *
+	 * @param string $field  The name of the field retrieving shortcodes for.
+     * @param string $linked_input_id The css id of the input that the shortcodes get added to.
+     * @return string
+    */
+	protected function _get_shortcode_selector( $field, $linked_input_id ) {
+		$template_args = array(
+			'shortcodes' => $this->_get_shortcodes( array( $field ), true ),
+			'fieldname' => $field,
+			'linked_input_id' => $linked_input_id
+		);
+		return EEH_Template::display_template( EE_MSG_TEMPLATE_PATH . 'shortcode_selector_skeleton.template.php', $template_args, true );
 	}
 
 
@@ -1567,30 +1598,7 @@ class Messages_Admin_Page extends EE_Admin_Page {
 		} else {
 			$alt = 0;
 			?>
-			<div style="float:right; margin-top:10px"><?php echo $this->_get_help_tab_link('message_template_shortcodes'); ?></div><p class="small-text"><?php _e('This is a list of shortcodes that have been organized by content areas where they can be used: ', 'event_espresso' ); ?></p>
-
-			<?php foreach ( $shortcodes as $field => $allshortcodes ) : ?>
-				<?php
-				//get the field label
-				$field_label = $messenger->get_field_label($field);
-				?>
-				<div class="shortcode-field-table">
-					<h3 class="shortcode-field-title"><?php echo $field_label; ?>:</h3>
-					<div class="ee-shortcode-table-scroll">
-						<table class="widefat ee-shortcode-table">
-							<tbody>
-					<?php foreach ( $allshortcodes as $code => $label ) : ?>
-						<?php $alt_class = !($alt%2) ? 'class="alternate"' : ''; ?>
-						<tr <?php echo $alt_class; ?>>
-							<td><?php echo $code; ?></td>
-						</tr>
-					<?php $alt++; endforeach; ?>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			<?php endforeach; ?>
-			</table> <!-- end .ee-shortcode-table -->
+			<div style="float:right; margin-top:10px"><?php echo $this->_get_help_tab_link('message_template_shortcodes'); ?></div><p class="small-text"><?php printf( __('You can view the shortcodes usable in your template by clicking the %s icon next to each field.', 'event_espresso' ), '<span class="dashicons dashicons-menu"></span>' ); ?></p>
 			<?php
 		}
 
@@ -2425,7 +2433,7 @@ class Messages_Admin_Page extends EE_Admin_Page {
 
 		$settings_template_args['on_off_action'] = $active ? 'messenger-off' : 'messenger-on';
 		$settings_template_args['nonce'] = wp_create_nonce('activate_' . $messenger->name . '_toggle_nonce');
-		$settings_template_args['on_off_status'] = $active ? 'active' : 'inactive';
+		$settings_template_args['on_off_status'] = $active ? true : false;
 		$template = EE_MSG_TEMPLATE_PATH . 'ee_msg_m_settings_content.template.php';
 		$content = EEH_Template::display_template( $template, $settings_template_args, TRUE);
 		return $content;

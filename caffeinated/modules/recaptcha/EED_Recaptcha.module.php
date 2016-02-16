@@ -33,6 +33,13 @@ class EED_Recaptcha  extends EED_Module {
 
 
 	/**
+	 * @type string $_recaptcha_response
+	 */
+	private static $_recaptcha_response;
+
+
+
+	/**
 	 * @return EED_Recaptcha
 	 */
 	public static function instance() {
@@ -52,9 +59,12 @@ class EED_Recaptcha  extends EED_Module {
 		if ( EE_Registry::instance()->CFG->registration->use_captcha ) {
 			EED_Recaptcha::set_definitions();
 			EED_Recaptcha::enqueue_styles_and_scripts();
+			add_action( 'wp', array( 'EED_Recaptcha', 'set_late_hooks' ), 1, 0 );
 			add_action( 'AHEE__before_spco_whats_next_buttons', array( 'EED_Recaptcha', 'display_recaptcha' ), 10, 0 );
-			add_filter( 'FHEE__EED_Single_Page_Checkout__init___continue_reg', array( 'EED_Recaptcha', 'recaptcha_passed' ), 10 );
+			add_filter( 'FHEE__EED_Single_Page_Checkout__init___continue_reg', array( 'EED_Recaptcha', 'not_a_robot' ), 10 );
+			add_filter( 'FHEE__EE_SPCO_Reg_Step__set_completed___completed', array( 'EED_Recaptcha', 'not_a_robot' ), 10 );
 			add_filter( 'FHEE__EE_SPCO_JSON_Response___toString__JSON_response', array( 'EED_Recaptcha', 'recaptcha_response' ), 10, 1 );
+			add_filter( 'FHEE__EED_Recaptcha___bypass_recaptcha__bypass_request_params_array', array( 'EED_Recaptcha', 'bypass_recaptcha_for_spco_load_payment_method' ), 10, 1 );
 		}
 	}
 
@@ -71,7 +81,8 @@ class EED_Recaptcha  extends EED_Module {
 		// use_captcha ?
 		if ( EE_Registry::instance()->CFG->registration->use_captcha ) {
 			EED_Recaptcha::enqueue_styles_and_scripts();
-			add_filter( 'FHEE__EED_Single_Page_Checkout__init___continue_reg', array( 'EED_Recaptcha', 'recaptcha_passed' ), 10 );
+			add_filter( 'FHEE__EED_Single_Page_Checkout__init___continue_reg', array( 'EED_Recaptcha', 'not_a_robot' ), 10 );
+			add_filter( 'FHEE__EE_SPCO_Reg_Step__set_completed___completed', array( 'EED_Recaptcha', 'not_a_robot' ), 10 );
 			add_filter( 'FHEE__EE_SPCO_JSON_Response___toString__JSON_response', array( 'EED_Recaptcha', 'recaptcha_response' ), 10, 1 );
 		}
 		// admin settings
@@ -88,9 +99,26 @@ class EED_Recaptcha  extends EED_Module {
 	 *  @return 	void
 	 */
 	public static function set_definitions() {
-		EED_Recaptcha::$_not_a_robot = is_user_logged_in();
+		if ( is_user_logged_in() ) {
+			EED_Recaptcha::$_not_a_robot = true;
+		}
 		define( 'RECAPTCHA_BASE_PATH', rtrim( str_replace( array( '\\', '/' ), DS, plugin_dir_path( __FILE__ )), DS ) . DS );
 		define( 'RECAPTCHA_BASE_URL', plugin_dir_url( __FILE__ ));
+	}
+
+
+
+	/**
+	 * set_late_hooks
+	 *
+	 * @access    public
+	 * @return    void
+	 */
+	public static function set_late_hooks() {
+		add_filter(
+			'FHEE__Single_Page_Checkout__translate_js_strings__ajax_submit',
+			array( 'EED_Recaptcha', 'not_a_robot' )
+		);
 	}
 
 
@@ -111,15 +139,26 @@ class EED_Recaptcha  extends EED_Module {
 
 
 
+	/**
+	 *    run
+	 *
+	 * @access    public
+	 * @param \WP $WP
+	 */
+	public function run( $WP ) {
+	}
+
 
 
 	/**
-	 * 	run
-	 *
-	 *  @access 	public
-	 *  @return 	void
+	 * not_a_robot
+	 *  @return boolean
 	 */
-	public function run( $WP ) {}
+	public static function not_a_robot() {
+		$not_a_robot = is_bool( EED_Recaptcha::$_not_a_robot ) ? EED_Recaptcha::$_not_a_robot :
+			EED_Recaptcha::recaptcha_passed();
+		return $not_a_robot;
+	}
 
 
 
@@ -129,12 +168,12 @@ class EED_Recaptcha  extends EED_Module {
 	 * display_recaptcha
 	 *
 	 * @access public
-	 * @return string html
+	 * @return void
 	 */
 	public static function display_recaptcha() {
 		// logged in means you have already passed a turing test of sorts
 		if ( is_user_logged_in() ) {
-			return '';
+			return;
 		}
 		// don't display if not using recaptcha or user is logged in
 		if ( EE_Registry::instance()->CFG->registration->use_captcha ) {
@@ -156,6 +195,19 @@ class EED_Recaptcha  extends EED_Module {
 
 
 
+	/**
+	 * bypass_recaptcha_for_spco_load_payment_method
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public static function bypass_recaptcha_for_spco_load_payment_method() {
+		return array(
+			'EESID' 		=> EE_Registry::instance()->SSN->id(),
+			'step' 		=> 'payment_options',
+			'action' 	=> 'switch_spco_billing_form'
+		);
+	}
 
 
 
@@ -174,7 +226,8 @@ class EED_Recaptcha  extends EED_Module {
 		$recaptcha_passed = EE_Registry::instance()->SSN->get_session_data( 'recaptcha_passed' );
 		$recaptcha_passed = filter_var( $recaptcha_passed, FILTER_VALIDATE_BOOLEAN );
 		// verify recaptcha
-		if ( ! $recaptcha_passed && EE_Registry::instance()->REQ->is_set( 'g-recaptcha-response' )) {
+		EED_Recaptcha::_get_recaptcha_response();
+		if ( ! $recaptcha_passed && EED_Recaptcha::$_recaptcha_response ) {
 			$recaptcha_passed = EED_Recaptcha::_process_recaptcha_response();
 			EE_Registry::instance()->SSN->set_session_data( array( 'recaptcha_passed' => $recaptcha_passed ));
 			EE_Registry::instance()->SSN->update();
@@ -236,26 +289,44 @@ class EED_Recaptcha  extends EED_Module {
 	 * 	@access private
 	 * 	@return 	boolean
 	 */
-	private static function _process_recaptcha_response() {
+	private static function _get_recaptcha_response() {
+		EED_Recaptcha::$_recaptcha_response = EE_Registry::instance()->REQ->get( 'g-recaptcha-response', false );
+	}
 
+
+
+
+	/**
+	 * 	process_recaptcha
+	 *
+	 * 	@access private
+	 * 	@return 	boolean
+	 */
+	private static function _process_recaptcha_response() {
 		// verify library is loaded
-		if ( ! class_exists( 'ReCaptcha' )) {
-			require_once( RECAPTCHA_BASE_PATH . 'recaptchalib.php' );
+		if ( ! class_exists( '\\ReCaptcha\\ReCaptcha' )) {
+			require_once( RECAPTCHA_BASE_PATH . DS . 'autoload.php' );
 		}
 		// The response from reCAPTCHA
-		$recaptcha_response = EE_Registry::instance()->REQ->get( 'g-recaptcha-response', FALSE );
+		EED_Recaptcha::_get_recaptcha_response();
+		$recaptcha_response = EED_Recaptcha::$_recaptcha_response;
 		// Was there a reCAPTCHA response?
 		if ( $recaptcha_response ) {
-			$reCaptcha = new ReCaptcha( EE_Registry::instance()->CFG->registration->recaptcha_privatekey );
-			$recaptcha_response = $reCaptcha->verifyResponse(
-				$_SERVER['REMOTE_ADDR'],
-				EE_Registry::instance()->REQ->get( 'g-recaptcha-response' )
+			// if allow_url_fopen is Off, then set a different request method
+			$request_method = ! ini_get( 'allow_url_fopen' ) ? new \ReCaptcha\RequestMethod\SocketPost() : null;
+			$recaptcha = new \ReCaptcha\ReCaptcha(
+				EE_Registry::instance()->CFG->registration->recaptcha_privatekey,
+				$request_method
+			);
+			$recaptcha_response = $recaptcha->verify(
+				EED_Recaptcha::$_recaptcha_response,
+				$_SERVER[ 'REMOTE_ADDR' ]
 			);
 		}
-		// sorry... it appears you can't read gibberish chicken scratches !!!
-		if ( $recaptcha_response instanceof ReCaptchaResponse && $recaptcha_response->success ) {
+		if ( $recaptcha_response instanceof \ReCaptcha\Response && $recaptcha_response->isSuccess() ) {
 			return TRUE;
 		}
+		// sorry... it appears you can't don't know what soup or hamburgers are !!!
 		return FALSE;
 	}
 
@@ -298,9 +369,9 @@ class EED_Recaptcha  extends EED_Module {
 				'subsections' 			=> apply_filters(
 					'FHEE__EED_Recaptcha___recaptcha_settings_form__form_subsections',
 					array(
-						'main_settings_hdr' 				=> new EE_Form_Section_HTML( EEH_HTML::h3( __( 'reCAPTCHA Anti-spam Settings', 'event_espresso' ) . EEH_Template::get_help_tab_link( 'recaptcha_info' ))),
+						'main_settings_hdr' 				=> new EE_Form_Section_HTML( EEH_HTML::h2( __( 'reCAPTCHA Anti-spam Settings', 'event_espresso' ) . EEH_Template::get_help_tab_link( 'recaptcha_info' ))),
 						'main_settings' 						=> EED_Recaptcha::_recaptcha_main_settings(),
-						'appearance_settings_hdr' 	=> new EE_Form_Section_HTML( EEH_HTML::h3( __( 'reCAPTCHA Appearance', 'event_espresso' ) )),
+						'appearance_settings_hdr' 	=> new EE_Form_Section_HTML( EEH_HTML::h2( __( 'reCAPTCHA Appearance', 'event_espresso' ) )),
 						'appearance_settings' 			=> EED_Recaptcha::_recaptcha_appearance_settings(),
 						// 'recaptcha_example' 				=> new EE_Form_Section_HTML( EED_Recaptcha::display_recaptcha() ),
 						'required_fields_note' 			=> new EE_Form_Section_HTML( EEH_HTML::p( __( 'All fields marked with a * are required fields', 'event_espresso' ), '', 'grey-text' ))
@@ -479,9 +550,9 @@ class EED_Recaptcha  extends EED_Module {
 	protected static function _recaptcha_example() {
 		//		 if ( !empty( $recaptcha_example ) ) { ?>
 		<!--		-->
-		<!--			<h4 class="ee-admin-settings-hdr admin-recaptcha-settings-hdr">-->
+		<!--			<h2 class="ee-admin-settings-hdr admin-recaptcha-settings-hdr">-->
 		<!--				--><?php //_e('reCAPTCHA Example', 'event_espresso'); ?>
-		<!--			</h4>-->
+		<!--			</h2>-->
 		<!--			<p class="description">--><?php //_e('A reCAPTCHA displaying here means that you have a valid public key entered for the reCAPTCHA settings and this is how the reCAPTCHA will look with the currently set appearance settings.  If you do not see a reCAPTCHA then please doublecheck the key you entered for a public key.', 'event_espresso'); ?><!--</p>-->
 		<!--			<table class="form-table">-->
 		<!--				<tbody>-->

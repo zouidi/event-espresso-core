@@ -8,6 +8,205 @@
 if ( ! defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
 
 
+/**
+ * Checks if the filters which were removed as part of https://events.codebasehq.com/projects/event-espresso/tickets/9165
+ * are in use. If so, issues a doing_it_wrong AND an error (because the doing_it_wrong
+ * messages were somehow hidden in the UI)
+ * @return boolean
+ */
+function ee_deprecated_using_old_registration_admin_custom_questions_form_hooks() {
+	$in_use =  has_filter( 'FHEE__Registrations_Admin_Page___update_attendee_registration_form__qstns' )
+			|| has_action( 'AHEE__Registrations_Admin_Page___save_attendee_registration_form__after_reg_and_attendee_save' );
+	if( $in_use ) {
+		$msg = __(
+			'We detected you are using the filter FHEE__Registrations_Admin_Page___update_attendee_registration_form__qstns or AHEE__Registrations_Admin_Page___save_attendee_registration_form__after_reg_and_attendee_save.'
+			. 'Both of these have been deprecated and should not be used anymore. You should instead use FHEE__EE_Form_Section_Proper___construct__options_array to customize the contents of the form,'
+			. 'use FHEE__EE_Form_Section_Proper__receive_form_submission__req_data to customize the submission data, or AHEE__EE_Form_Section_Proper__receive_form_submission__end '
+			. 'to add other actions after a form submission has been received.',
+			'event_espresso' )
+		;
+		EE_Error::doing_it_wrong(
+			__CLASS__ . '::' . __FUNCTION__,
+			$msg,
+			'4.8.32.rc.000'
+		);
+		//it seems the doing_it_wrong messages get output during some hidden html tags, so add an error to make sure this gets noticed
+		if ( is_admin() && ! defined( 'DOING_AJAX' ) ) {
+			EE_Error::add_error( $msg, __FILE__, __FUNCTION__, __LINE__ );
+		}
+	}
+	return $in_use;
+}
+add_action( 'AHEE__Registrations_Admin_Page___registration_details_metabox__start', 'ee_deprecated_using_old_registration_admin_custom_questions_form_hooks' );
+
+/**
+ * @deprecated since 4.8.32.rc.000 because it has issues on https://events.codebasehq.com/projects/event-espresso/tickets/9165
+ * it is preferred to instead use _update_attendee_registration_form_new() which
+ * also better handles form validation. Exits
+ * @param EE_Admin_Page $admin_page
+ * @return void
+ */
+function ee_deprecated_update_attendee_registration_form_old( $admin_page ) {
+	//check if the old hooks are in use. If not, do the default
+	if( ! ee_deprecated_using_old_registration_admin_custom_questions_form_hooks()
+		|| ! $admin_page instanceof EE_Admin_Page ) {
+		return;
+	}
+	$req_data = $admin_page->get_request_data();
+	$qstns = isset( $req_data['qstn'] ) ? $req_data['qstn'] : FALSE;
+	$REG_ID = isset( $req_data['_REG_ID'] ) ? absint( $req_data['_REG_ID'] ) : FALSE;
+	$qstns = apply_filters( 'FHEE__Registrations_Admin_Page___update_attendee_registration_form__qstns', $qstns );
+	if ( ! $REG_ID || ! $qstns ) {
+		EE_Error::add_error( __('An error occurred. No registration ID and/or registration questions were received.', 'event_espresso'), __FILE__, __FUNCTION__, __LINE__ );
+	}
+	$success = TRUE;
+
+	// allow others to get in on this awesome fun   :D
+	do_action( 'AHEE__Registrations_Admin_Page___save_attendee_registration_form__after_reg_and_attendee_save', $REG_ID, $qstns );
+	// loop thru questions... FINALLY!!!
+
+	foreach ( $qstns as $QST_ID => $qstn ) {
+		//if $qstn isn't an array then it doesn't already have an answer, so let's create the answer
+		if ( !is_array($qstn) ) {
+			$success = $this->_save_new_answer( $REG_ID, $QST_ID, $qstn);
+			continue;
+		}
+
+
+		foreach ( $qstn as $ANS_ID => $ANS_value ) {
+			//get answer
+			$query_params = array(
+				0 => array(
+					'ANS_ID' => $ANS_ID,
+					'REG_ID' => $REG_ID,
+					'QST_ID' => $QST_ID
+					)
+				);
+			$answer = EEM_Answer::instance()->get_one($query_params);
+			//this MAY be an array but NOT have an answer because its multi select.  If so then we need to create the answer
+			if ( ! $answer instanceof EE_Answer ) {
+				$set_values = array(
+					'QST_ID' => $QST_ID,
+					'REG_ID' => $REG_ID,
+					'ANS_value' => $qstn
+					);
+				$success = EEM_Answer::instance()->insert($set_values);
+				continue 2;
+			}
+
+			$answer->set('ANS_value', $ANS_value);
+			$success = $answer->save();
+		}
+	}
+	$what = __('Registration Form', 'event_espresso');
+	$route = $REG_ID ? array( 'action' => 'view_registration', '_REG_ID' => $REG_ID ) : array( 'action' => 'default' );
+	$admin_page->redirect_after_action( $success, $what, __('updated', 'event_espresso'), $route );
+	exit;
+}
+add_action( 'AHEE__Registrations_Admin_Page___update_attendee_registration_form__start', 'ee_deprecated_update_attendee_registration_form_old', 10, 1 );
+/**
+ * Render the registration admin page's custom questions area in the old fashion
+ * and firing the old hooks. When this method is removed, we can probably also
+ * remove the deprecated methods form_before_question_group, form_after_question_group,
+ * form_form_field_label_wrap and form_form_field_input__wrap in Registrations_Admin_Page
+ *
+ * @param boolean         $do_default_action
+ * @param EE_Admin_Page   $admin_page
+ * @param EE_Registration $registration
+ * @return bool
+ * @throws \EE_Error
+ */
+function ee_deprecated_reg_questions_meta_box_old( $do_default_action, $admin_page, $registration ) {
+	//check if the old hooks are in use. If not, do the default
+	if( ! ee_deprecated_using_old_registration_admin_custom_questions_form_hooks()
+		|| ! $admin_page instanceof EE_Admin_Page ) {
+		return $do_default_action;
+	}
+	add_filter( 'FHEE__EEH_Form_Fields__generate_question_groups_html__before_question_group_questions', array( $admin_page, 'form_before_question_group' ), 10, 1 );
+	add_filter( 'FHEE__EEH_Form_Fields__generate_question_groups_html__after_question_group_questions', array( $admin_page, 'form_after_question_group' ), 10, 1 );
+	add_filter( 'FHEE__EEH_Form_Fields__label_html', array( $admin_page, 'form_form_field_label_wrap' ), 10, 1 );
+	add_filter( 'FHEE__EEH_Form_Fields__input_html', array( $admin_page, 'form_form_field_input__wrap' ), 10, 1 );
+
+	$question_groups = EEM_Event::instance()->assemble_array_of_groups_questions_and_options( $registration, $registration->get('EVT_ID') );
+
+	EE_Registry::instance()->load_helper( 'Form_Fields' );
+	$template_args = array(
+		'att_questions' => EEH_Form_Fields::generate_question_groups_html( $question_groups ),
+		'reg_questions_form_action' => 'edit_registration',
+		'REG_ID' => $registration->ID()
+	);
+	$template_path = REG_TEMPLATE_PATH . 'reg_admin_details_main_meta_box_reg_questions.template.php';
+	echo EEH_Template::display_template( $template_path, $template_args, TRUE );
+	//indicate that we should not do the default admin page code
+	return false;
+}
+add_action( 'FHEE__Registrations_Admin_Page___reg_questions_meta_box__do_default', 'ee_deprecated_reg_questions_meta_box_old', 10, 3 );
+
+/**
+ * ee_deprecated__registration_checkout__button_text
+ *
+ * @param string       $submit_button_text
+ * @param \EE_Checkout $checkout
+ * @return string
+ */
+function ee_deprecated__registration_checkout__button_text( $submit_button_text, EE_Checkout $checkout ) {
+	// list of old filters
+	$deprecated_filters = array(
+		'update_registration_details' => true,
+		'process_payment' => true,
+		'finalize_registration' => true,
+		'and_proceed_to_payment' => true,
+		'proceed_to' => true,
+	);
+	// loop thru and call doing_it_wrong() or remove any that aren't being used
+	foreach ( $deprecated_filters as $deprecated_filter => $on ) {
+		// was this filter called ?
+		if ( has_action( 'FHEE__EED_Single_Page_Checkout__registration_checkout__button_text__' . $deprecated_filter )) {
+			// only display doing_it_wrong() notice to Event Admins during non-AJAX requests
+			if ( EE_Registry::instance()->CAP->current_user_can( 'ee_read_ee', 'hide_doing_it_wrong_for_deprecated_SPCO_filter' ) && ! defined( 'DOING_AJAX' ) ) {
+				EE_Error::doing_it_wrong(
+					'FHEE__EED_Single_Page_Checkout__registration_checkout__button_text__' . $deprecated_filter,
+					sprintf(
+						__( 'The %1$s filter is deprecated.  It *may* work as an attempt to build in backwards compatibility.  However, it is recommended to use the following new filter: %2$s"%3$s" found in "%4$s"', 'event_espresso' ),
+						'FHEE__EED_Single_Page_Checkout__registration_checkout__button_text__' . $deprecated_filter,
+						'<br />',
+						'FHEE__EE_SPCO_Reg_Step__set_submit_button_text___submit_button_text',
+						'/modules/single_page_checkout/inc/EE_SPCO_Reg_Step.class.php'
+					),
+					'4.6.10',
+					E_USER_DEPRECATED
+				);
+			}
+		} else {
+			unset( $deprecated_filters[ $deprecated_filter ] );
+		}
+	}
+	if ( ! empty( $deprecated_filters )) {
+
+		if ( $checkout->current_step->slug() == 'attendee_information' && $checkout->revisit && isset( $deprecated_filters[ 'update_registration_details' ] )) {
+			$submit_button_text = apply_filters( 'FHEE__EED_Single_Page_Checkout__registration_checkout__button_text__update_registration_details', $submit_button_text );
+		} else if ( $checkout->current_step->slug() == 'payment_options' && $checkout->revisit && isset( $deprecated_filters[ 'process_payment' ] ) ) {
+			$submit_button_text = apply_filters( 'FHEE__EED_Single_Page_Checkout__registration_checkout__button_text__process_payment', $submit_button_text );
+		} else if ( $checkout->next_step instanceof EE_SPCO_Reg_Step && $checkout->next_step->slug() == 'finalize_registration' && isset( $deprecated_filters[ 'finalize_registration' ] ) ) {
+			$submit_button_text = apply_filters( 'FHEE__EED_Single_Page_Checkout__registration_checkout__button_text__finalize_registration', $submit_button_text );
+		}
+		if ( $checkout->next_step instanceof EE_SPCO_Reg_Step ) {
+			if ( $checkout->payment_required() && $checkout->next_step->slug() == 'payment_options' && isset( $deprecated_filters[ 'and_proceed_to_payment' ] ) ) {
+				$submit_button_text .= apply_filters( 'FHEE__EED_Single_Page_Checkout__registration_checkout__button_text__and_proceed_to_payment', $submit_button_text );
+			}
+			if ( $checkout->next_step->slug() != 'finalize_registration' && ! $checkout->revisit && isset( $deprecated_filters[ 'proceed_to' ] ) ) {
+				$submit_button_text = apply_filters( 'FHEE__EED_Single_Page_Checkout__registration_checkout__button_text__proceed_to', $submit_button_text ) . $checkout->next_step->name();
+			}
+		}
+
+	}
+	return $submit_button_text;
+
+}
+add_filter( 'FHEE__EE_SPCO_Reg_Step__set_submit_button_text___submit_button_text', 'ee_deprecated__registration_checkout__button_text', 10, 2 );
+
+
+
 
 /**
  * ee_deprecated_finalize_transaction
@@ -32,7 +231,8 @@ function ee_deprecated_finalize_transaction( EE_Checkout $checkout, $status_upda
 				'AHEE__EE_Transaction_Processor__toggle_registration_statuses_for_default_approved_events',
 				'AHEE__EE_Transaction_Processor__toggle_registration_statuses_if_no_monies_owing'
 			),
-			'4.6.0'
+			'4.6.0',
+			E_USER_DEPRECATED
 		);
 		switch ( $action_ref ) {
 			case 'AHEE__EE_Transaction__finalize__new_transaction' :
@@ -61,7 +261,8 @@ function ee_deprecated_finalize_registration( EE_Registration $registration ) {
 				'/core/business/EE_Registration_Processor.class.php',
 				'AHEE__EE_Registration_Processor__trigger_registration_status_changed_hook'
 			),
-			'4.6.0'
+			'4.6.0',
+			E_USER_DEPRECATED
 		);
 		do_action( 'AHEE__EE_Registration__finalize__update_and_new_reg', $registration, ( is_admin() && ! ( defined( 'DOING_AJAX' ) && DOING_AJAX )));
 	}
@@ -106,7 +307,7 @@ function ee_deprecated_get_templates( $templates, EE_messenger $messenger, EE_me
 	foreach ( $old_default_classnames as $classname ) {
 		$filter_ref = 'FHEE__' . $classname . '___create_new_templates___templates';
 		if ( has_filter( $filter_ref ) ) {
-			EE_Error::doing_it_wrong( $filter_ref, __('This filter is deprecated.  It *may* work as an attempt to build in backwards compatibility.  However, it is recommended to use the new filter provided which is "FHEE__EE_Template_Pack___get_templates__templates" found in the EE_Messages_Template_Pack class.', 'event_espresso'), '4.5.0' );
+			EE_Error::doing_it_wrong( $filter_ref, __('This filter is deprecated.  It *may* work as an attempt to build in backwards compatibility.  However, it is recommended to use the new filter provided which is "FHEE__EE_Template_Pack___get_templates__templates" found in the EE_Messages_Template_Pack class.', 'event_espresso'), '4.5.0', E_USER_DEPRECATED );
 		}
 		$templates = apply_filters( $filter_ref, $templates, $old_class_instance );
 	}
@@ -143,7 +344,8 @@ function ee_deprecated_hooks(){
 					$deprecation_info[ 'still_works' ] ?  __('It *may* work as an attempt to build in backwards compatibility.', 'event_espresso') : __( 'It has been completely removed.', 'event_espresso' ),
 					isset( $deprecation_info[ 'alternative' ] ) ? $deprecation_info[ 'alternative' ] : __( 'Please read the current EE4 documentation further or contact Support.', 'event_espresso' )
 				),
-				isset( $deprecation_info[ 'version' ] ) ? $deprecation_info[ 'version' ] : __( 'recently', 'event_espresso' )
+				isset( $deprecation_info[ 'version' ] ) ? $deprecation_info[ 'version' ] : __( 'recently', 'event_espresso' ),
+				E_USER_DEPRECATED
 			);
 		}
 	}
@@ -182,7 +384,7 @@ function ee_deprecated_get_default_field_content( $contents, $actual_path, EE_me
 	foreach ( $classnames_to_try as $classname => $obj ) {
 		$filter_ref = 'FHEE__' . $classname . '__get_default_field_content';
 		if ( has_filter( $filter_ref ) ) {
-			EE_Error::doing_it_wrong( $filter_ref, __('This filter is deprecated.  It *may* work as an attempt to build in backwards compatibility.  However, it is recommended to use the new filter provided which is "FHEE__EE_Messages_Template_Pack__get_specific_template__contents" found in the EE_Messages_Template_Pack class.', 'event_espresso'), '4.5.0' );
+			EE_Error::doing_it_wrong( $filter_ref, __('This filter is deprecated.  It *may* work as an attempt to build in backwards compatibility.  However, it is recommended to use the new filter provided which is "FHEE__EE_Messages_Template_Pack__get_specific_template__contents" found in the EE_Messages_Template_Pack class.', 'event_espresso'), '4.5.0', E_USER_DEPRECATED );
 		}
 		$contents = apply_filters( $filter_ref, $contents, $obj );
 	}
@@ -228,7 +430,7 @@ function ee_deprecated_get_inline_css_template_filters( $variation_path, $messen
 	}
 
 	if ( has_filter( $filter_ref ) ) {
-		EE_Error::doing_it_wrong( $filter_ref, __('This filter is deprecated.  It is recommended to use the new filter provided which is "FHEE__EE_Messages_Template_Pack__get_variation" found in the EE_Messages_Template_Pack class.', 'event_espresso'), '4.5.0' );
+		EE_Error::doing_it_wrong( $filter_ref, __('This filter is deprecated.  It is recommended to use the new filter provided which is "FHEE__EE_Messages_Template_Pack__get_variation" found in the EE_Messages_Template_Pack class.', 'event_espresso'), '4.5.0', E_USER_DEPRECATED );
 	}
 
 	return apply_filters( $filter_ref, $variation_path, $url, $type );
@@ -256,7 +458,7 @@ class EE_Messages_Init extends EE_Base {
 	 * @param $method_name
 	 */
 	public static function doing_it_wrong_call( $method_name ) {
-		EE_Error::doing_it_wrong( __CLASS__, sprintf( __('The %s in this class is deprecated as of EE4.5.0.  All functionality formerly in this class is now in the EED_Messages module.', 'event_espresso'), $method_name ), '4.5.0' );
+		EE_Error::doing_it_wrong( __CLASS__, sprintf( __('The %s in this class is deprecated as of EE4.5.0.  All functionality formerly in this class is now in the EED_Messages module.', 'event_espresso'), $method_name ), '4.5.0', E_USER_DEPRECATED );
 	}
 
 	/**
@@ -343,7 +545,7 @@ class EE_Messages_Init extends EE_Base {
  */
 function ee_deprecated_get_cpts( $cpts ) {
 	if ( has_filter( 'FHEE__EE_Register_CPTs__construct__CPTs' ) ) {
-		EE_Error::doing_it_wrong( 'FHEE__EE_Register_CPTs__construct__CPTs', __('This filter is deprecated. It will still work for the time being.  However, it is recommended to use the new filter provided which is "FHEE__EE_Register_CPTs__get_CPTs__cpts" found in EE_Register_CPTs::get_CPTs()', 'event_espresso'), '4.5.0' );
+		EE_Error::doing_it_wrong( 'FHEE__EE_Register_CPTs__construct__CPTs', __('This filter is deprecated. It will still work for the time being.  However, it is recommended to use the new filter provided which is "FHEE__EE_Register_CPTs__get_CPTs__cpts" found in EE_Register_CPTs::get_CPTs()', 'event_espresso'), '4.5.0', E_USER_DEPRECATED );
 	}
 	return apply_filters( 'FHEE__EE_Register_CPTs__construct__CPTs', $cpts );
 }
@@ -363,7 +565,7 @@ add_filter( 'FHEE__EE_Register_CPTs__get_CPTs__cpts', 'ee_deprecated_get_cpts', 
  */
 function ee_deprecated_get_taxonomies( $cts ) {
 	if ( has_filter( 'FHEE__EE_Register_CPTs__construct__taxonomies' ) ) {
-		EE_Error::doing_it_wrong( 'FHEE__EE_Register_CPTs__construct__taxonomies', __('This filter is deprecated. It will still work for the time being.  However, it is recommended to use the new filter provided which is "FHEE__EE_Register_CPTs__get_taxonomies__taxonomies" found in EE_Register_CPTs::get_taxonomies()', 'event_espresso'), '4.5.0' );
+		EE_Error::doing_it_wrong( 'FHEE__EE_Register_CPTs__construct__taxonomies', __('This filter is deprecated. It will still work for the time being.  However, it is recommended to use the new filter provided which is "FHEE__EE_Register_CPTs__get_taxonomies__taxonomies" found in EE_Register_CPTs::get_taxonomies()', 'event_espresso'), '4.5.0', E_USER_DEPRECATED );
 	}
 	return apply_filters( 'FHEE__EE_Register_CPTs__construct__taxonomies', $cts );
 }

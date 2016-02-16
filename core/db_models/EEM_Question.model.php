@@ -50,26 +50,25 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 	// constant used to indicate that the question type is TEXTAREA
 	const QST_type_textarea = 'TEXTAREA';
 
-
-
-  	// private instance of the Attendee object
-	protected static $_instance = NULL;
-
-
+	// constant used to indicate that the question type is a TEXTAREA that allows simple html
+	const QST_type_html_textarea = 'HTML_TEXTAREA';
+	/**
+	 * Question types that are interchangeable, even after answers have been provided for them.
+	 * Top-level keys are category slugs, next level is an array of question types. If question types
+	 * aren't in this array, it is assumed they AREN'T interchangeable with any other question types.
+	 * @var array
+	 */
+	protected $_question_type_categories = null;
 	/**
 	 * lists all the question types which should be allowed. Ideally, this will be extensible.
 	 * @access private
 	 * @var array of strings
 	 */
-	private $_allowed_question_types;
-	/**
-	 * Returns the list of allowed question types, which are normally: 'TEXT','TEXTAREA','RADIO_BTN','DROPDOWN','CHECKBOX','DATE'
-	 * but they can be extended
-	 * @return string[]
-	 */
-	public function allowed_question_types(){
-		return $this->_allowed_question_types;
-	}
+	protected $_allowed_question_types;
+
+	// private instance of the Attendee object
+	protected static $_instance = NULL;
+
 	protected function __construct( $timezone = NULL ) {
 		$this->singular_item = __('Question','event_espresso');
 		$this->plural_item = __('Questions','event_espresso');
@@ -83,7 +82,22 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 				EEM_Question::QST_type_dropdown =>__('Dropdown','event_espresso'),
 				EEM_Question::QST_type_state =>__('State/Province Dropdown','event_espresso'),
 				EEM_Question::QST_type_country =>__('Country Dropdown','event_espresso'),
-				EEM_Question::QST_type_date =>__('Date Picker','event_espresso')
+				EEM_Question::QST_type_date =>__('Date Picker','event_espresso'),
+				EEM_Question::QST_type_html_textarea => __( 'HTML Textarea', 'event_espresso' ),
+			)
+		);
+		$this->_question_type_categories = apply_filters(
+				'FHEE__EEM_Question__construct__question_type_categories',
+				array(
+				'text' => array(
+						self::QST_type_text,
+						self::QST_type_textarea,
+						self::QST_type_html_textarea,
+					),
+				'single-answer-enum' => array(
+					self::QST_type_radio,
+					self::QST_type_dropdown
+				),
 			)
 		);
 
@@ -101,7 +115,8 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 				'QST_required_text'=>new EE_Simple_HTML_Field('QST_required_text', __('Text to Display if Not Provided','event_espresso'), true, ''),
 				'QST_order'=>new EE_Integer_Field('QST_order', __('Question Order','event_espresso'), false, 0),
 				'QST_admin_only'=>new EE_Boolean_Field('QST_admin_only', __('Admin-Only Question?','event_espresso'), false, false),
-				'QST_wp_user'=>new EE_Integer_Field('QST_wp_user', __('Wp User ID who created question','event_espresso'), false, get_current_user_id() ),
+				'QST_max' => new EE_Infinite_Integer_Field( 'QST_max', __( 'Max Size', 'event_espresso'	), false, EE_INF ),
+				'QST_wp_user'=>new EE_WP_User_Field('QST_wp_user', __('Question Creator ID','event_espresso'), false ),
 				'QST_deleted'=>new EE_Trashed_Flag_Field('QST_deleted', __('Flag Indicating question was deleted','event_espresso'), false, false)
 			)
 		);
@@ -109,11 +124,115 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 			'Question_Group'=>new EE_HABTM_Relation('Question_Group_Question'),
 			'Question_Option'=>new EE_Has_Many_Relation(),
 			'Answer'=>new EE_Has_Many_Relation(),
+			'WP_User' => new EE_Belongs_To_Relation(),
 			//for QST_order column
 			'Question_Group_Question'=>new EE_Has_Many_Relation()
 		);
-
+		//this model is generally available for reading
+		$this->_cap_restriction_generators[ EEM_Base::caps_read ] = new EE_Restriction_Generator_Public();
+		$this->_cap_restriction_generators[ EEM_Base::caps_read_admin ] = new EE_Restriction_Generator_Reg_Form('QST_system');
+		$this->_cap_restriction_generators[ EEM_Base::caps_edit ] = new EE_Restriction_Generator_Reg_Form('QST_system');
+		$this->_cap_restriction_generators[ EEM_Base::caps_delete ] = new EE_Restriction_Generator_Reg_Form('QST_system');
 		parent::__construct( $timezone );
+	}
+
+	/**
+	 * Returns the list of allowed question types, which are normally: 'TEXT','TEXTAREA','RADIO_BTN','DROPDOWN','CHECKBOX','DATE'
+	 * but they can be extended
+	 * @return string[]
+	 */
+	public function allowed_question_types(){
+		return $this->_allowed_question_types;
+	}
+	/**
+	 * Gets all the question types in the same category
+	 * @param string $question_type one of EEM_Question::allowed_question_types(
+	 * @return string[] like EEM_Question::allowed_question_types()
+	 */
+	public function question_types_in_same_category( $question_type ) {
+		$question_types = array( $question_type );
+		foreach( $this->_question_type_categories as $category => $question_types_in_category ) {
+			if( in_array( $question_type, $question_types_in_category ) ) {
+				$question_types = $question_types_in_category;
+				break;
+			}
+		}
+
+		return array_intersect_key( $this->allowed_question_types(), array_flip( $question_types ) );
+	}
+
+	/**
+	 * Determines if the given question type is in the given question type category
+	 * @param string $question_type one of EEM_Question::allowed_question_types()
+	 * @param string $category one of the top-level keys of EEM_Question::question_type_categories()
+	 * @return boolean
+	 */
+	public function question_type_is_in_category( $question_type, $category ) {
+		if( ! isset( $this->_question_type_categories[ $category ] ) ) {
+			return false;
+		}
+		return in_array( $question_type, $this->_question_type_categories[ $category ] );
+	}
+
+	/**
+	 * Returns the question type categories 2d array
+	 * @return array see EEM_Question::_question_type_categories
+	 */
+	public function question_type_categories() {
+		return $this->_question_type_categories;
+	}
+
+	/**
+	 * Returns an array of all the QST_system values that can be allowed in the system question group
+	 * identified by $system_question_group_id
+	 * @param string $system_question_group_id QSG_system
+	 * @return array of system question names (QST_system)
+	 */
+	public function allowed_system_questions_in_system_question_group( $system_question_group_id ) {
+		$question_system_ids = array();
+		switch( $system_question_group_id ) {
+			case EEM_Question_Group::system_personal:
+				$question_system_ids = array(
+					EEM_Attendee::system_question_fname,
+					EEM_Attendee::system_question_lname,
+					EEM_Attendee::system_question_email,
+					EEM_Attendee::system_question_phone
+				);
+				break;
+			case EEM_Question_Group::system_address:
+				$question_system_ids = array(
+					EEM_Attendee::system_question_address,
+					EEM_Attendee::system_question_address2,
+					EEM_Attendee::system_question_city,
+					EEM_Attendee::system_question_state,
+					EEM_Attendee::system_question_country,
+					EEM_Attendee::system_question_zip,
+					EEM_Attendee::system_question_phone
+				);
+				break;
+		}
+		return apply_filters( 'FHEE__EEM_Question__system_questions_allowed_in_system_question_group__return', $question_system_ids, $system_question_group_id );
+	}
+
+	/**
+	 * Returns an array of all the QST_system values that are required in the system question group
+	 * identified by $system_question_group_id
+	 * @param string $system_question_group_id QSG_system
+	 * @return array of system question names (QST_system)
+	 */
+	public function required_system_questions_in_system_question_group( $system_question_group_id ) {
+		$question_system_ids = null;
+		switch( $system_question_group_id ) {
+			case EEM_Question_Group::system_personal:
+				$question_system_ids =  array(
+					EEM_Attendee::system_question_fname,
+					EEM_Attendee::system_question_email,
+				);
+				break;
+			default:
+				$question_system_ids = array();
+		}
+		return apply_filters( 'FHEE__EEM_Question__system_questions_required_in_system_question_group', $question_system_ids, $system_question_group_id );
 	}
 
 
@@ -121,25 +240,13 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 	/**
 	 * Gets an array for converting between QST_system and QST_IDs for system questions. Eg, if you want to know
 	 * which system question QST_ID corresponds to the QST_system 'city', use EEM_Question::instance()->get_Question_ID_from_system_string('city');
+	 * @param $QST_system
 	 * @return int of QST_ID for the question that corresponds to that QST_system
 	 */
-	public function get_Question_ID_from_system_string($QST_system){
-		 $conversion_array = array(
-			'fname'=> EEM_Attendee::fname_question_id,
-			'lname'=> EEM_Attendee::lname_question_id,
-			'email'=> EEM_Attendee::email_question_id,
-			'address'=> EEM_Attendee::address_question_id,
-			'address2'=> EEM_Attendee::address2_question_id,
-			'city'=> EEM_Attendee::city_question_id,
-			'state'=> EEM_Attendee::state_question_id,
-			'country'=> EEM_Attendee::country_question_id,
-			'zip'=> EEM_Attendee::zip_question_id,
-			'phone'=> EEM_Attendee::phone_question_id
-		);
-
-		return isset( $conversion_array[ $QST_system ] ) ? $conversion_array[ $QST_system ] : NULL;
-
+	public function get_Question_ID_from_system_string( $QST_system ){
+		 return $this->get_var( array( array( 'QST_system' => $QST_system ) ) );
 	}
+
 
 
 	/**
@@ -150,9 +257,44 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 	public function get_latest_question_order() {
 		$columns_to_select = array(
 			'max_order' => array("MAX(QST_order)","%d")
-			);
-		$max = $this->_get_all_wpdb_results(array(), ARRAY_A, $columns_to_select );
+		);
+		$max = $this->_get_all_wpdb_results( array(), ARRAY_A, $columns_to_select );
 		return $max[0]['max_order'];
+	}
+
+	/**
+	 * Returns an array where keys are system question QST_system values,
+	 * and values are the highest question max the admin can set on the question
+	 * (aka the "max max"; eg, a site admin can change the zip question to have a max
+	 * of 5, but no larger than 12)
+	 * @return array
+	 */
+	public function system_question_maxes() {
+		return array(
+			'fname' => 45,
+			'lname' => 45,
+			'address' => 255,
+			'address2' => 255,
+			'city' => 45,
+			'zip' => 12,
+			'email' => 255,
+			'phone' => 45,
+		);
+	}
+
+	/**
+	 * Given a QST_system value, gets the question's largest allowable max input.
+	 * @see Registration_Form_Admin_Page::system_question_maxes()
+	 * @param string $system_question_value
+	 * @return int|float
+	 */
+	public function absolute_max_for_system_question( $system_question_value ) {
+		$maxes = $this->system_question_maxes();
+		if( isset( $maxes[ $system_question_value ] ) ) {
+			return $maxes[ $system_question_value ];
+		} else {
+			return EE_INF;
+		}
 	}
 
 

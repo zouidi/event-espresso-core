@@ -93,7 +93,7 @@ final class EE_Front_Controller {
 		// before headers sent
 		add_action( 'wp', array( $this, 'wp' ), 5 );
 		// load css and js
-		add_action('wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ), 5 );
+		add_action('wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ), 1 );
 		// header
 		add_action('wp_head', array( $this, 'header_meta_tag' ), 5 );
 		add_filter( 'template_include', array( $this, 'template_include' ), 1 );
@@ -101,13 +101,16 @@ final class EE_Front_Controller {
 		add_action('loop_start', array( $this, 'display_errors' ), 2 );
 		// the content
 		add_filter( 'the_content', array( $this, 'the_content' ), 5, 1 );
-
 		//exclude our private cpt comments
 		add_filter( 'comments_clauses', array( $this, 'filter_wp_comments'), 10, 1 );
 		//make sure any ajax requests will respect the url schema when requests are made against admin-ajax.php (http:// or https://)
 		add_filter( 'admin_url', array( $this, 'maybe_force_admin_ajax_ssl' ), 200, 1 );
 		// action hook EE
 		do_action( 'AHEE__EE_Front_Controller__construct__done',$this );
+		// for checking that browser cookies are enabled
+		if ( apply_filters( 'FHEE__EE_Front_Controller____construct__set_test_cookie', true )) {
+			setcookie( 'ee_cookie_test', uniqid(), time() + 24 * HOUR_IN_SECONDS, '/' );
+		}
 	}
 
 
@@ -218,7 +221,9 @@ final class EE_Front_Controller {
 	 */
 	public function get_request( WP $WP ) {
 		do_action( 'AHEE__EE_Front_Controller__get_request__start' );
-		EE_Registry::instance()->load_core( 'Request_Handler', $WP );
+		/** @var EE_Request_Handler $Request_Handler */
+		$Request_Handler = EE_Registry::instance()->load_core( 'Request_Handler' );
+		$Request_Handler->parse_request( $WP );
 		do_action( 'AHEE__EE_Front_Controller__get_request__complete' );
 	}
 
@@ -269,14 +274,14 @@ final class EE_Front_Controller {
 					// are we on this page, or on the blog page, or an EE CPT category page ?
 					if ( $current_post == $post_name || $term_exists ) {
 						// verify shortcode is in list of registered shortcodes
-						if ( ! isset( EE_Registry::instance()->shortcodes->$shortcode_class )) {
+						if ( ! isset( EE_Registry::instance()->shortcodes->{$shortcode_class} )) {
 							if ( $current_post != $page_for_posts && current_user_can( 'edit_post', $post_id )) {
 								$msg = sprintf( __( 'The [%s] shortcode has not been properly registered or the corresponding addon/module is not active for some reason. Either fix/remove the shortcode from the post, or activate the addon/module the shortcode is associated with.', 'event_espresso' ), $shortcode_class );
 								EE_Error::add_error( $msg, __FILE__, __FUNCTION__, __LINE__ );
 								add_filter( 'FHEE_run_EE_the_content', '__return_true' );
 							}
 							add_shortcode( $shortcode_class, array( 'EES_Shortcode', 'invalid_shortcode_processor' ));
-							break;
+							continue;
 						}
 						// is this : a shortcodes set exclusively for this post, or for the home page, or a category, or a taxonomy ?
 						if ( isset( EE_Registry::instance()->CFG->core->post_shortcodes[ $current_post ] ) || $term_exists || $current_post == $page_for_posts ) {
@@ -287,12 +292,12 @@ final class EE_Front_Controller {
 								$msg = sprintf( __( 'The requested %s shortcode is not of the class "EES_Shortcode". Please check your files.', 'event_espresso' ), $shortcode_class );
 								EE_Error::add_error( $msg, __FILE__, __FUNCTION__, __LINE__ );
 								add_filter( 'FHEE_run_EE_the_content', '__return_true' );
-								break;
+								continue;
 							}
 							// and pass the request object to the run method
-							EE_Registry::instance()->shortcodes->$shortcode_class = $sc_reflector->newInstance();
+							EE_Registry::instance()->shortcodes->{$shortcode_class} = $sc_reflector->newInstance();
 							// fire the shortcode class's run method, so that it can activate resources
-							EE_Registry::instance()->shortcodes->$shortcode_class->run( $WP );
+							EE_Registry::instance()->shortcodes->{$shortcode_class}->run( $WP );
 						}
 					// if this is NOT the "Posts page" and we have a valid entry for the "Posts page" in our tracked post_shortcodes array
 					} else if ( $post_name != $page_for_posts && isset( EE_Registry::instance()->CFG->core->post_shortcodes[ $page_for_posts ] )) {
@@ -334,7 +339,7 @@ final class EE_Front_Controller {
 						// grab module name
 						$module_name = $module->module_name();
 						// map the module to the module objects
-						EE_Registry::instance()->modules->$module_name = $module;
+						EE_Registry::instance()->modules->{$module_name} = $module;
 					}
 				}
 			}
@@ -423,6 +428,7 @@ final class EE_Front_Controller {
 			// load core js
 			wp_register_script( 'espresso_core', EE_GLOBAL_ASSETS_URL . 'scripts/espresso_core.js', array('jquery'), EVENT_ESPRESSO_VERSION, TRUE );
 			wp_enqueue_script( 'espresso_core' );
+			wp_localize_script( 'espresso_core', 'eei18n', EE_Registry::$i18n_js_strings );
 
 		}
 
@@ -532,7 +538,14 @@ final class EE_Front_Controller {
 	public function display_errors() {
 		static $shown_already = FALSE;
 		do_action( 'AHEE__EE_Front_Controller__display_errors__begin' );
-		if ( apply_filters( 'FHEE__EE_Front_Controller__display_errors', TRUE ) && ! $shown_already && is_main_query() && ! is_feed() && in_the_loop() ) {
+		if (
+			apply_filters( 'FHEE__EE_Front_Controller__display_errors', TRUE )
+			&& ! $shown_already
+			&& is_main_query()
+			&& ! is_feed()
+			&& in_the_loop()
+			&& EE_Registry::instance()->REQ->is_espresso_page()
+		) {
 			echo EE_Error::get_notices();
 			$shown_already = TRUE;
 			EE_Registry::instance()->load_helper( 'Template' );
@@ -554,12 +567,14 @@ final class EE_Front_Controller {
 	 * @return    string
 	 */
 	public function template_include( $template_include_path = NULL ) {
-		$this->_template_path = ! empty( $this->_template_path ) ? basename( $this->_template_path ) : basename( $template_include_path );
-		$template_path = EEH_Template::locate_template( $this->_template_path, array(), FALSE );
-		$this->_template_path = ! empty( $template_path ) ? $template_path : $template_include_path;
-		$this->_template = basename( $this->_template_path );
-		//		echo '<h4>$this->_template_path : ' . $this->_template_path . '  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span></h4>';
-		return $this->_template_path;
+		if ( EE_Registry::instance()->REQ->is_espresso_page() ) {
+			$this->_template_path = ! empty( $this->_template_path ) ? basename( $this->_template_path ) : basename( $template_include_path );
+			$template_path = EEH_Template::locate_template( $this->_template_path, array(), false );
+			$this->_template_path = ! empty( $template_path ) ? $template_path : $template_include_path;
+			$this->_template = basename( $this->_template_path );
+			return $this->_template_path;
+		}
+		return $template_include_path;
 	}
 
 

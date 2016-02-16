@@ -31,25 +31,79 @@ class EE_Transaction extends EE_Base_Class implements EEI_Transaction{
 
 	/**
 	 *
-	 * @param array $props_n_values
-	 * @param string $timezone
+	 * @param array $props_n_values  incoming values
+	 * @param string $timezone  incoming timezone (if not set the timezone set for the website will be
+	 *                          		used.)
+	 * @param array $date_formats  incoming date_formats in an array where the first value is the
+	 *                             		    date_format and the second value is the time format
 	 * @return EE_Transaction
 	 */
-	public static function new_instance( $props_n_values = array(), $timezone = '' ) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__ );
-		return $has_object ? $has_object : new self( $props_n_values, FALSE, $timezone );
+	public static function new_instance( $props_n_values = array(), $timezone = null, $date_formats = array() ) {
+		$has_object = parent::_check_for_object( $props_n_values, __CLASS__, $timezone, $date_formats );
+		return $has_object ? $has_object : new self( $props_n_values, false, $timezone, $date_formats );
 	}
 
 
 
 	/**
-	 *
-	 * @param array $props_n_values
-	 * @param string $timezone
-	 * @return EE_Transaction
+	 * @param array $props_n_values  incoming values from the database
+	 * @param string $timezone  incoming timezone as set by the model.  If not set the timezone for
+	 *                          		the website will be used.
+	 * @return EE_Attendee
 	 */
-	public static function new_instance_from_db( $props_n_values = array(), $timezone = '' ) {
+	public static function new_instance_from_db( $props_n_values = array(), $timezone = null ) {
 		return new self( $props_n_values, TRUE, $timezone );
+	}
+
+
+
+	/**
+	 * 	lock
+	 *
+	 * 	sets a wp_option indicating that this TXN is locked
+	 * and should not be updated in the db
+	 *
+	 * @access 	public
+	 * @return 	void
+	 */
+	public function lock() {
+		$locked_transactions = get_option( 'ee_locked_transactions', array() );
+		$locked_transactions[ $this->ID() ] = true;
+		update_option( 'ee_locked_transactions', $locked_transactions );
+	}
+
+
+
+	/**
+	 * 	unlock
+	 *
+	 * 	removes transaction lock applied in lock_transaction()
+	 *
+	 * @access 	public
+	 * @return 	void
+	 */
+	public function unlock() {
+		$locked_transactions = get_option( 'ee_locked_transactions', array() );
+		unset( $locked_transactions[ $this->ID() ] );
+		update_option( 'ee_locked_transactions', $locked_transactions );
+	}
+
+	/**
+	 * is_locked
+	 *
+	 * Decides whether or not now is the right time to update the transaction.
+	 * This is useful because we don't always if it is safe to update the transaction
+	 * and its related data. why?
+	 * because it's possible that the transaction is being used in another
+	 * request and could overwrite anything we save.
+	 * So we want to only update the txn once we know that won't happen.
+	 *
+	 * @access 	public
+	 * @return boolean
+	 */
+	public function is_locked() {
+		$locked_transactions = get_option( 'ee_locked_transactions', array() );
+		return isset( $locked_transactions[ $this->ID() ] ) ? true : false;
 	}
 
 
@@ -114,7 +168,7 @@ class EE_Transaction extends EE_Base_Class implements EEI_Transaction{
 
 	/**
 	 * Gets TXN_reg_steps
-	 * @return EE_SPCO_Reg_Step[]
+	 * @return array
 	 */
 	function reg_steps() {
 		$TXN_reg_steps = $this->get( 'TXN_reg_steps' );
@@ -231,11 +285,12 @@ class EE_Transaction extends EE_Base_Class implements EEI_Transaction{
 	/**
 	 *    datetime
 	 *
-	 *    Returns the transaction datetime as:
-	 * 			- unix timestamp format including the UTC (timezone) offset (default)
-	 * 			- formatted date string including the UTC (timezone) offset ($format = TRUE ($gmt has no affect with this option))
-	 * 			- unix timestamp format in UTC+0 (GMT) ($gmt = TRUE)
-	 *    Formatting options, including the UTC offset, are set via the WP General Settings page
+	 *    Returns the transaction datetime as either:
+	 * 			- unix timestamp format ($format = false, $gmt = true)
+	 * 			- formatted date string including the UTC (timezone) offset ($format = true ($gmt
+	 * 			  has no affect with this option)), this also may include a timezone abbreviation if the
+	 * 			  set timezone in this class differs from what the timezone is on the blog.
+	 * 			- formatted date string including the UTC (timezone) offset (default).
 	 *
 	 * @access 	public
 	 * @param 	boolean 	$format - whether to return a unix timestamp (default) or formatted date string
@@ -598,7 +653,7 @@ class EE_Transaction extends EE_Base_Class implements EEI_Transaction{
 		$item =  $this->get_first_related( 'Line_Item', array( array( 'LIN_type' => EEM_Line_Item::type_total ) ) );
 		if( ! $item ){
 			EE_Registry::instance()->load_helper( 'Line_Item' );
-			$item = EEH_Line_Item::create_default_total_line_item();
+			$item = EEH_Line_Item::create_total_line_item( $this );
 		}
 		return $item;
 	}
@@ -626,12 +681,7 @@ class EE_Transaction extends EE_Base_Class implements EEI_Transaction{
 	 * @return EE_Line_Item
 	 */
 	public function tax_total_line_item() {
-		$item =  $this->get_first_related( 'Line_Item', array( array( 'LIN_type' => EEM_Line_Item::type_tax_sub_total ) ) );
-		if( ! $item ){
-			EE_Registry::instance()->load_helper( 'Line_Item' );
-			$item = EEH_Line_Item::create_default_total_line_item();
-		}
-		return $item;
+		return EEH_Line_Item::get_taxes_subtotal( $this->total_line_item() );
 	}
 
 

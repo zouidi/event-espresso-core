@@ -101,8 +101,8 @@ abstract class EE_Form_Section_Base {
 		// assign incoming values to properties
 		foreach( $options_array as $key => $value ) {
 			$key = '_' . $key;
-			if ( property_exists( $this, $key ) && empty( $this->$key )) {
-				$this->$key = $value;
+			if ( property_exists( $this, $key ) && empty( $this->{$key} )) {
+				$this->{$key} = $value;
 			}
 		}
 	}
@@ -313,7 +313,12 @@ abstract class EE_Form_Section_Base {
 		if ( ! empty( $method )) {
 			$this->set_method( $method );
 		}
-		return EEH_HTML::nl( 1, 'form' ) . '<form id="' . $this->html_id() . '" action="' . $this->action() . '" method="' . $this->method() . '"' . $other_attributes . '>';
+		$html = EEH_HTML::nl( 1, 'form' ) . '<form';
+		$html .= $this->html_id() !== '' ? ' id="' . $this->html_id() . '"' : '';
+		$html .= ' action="' . $this->action() . '"';
+		$html .= ' method="' . $this->method() . '"';
+		$html .= $other_attributes . '>';
+		return $html;
 	}
 
 
