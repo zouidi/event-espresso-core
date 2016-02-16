@@ -49,26 +49,43 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 			$this->wpUserId(),
 			array( 'SystemQuestionsBase' )
 		);
-		// todo add sorting property to each SystemQuestions* class and run array through custom sorting algorithm
+		uasort( $table_data_generators, array( $this, 'sortSystemQuestionTables' ) );
 		$this->setTableDataGenerators( $table_data_generators );
 	}
 
 
 
 	/**
-	 * getExistingSystemQuestionGroups
+	 * sorts table based on the return value of each object's tableInsertOrder() method
+	 *
+	 * @param SystemQuestionsBase $a
+	 * @param SystemQuestionsBase $b
+	 * @return int
+	 */
+	private function sortSystemQuestionTables( SystemQuestionsBase $a, SystemQuestionsBase $b ) {
+		if ( $a->tableInsertOrder() == $b->tableInsertOrder() ) {
+			return 0;
+		}
+		return ( $a->tableInsertOrder() < $b->tableInsertOrder() ) ? -1 : 1;
+	}
+
+
+
+	/**
+	 * getExistingData
 	 *
 	 * @access protected
+	 * @param string $field_name
 	 * @param string $table_name
 	 * @return array
 	 */
-	protected function getExistingSystemQuestionGroups( $table_name ) {
+	protected function getExistingData( $field_name, $table_name ) {
 		global $wpdb;
-		$SQL = "SELECT 'QSG_system' FROM $table_name WHERE 'QSG_system' != '0'";
+		$SQL = "SELECT $field_name FROM $table_name WHERE $field_name != 0";
 		// what we have
-		$existing_question_groups = $wpdb->get_col( $SQL );
+		$existing_data = $wpdb->get_col( $SQL );
 		// check the response
-		return is_array( $existing_question_groups ) ? $existing_question_groups : array();
+		return is_array( $existing_data ) ? $existing_data : array();
 	}
 
 
@@ -77,30 +94,27 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 	 * initializeSystemQuestionGroups
 	 *
 	 * @access public
-	 * @return array
+	 * @return void
 	 */
 	public function initializeSystemQuestionGroups() {
 		// QUESTION GROUPS
 		$table_name = TableDataGenerator::tableNameWithPrefix( 'esp_question_group' );
-		$existing_question_groups = $this->getExistingSystemQuestionGroups( $table_name );
-		$QSG_IDs = array();
+		$existing_question_groups = $this->getExistingData( 'QSG_system', $table_name );
 		foreach ( $this->tableDataGenerators() as $classname => $table_data_generator ) {
 			if ( $table_data_generator instanceof SystemQuestionsBase ) {
 				$QSG_system = $table_data_generator->getQSGConstant();
-				\EEH_Debug_Tools::printr( $classname, '$classname', __FILE__, __LINE__ );
-				\EEH_Debug_Tools::printr( $QSG_system, '$QSG_system', __FILE__, __LINE__ );
 				// record already exists, skip to next item
 				if ( in_array( (string)$QSG_system, $existing_question_groups ) ) {
 					continue;
 				}
-				$QSG_IDs[ $QSG_system ] = $this->insertData(
+				$QSG_ID = $this->insertData(
 					$table_name,
 					$table_data_generator->getQuestionGroupData(),
 					$table_data_generator->getQuestionGroupDataTypes()
 				);
+				$table_data_generator->setQsgID( $QSG_ID );
 			}
 		}
-		return $QSG_IDs;
 	}
 
 
@@ -113,115 +127,40 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 	 */
 	public function initializeSystemQuestions() {
 		// QUESTION GROUPS
-		$table_name = TableDataGenerator::tableNameWithPrefix( 'esp_question_group' );
-		$existing_question_groups = $this->getExistingSystemQuestionGroups( $table_name );
-		$QSG_IDs = array();
-		foreach ( $this->tableDataGenerators() as $classname => $table_data_generator ) {
-			if ( $table_data_generator instanceof SystemQuestionsBase ) {
-				$QSG_system = $table_data_generator->getQSGConstant();
-				if ( in_array( (string)$QSG_system, $existing_question_groups ) ) {
-				}
-				$QSG_IDs[ $QSG_system ] = $this->insertData(
-					$table_name,
-					$table_data_generator->getQuestionGroupData(),
-					$table_data_generator->getQuestionGroupDataTypes()
-				);
-			}
-		}
-		wp_die();
-
-		// QUESTIONS
-		global $wpdb;
 		$table_name = TableDataGenerator::tableNameWithPrefix( 'esp_question' );
-		$SQL = "SELECT QST_system FROM $table_name WHERE QST_system != ''";
-		// what we have
-		$questions = $wpdb->get_col( $SQL );
-		// what we should have
-		$QST_systems = array(
-			'fname',
-			'lname',
-			'email',
-			'address',
-			'address2',
-			'city',
-			'state',
-			'country',
-			'zip',
-			'phone',
-			'purchase_fname',
-			'purchase_lname',
-			'purchase_email',
-			'organization',
-		);
-		$order_for_group_1 = 1;
-		$order_for_group_2 = 1;
-		$order_for_group_3 = 1;
-		// loop thru what we should have and compare to what we have
-		foreach ( $QST_systems as $QST_system ) {
-			// reset values array
-			$QST_values = array();
-			// if we don't have what we should have
-			if ( ! in_array( $QST_system, $questions ) ) {
-				// add it
-				switch ( $QST_system ) {
-
-					case 'organization':
-						$QST_values = array(
-						);
-						break;
-				}
-				if ( ! empty( $QST_values ) ) {
-					// insert system question
-					$wpdb->insert(
+		$existing_questions = $this->getExistingData( 'QST_system', $table_name );
+		foreach ( $this->tableDataGenerators() as $classname => $table_data_generator ) {
+			$QSG_order = 0;
+			if ( $table_data_generator instanceof SystemQuestionsBase ) {
+				$system_questions = $table_data_generator->getSystemQuestions();
+				foreach ( $system_questions as $system_question => $system_question_data ) {
+					$QSG_order++;
+					// record already exists, skip to next item
+					if ( in_array( $system_question, $existing_questions ) ) {
+						continue;
+					}
+					$QST_ID = $this->insertData(
 						$table_name,
-						$QST_values,
-						array( '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%d', '%d' )
+						$system_question_data,
+						$table_data_generator->getQuestionDataTypes()
 					);
-					$QST_ID = $wpdb->insert_id;
-					// QUESTION GROUP QUESTIONS
-					if ( in_array( $QST_system, array( 'fname', 'lname', 'email' ) ) ) {
-						$system_question_we_want = \EEM_Question_Group::system_personal;
-					} else {
-						$system_question_we_want = \EEM_Question_Group::system_address;
-					}
-					if ( isset( $QSG_IDs[ $system_question_we_want ] ) ) {
-						$QSG_ID = $QSG_IDs[ $system_question_we_want ];
-					} else {
-						$id_col = \EEM_Question_Group::instance()->get_col(
-							array( array( 'QSG_system' => $system_question_we_want ) )
-						);
-						if ( is_array( $id_col ) ) {
-							$QSG_ID = reset( $id_col );
-						} else {
-							//ok so we didn't find it in the db either?? that's weird because we should have inserted it at the start of this method
-							\EE_Log::instance()->log(
-								__FILE__,
-								__FUNCTION__,
-								sprintf(
-									__(
-										'Could not associate question %1$s to a question group because no system question group existed',
-										'event_espresso'
-									),
-									$QST_ID
-								),
-								'error'
-							);
-							continue;
-						}
-					}
-					switch ( $QSG_ID ) {
-					}
-					//$QSG_order ( $QSG_ID == 1 ) ? $order_for_group_1++ : $order_for_group_2++;
-					// add system questions to groups
-					$wpdb->insert(
+					// now set a relation to it's question group
+					$this->insertData(
 						TableDataGenerator::tableNameWithPrefix( 'esp_question_group_question' ),
-						array( 'QSG_ID' => $QSG_ID, 'QST_ID' => $QST_ID, 'QGQ_order' => $QSG_order ),
+						array(
+							'QSG_ID' => $table_data_generator->qsgID(),
+							'QST_ID' => $QST_ID,
+							'QGQ_order' => $QSG_order
+						),
 						array( '%d', '%d', '%d' )
 					);
 				}
 			}
 		}
 	}
+
+
+
 }
 // End of file SystemQuestionTableDataGenerator.php
 // Location: /core/config/system_questions/SystemQuestionTableDataGenerator.php
