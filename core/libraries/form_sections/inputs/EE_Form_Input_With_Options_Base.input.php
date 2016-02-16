@@ -7,7 +7,25 @@
  * @subpackage
  * @author				Mike Nelson
  */
-class EE_Form_Input_With_Options_Base extends EE_Form_Input_Base{
+class EE_Form_Input_With_Options_Base extends EE_Form_Input_Base {
+
+	/**
+	 * indicates that the label HTML should be displayed BEFORE the input, ie:
+	 *      <label>option display text</label><input/>
+	 */
+	const label_before_input = -1;
+
+	/**
+	 * indicates that the label HTML should WRAP (contain) the input, ie:
+	 *      <label><input/>option display text</label>
+	 */
+	const label_wraps_input = 0;
+
+	/**
+	 * indicates that the label HTML should be displayed AFTER the input, ie:
+	 *      <label>option display text</label><input/>
+	 */
+	const label_after_input = 1;
 
 	/**
 	 * array of available options to choose as an answer
@@ -47,6 +65,14 @@ class EE_Form_Input_With_Options_Base extends EE_Form_Input_Base{
 	 */
 	protected $_multiple_selections = FALSE;
 
+	/**
+	 * controls the display position of the HTML label relative to the form input.
+	 * value = one of the class constants above
+	 *
+	 * @var int
+	 */
+	protected $_label_position = 0;
+
 
 
 	/**
@@ -59,6 +85,9 @@ class EE_Form_Input_With_Options_Base extends EE_Form_Input_Base{
 			if ( isset( $input_settings['enforce_label_size'] ) && $input_settings['enforce_label_size'] ) {
 				$this->_enforce_label_size = TRUE;
 			}
+		}
+		if ( isset( $input_settings[ 'label_position' ] ) ) {
+			$this->set_label_position( $input_settings[ 'label_position' ] );
 		}
 		if ( isset( $input_settings['display_html_label_text'] )) {
 			$this->set_display_html_label_text( $input_settings['display_html_label_text'] );
@@ -281,6 +310,31 @@ class EE_Form_Input_With_Options_Base extends EE_Form_Input_Base{
 	 */
 	public function set_display_html_label_text( $display_html_label_text ) {
 		$this->_display_html_label_text = filter_var( $display_html_label_text, FILTER_VALIDATE_BOOLEAN );
+	}
+
+
+
+	/**
+	 * @return int
+	 */
+	public function label_position() {
+		return $this->_label_position;
+	}
+
+
+
+	/**
+	 * @param int $label_position
+	 */
+	public function set_label_position( $label_position ) {
+		$label_positions = array(
+			EE_Form_Input_With_Options_Base::label_before_input,
+			EE_Form_Input_With_Options_Base::label_wraps_input,
+			EE_Form_Input_With_Options_Base::label_after_input,
+		);
+		$this->_label_position = in_array( $label_position, array( $label_positions ))
+			? $label_position
+			: EE_Form_Input_With_Options_Base::label_wraps_input;
 	}
 
 
