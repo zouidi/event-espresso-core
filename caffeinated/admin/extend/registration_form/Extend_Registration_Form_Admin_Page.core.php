@@ -453,11 +453,13 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 	}
 
 
-/**
- * Performs the deletion of a single or multiple questions or question groups.
- * @param EEM_Base $model
- * @return int number of items deleted permanenetly
- */
+
+	/**
+	 * Performs the deletion of a single or multiple questions or question groups.
+	 *
+	 * @param EEM_Soft_Delete_Base $model
+	 * @return int number of items deleted permanently
+	 */
 	private function _delete_items(EEM_Soft_Delete_Base $model){
 		$success = 0;
 		do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
@@ -498,6 +500,7 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 		$this->_admin_page_title = ucwords( str_replace( '_', ' ', $this->_req_action ));
 		// add ID to title if editing
 		$this->_admin_page_title = $ID ? $this->_admin_page_title . ' # ' . $ID : $this->_admin_page_title;
+		/** @var EE_Question_Group $questionGroup */
 		if($ID){
 			$questionGroup=$this->_question_group_model->get_one_by_ID($ID);
 			$additional_hidden_fields=array('QSG_ID'=>array('type'=>'hidden','value'=>$ID));
@@ -620,7 +623,7 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 
 	protected function _trash_or_restore_question_groups($trash = TRUE) {
-		return $this->_trash_or_restore_items( $this->_question_group_model, $trash );
+		$this->_trash_or_restore_items( $this->_question_group_model, $trash );
 	}
 
 	protected function _trash_question(){
@@ -638,12 +641,13 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 
 	/**
-	 * Interally used to delete or restore items, using the request data. Meant to be
+	 * Internally used to delete or restore items, using the request data. Meant to be
 	 * flexible between question or question groups
-	 * @param EEM_Base $model
-	 * @param boolean $trash wehter to trash or restore
+	 *
+	 * @param EEM_Soft_Delete_Base $model
+	 * @param boolean $trash whether to trash or restore
 	 */
-	private function _trash_or_restore_items( EEM_Base $model, $trash = TRUE ) {
+	private function _trash_or_restore_items( EEM_Soft_Delete_Base $model, $trash = TRUE ) {
 
 		do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
@@ -701,11 +705,11 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 		$query_params = $this->get_query_params(EEM_Question::instance(), $per_page, $current_page);
 
 		if( $count ){
-			//note: this a subclass of EEM_Soft_Delete_Base, so thsi is actually only getting nontrashed items
+			//note: this a subclass of EEM_Soft_Delete_Base, so this is actually only getting non-trashed items
 			$where = isset( $query_params[0] ) ? array( $query_params[0] ) : array();
 			$results=$this->_question_model->count_deleted($where);
 		}else{
-			//note: this a subclass of EEM_Soft_Delete_Base, so thsi is actually only getting nontrashed items
+			//note: this a subclass of EEM_Soft_Delete_Base, so this is actually only getting non-trashed items
 			$results=$this->_question_model->get_all_deleted($query_params);
 		}
 		return $results;
@@ -759,7 +763,6 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 			//figure out where we start the row_id count at for the current page.
 			$qsgcount = empty( $curpage ) ? 0 : ($curpage - 1 ) * $perpage;
 
-			global $wpdb;
 			for ( $i = 0; $i < count($row_ids); $i++ ) {
 				//Update the questions when re-ordering
 				if ( EEM_Question_Group::instance()->update ( array( 'QSG_order' => $qsgcount ), array(array( 'QSG_ID' => $row_ids[$i] ))) === FALSE ) {
