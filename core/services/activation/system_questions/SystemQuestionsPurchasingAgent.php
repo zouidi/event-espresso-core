@@ -99,7 +99,7 @@ class SystemQuestionsPurchasingAgent extends SystemQuestionsBase {
 				'QST_display_text'  => __( 'Email Address', 'event_espresso' ),
 				'QST_admin_label'   => __( 'Purchasing Agent Email Address - System Question', 'event_espresso' ),
 				'QST_system'        => 'purchaser_email',
-				'QST_type'          => 'EMAIL',
+				'QST_type'          => 'TEXT', // todo: in 4.9 this can be changed to EMAIL
 				'QST_required'      => 1,
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 3,
