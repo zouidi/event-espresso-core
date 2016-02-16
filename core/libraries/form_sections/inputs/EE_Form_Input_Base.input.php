@@ -142,6 +142,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 	 * }
 	 */
 	public function __construct( $input_args = array() ){
+		$input_args = apply_filters( 'FHEE__EE_Form_Input_Base___construct__input_args', $input_args, $this );
 		// the following properties must be cast as arrays
 		$set_as_array = array(
 			'validation_strategies'
@@ -156,9 +157,9 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 					// ensure value is an array
 					$value = is_array( $value ) ? $value : array( $value );
 					// and merge with existing values
-					$this->$_key = array_merge( $this->$_key, $value );
+					$this->{$_key} = array_merge( $this->{$_key}, $value );
 				} else {
-					$this->$_key = $value;
+					$this->{$_key} = $value;
 				}
 			}
 		}
@@ -220,6 +221,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 				$this->_html_label_text = ucwords( str_replace("_"," ",$name));
 			}
 		}
+		do_action( 'AHEE__EE_Form_Input_Base___construct_finalize__end', $this, $parent_form_section, $name );
 	}
 
 	 /**

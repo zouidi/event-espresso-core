@@ -46,7 +46,7 @@ class EE_Question_Option extends EE_Soft_Delete_Base_Class implements EEI_Duplic
 	 * @return EE_Attendee
 	 */
 	public static function new_instance( $props_n_values = array(), $timezone = null, $date_formats = array() ) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__ );
+		$has_object = parent::_check_for_object( $props_n_values, __CLASS__, $timezone, $date_formats );
 		return $has_object ? $has_object : new self( $props_n_values, false, $timezone, $date_formats );
 	}
 
@@ -204,6 +204,23 @@ class EE_Question_Option extends EE_Soft_Delete_Base_Class implements EEI_Duplic
 			$new_question_option->set_question_ID( $options[ 'QST_ID' ] );
 		}
 		$new_question_option->save();
+	}
+	
+	/**
+	 * Gets the QSO_system value
+	 * @return string|null
+	 */
+	public function system() {
+		return $this->get('QSO_system');
+	}
+	
+	/**
+	 * Sets QSO_system
+	 * @param string $QSO_system
+	 * @return bool
+	 */
+	public function set_system( $QSO_system ) {
+		return $this->set( 'QSO_system', $QSO_system );
 	}
 }
 

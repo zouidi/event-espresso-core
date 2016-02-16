@@ -26,8 +26,15 @@ class EEH_Activation {
 	/**
 	 * constant used to indicate a cron task is no longer in use
 	 */
-	const cron_task_no_longer_in_use = null;
+	const cron_task_no_longer_in_use = 'no_longer_in_use';
 
+	/**
+	 * option name that will indicate whether or not we still
+	 * need to create EE's folders in the uploads directory
+	 * (because if EE was installed without file system access,
+	 * we need to request credentials before we can create them)
+	 */
+	const upload_directories_incomplete_option_name = 'ee_upload_directories_incomplete';
 	private static $_default_creator_id = null;
 
 	/**
@@ -136,6 +143,7 @@ class EEH_Activation {
 			array(
 				'AHEE__EE_Cron_Tasks__clean_up_junk_transactions' => 'hourly',
 //				'AHEE__EE_Cron_Tasks__finalize_abandoned_transactions' => EEH_Activation::cron_task_no_longer_in_use, actually this is still in use
+				'AHEE__EE_Cron_Tasks__update_transaction_with_payment' => EEH_Activation::cron_task_no_longer_in_use, //there may have been a bug which prevented from these cron tasks from getting unscheduled, so we might want to remove these for a few updates
 			)
 		);
 		if( $which_to_include === 'all' ) {
@@ -173,11 +181,33 @@ class EEH_Activation {
 	 */
 	public static function remove_cron_tasks( $remove_all = true ) {
 		$cron_tasks_to_remove = $remove_all ? 'all' : 'old';
+		$crons = _get_cron_array();
+		$crons = is_array( $crons ) ? $crons : array();
+		/* reminder that $crons looks like: top-level keys are timestamps,
+		 * and their values are arrays.
+		 * The 2nd level arrays have keys with each of the cron task hooknames to run at that time
+		 * and their values are arrays.
+		 * The 3rd level level arrays are keys which are hashes of the cron task's arguments,
+		 *  and their values are the UN-hashed arguments
+		 * eg
+		 * array (size=13)
+		 *		1429903276 =>
+		 *		  array (size=1)
+		 *			'AHEE__EE_Cron_Tasks__update_transaction_with_payment' =>
+		 *			  array (size=1)
+		 *				'561299d6e42c8e079285870ade0e47e6' =>
+		 *				  array (size=2)
+		 *					...
+		 *      ...
+		 */
 		foreach( EEH_Activation::get_cron_tasks( $cron_tasks_to_remove ) as $hook_name => $frequency ) {
-			while( $scheduled_time = wp_next_scheduled( $hook_name ) ) {
-				wp_unschedule_event( $scheduled_time, $hook_name );
+			foreach( $crons as $timestamp => $hooks_to_fire_at_time ) {
+				if ( array_key_exists( $hook_name, $hooks_to_fire_at_time ) )  {
+					unset( $crons[ $timestamp ][ $hook_name ] );
+				}
 			}
 		}
+		_set_cron_array( $crons );
 	}
 
 
@@ -268,7 +298,7 @@ class EEH_Activation {
 				if ( $key == 'calendar' && class_exists( 'EE_Calendar_Config' )) {
 					$EE_Config->set_config( 'addons', 'EE_Calendar', 'EE_Calendar_Config', $value );
 				} else {
-					$settings->$key = $value;
+					$settings->{$key} = $value;
 				}
 			}
 			add_filter( 'FHEE__EE_Config___load_core_config__update_espresso_config', '__return_true' );
@@ -334,11 +364,13 @@ class EEH_Activation {
 			),
 		);
 
+		$EE_Core_Config = EE_Registry::instance()->CFG->core;
+
 		foreach ( $critical_pages as $critical_page ) {
 			// is critical page ID set in config ?
-			if ( EE_Registry::instance()->CFG->core->$critical_page['id'] !== FALSE ) {
+			if ( $EE_Core_Config->{$critical_page[ 'id' ]} !== FALSE ) {
 				// attempt to find post by ID
-				$critical_page['post'] = get_post( EE_Registry::instance()->CFG->core->$critical_page['id'] );
+				$critical_page['post'] = get_post( $EE_Core_Config->{$critical_page[ 'id' ]} );
 			}
 			// no dice?
 			if ( $critical_page['post'] == NULL ) {
@@ -360,16 +392,24 @@ class EEH_Activation {
 				EEH_Activation::_track_critical_page_post_shortcodes( $critical_page );
 			}
 			// check that Post ID matches critical page ID in config
-			if ( isset( $critical_page['post']->ID ) && $critical_page['post']->ID != EE_Registry::instance()->CFG->core->$critical_page['id'] ) {
+			if (
+				isset( $critical_page['post']->ID )
+				&& $critical_page['post']->ID != $EE_Core_Config->{$critical_page[ 'id' ]}
+			) {
 				//update Config with post ID
-				EE_Registry::instance()->CFG->core->$critical_page['id'] = $critical_page['post']->ID;
+				$EE_Core_Config->{$critical_page[ 'id' ]} = $critical_page['post']->ID;
 				if ( ! EE_Config::instance()->update_espresso_config( FALSE, FALSE ) ) {
 					$msg = __( 'The Event Espresso critical page configuration settings could not be updated.', 'event_espresso' );
 					EE_Error::add_error( $msg, __FILE__, __FUNCTION__, __LINE__ );
 				}
 			}
 
-			$critical_page_problem =  ! isset( $critical_page['post']->post_status ) || $critical_page['post']->post_status != 'publish' || strpos( $critical_page['post']->post_content, $critical_page['code'] ) === FALSE ? TRUE : $critical_page_problem;
+			$critical_page_problem =
+				! isset( $critical_page['post']->post_status )
+				|| $critical_page['post']->post_status != 'publish'
+				|| strpos( $critical_page['post']->post_content, $critical_page['code'] ) === FALSE
+					? TRUE
+					: $critical_page_problem;
 
 		}
 
@@ -380,11 +420,9 @@ class EEH_Activation {
 			);
 			EE_Error::add_persistent_admin_notice( 'critical_page_problem', $msg );
 		}
-
 		if ( EE_Error::has_notices() ) {
 			EE_Error::get_notices( FALSE, TRUE, TRUE );
 		}
-
 	}
 
 	/**
@@ -472,16 +510,17 @@ class EEH_Activation {
 			EE_Error::add_error( $msg, __FILE__, __FUNCTION__, __LINE__ );
 			return;
 		}
+		$EE_Core_Config = EE_Registry::instance()->CFG->core;
 		// map shortcode to post
-		EE_Registry::instance()->CFG->core->post_shortcodes[ $critical_page['post']->post_name ][ $critical_page['code'] ] = $critical_page['post']->ID;
+		$EE_Core_Config->post_shortcodes[ $critical_page['post']->post_name ][ $critical_page['code'] ] = $critical_page['post']->ID;
 		// and make sure it's NOT added to the WP "Posts Page"
 		// name of the WP Posts Page
 		$posts_page = EE_Registry::instance()->CFG->get_page_for_posts();
-		if ( isset( EE_Registry::instance()->CFG->core->post_shortcodes[ $posts_page ] )) {
-			unset( EE_Registry::instance()->CFG->core->post_shortcodes[ $posts_page ][ $critical_page['code'] ] );
+		if ( isset( $EE_Core_Config->post_shortcodes[ $posts_page ] )) {
+			unset( $EE_Core_Config->post_shortcodes[ $posts_page ][ $critical_page['code'] ] );
 		}
-		if ( $posts_page != 'posts' && isset( EE_Registry::instance()->CFG->core->post_shortcodes['posts'] )) {
-			unset( EE_Registry::instance()->CFG->core->post_shortcodes['posts'][ $critical_page['code'] ] );
+		if ( $posts_page != 'posts' && isset( $EE_Core_Config->post_shortcodes['posts'] )) {
+			unset( $EE_Core_Config->post_shortcodes['posts'][ $critical_page['code'] ] );
 		}
 		// update post_shortcode CFG
 		if ( ! EE_Config::instance()->update_espresso_config( FALSE, FALSE )) {
@@ -787,8 +826,6 @@ class EEH_Activation {
 
 
 
-
-
 	/**
 	 * initialize_system_questions
 	 *
@@ -804,6 +841,8 @@ class EEH_Activation {
 		$system_questions_generator->initializeSystemQuestionGroups();
 		$system_questions_generator->initializeSystemQuestions();
 	}
+
+
 
 	/**
 	 * Makes sure the default payment method (Invoice) is active.
@@ -898,12 +937,11 @@ class EEH_Activation {
 		EE_Registry::instance()->load_helper( 'File' );
 		// Create the required folders
 		$folders = array(
-				EVENT_ESPRESSO_UPLOAD_DIR,
 				EVENT_ESPRESSO_TEMPLATE_DIR,
 				EVENT_ESPRESSO_GATEWAY_DIR,
-				EVENT_ESPRESSO_UPLOAD_DIR . '/logs/',
-				EVENT_ESPRESSO_UPLOAD_DIR . '/css/',
-				EVENT_ESPRESSO_UPLOAD_DIR . '/tickets/'
+				EVENT_ESPRESSO_UPLOAD_DIR . 'logs/',
+				EVENT_ESPRESSO_UPLOAD_DIR . 'css/',
+				EVENT_ESPRESSO_UPLOAD_DIR . 'tickets/'
 		);
 		foreach ( $folders as $folder ) {
 			try {
@@ -918,10 +956,29 @@ class EEH_Activation {
 					),
 					__FILE__, __FUNCTION__, __LINE__
 				);
+				//indicate we'll need to fix this later
+				update_option( EEH_Activation::upload_directories_incomplete_option_name, true );
 				return FALSE;
 			}
 		}
+		//just add the .htaccess file to the logs directory to begin with. Even if logging
+		//is disabled, there might be activation errors recorded in there
+		EEH_File::add_htaccess_deny_from_all( EVENT_ESPRESSO_UPLOAD_DIR . 'logs/' );
+		//remember EE's folders are all good
+		delete_option( EEH_Activation::upload_directories_incomplete_option_name );
 		return TRUE;
+	}
+
+	/**
+	 * Whether the upload directories need to be fixed or not.
+	 * If EE is installed but filesystem access isn't initially available,
+	 * we need to get the user's filesystem credentials and THEN create them,
+	 * so there might be period of time when EE is installed but its
+	 * upload directories aren't available. This indicates such a state
+	 * @return boolean
+	 */
+	public static function upload_directories_incomplete() {
+		return get_option( EEH_Activation::upload_directories_incomplete_option_name, false );
 	}
 
 
@@ -1239,11 +1296,11 @@ class EEH_Activation {
 		//there are some tables whose models were removed.
 		//they should be removed when removing all EE core's data
 		$tables_without_models = array(
-			'wp_esp_promotion',
-			'wp_esp_promotion_applied',
-			'wp_esp_promotion_object',
-			'wp_esp_promotion_rule',
-			'wp_esp_rule'
+			'esp_promotion',
+			'esp_promotion_applied',
+			'esp_promotion_object',
+			'esp_promotion_rule',
+			'esp_rule'
 		);
 		foreach( $tables_without_models as $table ){
 			EEH_Activation::delete_db_table_if_empty( $table );
@@ -1255,7 +1312,7 @@ class EEH_Activation {
 			'ee_active_messengers' => true,
 			'ee_has_activated_messenger' => true,
 			'ee_flush_rewrite_rules' => true,
-			'ee_config' => true,
+			'ee_config' => false,
 			'ee_data_migration_current_db_state' => true,
 			'ee_data_migration_mapping_' => false,
 			'ee_data_migration_script_' => false,
@@ -1281,6 +1338,8 @@ class EEH_Activation {
 			'ee_rss_' => false,
 			'ee_rte_n_tx_' => false,
 			'ee_pers_admin_notices' => true,
+			'ee_job_parameters_' => false,
+			'ee_upload_directories_incomplete' => true,
 		);
 		if( is_main_site() ) {
 			$wp_options_to_delete[ 'ee_network_config' ] = true;
@@ -1302,6 +1361,8 @@ class EEH_Activation {
 				}
 			}
 		}
+                //also, let's make sure the "ee_config_option_names" wp option stays out by removing the action that adds it
+                remove_action( 'shutdown', array( EE_Config::instance(), 'shutdown' ), 10 );
 
 		if ( $remove_all && $espresso_db_update = get_option( 'espresso_db_update' )) {
 			$db_update_sans_ee4 = array();

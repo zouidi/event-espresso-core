@@ -441,15 +441,24 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 
 	protected function _delete_question(){
-		$success=$this->_question_model->delete_permanently_by_ID(intval($this->_req_data['QST_ID']));
-		$query_args=array('action'=>'default','status'=>'all');
-		$this->_redirect_after_action($success, $this->_question_model->item_name($success), 'deleted', $query_args);
+		$success = $this->_delete_items( $this->_question_model );
+		$this->_redirect_after_action(
+			$success,
+			$this->_question_model->item_name( $success ),
+			'deleted',
+			array( 'action' => 'default', 'status' => 'all' )
+		);
 	}
 
 
 	protected function _delete_questions() {
-		$success = $this->_delete_items($this->_question_model);
-		$this->_redirect_after_action( $success, $this->_question_model->item_name($success), 'deleted permanently', array( 'action'=>'default', 'status'=>'trash' ));
+		$success = $this->_delete_items( $this->_question_model );
+		$this->_redirect_after_action(
+			$success,
+			$this->_question_model->item_name( $success ),
+			'deleted permanently',
+			array( 'action' => 'default', 'status' => 'trash' )
+		);
 	}
 
 
@@ -468,21 +477,33 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 			$success = count( $this->_req_data['checkbox'] ) > 1 ? 2 : 1;
 			// cycle thru bulk action checkboxes
 			while (list( $ID, $value ) = each($this->_req_data['checkbox'])) {
-
-				if (!$model->delete_permanently_by_ID(absint($ID))) {
+				if ( ! $this->_delete_item( $ID, $model ) ) {
 					$success = 0;
 				}
 			}
 
 		}elseif( !empty($this->_req_data['QSG_ID'])){
-			$success = $model->delete_permanently_by_ID($this->_req_data['QSG_ID']);
+			$success = $this->_delete_item( $this->_req_data['QSG_ID'], $model );
 
 		}elseif( !empty($this->_req_data['QST_ID'])){
-			$success = $model->delete_permanently_by_ID($this->_req_data['QST_ID']);
+			$success = $this->_delete_item( $this->_req_data['QST_ID'], $model );
 		}else{
 			EE_Error::add_error( sprintf(__("No Questions or Question Groups were selected for deleting. This error usually shows when you've attempted to delete via bulk action but there were no selections.", "event_espresso")), __FILE__, __FUNCTION__, __LINE__ );
 		}
 		return $success;
+	}
+
+	/**
+	 * Deletes the specified question (and its associated question options) or question group
+	 * @param int $id
+	 * @param EEM_Soft_Delete_Base $model
+	 * @return boolean
+	 */
+	protected function _delete_item( $id, $model ) {
+		if( $model instanceof EEM_Question ) {
+			EEM_Question_Option::instance()->delete_permanently( array( array( 'QST_ID' => absint( $id ) ) ) );
+		}
+		return $model->delete_permanently_by_ID( absint( $id ) );
 	}
 
 
@@ -570,13 +591,15 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 			if ( isset( $this->_req_data['questions'], $this->_req_data['questions'][ $question_ID ] )) {
 				$question_group->add_question( $question_ID );
 			} else {
-				// not found, remove it (but only if not a system question for the personal group)
-				if ( $question instanceof EE_Question &&
-					! (
-						$question->is_system_question() &&
-						$question_group->system_group() === EEM_Question_Group::system_personal
+				// not found, remove it (but only if not a system question for the personal group with the exception of lname system question - we allow removal of it)
+				if (
+					in_array(
+						$question->system_ID(),
+						EEM_Question::instance()->required_system_questions_in_system_question_group( $question_group->system_group() )
 					)
 				) {
+					continue;
+				} else {
 					$question_group->remove_question( $question_ID );
 				}
 			}
@@ -717,7 +740,7 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 
 
-	public function get_question_groups( $per_page,$current_page = 1, $count = FALSE ) {
+	public function get_question_groups( $per_page, $current_page = 1, $count = FALSE ) {
 		$questionGroupModel=EEM_Question_Group::instance();
 		$query_params=$this->get_query_params($questionGroupModel,$per_page,$current_page);
 		if ($count){

@@ -33,6 +33,35 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$this->assertInstanceOf('EE_Attendee', $a);
 		return $a;
 	}
+
+
+
+
+	/**
+	 * @group 9273
+	 * @see https://events.codebasehq.com/projects/event-espresso/tickets/9273
+	 */
+	function test_new_instance_with_existing_object_and_incoming_date_formats() {
+		//setup a EE_Payment object and save
+		$payment_object = EE_Payment::new_instance();
+		$payment_object->save();
+		$payment_object_id = $payment_object->ID();
+
+		//now let's setup a new payment object using that ID but with different formats than the defaults
+		//that way we can verify the timestamp gets set correctly.
+		$expected_date = '2016-24-01';
+		$payment_object_to_test = EE_Payment::new_instance(
+			array(
+				'PAY_ID' => $payment_object_id,
+				'PAY_timestamp' => '2016-24-01 3:45 pm',
+			),
+			'',
+			array( 'Y-d-m', 'g:i a' )
+		);
+		$this->assertEquals( $expected_date, $payment_object_to_test->get_date( 'PAY_timestamp' ) );
+	}
+
+
 	function test_set_and_get(){
 		$a = EE_Attendee::new_instance();
 		$a->set('ATT_fname','value1');
@@ -112,7 +141,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
             $this->assertNull( $t_from_r );
             $rs_from_t = $t->registrations();
             $this->assertTrue( empty( $rs_from_t ) );
-            
+
             //add a relation and verify it changes the model object with the PK
             $r->_add_relation_to($t, 'Transaction');
             $this->assertEquals( $t->ID(), $r->get('TXN_ID'));
@@ -120,7 +149,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
             $t_from_r = $r->transaction();
             $this->assertEquals( $t, $t_from_r );
             $rs_from_t = $t->registrations();
-            $this->assertFalse( empty( $rs_from_t ) ); 
+            $this->assertFalse( empty( $rs_from_t ) );
 	}
         /**
          * @group 8686
@@ -526,7 +555,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 	public function test_infinite_fields_stay_that_way() {
 		/** @type EE_Datetime $datetime */
 		$datetime = $this->new_model_obj_with_dependencies( 'Datetime' );
-		$datetime->set_reg_limit( INF );
+		$datetime->set_reg_limit( EE_INF );
 		$datetime->save();
 		/** @type EE_Datetime $datetime_from_db */
 		$datetime_from_db = EEM_Datetime::reset()->get_one_by_ID( $datetime->ID() );
@@ -819,7 +848,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$this->assertTrue( is_array( $log_from_db->get( 'LOG_message' ) ) );
 		$this->assertEquals( unserialize( $log_message ), $log_from_db->get( 'LOG_message' ) );
 	}
-        
+
         /**
          * @group 8686
          */
@@ -831,7 +860,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
             $this->assertFalse( empty( $reg_payments ) );
             //now delete the relation entry
             foreach ( $p->registration_payments() as $registration_payment ) {
-                if ( $registration_payment instanceof EE_Registration_Payment ) {       
+                if ( $registration_payment instanceof EE_Registration_Payment ) {
                     $this->assertEquals( 1, $registration_payment->delete() );
                 }
             }
@@ -839,7 +868,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
             $reg_payments = $p->registration_payments();
             $this->assertTrue( empty( $reg_payments ) );
         }
-        
+
         /**
          * @group 8686
          */
@@ -853,7 +882,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
             $this->assertFalse( empty( $pays_on_r ) );
             //now remove the relations
             foreach ( $p->get_many_related( 'Registration' ) as $registration ) {
-                if ( $registration instanceof EE_Registration ) {       
+                if ( $registration instanceof EE_Registration ) {
                     $this->assertEquals( $registration, $p->_remove_relation_to( $registration, 'Registration' ) );
                 }
             }

@@ -11,7 +11,7 @@ require_once ( EE_MODELS . 'EEM_Base.model.php' );
  */
 class EEM_Transaction extends EEM_Base {
 
-  	// private instance of the Transaction object
+	// private instance of the Transaction object
 	protected static $_instance = NULL;
 
 	/**
@@ -19,7 +19,7 @@ class EEM_Transaction extends EEM_Base {
 	 * but payment is pending. This is the state for transactions where payment is promised
 	 * from an offline gateway.
 	 */
-//	const open_status_code = 'TPN';
+	//	const open_status_code = 'TPN';
 
 	/**
 	 * Status ID(STS_ID on esp_status table) to indicate the transaction failed,
@@ -108,20 +108,24 @@ class EEM_Transaction extends EEM_Base {
 	 * @return \stdClass[]
 	 */
 	public function get_revenue_per_day_report( $period = '-1 month' ) {
+		$sql_date = $this->convert_datetime_for_query( 'TXN_timestamp', date( 'Y-m-d H:i:s', strtotime( $period ) ), 'Y-m-d H:i:s', 'UTC' );
 
-		$sql_date = $this->convert_datetime_for_query( 'TXN_timestamp', date("Y-m-d H:i:s", strtotime($period) ), 'Y-m-d H:i:s', 'UTC' );
+		EE_Registry::instance()->load_helper( 'DTT_Helper' );
+		$query_interval = EEH_DTT_Helper::get_sql_query_interval_for_offset( $this->get_timezone(), 'TXN_timestamp' );
+
 		$results = $this->_get_all_wpdb_results(
 			array(
 				array(
-					'TXN_timestamp' => array('>=', $sql_date)),
-					'group_by' => 'txnDate',
-					'order_by' => array('TXN_timestamp' => 'DESC' )
-					),
-				OBJECT,
-				array(
-					'txnDate' => array('DATE(Transaction.TXN_timestamp)','%s'),
-					'revenue' => array('SUM(Transaction.TXN_paid)', '%d')
-					));
+				'TXN_timestamp' => array( '>=', $sql_date ) ),
+				'group_by' => 'txnDate',
+				'order_by' => array( 'TXN_timestamp' => 'ASC' )
+			),
+			OBJECT,
+			array(
+				'txnDate' => array( 'DATE(' . $query_interval . ')', '%s' ),
+				'revenue' => array( 'SUM(Transaction.TXN_paid)', '%d' )
+			)
+		);
 		return $results;
 	}
 
@@ -135,23 +139,28 @@ class EEM_Transaction extends EEM_Base {
 	 * @throws \EE_Error
 	 * @return mixed
 	 */
-	public function get_revenue_per_event_report( $period = 'month' ) {
-		/** @type WPDB $wpdb */
-		global $wpdb;
-		$date_mod = strtotime( '-1 ' . $period );
+	public function get_revenue_per_event_report( $period = '-1 month' ) {
+		$date_sql = EEM_Registration::instance()->convert_datetime_for_query( 'REG_date', date( 'Y-m-d H:i:s', strtotime( $period ) ), 'Y-m-d H:i:s', 'UTC' );
+		$where = array( 'Registration.REG_date' => array( '>=', $date_sql ) );
 
-		$SQL = 'SELECT post_title as event_name, SUM(TXN_paid) AS revenue';
-		$SQL .= ' FROM ' . $this->_get_main_table()->get_table_name() . ' txn';
-		$SQL .= ' LEFT JOIN ' . $wpdb->prefix . 'esp_registration reg ON reg.TXN_ID = txn.TXN_ID';
-		$SQL .= ' LEFT JOIN ' . $wpdb->posts . ' evt ON evt.ID = reg.EVT_ID';
-		$SQL .= ' WHERE REG_count = 1';
-		$SQL .= ' AND REG_date >= %d';
-		$SQL .= ' GROUP BY event_name';
-		$SQL .= ' ORDER BY event_name';
-		$SQL .= ' LIMIT 0, 24';
+		if ( ! EE_Registry::instance()->CAP->current_user_can( 'ee_read_others_registrations', 'revenue_per_event_report' ) ) {
+			$where ['Registration.Event.EVT_wp_user'] = get_current_user_id();
+		}
 
-		return $this->_do_wpdb_query( 'get_results', array(  $wpdb->prepare( $SQL, $date_mod ) ) );
-
+		$results = $this->_get_all_wpdb_results(
+			array(
+				$where,
+				'group_by' => array( 'Registration.Event.EVT_name' ),
+				'order_by' => 'Registration.Event.EVT_name',
+				'limit' => array( 0, 24 )
+			),
+			OBJECT,
+			array(
+				'event_name' => array( 'Registration___Event_CPT.post_title', '%s' ),
+				'revenue' => array( 'SUM(TXN_PAID)', '%d' )
+			)
+		);
+		return $results;
 	}
 
 
@@ -212,20 +221,57 @@ class EEM_Transaction extends EEM_Base {
 	public function delete_junk_transactions() {
 		/** @type WPDB $wpdb */
 		global $wpdb;
+		$deleted = false;
 		$time_to_leave_alone = apply_filters(
 			'FHEE__EEM_Transaction__delete_junk_transactions__time_to_leave_alone', WEEK_IN_SECONDS
 		);
-		$query = $wpdb->prepare( '
-			DELETE
-			FROM '. $this->table() . '
-			WHERE
-				STS_ID = %s AND
-				TXN_timestamp < %s',
-			EEM_Transaction::failed_status_code,
-			// use GMT time because that's what TXN_timestamps are in
-			gmdate(  'Y-m-d H:i:s', time() - $time_to_leave_alone )
+
+
+		/**
+		 * This allows code to filter the query arguments used for retrieving the transaction IDs to delete.
+		 * Useful for plugins that want to exclude transactions matching certain query parameters.
+		 * The query parameters should be in the format accepted by the EEM_Base model queries.
+		 */
+		$ids_query = apply_filters(
+			'FHEE__EEM_Transaction__delete_junk_transactions__initial_query_args',
+			array(
+				0 => array(
+					'STS_ID' => EEM_Transaction::failed_status_code,
+					'TXN_timestamp' => array( '<', time() - $time_to_leave_alone )
+				)
+			),
+			$time_to_leave_alone
 		);
-		return $wpdb->query( $query );
+
+
+		/**
+		 * This filter is for when code needs to filter the list of transaction ids that represent transactions
+		 * about to be deleted based on some other criteria that isn't easily done via the query args filter.
+		 */
+		$txn_ids = apply_filters(
+			'FHEE__EEM_Transaction__delete_junk_transactions__transaction_ids_to_delete',
+			EEM_Transaction::instance()->get_col( $ids_query, 'TXN_ID' ),
+			$time_to_leave_alone
+		);
+
+		//now that we have the ids to delete, let's get deletin'
+		//Why no wpdb->prepare?  Because the data is trusted.  We got the ids from the original query to get them FROM
+		//the db (which is sanitized) so no need to prepare them again.
+		if ( $txn_ids ) {
+			$query   = '
+				DELETE
+				FROM ' . $this->table() . '
+				WHERE
+					TXN_ID IN ( ' . implode( ",", $txn_ids ) . ')';
+			$deleted = $wpdb->query( $query );
+		}
+		if ( $deleted ) {
+			/**
+			 * Allows code to do something after the transactions have been deleted.
+			 */
+			do_action( 'AHEE__EEM_Transaction__delete_junk_transactions__successful_deletion', $txn_ids );
+		}
+		return $deleted;
 	}
 
 

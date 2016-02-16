@@ -39,7 +39,7 @@ class EE_Transaction extends EE_Base_Class implements EEI_Transaction{
 	 * @return EE_Transaction
 	 */
 	public static function new_instance( $props_n_values = array(), $timezone = null, $date_formats = array() ) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__ );
+		$has_object = parent::_check_for_object( $props_n_values, __CLASS__, $timezone, $date_formats );
 		return $has_object ? $has_object : new self( $props_n_values, false, $timezone, $date_formats );
 	}
 
@@ -681,7 +681,7 @@ class EE_Transaction extends EE_Base_Class implements EEI_Transaction{
 	 * @return EE_Line_Item
 	 */
 	public function tax_total_line_item() {
-		return $this->get_first_related( 'Line_Item', array( array( 'LIN_type' => EEM_Line_Item::type_tax_sub_total ) ) );
+		return EEH_Line_Item::get_taxes_subtotal( $this->total_line_item() );
 	}
 
 

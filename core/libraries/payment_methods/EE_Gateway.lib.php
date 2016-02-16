@@ -143,6 +143,8 @@ abstract class EE_Gateway{
 		return $this->_supports_receiving_refunds;
 	}
 
+
+
 	/**
 	 * Tries to refund the payment specified, taking into account the extra
 	 * refund info. Note that if the gateway's _supports_sending_refunds is false,
@@ -152,9 +154,12 @@ abstract class EE_Gateway{
 	 * @return EE_Payment for the refund
 	 * @throws EE_Error
 	 */
-	public function do_direct_refund($payment,$refund_info = null){
+	public function do_direct_refund( EE_Payment $payment, $refund_info = null ) {
 		return NULL;
 	}
+
+
+
 	/**
 	 * Sets the payment method's settings so the gateway knows where to send the request
 	 * etc
@@ -163,7 +168,7 @@ abstract class EE_Gateway{
 	public function set_settings($settings_array){
 		foreach($settings_array as $name => $value){
 			$property_name = "_".$name;
-			$this->$property_name = $value;
+			$this->{$property_name} = $value;
 		}
 	}
 	/**
