@@ -25,14 +25,14 @@ abstract class SystemQuestionsBase {
 	 *
 	 * @var int $wp_user_id
 	 */
-	protected $wp_user_id = 0;
+	private $wp_user_id = 0;
 
 	/**
 	 * the order that the table data should be added
 	 *
 	 * @var int $table_insert_order
 	 */
-	protected $table_insert_order = 0;
+	private $table_insert_order = 0;
 
 
 
