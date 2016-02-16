@@ -1,0 +1,68 @@
+#ee_reg_qstn-purchasing_agent-lbl {
+	margin:0 0 1em;;
+}
+
+#ee-single-page-checkout-dv .switch-field {
+	margin: 1em;
+	overflow: hidden;
+}
+
+
+#ee-single-page-checkout-dv .switch-field input {
+	display: none;
+	margin:0;
+}
+
+#ee-single-page-checkout-dv .switch-field label {
+	float: left;
+}
+
+#ee-single-page-checkout-dv .switch-field label {
+	display: inline-block;
+	background-color: #f3f3f3;
+	/*color: rgba(0, 0, 0, 0.5);*/
+	font-size: 1.25em;
+	font-weight: bold;
+	text-align: center;
+	text-shadow: 0 -.5px 0 rgba(0, 0, 0, 0.25);
+	padding: .5em;
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	/*-webkit-box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px rgba(255, 255, 255, 0.1);*/
+	/*box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px rgba(255, 255, 255, 0.1);*/
+	-webkit-transition: all 0.1s ease-in-out;
+	-moz-transition: all 0.1s ease-in-out;
+	-ms-transition: all 0.1s ease-in-out;
+	-o-transition: all 0.1s ease-in-out;
+	transition: all 0.1s ease-in-out;
+	max-width: 100%;
+	min-width: auto;
+	width: 49.4%;
+}
+
+.switch-field label:hover {
+	cursor: pointer;
+}
+
+#ee-single-page-checkout-dv .switch-field input:checked + label {
+	/*background-color: rgba(112, 204, 80, 1);*/
+	/*background-color: rgba(0, 177, 202, .8);*/
+	background-color: #00b1ca;
+	-webkit-box-shadow: none;
+	box-shadow: none;
+	color: #ffffff;
+
+}
+
+#ee-single-page-checkout-dv .switch-field label:first-of-type {
+	border-radius: 2px 0 0 2px;
+}
+
+#ee-single-page-checkout-dv .switch-field label:last-of-type {
+	border-radius: 0 2px 2px 0;
+}
+
+.ee-additional-info {
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	margin: 1em;
+	padding: 2em;
+}
