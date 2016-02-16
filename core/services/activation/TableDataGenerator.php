@@ -25,12 +25,12 @@ class TableDataGenerator {
 	 *
 	 * @var int $wp_user_id
 	 */
-	protected $wp_user_id = 0;
+	private $wp_user_id = 0;
 
 	/**
 	 * @var array $table_data_generators
 	 */
-	protected $table_data_generators = array();
+	private $table_data_generators = array();
 
 
 
@@ -41,12 +41,48 @@ class TableDataGenerator {
 	 * @throws \Exception
 	 */
 	public function __construct( $wp_user_id ) {
-		$this->wp_user_id = absint( $wp_user_id );
+		$this->setWpUserId( $wp_user_id );
 		if ( empty( $this->wp_user_id ) ) {
 			throw new \Exception(
 				__( 'A valid WP User ID is required in order to generate tables and default data', 'event_espresso' )
 			);
 		}
+	}
+
+
+
+	/**
+	 * @return int
+	 */
+	public function wpUserId() {
+		return $this->wp_user_id;
+	}
+
+
+
+	/**
+	 * @param int $wp_user_id
+	 */
+	public function setWpUserId( $wp_user_id ) {
+		$this->wp_user_id = absint( $wp_user_id );
+	}
+
+
+
+	/**
+	 * @return array
+	 */
+	public function tableDataGenerators() {
+		return $this->table_data_generators;
+	}
+
+
+
+	/**
+	 * @param array $table_data_generators
+	 */
+	public function setTableDataGenerators( $table_data_generators ) {
+		$this->table_data_generators = $table_data_generators;
 	}
 
 
@@ -102,7 +138,6 @@ class TableDataGenerator {
 				}
 			}
 		}
-		// todo add sorting property to each table data generator class and run array through custom sorting algorithm
 		return $table_data_generators;
 	}
 
