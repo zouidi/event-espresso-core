@@ -72,7 +72,7 @@ class SystemQuestionsPersonal extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 1,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 			'lname' => array(
@@ -84,7 +84,7 @@ class SystemQuestionsPersonal extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 2,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 			'email' => array(
@@ -96,7 +96,7 @@ class SystemQuestionsPersonal extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 3,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 		);
