@@ -797,6 +797,13 @@ class EEH_Activation {
 	 * 	@return void
 	 */
 	public static function initialize_system_questions() {
+
+		$system_questions_generator = new EventEspresso\core\services\activation\system_questions\SystemQuestionTableDataGenerator(
+			self::get_default_creator_id()
+		);
+		$system_question_groups = $system_questions_generator->initializeSystemQuestionGroups();
+		\EEH_Debug_Tools::printr( $system_question_groups, '$system_question_groups', __FILE__, __LINE__ );
+		wp_die();
 		// QUESTION GROUPS
 		global $wpdb;
 		$table_name = EEH_Activation::ensure_table_name_has_prefix( 'esp_question_group' );
@@ -1062,17 +1069,17 @@ class EEH_Activation {
 							$QSG_ID = reset( $id_col );
 						} else {
 							//ok so we didn't find it in the db either?? that's weird because we should have inserted it at the start of this method
-                                                        EE_Log::instance()->log( 
-                                                                __FILE__, 
-                                                                __FUNCTION__, 
-                                                                sprintf( 
-                                                                        __( 'Could not associate question %1$s to a question group because no system question group existed', 'event_espresso'), 
-                                                                        $QST_ID ), 
+                                                        EE_Log::instance()->log(
+                                                                __FILE__,
+                                                                __FUNCTION__,
+                                                                sprintf(
+                                                                        __( 'Could not associate question %1$s to a question group because no system question group existed', 'event_espresso'),
+                                                                        $QST_ID ),
                                                                 'error' );
                                                         continue;
 						}
 					}
-                                        
+
 					// add system questions to groups
 					$wpdb->insert(
 						EEH_Activation::ensure_table_name_has_prefix( 'esp_question_group_question' ),
