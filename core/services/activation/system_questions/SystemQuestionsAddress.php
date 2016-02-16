@@ -71,7 +71,7 @@ class SystemQuestionsAddress extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 4,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 			'address2' => array(
@@ -83,7 +83,7 @@ class SystemQuestionsAddress extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 5,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 			'city' => array(
@@ -95,7 +95,7 @@ class SystemQuestionsAddress extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 6,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 			'state' => array(
@@ -107,7 +107,7 @@ class SystemQuestionsAddress extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 7,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 			'country' => array(
@@ -119,7 +119,7 @@ class SystemQuestionsAddress extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 8,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 			'zip' => array(
@@ -131,7 +131,7 @@ class SystemQuestionsAddress extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 9,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 			'phone' => array(
@@ -143,7 +143,7 @@ class SystemQuestionsAddress extends SystemQuestionsBase {
 				'QST_required_text' => __( 'This field is required', 'event_espresso' ),
 				'QST_order'         => 10,
 				'QST_admin_only'    => 0,
-				'QST_wp_user'       => $this->wp_user_id,
+				'QST_wp_user'       => $this->wpUserId(),
 				'QST_deleted'       => 0
 			),
 		);
