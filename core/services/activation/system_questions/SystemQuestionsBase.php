@@ -10,7 +10,8 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 /**
  * Class SystemQuestionsBase
  *
- * Description
+ * Abstract parent class for the classes that provide actual table data for EE System Questions
+ * These classes simply pass their data to SystemQuestionTableDataGenerator as required
  *
  * @package       Event Espresso
  * @subpackage    core
@@ -85,28 +86,6 @@ abstract class SystemQuestionsBase {
 	 */
 	public function setQsgID( $qsgID ) {
 		$this->qsgID = absint( $qsgID );
-	}
-
-
-
-	/**
-	 * returns an array defining the data types for the esp_question_group table
-	 *
-	 * @return array
-	 */
-	public function getQuestionGroupDataTypes() {
-		return array( '%s', '%s', '%s', '%d', '%d', '%d', '%d', '%d' );
-	}
-
-
-
-	/**
-	 * returns an array defining the data types for the esp_question table
-	 *
-	 * @return array
-	 */
-	public function getQuestionDataTypes() {
-		return array( '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%d', '%d' );
 	}
 
 
