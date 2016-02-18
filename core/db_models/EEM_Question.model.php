@@ -210,6 +210,14 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 					EEM_Attendee::system_question_phone
 				);
 				break;
+			case EEM_Question_Group::system_purchase_agent:
+				$question_system_ids = array(
+					EEM_Attendee::system_question_purchaser_fname,
+					EEM_Attendee::system_question_purchaser_lname,
+					EEM_Attendee::system_question_purchaser_email,
+					EEM_Attendee::system_question_purchaser_organization,
+				);
+				break;
 		}
 		return apply_filters( 'FHEE__EEM_Question__system_questions_allowed_in_system_question_group__return', $question_system_ids, $system_question_group_id );
 	}
@@ -227,6 +235,12 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 				$question_system_ids =  array(
 					EEM_Attendee::system_question_fname,
 					EEM_Attendee::system_question_email,
+				);
+				break;
+			case EEM_Question_Group::system_purchase_agent:
+				$question_system_ids =  array(
+					EEM_Attendee::system_question_purchaser_fname,
+					EEM_Attendee::system_question_purchaser_email,
 				);
 				break;
 			default:
@@ -279,6 +293,10 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 			'zip' => 12,
 			'email' => 255,
 			'phone' => 45,
+			'purchaser_fname' => 45,
+			'purchaser_lname' => 45,
+			'purchaser_email' => 255,
+			'purchaser_organization' => 255,
 		);
 	}
 
