@@ -10,7 +10,9 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 /**
  * Class TableDataGenerator
  *
- * Description
+ * Parent abstract class for generating default table data.
+ * This class really only handles loading the data generator classes,
+ * and inserting data via EEM_Base::insert(), but with a little extra error handling
  *
  * @package       Event Espresso
  * @subpackage    core
@@ -18,7 +20,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @since         $VID:$
  *
  */
-class TableDataGenerator {
+abstract class TableDataGenerator {
 
 	/**
 	 * WP User ID of the table creator
@@ -88,21 +90,6 @@ class TableDataGenerator {
 
 
 	/**
-	 * tableNameWithPrefix
-	 *
-	 * @access public
-	 * @static
-	 * @param $table_name
-	 * @return string
-	 */
-	public static function tableNameWithPrefix( $table_name ) {
-		global $wpdb;
-		return strpos( $table_name, $wpdb->prefix ) === 0 ? $table_name : $wpdb->prefix . $table_name;
-	}
-
-
-
-	/**
 	 * loadTableDataGenerators
 	 *
 	 * @access protected
@@ -144,18 +131,17 @@ class TableDataGenerator {
 
 
 	/**
-	 * @param string $table_name
+	 * @param \EEM_Base $model
 	 * @param array  $data
-	 * @param array $data_types
 	 * @return int The number of rows inserted
 	 * @throws \Exception
 	 */
-	protected function insertData( $table_name, $data, $data_types ) {
-		if ( empty( $table_name ) ) {
+	protected function insertData( \EEM_Base $model, $data ) {
+		if ( ! $model instanceof \EEM_Base ) {
 			throw new \Exception(
 				sprintf(
-					__( '"%1$s" is not a valid table name. Could not perform an insert query.', 'event_espresso' ),
-					$table_name
+					__( '"%1$s" is not a valid table model. Could not perform an insert query.', 'event_espresso' ),
+					is_object( $model ) ? get_class( $model ) : print_r( $model, true )
 				)
 			);
 		}
@@ -166,51 +152,26 @@ class TableDataGenerator {
 						'A valid array of data is required in order to perform an insert query for table "%1$s"',
 						'event_espresso'
 					),
-					$table_name
+					$model->table()
 				)
 			);
 		}
-		if ( empty( $data_types ) || ! is_array( $data_types ) ) {
-			throw new \Exception(
-				sprintf(
-					__(
-						'A valid array of data types is required in order to perform an insert query for table "%1$s".',
-						'event_espresso'
-					),
-					$table_name
-				)
-			);
-		}
-		if ( count( $data ) != count( $data_types ) ) {
-			throw new \Exception(
-				sprintf(
-					__( 'There is a mismatch between the data and data type arrays for table "%1$s".', 'event_espresso' ),
-					$table_name
-				)
-			);
-		}
-		/** @var \WPDB $wpdb */
-		global $wpdb;
 		// insert table data
-		$rows_inserted = $wpdb->insert(
-			$table_name,
-			$data,
-			$data_types
-		);
-		if ( $rows_inserted === false ) {
+		$insert_id = $model->insert( $data );
+		if ( $insert_id === false ) {
 			throw new \Exception(
 				sprintf(
 					__(
 						'An unknown error occurred while attempting to insert the following data into table "%1$s".%3$s %2$s',
 						'event_espresso'
 					),
-					$table_name,
+					$model->table(),
 					print_r( $data, true ),
 					'<br />'
 				)
 			);
 		}
-		return $wpdb->insert_id;
+		return $insert_id;
 	}
 
 }
