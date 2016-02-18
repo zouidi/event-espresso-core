@@ -10,7 +10,8 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 /**
  * Class SystemQuestionsAddress
  *
- * Description
+ * Provides the data required for adding records to the EE Question and Question Group tables
+ * for the Address Information System questions
  *
  * @package       Event Espresso
  * @subpackage    core
@@ -50,7 +51,7 @@ class SystemQuestionsAddress extends SystemQuestionsBase {
 		return array(
 			'QSG_name'            => __( 'Address Information', 'event_espresso' ),
 			'QSG_identifier'      => 'address-information-' . time(),
-			'QSG_desc'            => '',
+			'QSG_desc'            => 'Contact details for each registrant',
 			'QSG_order'           => \EEM_Question_Group::system_address,
 			'QSG_show_group_name' => 1,
 			'QSG_show_group_desc' => 1,
