@@ -835,11 +835,15 @@ class EEH_Activation {
 	 */
 	public static function initialize_system_questions() {
 		// todo: in 4.9 we will be better able to add a namespace to the Psr4Autoloader class and then simplify the following
-		$system_questions_generator = new EventEspresso\core\services\activation\system_questions\SystemQuestionTableDataGenerator(
-			self::get_default_creator_id()
-		);
-		$system_questions_generator->initializeSystemQuestionGroups();
-		$system_questions_generator->initializeSystemQuestions();
+		try {
+			$system_questions_generator = new EventEspresso\core\services\activation\system_questions\SystemQuestionTableDataGenerator(
+				self::get_default_creator_id()
+			);
+			$system_questions_generator->initializeSystemQuestionGroups();
+			$system_questions_generator->initializeSystemQuestions();
+		} catch ( Exception $e ) {
+			\EE_Error::add_error( $e->getMessage(), __FILE__, __FUNCTION__, __LINE__ );
+		}
 	}
 
 
