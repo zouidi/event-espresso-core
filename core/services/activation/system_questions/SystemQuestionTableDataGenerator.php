@@ -13,7 +13,8 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 /**
  * Class SystemQuestionTableDataGenerator
  *
- * Description
+ * This class specifies details for what type of table data classes get loaded via TableDataGenerator,
+ * ( instances of SystemQuestionsBase ) and then provides methods for inserting the data provided
  *
  * @package       Event Espresso
  * @subpackage    core
@@ -76,14 +77,12 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 	 *
 	 * @access protected
 	 * @param string $field_name
-	 * @param string $table_name
+	 * @param \EEM_Base $model
 	 * @return array
 	 */
-	protected function getExistingData( $field_name, $table_name ) {
-		global $wpdb;
-		$SQL = "SELECT $field_name FROM $table_name WHERE $field_name != 0";
+	protected function getExistingData( $field_name, \EEM_Base $model ) {
 		// what we have
-		$existing_data = $wpdb->get_col( $SQL );
+		$existing_data = $model->get_col( array( $field_name => array( '!=', 0 ) ), $field_name );
 		// check the response
 		return is_array( $existing_data ) ? $existing_data : array();
 	}
@@ -97,9 +96,10 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 	 * @return void
 	 */
 	public function initializeSystemQuestionGroups() {
-		// QUESTION GROUPS
-		$table_name = TableDataGenerator::tableNameWithPrefix( 'esp_question_group' );
-		$existing_question_groups = $this->getExistingData( 'QSG_system', $table_name );
+		/** @var \EEM_Question_Group $EEM_Question_Group */
+		$EEM_Question_Group = \EE_Registry::instance()->load_model( 'EEM_Question_Group' );
+		// get existing system question groups
+		$existing_question_groups = $this->getExistingData( 'QSG_system', $EEM_Question_Group );
 		foreach ( $this->tableDataGenerators() as $classname => $table_data_generator ) {
 			if ( $table_data_generator instanceof SystemQuestionsBase ) {
 				$QSG_system = $table_data_generator->getQSGConstant();
@@ -107,11 +107,7 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 				if ( in_array( (string)$QSG_system, $existing_question_groups ) ) {
 					continue;
 				}
-				$QSG_ID = $this->insertData(
-					$table_name,
-					$table_data_generator->getQuestionGroupData(),
-					$table_data_generator->getQuestionGroupDataTypes()
-				);
+				$QSG_ID = $this->insertData( $EEM_Question_Group, $table_data_generator->getQuestionGroupData() );
 				$table_data_generator->setQsgID( $QSG_ID );
 			}
 		}
@@ -126,9 +122,12 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 	 * @return void
 	 */
 	public function initializeSystemQuestions() {
-		// QUESTION GROUPS
-		$table_name = TableDataGenerator::tableNameWithPrefix( 'esp_question' );
-		$existing_questions = $this->getExistingData( 'QST_system', $table_name );
+		/** @var \EEM_Question $EEM_Question */
+		$EEM_Question = \EE_Registry::instance()->load_model( 'EEM_Question' );
+		/** @var \EEM_Question_Group_Question $EEM_Question_Group_Question */
+		$EEM_Question_Group_Question = \EE_Registry::instance()->load_model( 'EEM_Question_Group_Question' );
+		// get existing system questions
+		$existing_questions = $this->getExistingData( 'QST_system', $EEM_Question );
 		foreach ( $this->tableDataGenerators() as $classname => $table_data_generator ) {
 			$QSG_order = 0;
 			if ( $table_data_generator instanceof SystemQuestionsBase ) {
@@ -139,20 +138,15 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 					if ( in_array( $system_question, $existing_questions ) ) {
 						continue;
 					}
-					$QST_ID = $this->insertData(
-						$table_name,
-						$system_question_data,
-						$table_data_generator->getQuestionDataTypes()
-					);
+					$QST_ID = $this->insertData( $EEM_Question, $system_question_data );
 					// now set a relation to it's question group
 					$this->insertData(
-						TableDataGenerator::tableNameWithPrefix( 'esp_question_group_question' ),
+						$EEM_Question_Group_Question,
 						array(
-							'QSG_ID' => $table_data_generator->qsgID(),
-							'QST_ID' => $QST_ID,
+							'QSG_ID'    => $table_data_generator->qsgID(),
+							'QST_ID'    => $QST_ID,
 							'QGQ_order' => $QSG_order
-						),
-						array( '%d', '%d', '%d' )
+						)
 					);
 				}
 			}
