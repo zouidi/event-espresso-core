@@ -82,7 +82,7 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 	 */
 	protected function getExistingData( $field_name, \EEM_Base $model ) {
 		// what we have
-		$existing_data = $model->get_col( array( $field_name => array( '!=', 0 ) ), $field_name );
+		$existing_data = $model->get_col( array( array( $field_name => array( '!=', 0 ) ) ), $field_name );
 		// check the response
 		return is_array( $existing_data ) ? $existing_data : array();
 	}
@@ -131,11 +131,17 @@ class SystemQuestionTableDataGenerator extends TableDataGenerator {
 		foreach ( $this->tableDataGenerators() as $classname => $table_data_generator ) {
 			$QSG_order = 0;
 			if ( $table_data_generator instanceof SystemQuestionsBase ) {
+				$allowed_system_questions = $EEM_Question->allowed_system_questions_in_system_question_group(
+					$table_data_generator->getQSGConstant()
+				);
 				$system_questions = $table_data_generator->getSystemQuestions();
 				foreach ( $system_questions as $system_question => $system_question_data ) {
 					$QSG_order++;
-					// record already exists, skip to next item
-					if ( in_array( $system_question, $existing_questions ) ) {
+					// record already exists OR question not allowed for this question group, so skip to next item
+					if (
+						in_array( $system_question, $existing_questions )
+						|| ! in_array( $system_question, $allowed_system_questions )
+					) {
 						continue;
 					}
 					$QST_ID = $this->insertData( $EEM_Question, $system_question_data );
