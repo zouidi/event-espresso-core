@@ -84,13 +84,21 @@ class EEM_Attendee extends EEM_CPT_Base {
 	const system_question_fname = 'fname';
 	const system_question_lname = 'lname';
 	const system_question_email = 'email';
-	const system_question_address = 'address';
+
+	// address properties
+	const system_question_address  = 'address';
 	const system_question_address2 = 'address2';
-	const system_question_city = 'city';
-	const system_question_state = 'state';
-	const system_question_country = 'country';
-	const system_question_zip = 'zip';
-	const system_question_phone = 'phone';
+	const system_question_city     = 'city';
+	const system_question_state    = 'state';
+	const system_question_country  = 'country';
+	const system_question_zip      = 'zip';
+	const system_question_phone    = 'phone';
+
+	// purchasing agent properties
+	const system_question_purchaser_fname        = 'purchaser_fname';
+	const system_question_purchaser_lname        = 'purchaser_lname';
+	const system_question_purchaser_email        = 'purchaser_email';
+	const system_question_purchaser_organization = 'purchaser_organization';
 
 	/**
 	 * Keys are all the EEM_Attendee::system_question_* constants, which are
@@ -99,16 +107,22 @@ class EEM_Attendee extends EEM_CPT_Base {
 	 * @var array
 	 */
 	protected $_system_question_to_attendee_field_name = array(
-		EEM_Attendee::system_question_fname => 'ATT_fname',
-		EEM_Attendee::system_question_lname => 'ATT_lname',
-		EEM_Attendee::system_question_email => 'ATT_email',
-		EEM_Attendee::system_question_address => 'ATT_address',
+		EEM_Attendee::system_question_fname    => 'ATT_fname',
+		EEM_Attendee::system_question_lname    => 'ATT_lname',
+		EEM_Attendee::system_question_email    => 'ATT_email',
+		// address properties
+		EEM_Attendee::system_question_address  => 'ATT_address',
 		EEM_Attendee::system_question_address2 => 'ATT_address2',
-		EEM_Attendee::system_question_city => 'ATT_city',
-		EEM_Attendee::system_question_state => 'STA_ID',
-		EEM_Attendee::system_question_country => 'CNT_ISO',
-		EEM_Attendee::system_question_zip => 'ATT_zip',
-		EEM_Attendee::system_question_phone => 'ATT_phone',
+		EEM_Attendee::system_question_city     => 'ATT_city',
+		EEM_Attendee::system_question_state    => 'STA_ID',
+		EEM_Attendee::system_question_country  => 'CNT_ISO',
+		EEM_Attendee::system_question_zip      => 'ATT_zip',
+		EEM_Attendee::system_question_phone    => 'ATT_phone',
+		// purchasing agent properties
+		EEM_Attendee::system_question_purchaser_fname => 'ATT_fname',
+		EEM_Attendee::system_question_purchaser_lname => 'ATT_lname',
+		EEM_Attendee::system_question_purchaser_email => 'ATT_email',
+		EEM_Attendee::system_question_purchaser_organization => 'ATT_email',
 	);
 
 
