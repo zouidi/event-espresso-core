@@ -53,7 +53,7 @@ class SystemQuestionsPersonal extends SystemQuestionsBase {
 		return array(
 			'QSG_name'            => __( 'Personal Information', 'event_espresso' ),
 			'QSG_identifier'      => 'personal-information-' . time(),
-			'QSG_desc'            => 'Basic personal details about each registrant',
+			'QSG_desc'            => '',
 			'QSG_order'           => 1,
 			'QSG_show_group_name' => 1,
 			'QSG_show_group_desc' => 1,
