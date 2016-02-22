@@ -51,7 +51,7 @@ class SystemQuestionsPurchasingAgent extends SystemQuestionsBase {
 		return array(
 			'QSG_name'            => __( 'Purchasing Agent', 'event_espresso' ),
 			'QSG_identifier'      => 'purchasing-agent-' . time(),
-			'QSG_desc'            => 'Questions for those that are purchasing for others',
+			'QSG_desc'            => __( 'Questions for those that are purchasing for others', 'event_espresso' ),
 			'QSG_order'           => 3,
 			'QSG_show_group_name' => 1,
 			'QSG_show_group_desc' => 1,
