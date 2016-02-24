@@ -66,6 +66,7 @@ class EED_Recaptcha  extends EED_Module {
 			add_filter( 'FHEE__EE_SPCO_JSON_Response___toString__JSON_response', array( 'EED_Recaptcha', 'recaptcha_response' ), 10, 1 );
 			add_filter( 'FHEE__EED_Recaptcha___bypass_recaptcha__bypass_request_params_array', array( 'EED_Recaptcha', 'bypass_recaptcha_for_spco_load_payment_method' ), 10, 1 );
 		}
+		add_filter( 'wp_headers', array( 'EED_Recaptcha', 'add_security_headers' ), 99 );
 	}
 
 
@@ -88,6 +89,7 @@ class EED_Recaptcha  extends EED_Module {
 		// admin settings
 		add_action( 'AHEE__Extend_Registration_Form_Admin_Page___reg_form_settings_template', array( 'EED_Recaptcha', 'admin_settings' ), 10, 1 );
 		add_filter( 'FHEE__Extend_Registration_Form_Admin_Page___update_reg_form_settings__CFG_registration', array( 'EED_Recaptcha', 'update_admin_settings' ), 10, 1 );
+		add_filter( 'wp_headers', array( 'EED_Recaptcha', 'add_security_headers' ), 99 );
 	}
 
 
@@ -313,7 +315,7 @@ class EED_Recaptcha  extends EED_Module {
 		// Was there a reCAPTCHA response?
 		if ( $recaptcha_response ) {
 			// add "Access-Control-Allow-Origin" header
-			add_filter( 'wp_headers', array( '\EED_Recaptcha', 'add_access_control_allow_origin_header' ), 999 );
+			//add_filter( 'wp_headers', array( 'EED_Recaptcha', 'add_access_control_allow_origin_header' ), 999 );
 			// if allow_url_fopen is Off, then set a different request method
 			$request_method = ! ini_get( 'allow_url_fopen' ) ? new \ReCaptcha\RequestMethod\SocketPost() : null;
 			$recaptcha = new \ReCaptcha\ReCaptcha(
@@ -343,6 +345,21 @@ class EED_Recaptcha  extends EED_Module {
 	 */
 	public static function add_access_control_allow_origin_header( $headers ) {
 		$headers[ 'Access-Control-Allow-Origin' ] = "www.google.com";
+		return $headers;
+	}
+
+
+
+	/**
+	 * add Access-Control-Allow-Origin: * header
+	 *
+	 * @access public
+	 * @param  array $headers
+	 * @return array
+	 */
+	public static function add_security_headers( $headers ) {
+		$headers[ 'X-Frame-Options' ] = "SAMEORIGIN";
+		$headers[ 'X-XSS-Protection' ] = "1; mode=block";
 		return $headers;
 	}
 
