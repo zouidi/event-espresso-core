@@ -312,6 +312,8 @@ class EED_Recaptcha  extends EED_Module {
 		$recaptcha_response = EED_Recaptcha::$_recaptcha_response;
 		// Was there a reCAPTCHA response?
 		if ( $recaptcha_response ) {
+			// add "Access-Control-Allow-Origin" header
+			add_filter( 'wp_headers', array( '\EED_Recaptcha', 'add_access_control_allow_origin_header' ), 999 );
 			// if allow_url_fopen is Off, then set a different request method
 			$request_method = ! ini_get( 'allow_url_fopen' ) ? new \ReCaptcha\RequestMethod\SocketPost() : null;
 			$recaptcha = new \ReCaptcha\ReCaptcha(
@@ -328,6 +330,20 @@ class EED_Recaptcha  extends EED_Module {
 		}
 		// sorry... it appears you can't don't know what soup or hamburgers are !!!
 		return FALSE;
+	}
+
+
+
+	/**
+	 * add Access-Control-Allow-Origin: * header
+	 *
+	 * @access public
+	 * @param  array $headers
+	 * @return array
+	 */
+	public static function add_access_control_allow_origin_header( $headers ) {
+		$headers[ 'Access-Control-Allow-Origin' ] = "www.google.com";
+		return $headers;
 	}
 
 
