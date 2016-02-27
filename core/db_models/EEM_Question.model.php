@@ -107,12 +107,21 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 		$this->_fields = array(
 			'Question'=>array(
 				'QST_ID'=>new EE_Primary_Key_Int_Field('QST_ID', __('Question ID','event_espresso')),
+				'QSG_ID' => new EE_Integer_Field('QSG_ID', __('The Question Group that this belongs to.','event_espresso'),true,null),
+				'QST_admin_label' => new EE_Plain_Text_Field('QST_admin_label',__( 'Question Label (admin-only)', 'event_espresso' ),true,''),
 				'QST_display_text'=>new EE_Full_HTML_Field('QST_display_text', __('Question Text','event_espresso'), true, ''),
-				'QST_admin_label'=>new EE_Plain_Text_Field('QST_admin_label', __('Question Label (admin-only)','event_espresso'), true, ''),
-				'QST_system'=>new EE_Plain_Text_Field('QST_system', __('Internal string ID for question','event_espresso'), TRUE, NULL ),
+				'QST_identifier'=>new EE_Plain_Text_Field('QST_identifier', __('Internal string ID for question','event_espresso'), TRUE, NULL ),
+				'QST_system'=>new EE_Plain_Text_Field('QST_system', __('System Question type ID','event_espresso'), TRUE, NULL ),
 				'QST_type'=>new EE_Enum_Text_Field('QST_type', __('Question Type','event_espresso'),false, 'TEXT',$this->_allowed_question_types),
-				'QST_required'=>new EE_Boolean_Field('QST_required', __('Required Question?','event_espresso'), false, false),
-				'QST_required_text'=>new EE_Simple_HTML_Field('QST_required_text', __('Text to Display if Not Provided','event_espresso'), true, ''),
+				'QST_desc'=>new EE_Full_HTML_Field('QST_desc', __( 'Description of Question', 'event_espresso' ), true, ''),
+				'QST_html_name' => new EE_Plain_Text_Field('QST_html_name',__( 'HTML name property', 'event_espresso' ),true,null),
+				'QST_html_id' => new EE_Plain_Text_Field('QST_html_id',__( 'HTML CSS "id" property', 'event_espresso' ),true,null),
+				'QST_html_class' => new EE_Plain_Text_Field('QST_html_class',__( 'HTML CSS "class" property', 'event_espresso' ),true,null),
+				'QST_html_label_id' => new EE_Plain_Text_Field( 'QST_html_label_id', __( "HTML CSS \"id\" property for the Question's label", 'event_espresso' ), true, null),
+				'QST_html_label_class' => new EE_Plain_Text_Field( 'QST_html_label_class', __( "HTML CSS \"class\" property for the Question's label", 'event_espresso' ), true, null),
+				'QST_default_value' => new EE_Plain_Text_Field( 'QST_default_value', __( 'Default value for input', 'event_espresso' ), true, null),
+				'QST_validation'=>new EE_Plain_Text_Field('QST_validation', __('List of validations to be applied to Question','event_espresso'), false, false),
+				'QST_validation_message'=>new EE_Simple_HTML_Field('QST_validation_message', __('List of validation messages to be displayed','event_espresso'), true, ''),
 				'QST_order'=>new EE_Integer_Field('QST_order', __('Question Order','event_espresso'), false, 0),
 				'QST_admin_only'=>new EE_Boolean_Field('QST_admin_only', __('Admin-Only Question?','event_espresso'), false, false),
 				'QST_max' => new EE_Infinite_Integer_Field( 'QST_max', __( 'Max Size', 'event_espresso'	), false, EE_INF ),
@@ -120,6 +129,7 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 				'QST_deleted'=>new EE_Trashed_Flag_Field('QST_deleted', __('Flag Indicating question was deleted','event_espresso'), false, false)
 			)
 		);
+
 		$this->_model_relations = array(
 			'Question_Group'=>new EE_HABTM_Relation('Question_Group_Question'),
 			'Question_Option'=>new EE_Has_Many_Relation(),

@@ -846,6 +846,8 @@ class EEH_Activation {
 		$question_groups = is_array( $question_groups ) ? $question_groups : array();
 		// what we should have
 		$QSG_systems = array( 1, 2 );
+		$QSG_IDs = array();
+		$timestamp = time();
 		// loop thru what we should have and compare to what we have
 		foreach ( $QSG_systems as $QSG_system ) {
 			// reset values array
@@ -857,28 +859,38 @@ class EEH_Activation {
 
 					case 1:
 							$QSG_values = array(
-									'QSG_name' => __( 'Personal Information', 'event_espresso' ),
-									'QSG_identifier' => 'personal-information-' . time(),
-									'QSG_desc' => '',
-									'QSG_order' => 1,
-									'QSG_show_group_name' => 1,
-									'QSG_show_group_desc' => 1,
-									'QSG_system' => EEM_Question_Group::system_personal,
-									'QSG_deleted' => 0
-								);
+								'QSG_name'       => __( 'Personal Information', 'event_espresso' ),
+								'QSG_identifier' => 'personal-information-' . $timestamp,
+								'QSG_desc'       => __(
+									'Questions for gathering critical details like "Name" and "Email Address"',
+									'event_espresso'
+								),
+								'QSG_parent'     => null,
+								'QSG_html_name'  => 'personal-information-' . $timestamp,
+								'QSG_html_id'    => 'personal-information-' . $timestamp,
+								'QSG_order'      => 1,
+								'QSG_wp_user'    => self::get_default_creator_id(),
+								'QSG_system'     => EEM_Question_Group::system_personal,
+								'QSG_deleted'    => 0
+							);
 						break;
 
 					case 2:
 							$QSG_values = array(
-									'QSG_name' => __( 'Address Information','event_espresso' ),
-									'QSG_identifier' => 'address-information-' . time(),
-									'QSG_desc' => '',
-									'QSG_order' => 2,
-									'QSG_show_group_name' => 1,
-									'QSG_show_group_desc' => 1,
-									'QSG_system' => EEM_Question_Group::system_address,
-									'QSG_deleted' => 0
-								);
+								'QSG_name'       => __( 'Address Information', 'event_espresso' ),
+								'QSG_identifier' => 'address-information-' . $timestamp,
+								'QSG_desc'       => __(
+									'Questions for gathering mailing address details',
+									'event_espresso'
+								),
+								'QSG_parent'     => null,
+								'QSG_html_name'  => 'address-information-' . $timestamp,
+								'QSG_html_id'    => 'address-information-' . $timestamp,
+								'QSG_order'      => 2,
+								'QSG_wp_user'    => self::get_default_creator_id(),
+								'QSG_system'     => EEM_Question_Group::system_address,
+								'QSG_deleted'    => 0
+							);
 						break;
 
 				}
@@ -916,8 +928,6 @@ class EEH_Activation {
 			'zip',
 			'phone'
 		);
-		$order_for_group_1 = 1;
-		$order_for_group_2 = 1;
 		// loop thru what we should have and compare to what we have
 		foreach ( $QST_systems as $QST_system ) {
 			// reset values array
@@ -928,162 +938,258 @@ class EEH_Activation {
 				switch ( $QST_system ) {
 
 					case 'fname':
-							$QST_values = array(
-									'QST_display_text' => __( 'First Name', 'event_espresso' ),
-									'QST_admin_label' => __( 'First Name - System Question', 'event_espresso' ),
-									'QST_system' => 'fname',
-									'QST_type' => 'TEXT',
-									'QST_required' => 1,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 1,
-									'QST_admin_only' => 0,
-									'QST_max' => EEM_Question::instance()->absolute_max_for_system_question( $QST_system ),
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_personal ],
+							'QST_admin_label'      => __( 'First Name - System Question', 'event_espresso' ),
+							'QST_display_text'     => __( 'First Name', 'event_espresso' ),
+							'QST_identifier'       => 'fname-' . $timestamp,
+							'QST_system'           => 'fname',
+							'QST_type'             => 'TEXT',
+							'QST_desc'             => 'The registrant\'s given name',
+							'QST_html_name'        => 'fname-' . $timestamp,
+							'QST_html_id'          => 'fname-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'fname-' . $timestamp . '-lbl',
+							'QST_html_label_class' => '',
+							'QST_default_value'    => '',
+							'QST_validation'       => array( 'required' => '' ),
+							'QST_order'            => 1,
+							'QST_admin_only'       => 0,
+							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
+								$QST_system
+							),
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 					case 'lname':
-							$QST_values = array(
-									'QST_display_text' => __( 'Last Name', 'event_espresso' ),
-									'QST_admin_label' => __( 'Last Name - System Question', 'event_espresso' ),
-									'QST_system' => 'lname',
-									'QST_type' => 'TEXT',
-									'QST_required' => 1,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 2,
-									'QST_admin_only' => 0,
-									'QST_max' => EEM_Question::instance()->absolute_max_for_system_question( $QST_system ),
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_personal ],
+							'QST_admin_label'      => __( 'Last Name - System Question', 'event_espresso' ),
+							'QST_display_text'     => __( 'Last Name', 'event_espresso' ),
+							'QST_identifier'       => 'lname-' . $timestamp,
+							'QST_system'           => 'lname',
+							'QST_type'             => 'TEXT',
+							'QST_desc'             => 'The registrant\'s family name',
+							'QST_html_name'        => 'lname-' . $timestamp,
+							'QST_html_id'          => 'lname-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'lname-' . $timestamp . '-lbl',
+							'QST_html_label_class' => '',
+							'QST_default_value'    => '',
+							'QST_validation'       => array(),
+							'QST_order'            => 2,
+							'QST_admin_only'       => 0,
+							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
+								$QST_system
+							),
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 					case 'email':
-							$QST_values = array(
-									'QST_display_text' => __( 'Email Address', 'event_espresso' ),
-									'QST_admin_label' => __( 'Email Address - System Question', 'event_espresso' ),
-									'QST_system' => 'email',
-									'QST_type' => 'TEXT',
-									'QST_required' => 1,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 3,
-									'QST_admin_only' => 0,
-									'QST_max' => EEM_Question::instance()->absolute_max_for_system_question( $QST_system ),
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_personal ],
+							'QST_display_text'     => __( 'Email Address', 'event_espresso' ),
+							'QST_admin_label'      => __( 'Email Address - System Question', 'event_espresso' ),
+							'QST_identifier'       => 'email-' . $timestamp,
+							'QST_system'           => 'email',
+							'QST_type'             => 'TEXT',
+							'QST_desc'             => 'The registrant\'s email address',
+							'QST_html_name'        => 'email-' . $timestamp,
+							'QST_html_id'          => 'email-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'email-' . $timestamp . '-lbl',
+							'QST_html_label_class' => 'email',
+							'QST_default_value'    => '',
+							'QST_validation'       => array( 'required' => '', 'email' => '', ),
+							'QST_order'            => 3,
+							'QST_admin_only'       => 0,
+							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
+								$QST_system
+							),
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 					case 'address':
-							$QST_values = array(
-									'QST_display_text' => __( 'Address', 'event_espresso' ),
-									'QST_admin_label' => __( 'Address - System Question', 'event_espresso' ),
-									'QST_system' => 'address',
-									'QST_type' => 'TEXT',
-									'QST_required' => 0,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 4,
-									'QST_admin_only' => 0,
-									'QST_max' => EEM_Question::instance()->absolute_max_for_system_question( $QST_system ),
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_address ],
+							'QST_display_text'     => __( 'Address', 'event_espresso' ),
+							'QST_admin_label'      => __( 'Address - System Question', 'event_espresso' ),
+							'QST_identifier'       => 'address-' . $timestamp,
+							'QST_system'           => 'address',
+							'QST_type'             => 'TEXT',
+							'QST_desc'             => 'The registrant\'s street address',
+							'QST_html_name'        => 'address-' . $timestamp,
+							'QST_html_id'          => 'address-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'address-' . $timestamp . '-lbl',
+							'QST_html_label_class' => '',
+							'QST_default_value'    => '',
+							'QST_validation'       => array( 'required' => '' ),
+							'QST_order'            => 4,
+							'QST_admin_only'       => 0,
+							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
+								$QST_system
+							),
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 					case 'address2':
-							$QST_values = array(
-									'QST_display_text' => __( 'Address2', 'event_espresso' ),
-									'QST_admin_label' => __( 'Address2 - System Question', 'event_espresso' ),
-									'QST_system' => 'address2',
-									'QST_type' => 'TEXT',
-									'QST_required' => 0,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 5,
-									'QST_admin_only' => 0,
-									'QST_max' => EEM_Question::instance()->absolute_max_for_system_question( $QST_system ),
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_address ],
+							'QST_display_text'     => __( 'Address2', 'event_espresso' ),
+							'QST_admin_label'      => __( 'Address2 - System Question', 'event_espresso' ),
+							'QST_identifier'       => 'address2-' . $timestamp,
+							'QST_system'           => 'address2',
+							'QST_type'             => 'TEXT',
+							'QST_desc'             => 'The registrant\'s street address (additional info)',
+							'QST_html_name'        => 'address2-' . $timestamp,
+							'QST_html_id'          => 'address2-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'address2-' . $timestamp . '-lbl',
+							'QST_html_label_class' => '',
+							'QST_default_value'    => '',
+							'QST_validation'       => array( 'required' => '' ),
+							'QST_order'            => 5,
+							'QST_admin_only'       => 0,
+							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
+								$QST_system
+							),
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 					case 'city':
-							$QST_values = array(
-									'QST_display_text' => __( 'City', 'event_espresso' ),
-									'QST_admin_label' => __( 'City - System Question', 'event_espresso' ),
-									'QST_system' => 'city',
-									'QST_type' => 'TEXT',
-									'QST_required' => 0,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 6,
-									'QST_admin_only' => 0,
-									'QST_max' => EEM_Question::instance()->absolute_max_for_system_question( $QST_system ),
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_address ],
+							'QST_display_text'     => __( 'City', 'event_espresso' ),
+							'QST_admin_label'      => __( 'City - System Question', 'event_espresso' ),
+							'QST_identifier'       => 'city-' . $timestamp,
+							'QST_system'           => 'city',
+							'QST_type'             => 'TEXT',
+							'QST_desc'             => 'The registrant\'s city',
+							'QST_html_name'        => 'city-' . $timestamp,
+							'QST_html_id'          => 'city-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'city-' . $timestamp . '-lbl',
+							'QST_html_label_class' => '',
+							'QST_default_value'    => '',
+							'QST_validation'       => array( 'required' => '' ),
+							'QST_order'            => 6,
+							'QST_admin_only'       => 0,
+							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
+								$QST_system
+							),
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 					case 'state':
-							$QST_values = array(
-									'QST_display_text' => __( 'State/Province', 'event_espresso' ),
-									'QST_admin_label' => __( 'State/Province - System Question', 'event_espresso' ),
-									'QST_system' => 'state',
-									'QST_type' => 'STATE',
-									'QST_required' => 0,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 7,
-									'QST_admin_only' => 0,
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_address ],
+							'QST_display_text'     => __( 'State/Province', 'event_espresso' ),
+							'QST_admin_label'      => __( 'State/Province - System Question', 'event_espresso' ),
+							'QST_identifier'       => 'state-' . $timestamp,
+							'QST_system'           => 'state',
+							'QST_type'             => 'STATE',
+							'QST_desc'             => 'The registrant\'s state/province',
+							'QST_html_name'        => 'state-' . $timestamp,
+							'QST_html_id'          => 'state-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'state-' . $timestamp . '-lbl',
+							'QST_html_label_class' => '',
+							'QST_default_value'    => '',
+							'QST_validation'       => array( 'required' => '' ),
+							'QST_order'            => 7,
+							'QST_admin_only'       => 0,
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 					case 'country' :
-							$QST_values = array(
-									'QST_display_text' => __( 'Country', 'event_espresso' ),
-									'QST_admin_label' => __( 'Country - System Question', 'event_espresso' ),
-									'QST_system' => 'country',
-									'QST_type' => 'COUNTRY',
-									'QST_required' => 0,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 8,
-									'QST_admin_only' => 0,
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_address ],
+							'QST_display_text'     => __( 'Country', 'event_espresso' ),
+							'QST_admin_label'      => __( 'Country - System Question', 'event_espresso' ),
+							'QST_identifier'       => 'country-' . $timestamp,
+							'QST_system'           => 'country',
+							'QST_type'             => 'COUNTRY',
+							'QST_desc'             => 'The registrant\'s country',
+							'QST_html_name'        => 'country-' . $timestamp,
+							'QST_html_id'          => 'country-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'country-' . $timestamp . '-lbl',
+							'QST_html_label_class' => '',
+							'QST_default_value'    => '',
+							'QST_validation'       => array( 'required' => '' ),
+							'QST_order'            => 8,
+							'QST_admin_only'       => 0,
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 					case 'zip':
-							$QST_values = array(
-									'QST_display_text' => __( 'Zip/Postal Code', 'event_espresso' ),
-									'QST_admin_label' => __( 'Zip/Postal Code - System Question', 'event_espresso' ),
-									'QST_system' => 'zip',
-									'QST_type' => 'TEXT',
-									'QST_required' => 0,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 9,
-									'QST_admin_only' => 0,
-									'QST_max' => EEM_Question::instance()->absolute_max_for_system_question( $QST_system ),
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_address ],
+							'QST_display_text'     => __( 'Zip/Postal Code', 'event_espresso' ),
+							'QST_admin_label'      => __( 'Zip/Postal Code - System Question', 'event_espresso' ),
+							'QST_identifier'       => 'zip-' . $timestamp,
+							'QST_system'           => 'zip',
+							'QST_type'             => 'TEXT',
+							'QST_desc'             => 'The registrant\'s zip/postal code',
+							'QST_html_name'        => 'zip-' . $timestamp,
+							'QST_html_id'          => 'zip-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'zip-' . $timestamp . '-lbl',
+							'QST_html_label_class' => '',
+							'QST_default_value'    => '',
+							'QST_validation'       => array( 'required' => '' ),
+							'QST_order'            => 9,
+							'QST_admin_only'       => 0,
+							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
+								$QST_system
+							),
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 					case 'phone':
-							$QST_values = array(
-									'QST_display_text' => __( 'Phone Number', 'event_espresso' ),
-									'QST_admin_label' => __( 'Phone Number - System Question', 'event_espresso' ),
-									'QST_system' => 'phone',
-									'QST_type' => 'TEXT',
-									'QST_required' => 0,
-									'QST_required_text' => __( 'This field is required', 'event_espresso' ),
-									'QST_order' => 10,
-									'QST_admin_only' => 0,
-									'QST_max' => EEM_Question::instance()->absolute_max_for_system_question( $QST_system ),
-									'QST_wp_user' => self::get_default_creator_id(),
-									'QST_deleted' => 0
-								);
-						break;
+						$QST_values = array(
+							'QSG_ID'               => $QSG_IDs[ EEM_Question_Group::system_address ],
+							'QST_display_text'     => __( 'Phone Number', 'event_espresso' ),
+							'QST_admin_label'      => __( 'Phone Number - System Question', 'event_espresso' ),
+							'QST_identifier'       => 'phone-' . $timestamp,
+							'QST_system'           => 'phone',
+							'QST_type'             => 'TEXT',
+							'QST_desc'             => 'The registrant\'s phone number',
+							'QST_html_name'        => 'phone-' . $timestamp,
+							'QST_html_id'          => 'phone-' . $timestamp,
+							'QST_html_class'       => '',
+							'QST_html_label_id'    => 'phone-' . $timestamp . '-lbl',
+							'QST_html_label_class' => '',
+							'QST_default_value'    => '',
+							'QST_validation'       => array( 'required' => '' ),
+							'QST_order'            => 10,
+							'QST_admin_only'       => 0,
+							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
+								$QST_system
+							),
+							'QST_wp_user'          => self::get_default_creator_id(),
+							'QST_deleted'          => 0
+						);
+					break;
 
 				}
 				if ( ! empty( $QST_values )) {
@@ -1092,39 +1198,6 @@ class EEH_Activation {
 						$table_name,
 						$QST_values,
 						array( '%s', '%s', '%s', '%s', '%d', '%s', '%d', '%d', '%d', '%d' )
-					);
-					$QST_ID = $wpdb->insert_id;
-
-					// QUESTION GROUP QUESTIONS
-					if(  in_array( $QST_system, array( 'fname', 'lname', 'email' ) ) ) {
-						$system_question_we_want = EEM_Question_Group::system_personal;
-					} else {
-						$system_question_we_want = EEM_Question_Group::system_address;
-					}
-					if( isset( $QSG_IDs[ $system_question_we_want ] ) ) {
-						$QSG_ID = $QSG_IDs[ $system_question_we_want ];
-					} else {
-						$id_col = EEM_Question_Group::instance()->get_col( array( array( 'QSG_system' => $system_question_we_want ) ) );
-						if( is_array( $id_col ) ) {
-							$QSG_ID = reset( $id_col );
-						} else {
-							//ok so we didn't find it in the db either?? that's weird because we should have inserted it at the start of this method
-                                                        EE_Log::instance()->log(
-                                                                __FILE__,
-                                                                __FUNCTION__,
-                                                                sprintf(
-                                                                        __( 'Could not associate question %1$s to a question group because no system question group existed', 'event_espresso'),
-                                                                        $QST_ID ),
-                                                                'error' );
-                                                        continue;
-						}
-					}
-
-					// add system questions to groups
-					$wpdb->insert(
-						EEH_Activation::ensure_table_name_has_prefix( 'esp_question_group_question' ),
-						array( 'QSG_ID' => $QSG_ID , 'QST_ID' => $QST_ID, 'QGQ_order'=>($QSG_ID==1)? $order_for_group_1++ : $order_for_group_2++ ),
-						array( '%d', '%d','%d' )
 					);
 				}
 			}
