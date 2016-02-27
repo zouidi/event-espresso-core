@@ -1,4 +1,8 @@
-<?php if ( !defined( 'EVENT_ESPRESSO_VERSION' ) ) {
+<?php
+
+use EventEspresso\core\libraries\form_sections\strategies\validation\ValidationStrategies;
+
+if ( !defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
 /**
@@ -57,7 +61,7 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 
 
 	/**
-	 *        Set    Question display text
+	 * Set Question display text
 	 *
 	 * @access        public
 	 * @param string $QST_display_text
@@ -69,7 +73,7 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 
 
 	/**
-	 *        Set    Question admin text
+	 * Sets Question admin text
 	 *
 	 * @access        public
 	 * @param        string $QST_admin_label
@@ -81,7 +85,7 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 
 
 	/**
-	 *        Set    system name
+	 * Sets system name
 	 *
 	 * @access        public
 	 * @param        mixed $QST_system
@@ -93,7 +97,7 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 
 
 	/**
-	 *        Set    question's type
+	 * Sets question's type
 	 *
 	 * @access        public
 	 * @param        string $QST_type
@@ -105,25 +109,72 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 
 
 	/**
-	 *        Sets whether this question must be answered when presented in a form
+	 * Sets the html name for the Question
 	 *
-	 * @access        public
-	 * @param        bool $QST_required
+	 * @access public
+	 * @param string $QST_html_name
+	 * @return string
+	 * @throws \EE_Error
 	 */
-	public function set_required( $QST_required = FALSE ) {
-		$this->set( 'QST_required', $QST_required );
+	public function set_html_name( $QST_html_name = '' ) {
+		$this->set( 'QST_html_name', $QST_html_name );
 	}
 
 
 
 	/**
-	 *        Set    Question display text
+	 * Sets the html_id for the Question that can be used for identifying it via css / js
 	 *
-	 * @access        public
-	 * @param        string $QST_required_text
+	 * @access public
+	 * @param string $QST_html_id
+	 * @return string
+	 * @throws \EE_Error
 	 */
-	public function set_required_text( $QST_required_text = '' ) {
-		$this->set( 'QST_required_text', $QST_required_text );
+	public function set_html_id( $QST_html_id = '' ) {
+		$this->set( 'QST_html_id', $QST_html_id );
+	}
+
+
+
+	/**
+	 * Sets the html_class for the Question that can be used for identifying it via css / js
+	 *
+	 * @access public
+	 * @param string $QST_html_class
+	 * @return string
+	 * @throws \EE_Error
+	 */
+	public function set_html_class( $QST_html_class = '' ) {
+		$this->set( 'QST_html_class', $QST_html_class );
+	}
+
+
+
+	/**
+	 * Sets the html label id
+	 *
+	 * @access public
+	 * @param string $QST_html_label_id
+	 * @return string
+	 * @throws \EE_Error
+	 */
+	public function set_html_label_id( $QST_html_label_id = '' ) {
+		$this->set( 'QST_html_label_id', $QST_html_label_id );
+	}
+
+
+
+	/**
+	 * Sets whether this question must be answered when presented in a form
+	 *
+	 * @access public
+	 * @param string $QST_validation
+	 */
+	public function set_validation( $QST_validation = '' ) {
+		$validation_strategies = $QST_validation
+			? ValidationStrategies::add( 'required', $QST_validation )
+			: ValidationStrategies::remove( 'required', $QST_validation );
+		$this->set( 'QST_validation', $validation_strategies );
 	}
 
 
@@ -182,6 +233,18 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 
 
 	/**
+	 * Gets the question's internal name
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function identifier() {
+		return $this->get( 'QST_identifier' );
+	}
+
+
+
+	/**
 	 * returns the text for displaying the question to users
 	 * @access public
 	 * @return string
@@ -215,24 +278,91 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 
 
 	/**
-	 * returns either a string of 'text', 'textfield', etc.
+	 * Gets the question's description
+	 *
 	 * @access public
-	 * @return boolean
+	 * @param bool $pretty
+	 * @return string
 	 */
-	public function required() {
-		return $this->get( 'QST_required' );
+	public function desc( $pretty = false ) {
+		return $pretty ? $this->get_pretty( 'QST_desc' ) : $this->get( 'QST_desc' );
 	}
 
 
 
 	/**
-	 * returns the text which should be displayed when a user
-	 * doesn't answer this question in a form
+	 * Returns the html name for the Question
+	 *
 	 * @access public
 	 * @return string
 	 */
-	public function required_text() {
-		return $this->get( 'QST_required_text' );
+	public function html_name() {
+		return $this->get( 'QST_html_name' );
+	}
+
+
+
+	/**
+	 * Returns the html_id for the Question that can be used for identifying it via css / js
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function html_id() {
+		return $this->get( 'QST_html_id' );
+	}
+
+
+
+	/**
+	 * Returns the html_class for the Question that can be used for identifying it via css / js
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function html_class() {
+		return $this->get( 'QST_html_class' );
+	}
+
+
+
+	/**
+	 * Returns the actual html content if this
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function html_content() {
+		return $this->get( 'QST_html_content' );
+	}
+
+
+	/**
+	 * returns list of validations applied to question,
+	 * where the key is the simplified validation slug
+	 * and the value is the actual validation strategy class name
+	 * ie :
+	 *  array( 'required' => 'EE_Required_Validation_Strategy' )
+	 *
+	 * @access public
+	 * @return EE_Validation_Strategy_Base[]
+	 */
+	public function validation() {
+		return $this->get( 'QST_validation' );
+	}
+
+
+
+	/**
+	 * returns whether or not the specified validation is applied to question
+	 *
+	 * @access public
+	 * @param string $validation
+	 * @return bool
+	 */
+	public function has_validation( $validation = '' ) {
+		$validations = $this->get( 'QST_validation' );
+		return isset( $validations[ $validation ] ) ? true : false;
 	}
 
 
@@ -488,7 +618,7 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 	public function generate_form_input( $registration = null, $answer = null, $input_constructor_args = array() ) {
 		$identifier = $this->is_system_question() ? $this->system_ID() : $this->ID();
 
-		$input_constructor_args = array_merge( 
+		$input_constructor_args = array_merge(
 				array(
 					'required' => $this->required() ? true : false,
 					'html_label_text' => $this->display_text(),
@@ -601,5 +731,22 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 		return apply_filters( 'FHEE__EE_Question__generate_form_input__return', $result, $registration, $this, $answer );
 	}
 
+
+
+	/**
+	 * @deprecated
+	 */
+	public function required() {
+		return $this->validation( 'required' );
+	}
+
+
+
+	/**
+	 * @deprecated
+	 */
+	public function required_text() {
+		return '';
+	}
 
 }
