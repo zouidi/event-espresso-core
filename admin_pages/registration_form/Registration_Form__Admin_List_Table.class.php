@@ -3,36 +3,25 @@ if (!defined('EVENT_ESPRESSO_VERSION') )
 	exit('NO direct script access allowed');
 
 /**
- * Event Espresso
- *
- * Event Registration and Management Plugin for Wordpress
- *
- * @package		Event Espresso
- * @author		Seth Shoultes
- * @copyright	(c)2009-2012 Event Espresso All Rights Reserved.
- * @license		http://eventespresso.com/support/terms-conditions/  ** see Plugin Licensing **
- * @link		http://www.eventespresso.com
- * @version		4.0
- *
- * ------------------------------------------------------------------------
- *
- * Registration_Form_Questions_Admin_List_Table
+ * Registration_Form_Admin_List_Table
  *
  * Class for preparing the table listing all the custom event questions
  *
  * note: anywhere there are no php docs it is because the docs are available in the parent class.
  *
- * @package		Registration_Form_Questions_Admin_List_Table
- * @subpackage	includes/core/admin/events/Registration_Form_Questions_Admin_List_Table.class.php
- * @author		Darren Ethier
+ * @package		Registration_Form_Admin_List_Table
+ * @subpackage	includes/core/admin/events/Registration_Form_Admin_List_Tablep
+ * @author		Brent Christensen
  *
  * ------------------------------------------------------------------------
  */
 
-class Registration_Form_Questions_Admin_List_Table extends EE_Admin_List_Table {
+class Registration_Form_Admin_List_Table extends EE_Admin_List_Table {
+
 
 
 	public function __construct( $admin_page ) {
+		\EEH_Debug_Tools::printr( __FUNCTION__, __CLASS__, __FILE__, __LINE__ );
 		parent::__construct($admin_page);
 	}
 
@@ -40,12 +29,12 @@ class Registration_Form_Questions_Admin_List_Table extends EE_Admin_List_Table {
 
 
 	protected function _setup_data() {
-		if(isset($this->_req_data['status'] ) && $this->_req_data['status'] == 'trash'){
-			$this->_data = $this->_admin_page->get_trashed_questions( $this->_per_page,$this->_current_page, FALSE );
-		}else{
-			$this->_data = $this->_admin_page->get_questions( $this->_per_page,$this->_current_page, FALSE );
+		if ( isset( $this->_req_data[ 'status' ] ) && $this->_req_data[ 'status' ] == 'trash' ) {
+			$this->_data = $this->_admin_page->get_trashed_questions( $this->_per_page, $this->_current_page, false );
+		} else {
+			$this->_data = $this->_admin_page->get_questions( $this->_per_page, $this->_current_page, false );
 		}
-		$this->_all_data_count = $this->_admin_page->get_questions( $this->_per_page,$this->_current_page, TRUE );
+		$this->_all_data_count = $this->_admin_page->get_questions( $this->_per_page, $this->_current_page, true );
 	}
 
 
@@ -181,4 +170,4 @@ class Registration_Form_Questions_Admin_List_Table extends EE_Admin_List_Table {
 
 
 
-} //end class Registration_Form_Questions_Admin_List_Table
+} //end class Registration_Form_Admin_List_Table

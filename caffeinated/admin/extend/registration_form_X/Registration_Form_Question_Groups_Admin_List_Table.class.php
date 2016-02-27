@@ -209,4 +209,4 @@ class Registration_Form_Question_Groups_Admin_List_Table extends EE_Admin_List_T
 
 
 
-} //end class Registration_Form_Questions_Admin_List_Table
+} //end class Registration_Form_Admin_List_Table
