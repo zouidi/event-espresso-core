@@ -31,12 +31,12 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 
 	public function __construct( $routing = TRUE ) {
-		//define( 'REGISTRATION_FORM_CAF_ADMIN', EE_CORE_CAF_ADMIN_EXTEND . 'registration_form' . DS );
-		//define( 'REGISTRATION_FORM_CAF_ASSETS_PATH', REGISTRATION_FORM_CAF_ADMIN . 'assets' . DS );
-		//define( 'REGISTRATION_FORM_CAF_ASSETS_URL', EE_CORE_CAF_ADMIN_EXTEND_URL . 'registration_form/assets/' );
-		//define( 'REGISTRATION_FORM_CAF_TEMPLATE_PATH', REGISTRATION_FORM_CAF_ADMIN . 'templates' . DS );
-		//define( 'REGISTRATION_FORM_CAF_TEMPLATE_URL', EE_CORE_CAF_ADMIN_EXTEND_URL . 'registration_form/templates/' );
-		//parent::__construct( $routing );
+		define( 'REGISTRATION_FORM_CAF_ADMIN', EE_CORE_CAF_ADMIN_EXTEND . 'registration_form' . DS );
+		define( 'REGISTRATION_FORM_CAF_ASSETS_PATH', REGISTRATION_FORM_CAF_ADMIN . 'assets' . DS );
+		define( 'REGISTRATION_FORM_CAF_ASSETS_URL', EE_CORE_CAF_ADMIN_EXTEND_URL . 'registration_form/assets/' );
+		define( 'REGISTRATION_FORM_CAF_TEMPLATE_PATH', REGISTRATION_FORM_CAF_ADMIN . 'templates' . DS );
+		define( 'REGISTRATION_FORM_CAF_TEMPLATE_URL', EE_CORE_CAF_ADMIN_EXTEND_URL . 'registration_form/templates/' );
+		parent::__construct( $routing );
 	}
 
 
@@ -51,7 +51,7 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 		$new_page_routes = array(
 			'question_groups' => array(
-				'func' => '_question_groups_overview_list_table',
+				'func' => '_forms_overview_list_table',
 				'capability' => 'ee_read_question_groups'
 				),
 			'add_question' => array(
@@ -419,24 +419,121 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 
 
-
-
-
-	protected function _questions_overview_list_table() {
-		$this->_admin_page_title .= $this->get_action_link_or_button('add_question', 'add_question', array(), 'add-new-h2');
-		parent::_questions_overview_list_table();
-	}
-
-
-
 	protected function _question_groups_overview_list_table() {
 		$this->_search_btn_label = __('Question Groups', 'event_espresso');
-		$this->_admin_page_title .= $this->get_action_link_or_button('add_question_group', 'add_question_group', array(), 'add-new-h2');
 		$this->display_admin_list_table_page_with_sidebar();
 	}
 
 
 
+	/**
+	 *_forms_overview_list_table
+	 */
+	protected function _forms_overview_list_table() {
+		$this->_search_btn_label = __( 'Forms', 'event_espresso' );
+		$this->_admin_page_title .= $this->get_action_link_or_button(
+			'add_question_group',
+			'add_question_group',
+			array(),
+			'add-new-h2'
+		);
+		$this->display_admin_list_table_page_with_sidebar();
+	}
+
+
+
+	/**
+	 * @param int  $per_page
+	 * @param int  $current_page
+	 * @param bool $count
+	 * @param bool $trashed
+	 * @return \EEM_Question_Group[]|int
+	 */
+	public function get_form_sections( $per_page = 10, $current_page = 1, $count = false, $trashed = false ) {
+		return $this->get_form_sections_or_inputs(
+			EEM_Question_Group::instance(),
+			$per_page,
+			$current_page,
+			$count,
+			$trashed
+		);
+	}
+
+
+
+	/**
+	 * @param int  $per_page
+	 * @param int  $current_page
+	 * @param bool $count
+	 * @param bool $trashed
+	 * @return \EEM_Question_Group[]|int
+	 */
+	public function get_form_inputs( $per_page = 10, $current_page = 1, $count = false, $trashed = false ) {
+		return $this->get_form_sections_or_inputs(
+			EEM_Question_Group::instance(),
+			$per_page,
+			$current_page,
+			$count,
+			$trashed
+		);
+	}
+
+
+
+	/**
+	 * @param \EEM_Base $model
+	 * @param int       $per_page
+	 * @param int       $current_page
+	 * @param bool      $count
+	 * @param bool      $trashed
+	 * @return \EE_Soft_Delete_Base_Class[]|int
+	 */
+	protected function get_form_sections_or_inputs(
+		EEM_Base $model,
+		$per_page = 10,
+		$current_page = 1,
+		$count = false,
+		$trashed = false
+	) {
+		$query_params = array();
+		$offset = ( $current_page - 1 ) * $per_page;
+		$query_params[ 'limit' ] = array( $offset, $per_page );
+		$order = ( isset( $this->_req_data[ 'order' ] ) && ! empty( $this->_req_data[ 'order' ] ) )
+			? $this->_req_data[ 'order' ]
+			: 'ASC';
+		$orderby_field = $model instanceof EEM_Question_Group
+			? 'QSG_order'
+			: 'QST_order';
+		$field_to_order_by = empty( $this->_req_data[ 'orderby' ] )
+			? $orderby_field
+			: $this->_req_data[ 'orderby' ];
+		$query_params[ 'order_by' ] = array( $field_to_order_by => $order );
+		$search_string = isset( $this->_req_data[ 's' ] )
+			? $this->_req_data[ 's' ]
+			: null;
+		if ( ! empty( $search_string ) ) {
+			if ( $model instanceof EEM_Question_Group ) {
+				$query_params[ 0 ] = array(
+					'OR' => array(
+						'QSG_name' => array( 'LIKE', "%$search_string%" ),
+						'QSG_desc' => array( 'LIKE', "%$search_string%" )
+					)
+				);
+			} elseif ( $model instanceof EEM_Question ) {
+				$query_params[ 0 ] = array(
+					'QST_display_text' => array( 'LIKE', "%$search_string%" )
+				);
+			}
+		}
+		if ( $model instanceof EEM_Question_Group ) {
+			$query_params[ 0 ][ 'QSG_parent' ] = array( 'IS NULL' );
+		}
+		$where = isset( $query_params[ 0 ] ) ? array( $query_params[ 0 ] ) : array();
+		if ( $trashed ) {
+			return $count ? $model->count_deleted( $where ) : $model->get_all_deleted( $query_params );
+		}
+		return $count ? $model->count( $where ) : $model->get_all( $query_params );
+	}
 
 
 
@@ -814,10 +911,17 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 	protected function _reg_form_settings() {
 		$this->_template_args['values'] = $this->_yes_no_values;
-		$this->_template_args = apply_filters( 'FHEE__Extend_Registration_Form_Admin_Page___reg_form_settings___template_args', $this->_template_args );
+		$this->_template_args = apply_filters(
+			'FHEE__Extend_Registration_Form_Admin_Page___reg_form_settings___template_args',
+			$this->_template_args
+		);
 		$this->_set_add_edit_form_tags( 'update_reg_form_settings' );
-		$this->_set_publish_post_box_vars( NULL, FALSE, FALSE, NULL, FALSE );
-		$this->_template_args['admin_page_content'] = EEH_Template::display_template( REGISTRATION_FORM_CAF_TEMPLATE_PATH . 'reg_form_settings.template.php', $this->_template_args, TRUE );
+		$this->_set_publish_post_box_vars( null, false, false, null, false );
+		$this->_template_args['admin_page_content'] = EEH_Template::display_template(
+			REGISTRATION_FORM_CAF_TEMPLATE_PATH . 'reg_form_settings.template.php',
+			$this->_template_args,
+			true
+		);
 		$this->display_admin_page_with_sidebar();
 	}
 
@@ -825,9 +929,21 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 
 	protected function _update_reg_form_settings() {
-		EE_Registry::instance()->CFG->registration = apply_filters( 'FHEE__Extend_Registration_Form_Admin_Page___update_reg_form_settings__CFG_registration', EE_Registry::instance()->CFG->registration );
-		$success = $this->_update_espresso_configuration( __('Registration Form Options', 'event_espresso'), EE_Registry::instance()->CFG, __FILE__, __FUNCTION__, __LINE__ );
-		$this->_redirect_after_action( $success, __('Registration Form Options', 'event_espresso'), 'updated', array( 'action' => 'view_reg_form_settings' ) );
+		EE_Registry::instance()->CFG->registration = apply_filters(
+			'FHEE__Extend_Registration_Form_Admin_Page___update_reg_form_settings__CFG_registration',
+			EE_Registry::instance()->CFG->registration
+		);
+		$success = $this->_update_espresso_configuration(
+			__('Registration Form Options', 'event_espresso'),
+			EE_Registry::instance()->CFG,
+			__FILE__, __FUNCTION__, __LINE__
+		);
+		$this->_redirect_after_action(
+			$success,
+			__('Registration Form Options', 'event_espresso'),
+			'updated',
+			array( 'action' => 'view_reg_form_settings' )
+		);
 	}
 
 }
