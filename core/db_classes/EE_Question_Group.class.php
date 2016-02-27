@@ -1,28 +1,13 @@
 <?php if ( !defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
-/**
- * Event Espresso
- *
- * Event Registration and Management Plugin for WordPress
- *
- * @ package 		Event Espresso
- * @ author 		Event Espresso
- * @ copyright 	(c) 2008-2011 Event Espresso  All Rights Reserved.
- * @ license 		{@link http://eventespresso.com/support/terms-conditions/}   * see Plugin Licensing *
- * @ link 				{@link http://www.eventespresso.com}
- * @ since 			4.0
- *
- */
-
-
 
 /**
  * EE_Question_Group class
  *
- * @package 			Event Espresso
+ * @package     Event Espresso
  * @subpackage 	includes/classes/EE_Answer.class.php
- * @author 				Mike Nelson
+ * @author      Mike Nelson
  *
  * ------------------------------------------------------------------------
  */
@@ -98,29 +83,6 @@ class EE_Question_Group extends EE_Soft_Delete_Base_Class {
 
 
 	/**
-	 * Returns whether to show the group's name on the frontend
-	 * @access public
-	 * @return boolean
-	 */
-	public function show_group_name() {
-		return $this->get( 'QSG_show_group_name' );
-	}
-
-
-
-	/**
-	 * Returns whether to show the group's description
-	 * on the frontend
-	 * @access public
-	 * @return boolean
-	 */
-	public function show_group_desc() {
-		return $this->get( 'QSG_show_group_desc' );
-	}
-
-
-
-	/**
 	 * Returns whether this is a 'system group' (meaning
 	 * a question group integral to the system, whose questions
 	 * relate to the attendee table)
@@ -154,6 +116,68 @@ class EE_Question_Group extends EE_Soft_Delete_Base_Class {
 	 */
 	public function deleted() {
 		return $this->get( 'QST_deleted' );
+	}
+
+
+
+	/**
+	 * Returns the QSG_ID of the Question Group that this is a child of.
+	 * If null, then this is a top level form section
+	 *
+	 * @access public
+	 * @return int|null
+	 */
+	public function parent() {
+		return $this->get( 'QSG_parent' );
+	}
+
+
+
+	/**
+	 * Returns the html name for the Question Group.
+	 * Only top level form sections require this field. This would primarily be used for the form name.
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function html_name() {
+		return $this->get( 'QSG_html_name' );
+	}
+
+
+
+	/**
+	 * Returns the html_id for the Question Group that can be used for identifying it via css / js
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function html_id() {
+		return $this->get( 'QSG_html_id' );
+	}
+
+
+
+	/**
+	 * Returns the html_class for the Question Group that can be used for identifying it via css / js
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function html_class() {
+		return $this->get( 'QSG_html_class' );
+	}
+
+
+
+	/**
+	 * Returns the actual html content if this
+	 *
+	 * @access public
+	 * @return string
+	 */
+	public function html_content() {
+		return $this->get( 'QSG_html_content' );
 	}
 
 
@@ -271,4 +295,32 @@ class EE_Question_Group extends EE_Soft_Delete_Base_Class {
 		$latest_order ++;
 		$this->set( 'QSG_order', $latest_order );
 	}
+
+
+
+	/**
+	 * Returns whether to show the group's name on the frontend
+	 *
+	 * @deprecated 4.10.0
+	 * @access public
+	 * @return boolean
+	 */
+	public function show_group_name() {
+		return '';
+	}
+
+
+
+	/**
+	 * Returns whether to show the group's description
+	 * on the frontend
+	 *
+	 * @deprecated 4.10.0
+	 * @access public
+	 * @return boolean
+	 */
+	public function show_group_desc() {
+		return '';
+	}
+
 }
