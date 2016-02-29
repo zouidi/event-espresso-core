@@ -99,7 +99,7 @@ abstract class EE_Form_Section_Base {
 		// used by display strategies
 		EE_Registry::instance()->load_helper('HTML');
 		// assign incoming values to properties
-		foreach( $options_array as $key => $value ) {
+		foreach( (array)$options_array as $key => $value ) {
 			$key = '_' . $key;
 			if ( property_exists( $this, $key ) && empty( $this->{$key} )) {
 				$this->{$key} = $value;
