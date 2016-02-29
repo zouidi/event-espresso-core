@@ -154,3 +154,134 @@ table.question-options-table td:last-child {
         float: none !important;
     }
 }
+
+#ee-reg-form-editor-form-main-meta-box {
+	padding: 1em 0 0;
+}
+
+#ee-reg-form-editor-form-inputs-wrapper-dv {
+	padding: 1em 2em;
+}
+
+.ee-reg-form-editor-form-new-input-hdr {
+	color: #f8f8f8;
+	font-size: 2em !important;
+	font-weight: bold !important;
+	line-height: 2em !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	vertical-align: middle !important;
+}
+
+.ee-reg-form-editor-form-new-input-dv {
+	border: 1px dashed #ccc;
+	border-radius: 5px;
+	margin: 0 0 2em;
+	min-height: 42px;
+	padding: .5em 0 !important;
+	text-align: center;
+	width: 100%;
+}
+
+.ee-reg-form-editor-form-input-li {
+	display: inline-block;
+	margin-right: 1%;
+	width: 48%;
+}
+
+.ee-reg-form-editor-form-input {
+	color: #222 !important;
+	font-size: 11px !important;
+	padding: 0 0 1px !important;
+	text-align: center;
+	width: 122px;
+}
+
+.ee-droppable-active {
+	border: 1px dashed #70CC50 !important;
+}
+.ui-draggable-dragging {
+	border: 1px dashed #70CC50 !important;
+	box-shadow: 0 5px 5px rgba( 0, 0, 0, .25 ) !important;
+}
+
+.ee-reg-form-editor-form-new-input-form {
+	/*border: 1px solid #fff !important;*/
+	/*border-radius: 2px;*/
+	padding:0 1em 1em !important;
+	margin: 1em 0;
+}
+.ee-reg-form-editor-form-new-input-form.hover {
+	border: 1px solid #ddd !important;
+}
+
+.ee-new-form-input-dv label {
+	display: block;
+	margin: 0 0 .25em;
+}
+.ee-new-form-input-dv .ee-checkbox-label-after {
+	margin: 1em 0 0;
+}
+.ee-new-form-input-dv .ee-radio-label-after {
+	margin: 1em 0 0;
+}
+.ee-asterisk {
+	color: #E76700;
+	margin: 0 .5em;
+}
+
+.ee-new-form-input-dv select,
+.ee-new-form-input-dv textarea,
+.ee-new-form-input-dv input[type="text"],
+.ee-new-form-input-dv input[type="email"],
+.ee-new-form-input-dv input[type="password"] {
+	border: 1px solid #ddd !important;
+	border-radius: 2px !important;
+	box-shadow: none !important;
+	min-width: 50%;
+	max-width: 75%;
+}
+
+.ee-reg-form-editor-active-form-inputs-li + .ee-reg-form-editor-active-form-inputs-li {
+	margin-top: 4em;
+}
+
+.ee-reg-form-editor-active-form-inputs-li + .ee-droppable-active {
+	margin-top: 4em;
+}
+
+.ee-droppable-active + .ee-reg-form-editor-active-form-inputs-li {
+	margin-top: 4em;
+}
+
+.ee-reg-form-editor-active-form-inputs-controls-dv {
+	float: right;
+	text-align: right;
+}
+.ee-reg-form-editor-active-form-inputs-controls-dv span {
+	/*border: 1px solid #ccc !important;*/
+	/*border-radius: 2px;*/
+	font-size: 16px;
+	line-height: 24px;
+	height: 24px;
+	margin: 0 0 .25em .5em;
+	text-align: center;
+	vertical-align:middle;
+	width: 24px;
+}
+.ee-reg-form-editor-active-form-inputs-controls-dv .ee-form-input-control-config,
+.ee-reg-form-editor-active-form-inputs-controls-dv .ee-form-input-control-delete {
+	cursor: pointer;
+}
+.ee-reg-form-editor-active-form-inputs-controls-dv .ee-form-input-control-sort {
+	cursor: move;
+}
+
+.ee-new-form-input-settings-dv {
+	display: none;
+	border: 1px solid #eee;
+	border-radius: 2px;
+	padding: 1em 1em 1em 2em;
+	margin: 2em 0 0;
+
+}
