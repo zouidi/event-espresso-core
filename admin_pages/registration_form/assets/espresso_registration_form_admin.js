@@ -28,13 +28,132 @@ jQuery(document).ready(function($) {
 	espresso_reg_forms_show_or_hide_question_options();
 
 	/** sortable options **/
-	$('.question-options-table').sortable({
-		cursor: 'move',
-		items: '.ee-options-sortable',
-		update: function(event,ui) {
-			espresso_update_option_order();
+	//$('.question-options-table').sortable({
+	//	cursor: 'move',
+	//	items: '.ee-options-sortable',
+	//	update: function(event,ui) {
+	//		espresso_update_option_order();
+	//	}
+	//});
+
+
+
+	$( "#ee-reg-form-editor-active-form-inputs-ul" ).sortable({
+		connectWith : ".ee-reg-form-editor-active-form-inputs-li",
+		handle : ".ee-form-input-control-sort",
+		placeholder : "ee-reg-form-editor-form-new-input-dv ee-droppable-active",
+		revert : true,
+		receive : function ( event, ui ) {
+			//console.log( JSON.stringify( '** SORTABLE:RECEIVE **', null, 4 ) );
+			//console.log( JSON.stringify( 'event: ' + event, null, 4 ) );
+			//console.log( event );
+			//console.log( JSON.stringify( 'ui: ' + ui, null, 4 ) );
+			//console.log( ui );
+			//console.log( JSON.stringify( '$(this): ', null, 4 ) );
+			//console.log( $( this ) );
+			var $inputForm = getInputForm( $( ui.item ) );
+			//console.log( JSON.stringify( '$inputForm: ', null, 4 ) );
+			//console.log( $inputForm );
+			$( this ).find( '.draggable' ).replaceWith( $inputForm );
+		}
+	}).on( 'click', '.ee-delete-form-input', function () {
+		if ( confirm( "The form input will be permanently deleted and cannot be recovered. Are you sure?" ) ) {
+			$( this )
+				.closest( '.ee-reg-form-editor-active-form-inputs-li' )
+				.remove();
+		}
+		var listItems = $( "#ee-reg-form-editor-active-form-inputs-ul" ).find( 'li' ).length;
+		//console.log( JSON.stringify( 'listItems: ' + listItems, null, 4 ) );
+		if ( listItems < 1 ) {
+			$( '.droppable' ).fadeIn();
+		}
+	}).on( 'click', '.ee-config-form-input', function () {
+		var $config = $( this )
+			.closest( '.ee-reg-form-editor-active-form-inputs-li' )
+			.find( '.ee-new-form-input-settings-dv' );
+		$( '.ee-new-form-input-settings-dv' )
+			.not( $config )
+			.slideUp( 250 );
+		$config.slideToggle( 250 );
+	});
+
+	$( ".draggable" ).draggable({
+		connectToSortable : "#ee-reg-form-editor-active-form-inputs-ul",
+		cursor : "move",
+		helper : "clone",
+		revert : "invalid"
+		//stop : function ( event, ui ) {
+			//console.log( JSON.stringify( '** DRAGGABLE:STOP **', null, 4 ) );
+			//console.log( JSON.stringify( 'event: ' + event, null, 4 ) );
+			//console.log( event );
+			//console.log( JSON.stringify( 'ui: ' + ui, null, 4 ) );
+			//console.log( ui );
+			//console.log( JSON.stringify( '$(this): ', null, 4 ) );
+			//console.log( $( this ) );
+		//}
+	});
+
+	$( ".droppable" ).droppable({
+		hoverClass :  "ee-droppable-active",
+		drop : function ( event, ui ) {
+			//console.log( JSON.stringify( '** DROPPABLE:DROP **', null, 4 ) );
+			//console.log( JSON.stringify( 'event: ' + event, null, 4 ) );
+			//console.log( event );
+			//console.log( JSON.stringify( 'ui: ' + ui, null, 4 ) );
+			//console.log( ui );
+			//console.log( JSON.stringify( '$(this): ', null, 4 ) );
+			//console.log( $( this ) );
+			var $inputForm = getInputForm( ui.draggable );
+			$( '#ee-reg-form-editor-active-form-inputs-ul' ).append( $inputForm );
+			$( this ).hide();
 		}
 	});
+
+	function getInputForm( $draggableHelper ) {
+		// get formInput target ID from helper and clone that form
+		var $inputForm = $( '#' + $draggableHelper.data( 'form_input' ) ).clone();
+		// generate timestamp for adding to IDs and form input attributes to make them unique
+		var timestamp = "-" + new Date().getTime();
+		$inputForm.attr( 'id', $inputForm.attr( 'id' ) + timestamp );
+		// gather ALL form inputs
+		var $inputFormInputs = $inputForm.find( ':input' );
+		 // and loop through them
+		$inputFormInputs.each( function () {
+			// and add timestamp to names and IDs in place of "_clone"
+			$( this ).attr( 'id', $( this ).attr( 'id' ).replace( '_clone', timestamp ) );
+			$( this ).attr( 'name', $( this ).attr( 'name' ).replace( '_clone', timestamp ) );
+		});
+		// now do the same for all of the input labels
+		var $inputFormLabels = $inputForm.find( 'label' );
+		// and loop through them
+		$inputFormLabels.each( function () {
+			// and add timestamp to "for" and IDs in place of "_clone"
+			$( this ).attr( 'id', $( this ).attr( 'id' ).replace( '_clone', timestamp ) );
+			$( this ).attr( 'for', $( this ).attr( 'for' ).replace( '_clone', timestamp ) );
+		});
+		// make the new form visible
+		return $inputForm.show();
+	}
+
+
+	//droppable
+	//DROP = ui.draggable.id = ee-reg-form-editor-form-input-email
+	//$( this ).attr( id )    = undefined
+	//$( this ).attr( class ) = ee-reg-form-editor-form-new-input-dv droppable ui-droppable
+	//
+	//draggable
+	//STOP = $( this ).attr( id ) = ee-reg-form-editor-form-input-email
+	//$( this ).attr( class ) = ee-reg-form-editor-form-input draggable button ui-draggable ui-draggable-handle
+	//
+	//draggable
+	//STOP = $( this ).attr( id ) = ee-reg-form-editor-form-input-month
+	//$( this ).attr( class ) = ee-reg-form-editor-form-input draggable button ui-draggable ui-draggable-handle
+
+
+	// sortable receive
+	//draggable
+	//STOP = $( this ).attr( id ) = ee-reg-form-editor-active-form-inputs-ul
+	//$( this ).attr( class ) = sortable ui -sortable
 
 });
 
