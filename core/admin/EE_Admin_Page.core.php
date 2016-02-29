@@ -188,7 +188,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 
 
 
-
 	/**
 	 * _init_page_props
 	 * Child classes use to set at least the following properties:
@@ -745,12 +744,11 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 * All this method does is verify the incoming request and make sure that routes exist for it.  We do this early so we know if we need to drop out.
 	 *
 	 * @access protected
-	 * @return void
 	 */
 	protected function _verify_routes() {
 		do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
-		if ( !$this->_current_page && !defined( 'DOING_AJAX')) return FALSE;
+		if ( !$this->_current_page && !defined( 'DOING_AJAX')) return;
 
 		$this->_route = FALSE;
 		$func = FALSE;
@@ -3251,6 +3249,14 @@ abstract class EE_Admin_Page extends EE_BASE {
 		return $this->_current_page_view_url;
 	}
 
+
+
+	/**
+	 * @return string
+	 */
+	public function get_wp_page_slug() {
+		return $this->_wp_page_slug;
+	}
 
 
 
