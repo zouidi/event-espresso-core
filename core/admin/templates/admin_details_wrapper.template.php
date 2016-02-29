@@ -27,8 +27,8 @@ do_action( 'add_meta_boxes', $post_type, $post );
 			<?php do_meta_boxes( $current_page, 'advanced', NULL ); ?>
 		</div>
 		<!-- postbox-container-2 -->
-
 	</div>
+	<br class="clear"/>
 	<!-- post-body -->
 </div>
 <!-- poststuff -->
