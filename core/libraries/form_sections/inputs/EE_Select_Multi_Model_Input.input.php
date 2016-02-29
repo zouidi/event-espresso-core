@@ -50,6 +50,9 @@ class EE_Select_Multi_Model_Input extends EE_Select_Multiple_Input{
 		//convert the model objects to select from into normal select options
 		$select_options = array();
 		foreach( $answer_options as $model_obj ){
+			if ( ! $model_obj instanceof EE_Base_Class ) {
+				continue;
+			}
 			if( $this->_naming_method ){
 				$display_value = call_user_func( array( $model_obj, $this->_naming_method ));
 			}else{
