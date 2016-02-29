@@ -1,6 +1,6 @@
 <?php
 
-use EventEspresso\core\libraries\form_sections\strategies\validation\ValidationStrategies;
+use EventEspresso\core\libraries\form_sections\strategies\validation\ValidationStrategiesLoader;
 
 if ( !defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
@@ -172,8 +172,8 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 	 */
 	public function set_validation( $QST_validation = '' ) {
 		$validation_strategies = $QST_validation
-			? ValidationStrategies::add( 'required', $QST_validation )
-			: ValidationStrategies::remove( 'required', $QST_validation );
+			? ValidationStrategiesLoader::add( 'required', $QST_validation )
+			: ValidationStrategiesLoader::remove( 'required', $QST_validation );
 		$this->set( 'QST_validation', $validation_strategies );
 	}
 
@@ -632,7 +632,7 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 		// has this question been answered ?
 		if ( $answer instanceof EE_Answer ) {
 			//answer gets htmlspecialchars called on it, undo that please
-			//beceause the form input's display strategy may call esc_attr too
+			//because the form input's display strategy may call esc_attr too
 			//which also does html special characters
 			$values_with_html_special_chars = $answer->value();
 			if( is_array( $values_with_html_special_chars ) ) {
@@ -737,7 +737,7 @@ class EE_Question extends EE_Soft_Delete_Base_Class implements EEI_Duplicatable 
 	 * @deprecated
 	 */
 	public function required() {
-		return $this->validation( 'required' );
+		return $this->has_validation( 'required' );
 	}
 
 
