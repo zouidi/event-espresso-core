@@ -148,7 +148,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 			'validation_strategies'
 		);
 		// loop thru incoming options
-		foreach( $input_args as $key => $value ) {
+		foreach( (array)$input_args as $key => $value ) {
 			// add underscore to $key to match property names
 			$_key = '_' . $key;
 			if ( property_exists( $this, $_key )) {
