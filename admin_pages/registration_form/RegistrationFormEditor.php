@@ -171,12 +171,6 @@ class RegistrationFormEditor {
 
 
 
-	protected function formatInputName( $form_input_class_name ) {
-		return str_replace( array( '\EE_', '_Input', '_' ), array( '', '', ' ' ), $form_input_class_name );
-	}
-
-
-
 	public function formInputsMetaBox() {
 		\EE_Registry::instance()->load_helper( 'EEH_HTML' );
 		$html = \EEH_HTML::div(
@@ -185,7 +179,17 @@ class RegistrationFormEditor {
 			'ee-reg-form-editor-form-inputs-dv infolinks'
 		);
 		$html .= \EEH_HTML::ul( '', 'ee-reg-form-editor-form-inputs-ul draggable' );
-		foreach ( FormInputsLoader::get() as $form_input => $form_input_class_name ) {
+		$exclude = array(
+			'credit_card',
+			'credit_card_month',
+			'credit_card_year',
+			'cvv',
+			'hidden',
+			'fixed_hidden',
+			'select_multi_model',
+			//'submit',
+		);
+		foreach ( FormInputsLoader::get( $exclude ) as $form_input => $form_input_class_name ) {
 			$html .= \EEH_HTML::li(
 				'',
 				'ee-reg-form-editor-form-input-li-' . $form_input,
@@ -236,6 +240,39 @@ class RegistrationFormEditor {
 		echo $html;
 		do_action( 'AHEE__EE_Admin_Page__reg_form_editor_form_sections_meta_box__after_content' );
 	}
+
+
+
+	protected function formatInputName( $form_input_class_name ) {
+		$form_input_class_name = trim(
+			str_replace(
+				array( '\EE_', '_Input', '_' ), // find
+				array( '', '', ' ' ),           // replace
+				$form_input_class_name
+			)
+		);
+		switch( $form_input_class_name ) {
+			case 'Admin File Uploader' :
+				$form_input_class_name = 'File Uploader';
+				break;
+			case 'Checkbox Multi' :
+				$form_input_class_name = 'Checkbox';
+				break;
+			case 'Country Select' :
+				$form_input_class_name = 'Country';
+				break;
+			case 'State Select' :
+				$form_input_class_name = 'State/Province';
+				break;
+			case 'Yes No' :
+				$form_input_class_name = 'Yes or No';
+				break;
+		}
+		return $form_input_class_name;
+	}
+
+
+
 }
 // End of file RegistrationFormEditor.php
 // Location: admin_pages/registration_form/RegistrationFormEditor.php
