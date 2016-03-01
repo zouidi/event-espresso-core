@@ -29,9 +29,14 @@ class RegistrationFormEditor {
 	protected $question_group;
 
 	/*
-	 * @var $reg_form_admin_page \Registration_Form_Admin_Page
+	 * @var \Registration_Form_Admin_Page $reg_form_admin_page
 	 */
 	protected $reg_form_admin_page;
+
+	/*
+	 * @var RegistrationFormEditorFormInputForm $input_form_generator
+	 */
+	protected $input_form_generator;
 
 	/*
 	 * @var $editor_form \EE_Form_Section_Proper
@@ -44,10 +49,15 @@ class RegistrationFormEditor {
 	 * RegistrationFormEditor constructor
 	 *
 	 * @param \Registration_Form_Admin_Page $Registration_Form_Admin_Page
+	 * @param RegistrationFormEditorFormInputForm $RegistrationFormEditorFormInputForm
 	 */
-	public function __construct( \Registration_Form_Admin_Page $Registration_Form_Admin_Page ) {
+	public function __construct(
+		\Registration_Form_Admin_Page $Registration_Form_Admin_Page,
+		RegistrationFormEditorFormInputForm $RegistrationFormEditorFormInputForm
+	) {
 		// set reg admin page
 		$this->reg_form_admin_page = $Registration_Form_Admin_Page;
+		$this->input_form_generator = $RegistrationFormEditorFormInputForm;
 		// get copy of EE_Request
 		$request_data = $this->reg_form_admin_page->get_request_data();
 		// are we editing an existing Question Group or creating a new one ?
@@ -168,7 +178,6 @@ class RegistrationFormEditor {
 
 
 	public function formInputsMetaBox() {
-		$input_form = new RegistrationFormEditorFormInputForm( \EEM_Question::instance() );
 		\EE_Registry::instance()->load_helper( 'EEH_HTML' );
 		$html = \EEH_HTML::div(
 			'',
@@ -218,7 +227,7 @@ class RegistrationFormEditor {
 				'title="' . __( 'Drag to Sort', 'event_espresso' ) . '"'
 			);
 			$html .= \EEH_HTML::divx(); // end 'ee-reg-form-editor-active-form-inputs-controls-dv'
-			$html .= $input_form->formHTML( $form_input, $form_input_class_name );
+			$html .= $this->input_form_generator->formHTML( $form_input, $form_input_class_name );
 			$html .= \EEH_HTML::lix(); // end 'ee-reg-form-editor-active-form-inputs-li'
 			$html .= \EEH_HTML::lix(); // end 'ee-reg-form-editor-form-input-li'
 		}
