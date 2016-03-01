@@ -15,7 +15,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * No the name of this class is not some copy pasta mistake !!!
  * On the admin page where we edit the Registration Form,
  * we need forms for configuring the individual reg form inputs.
- * So this is the "Registration Form Editor" "Form Input" Form
+ * So this class generates the "Registration Form Editor" "Form Input" Forms
  *
  * @package       Event Espresso
  * @subpackage    core
@@ -143,7 +143,11 @@ class RegistrationFormEditorFormInputForm {
 				);
 				break;
 			case 'QST_desc' :
-				$config_input = new \EE_Text_Area_Input();
+				$config_input = new \EE_Text_Area_Input(
+					array(
+						'html_label_text' => __( 'Description', 'event_espresso' )
+					)
+				);
 				break;
 			case 'QST_validation' :
 				$config_input = new \EE_Checkbox_Multi_Input(
