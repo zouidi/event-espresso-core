@@ -1,5 +1,6 @@
 <?php
 use EventEspresso\admin_pages\registration_form\RegistrationFormEditor;
+use EventEspresso\admin_pages\registration_form\RegistrationFormEditorFormInputForm;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'NO direct script access allowed' );
@@ -408,7 +409,10 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 	 */
 	protected function _edit_form() {
 		do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
-		$reg_form_editor = new RegistrationFormEditor( $this );
+		$reg_form_editor = new RegistrationFormEditor(
+			$this,
+			new RegistrationFormEditorFormInputForm( $this->_question_model )
+		);
 		// tweak page title
 		$this->_admin_page_title = $reg_form_editor->getAdminPageTitle();
 		// set route and additional hidden fields
