@@ -16,16 +16,28 @@ class EE_Currency_Input extends EE_Select_Input{
 	 * @param array $input_settings
 	 */
 	function __construct( $only_specific_currency_codes = array(), $input_settings = array()){
-		$query_params = array('order_by'=>array('CNT_name'=>'asc'));
-		if($only_specific_currency_codes){
-			$query_params[0]['CNT_cur_code'] = array('IN',$only_specific_currency_codes);
+		$query_params = array( 'order_by' => array( 'CNT_name' => 'asc' ) );
+		if ( $only_specific_currency_codes ) {
+			$query_params[ 0 ][ 'CNT_cur_code' ] = array( 'IN', $only_specific_currency_codes );
 		}
-		$all_countries = EEM_Country::instance()->get_all($query_params);
+		$all_countries = EEM_Country::instance()->get_all( $query_params );
 		$country_options = array();
-		foreach($all_countries as $country){
-			/* @var $country EE_Country */
-			$country_options[$country->currency_code()] = $country->name().": ".$country->currency_name_single() ." (".$country->currency_sign().")";
+		foreach ( $all_countries as $country ) {
+			if ( $country instanceof EE_Country ) {
+				$text = $country->name().": ".$country->currency_name_single()." (".$country->currency_sign().")";
+				$country_options[ $country->currency_code() ] = $text;
+			}
 		}
-		parent::__construct($country_options,'int',$input_settings);
+		$this->_add_validation_strategy(
+			new EE_Enum_Validation_Strategy(
+				isset( $input_settings[ 'validation_error_message' ] )
+					? $input_settings[ 'validation_error_message' ]
+					: null
+			)
+		);
+		parent::__construct( $country_options, $input_settings );
 	}
+
+
+
 }

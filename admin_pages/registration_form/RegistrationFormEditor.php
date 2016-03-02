@@ -73,7 +73,15 @@ class RegistrationFormEditor {
 			$this->question_group = \EE_Question_Group::new_instance();
 			$this->question_group->set_order_to_latest();
 		}
+		\EE_Registry::instance()->load_helper( 'EEH_HTML' );
 		//sidebars
+		add_meta_box(
+			'espresso_reg_form_editor_form_layout_meta_box',
+			__( 'Form Layout', 'event_espresso' ),
+			array( $this, 'formLayoutMetaBox' ),
+			$this->reg_form_admin_page->get_wp_page_slug(),
+			'side'
+		);
 		add_meta_box(
 			'espresso_reg_form_editor_form_inputs_meta_box',
 			__( 'Form Inputs', 'event_espresso' ),
@@ -171,8 +179,35 @@ class RegistrationFormEditor {
 
 
 
+	public function formLayoutMetaBox() {
+		$html = \EEH_HTML::div(
+			'',
+			'ee-reg-form-editor-form-layout-meta-box',
+			'ee-reg-form-editor-form-layout-dv infolinks'
+		);
+		$html .= \EEH_HTML::ul( '', 'ee-reg-form-editor-form-layout-ul draggable' );
+		$html .= \EEH_HTML::li(
+			'',
+			'ee-reg-form-editor-form-layout-li-html',
+			'ee-reg-form-editor-form-layout-li'
+		);
+		$html .= \EEH_HTML::div(
+			'HTML',
+			'ee-reg-form-editor-form-layout-html',
+			'ee-reg-form-editor-form-layout draggable button',
+			'',
+			'data-form_input="ee-reg-form-editor-active-form-layout-li-html"'
+		);
+		$html .= \EEH_HTML::lix(); // end 'ee-reg-form-editor-form-layout-li'
+		$html .= \EEH_HTML::ulx();
+		$html .= \EEH_HTML::divx();
+		echo $html;
+		do_action( 'AHEE__EE_Admin_Page__reg_form_editor_form_layout_meta_box__after_content' );
+	}
+
+
+
 	public function formInputsMetaBox() {
-		\EE_Registry::instance()->load_helper( 'EEH_HTML' );
 		$html = \EEH_HTML::div(
 			'',
 			'ee-reg-form-editor-form-inputs-meta-box',
