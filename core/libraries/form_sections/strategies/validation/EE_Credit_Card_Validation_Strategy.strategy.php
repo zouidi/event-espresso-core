@@ -12,6 +12,17 @@
  */
 class EE_Credit_Card_Validation_Strategy extends EE_Text_Validation_Strategy{
 
+
+	/*
+	 * indicates whether or not this validation strategy is general enough that it can be applied to any/most input
+	 * a validation strategy that only applies to one,or very few, input type(s) would set this value to false
+	 *
+	 *  @var boolean $_generally_applicable
+	 */
+	protected static $_generally_applicable = false;
+
+
+
 	/**
 	 * @param null $validation_error_message
 	 */
