@@ -192,6 +192,7 @@ table.question-options-table td:last-child {
 	width: 48%;
 }
 
+.ee-reg-form-editor-form-layout,
 .ee-reg-form-editor-form-input {
 	color: #222 !important;
 	font-size: 11px !important;
