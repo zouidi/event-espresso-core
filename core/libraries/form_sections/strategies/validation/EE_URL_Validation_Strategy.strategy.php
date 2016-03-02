@@ -10,6 +10,18 @@
  */
 class EE_URL_Validation_Strategy extends EE_Validation_Strategy_Base{
 
+
+
+	/*
+	 * indicates whether or not this validation strategy is general enough that it can be applied to any/most input
+	 * a validation strategy that only applies to one,or very few, input type(s) would set this value to false
+	 *
+	 *  @var boolean $_generally_applicable
+	 */
+	protected static $_generally_applicable = false;
+
+
+
 	/**
 	 * @param null $validation_error_message
 	 */
@@ -30,18 +42,25 @@ class EE_URL_Validation_Strategy extends EE_Validation_Strategy_Base{
 	 * @throws \EE_Validation_Error
 	 */
 	function validate($normalized_value) {
-		if( $normalized_value ){
-			if (filter_var($normalized_value, FILTER_VALIDATE_URL) === false){
-				throw new EE_Validation_Error( $this->get_validation_error_message(), 'invalid_url');
-			}else{
-				EE_Registry::instance()->load_helper('URL');
-				if( ! EEH_URL::remote_file_exists(
+		if ( $normalized_value ) {
+			if ( filter_var( $normalized_value, FILTER_VALIDATE_URL ) === false ) {
+				throw new EE_Validation_Error( $this->get_validation_error_message(), 'invalid_url' );
+			} else {
+				EE_Registry::instance()->load_helper( 'URL' );
+				if (
+					! EEH_URL::remote_file_exists(
 						$normalized_value,
 						array(
-							'sslverify' => false, 
-							'limit_response_size' => 4095,//we don't really care for a full response, but we do want headers at least. Lets just ask for a one block
-						))){
-					throw new EE_Validation_Error(sprintf(__("That URL seems to be broken. Please enter a valid URL", "event_espresso")));
+							'sslverify' => false,
+							'limit_response_size' => 4095,
+							// we don't really care for a full response,
+							// but we do want headers at least. Lets just ask for a one block
+						)
+					)
+				) {
+					throw new EE_Validation_Error(
+						sprintf( __( "That URL seems to be broken. Please enter a valid URL", "event_espresso" ) )
+					);
 				}
 			}
 		}
