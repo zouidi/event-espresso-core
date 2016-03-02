@@ -10,18 +10,39 @@
  */
 class EE_Max_Length_Validation_Strategy extends EE_Validation_Strategy_Base{
 
+
+
+	/*
+	 * indicates whether or not this validation strategy is general enough that it can be applied to any/most input
+	 * a validation strategy that only applies to one,or very few, input type(s) would set this value to false
+	 *
+	 *  @var boolean $_generally_applicable
+	 */
+	protected static $_generally_applicable = true;
+
 	protected $_max_length;
 
+
+
+	/**
+	 * EE_Max_Length_Validation_Strategy constructor.
+	 *
+	 * @param null $validation_error_message
+	 * @param int  $max_length
+	 */
 	public function __construct( $validation_error_message = NULL, $max_length = EE_INF ) {
-		$this->_max_length = $max_length;
+		$this->_max_length = absint( $max_length );
 		if( $validation_error_message === null ) {
 			$validation_error_message = sprintf( __( 'Input is too long. Maximum number of characters is %1$s', 'event_espresso' ), $max_length );
 		}
 		parent::__construct( $validation_error_message );
 	}
 
+
+
 	/**
-	 * @param $normalized_value
+	 * @param mixed $normalized_value
+	 * @throws \EE_Validation_Error
 	 */
 	public function validate($normalized_value) {
 		if( $this->_max_length !== EE_INF &&
