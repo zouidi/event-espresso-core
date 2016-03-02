@@ -10,15 +10,35 @@
  */
 class EE_Min_Length_Validation_Strategy extends EE_Validation_Strategy_Base{
 
+
+	/*
+	 * indicates whether or not this validation strategy is general enough that it can be applied to any/most input
+	 * a validation strategy that only applies to one,or very few, input type(s) would set this value to false
+	 *
+	 *  @var boolean $_generally_applicable
+	 */
+	protected static $_generally_applicable = true;
+
 	protected $_min_length;
 
+
+
+	/**
+	 * EE_Min_Length_Validation_Strategy constructor.
+	 *
+	 * @param null $validation_error_message
+	 * @param int  $min_length
+	 */
 	public function __construct( $validation_error_message = NULL, $min_length = 0 ) {
-		$this->_min_length = $min_length;
+		$this->_min_length = absint( $min_length );
 		parent::__construct( $validation_error_message );
 	}
 
+
+
 	/**
-	 * @param $normalized_value
+	 * @param mixed $normalized_value
+	 * @throws \EE_Validation_Error
 	 */
 	public function validate($normalized_value) {
 		if( $this->_min_length > 0 &&
