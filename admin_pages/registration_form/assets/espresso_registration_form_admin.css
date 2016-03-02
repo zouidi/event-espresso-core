@@ -251,23 +251,23 @@ table.question-options-table td:last-child {
 	max-width: 75%;
 }
 
-.ee-reg-form-editor-active-form-inputs-li + .ee-reg-form-editor-active-form-inputs-li {
+.ee-reg-form-editor-active-form-li + .ee-reg-form-editor-active-form-li {
 	margin-top: 4em;
 }
 
-.ee-reg-form-editor-active-form-inputs-li + .ee-droppable-active {
+.ee-reg-form-editor-active-form-li + .ee-droppable-active {
 	margin-top: 4em;
 }
 
-.ee-droppable-active + .ee-reg-form-editor-active-form-inputs-li {
+.ee-droppable-active + .ee-reg-form-editor-active-form-li {
 	margin-top: 4em;
 }
 
-.ee-reg-form-editor-active-form-inputs-controls-dv {
+.ee-reg-form-editor-active-form-controls-dv {
 	float: right;
 	text-align: right;
 }
-.ee-reg-form-editor-active-form-inputs-controls-dv span {
+.ee-reg-form-editor-active-form-controls-dv span {
 	/*border: 1px solid #ccc !important;*/
 	/*border-radius: 2px;*/
 	font-size: 16px;
@@ -278,11 +278,11 @@ table.question-options-table td:last-child {
 	vertical-align:middle;
 	width: 24px;
 }
-.ee-reg-form-editor-active-form-inputs-controls-dv .ee-form-input-control-config,
-.ee-reg-form-editor-active-form-inputs-controls-dv .ee-form-input-control-delete {
+.ee-reg-form-editor-active-form-controls-dv .ee-form-input-control-config,
+.ee-reg-form-editor-active-form-controls-dv .ee-form-input-control-delete {
 	cursor: pointer;
 }
-.ee-reg-form-editor-active-form-inputs-controls-dv .ee-form-input-control-sort {
+.ee-reg-form-editor-active-form-controls-dv .ee-form-input-control-sort {
 	cursor: move;
 }
 
