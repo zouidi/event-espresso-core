@@ -226,7 +226,14 @@ class RegistrationFormEditor {
 			$html .= \EEH_HTML::span(
 				'',
 				'',
-				'ee-form-input-control-sort dashicons dashicons-list-view',
+				'ee-form-input-control-sort dashicons dashicons-arrow-up-alt2',
+				'',
+				'title="' . __( 'Drag to Sort', 'event_espresso' ) . '"'
+			);
+			$html .= \EEH_HTML::span(
+				'',
+				'',
+				'ee-form-input-control-sort dashicons dashicons-arrow-down-alt2', //list-view
 				'',
 				'title="' . __( 'Drag to Sort', 'event_espresso' ) . '"'
 			);
