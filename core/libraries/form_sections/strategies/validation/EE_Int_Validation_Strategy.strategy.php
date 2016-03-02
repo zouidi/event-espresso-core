@@ -8,6 +8,17 @@
  */
 class EE_Int_Validation_Strategy extends EE_Validation_Strategy_Base{
 
+
+	/*
+	 * indicates whether or not this validation strategy is general enough that it can be applied to any/most input
+	 * a validation strategy that only applies to one,or very few, input type(s) would set this value to false
+	 *
+	 *  @var boolean $_generally_applicable
+	 */
+	protected static $_generally_applicable = true;
+
+
+
 	/**
 	 * @param null $validation_error_message
 	 */
