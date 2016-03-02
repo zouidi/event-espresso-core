@@ -210,10 +210,9 @@ table.question-options-table td:last-child {
 }
 
 .ee-reg-form-editor-form-new-input-form {
-	/*border: 1px solid #fff !important;*/
-	/*border-radius: 2px;*/
-	padding:0 1em 1em !important;
 	margin: 1em 0;
+	padding: 0 1em 1em !important;
+	/*position: relative;*/
 }
 .ee-reg-form-editor-form-new-input-form.hover {
 	border: 1px solid #ddd !important;
@@ -273,7 +272,7 @@ table.question-options-table td:last-child {
 	font-size: 16px;
 	line-height: 24px;
 	height: 24px;
-	margin: 0 0 .25em .5em;
+	margin: 0 0 0 12px;
 	text-align: center;
 	vertical-align:middle;
 	width: 24px;
@@ -286,11 +285,79 @@ table.question-options-table td:last-child {
 	cursor: move;
 }
 
+.ee-form-input-control-sort.dashicons-arrow-up-alt2 {
+	margin-left: -24px;
+	position: relative;
+	right:-36px;
+	top: -6px;
+}
+.ee-form-input-control-sort.dashicons-arrow-down-alt2 {
+	position: relative;
+	top:3px;
+
+}
+
 .ee-new-form-input-settings-dv {
 	display: none;
-	border: 1px solid #eee;
-	border-radius: 2px;
-	padding: 1em 1em 1em 2em;
 	margin: 2em 0 0;
+	position: relative;
+}
 
+.ee-reg-form-input-settings-tab-ul li {
+	list-style: none;
+	margin: 0 !important;
+}
+
+.ee-reg-form-input-settings-tab-li {
+	background: #f8f8f8;
+	border: 1px solid #ddd;
+	/*border-bottom: none !important;*/
+	border-top-left-radius: 2px;
+	border-top-right-radius: 2px;
+	bottom: -1px;
+	box-shadow: none !important;
+	color: #787878 ;
+	cursor: pointer;
+	display: block;
+	float: left;
+	font-size: 14px;
+	height: 24px;
+	line-height: 24px;
+	margin: 0 6px 0 0 !important;
+	padding: 12px 24px;
+	position: relative;
+	text-align: center;
+	text-decoration: none;
+	white-space: nowrap;
+	z-index: 10;
+}
+.ee-reg-form-input-settings-tab-li:hover {
+	color: #333;
+	border-top: 1px solid #ccc !important;
+	border-left: 1px solid #ccc !important;
+	border-right: 1px solid #ccc !important;
+}
+.ee-reg-form-input-settings-tab-li.ee-reg-form-input-settings-tab-active {
+	background: #fff;
+	border-bottom: 1px solid #fff !important;
+	color: #333;
+	z-index: 30;
+}
+
+.ee-reg-form-input-settings-tab-panel-dv {
+	background-color: #fff;
+	border: 1px solid #ddd;
+	/*border-bottom: 1px solid #eee;*/
+	/*border-left: 1px solid #eee;*/
+	/*border-right: 1px solid #eee;*/
+	box-sizing: border-box;
+	clear: both;
+	display: none;
+	padding: 1em 1em 1em 2em;
+	position: relative;
+	top: 0;
+	z-index: 20;
+}
+#ee-reg-form-input-settings-tab-panel-1 {
+	display: block;
 }
