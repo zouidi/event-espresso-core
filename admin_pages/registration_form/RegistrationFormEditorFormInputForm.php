@@ -200,12 +200,49 @@ class RegistrationFormEditorFormInputForm {
 			array(
 				'name'            => "{$form_input}_input_options_clone",
 				'html_id'         => "{$form_input}-input_options_clone",
-				'layout_strategy' => new \EE_Div_Per_Section_Layout(),
-				'subsections'     => array(
-					new \EE_Form_Section_HTML( print_r( $options, true ))
-				),
+				'layout_strategy' => new \EE_Admin_Two_Column_Layout(), // EE_Div_Per_Section_Layout
+				'subsections'     => $this->getInputOptionForm( $form_input, $options )
 			)
 		);
+	}
+
+
+
+	/**
+	 * @param string $form_input
+	 * @param array  $options
+	 * @return \EE_Form_Section_Proper
+	 */
+	public function getInputOptionForm( $form_input, $options ) {
+		$subsections = array();
+		//<div class="padding">
+		//<table class="form-table" >
+		//<tbody >
+		 $subsections['table_header'] = new \EE_Form_Section_HTML(
+			\EEH_HTML::table( '', '', 'question-options-table' ) .
+			\EEH_HTML::thead(
+				\EEH_HTML::tr(
+					\EEH_HTML::th( __( 'Value', 'event_espresso' ), '', 'option-value-header' ) .
+					\EEH_HTML::th(
+						__( 'Description (optional, only shown on registration form)', 'event_espresso' ),
+						'', 'option-desc-header'
+					)
+				)
+			) .
+			\EEH_HTML::tbody()
+		 );
+		foreach ( $options as $key => $value ) {
+			$subsections[ 'ee-reg-form-' . $form_input . '-answer-option-' . $key ] = new \EE_Form_Section_HTML(
+				//$value
+				'yolo'
+			);
+		}
+		$subsections[ 'table_end' ] = new \EE_Form_Section_HTML(
+			\EEH_HTML::tbodyx() .
+			\EEH_HTML::tablex( '', 'question-options-table' )
+		);
+		return $subsections;
+		//return new \EE_Form_Section_HTML( print_r( $options, true ) );
 	}
 
 
