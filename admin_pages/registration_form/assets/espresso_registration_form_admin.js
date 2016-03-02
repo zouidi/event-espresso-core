@@ -38,22 +38,27 @@ jQuery(document).ready(function($) {
 
 
 
-	$( "#ee-reg-form-editor-active-form-inputs-ul" ).sortable({
+	var $active_inputs_list = $( '#ee-reg-form-editor-active-form-inputs-ul' );
+	$active_inputs_list.on( 'click', '.ee-reg-form-input-settings-tab-js', function ( e ) {
+			e.preventDefault();
+			var $content_tab = $( this ).attr( 'href' );
+			//console.log( JSON.stringify( '$content_tab: ' + $content_tab, null, 4 ) );
+			//first set all content as hidden and other nav tabs as not active
+			$( '.ee-reg-form-input-settings-tab-panel-dv' ).hide();
+			$( '.ee-reg-form-input-settings-tab-js' ).removeClass( 'ee-reg-form-input-settings-tab-active' );
+			//set new active tab
+			$( this ).addClass( 'ee-reg-form-input-settings-tab-active' );
+			$( $content_tab ).show();
+		}
+	);
+
+	$active_inputs_list.sortable({
 		connectWith : ".ee-reg-form-editor-active-form-inputs-li",
 		handle : ".ee-form-input-control-sort",
 		placeholder : "ee-reg-form-editor-form-new-input-dv ee-droppable-active",
 		revert : true,
 		receive : function ( event, ui ) {
-			//console.log( JSON.stringify( '** SORTABLE:RECEIVE **', null, 4 ) );
-			//console.log( JSON.stringify( 'event: ' + event, null, 4 ) );
-			//console.log( event );
-			//console.log( JSON.stringify( 'ui: ' + ui, null, 4 ) );
-			//console.log( ui );
-			//console.log( JSON.stringify( '$(this): ', null, 4 ) );
-			//console.log( $( this ) );
 			var $inputForm = getInputForm( $( ui.item ) );
-			//console.log( JSON.stringify( '$inputForm: ', null, 4 ) );
-			//console.log( $inputForm );
 			$( this ).find( '.draggable' ).replaceWith( $inputForm );
 		}
 	}).on( 'click', '.ee-delete-form-input', function () {
@@ -68,13 +73,30 @@ jQuery(document).ready(function($) {
 			$( '.droppable' ).fadeIn();
 		}
 	}).on( 'click', '.ee-config-form-input', function () {
+		// find the settings section
 		var $config = $( this )
 			.closest( '.ee-reg-form-editor-active-form-inputs-li' )
 			.find( '.ee-new-form-input-settings-dv' );
+		// close all other settings panels except this one
 		$( '.ee-new-form-input-settings-dv' )
 			.not( $config )
 			.slideUp( 250 );
+		// find all of the settings tabs, remove active status, then re-apply to first tab
+		$config
+			.find( '.ee-reg-form-input-settings-tab-ul .ee-reg-form-input-settings-tab-js' )
+			.removeClass( 'ee-reg-form-input-settings-tab-active' )
+			.first()
+			.addClass( 'ee-reg-form-input-settings-tab-active' );
+		// hide all tab panels, then make first visible again
+		$config.find( '.ee-reg-form-input-settings-tab-panel-dv' ).hide().first().show();
+		// finally... display this input's settings
 		$config.slideToggle( 250 );
+	}).on( 'change', '.ee-reg-form-label-text-js', function () {
+		// if editing a form's label, find the target id
+		var $target_id = $( this ).data('target');
+		// and the associated label for that input
+		var $target = $( "label[for='" + $target_id + "']")
+		$( $target ).text( $( this ).val() );
 	});
 
 	$( ".draggable" ).draggable({
@@ -82,27 +104,11 @@ jQuery(document).ready(function($) {
 		cursor : "move",
 		helper : "clone",
 		revert : "invalid"
-		//stop : function ( event, ui ) {
-			//console.log( JSON.stringify( '** DRAGGABLE:STOP **', null, 4 ) );
-			//console.log( JSON.stringify( 'event: ' + event, null, 4 ) );
-			//console.log( event );
-			//console.log( JSON.stringify( 'ui: ' + ui, null, 4 ) );
-			//console.log( ui );
-			//console.log( JSON.stringify( '$(this): ', null, 4 ) );
-			//console.log( $( this ) );
-		//}
 	});
 
 	$( ".droppable" ).droppable({
 		hoverClass :  "ee-droppable-active",
 		drop : function ( event, ui ) {
-			//console.log( JSON.stringify( '** DROPPABLE:DROP **', null, 4 ) );
-			//console.log( JSON.stringify( 'event: ' + event, null, 4 ) );
-			//console.log( event );
-			//console.log( JSON.stringify( 'ui: ' + ui, null, 4 ) );
-			//console.log( ui );
-			//console.log( JSON.stringify( '$(this): ', null, 4 ) );
-			//console.log( $( this ) );
 			var $inputForm = getInputForm( ui.draggable );
 			$( '#ee-reg-form-editor-active-form-inputs-ul' ).append( $inputForm );
 			$( this ).hide();
@@ -116,12 +122,17 @@ jQuery(document).ready(function($) {
 		var timestamp = "-" + new Date().getTime();
 		$inputForm.attr( 'id', $inputForm.attr( 'id' ) + timestamp );
 		// gather ALL form inputs
-		var $inputFormInputs = $inputForm.find( ':input' );
+		//var $inputFormInputs = $inputForm.find( ':input' );
 		 // and loop through them
-		$inputFormInputs.each( function () {
+		//$inputFormInputs.each( function () {
+		$inputForm.find( ':input' ).each( function () {
 			// and add timestamp to names and IDs in place of "_clone"
 			$( this ).attr( 'id', $( this ).attr( 'id' ).replace( '_clone', timestamp ) );
 			$( this ).attr( 'name', $( this ).attr( 'name' ).replace( '_clone', timestamp ) );
+			//if ( $( this ).hasData( 'target' ) ) {
+			if ( $( this ).attr( 'data-target' ) ) {
+				$( this ).data( 'target', $( this ).data( 'target' ).replace( '_clone', timestamp ) );
+			}
 		});
 		// now do the same for all of the input labels
 		var $inputFormLabels = $inputForm.find( 'label' );
@@ -131,29 +142,25 @@ jQuery(document).ready(function($) {
 			$( this ).attr( 'id', $( this ).attr( 'id' ).replace( '_clone', timestamp ) );
 			$( this ).attr( 'for', $( this ).attr( 'for' ).replace( '_clone', timestamp ) );
 		});
+		// and the tabs
+		var $inputFormTabs = $inputForm.find( '.ee-reg-form-input-settings-tab-js' );
+		$inputFormTabs.each(
+			function () {
+				$( this ).attr( 'href', $( this ).attr( 'href' ).replace( '_clone', timestamp ) );
+			}
+		);
+		// and the tab panels
+		var $inputFormTabPanels = $inputForm.find( '.ee-reg-form-input-settings-tab-panel-dv' );
+		$inputFormTabPanels.each(
+			function () {
+				$( this ).attr( 'id', $( this ).attr( 'id' ).replace( '_clone', timestamp ) );
+			}
+		);
 		// make the new form visible
 		return $inputForm.show();
 	}
 
 
-	//droppable
-	//DROP = ui.draggable.id = ee-reg-form-editor-form-input-email
-	//$( this ).attr( id )    = undefined
-	//$( this ).attr( class ) = ee-reg-form-editor-form-new-input-dv droppable ui-droppable
-	//
-	//draggable
-	//STOP = $( this ).attr( id ) = ee-reg-form-editor-form-input-email
-	//$( this ).attr( class ) = ee-reg-form-editor-form-input draggable button ui-draggable ui-draggable-handle
-	//
-	//draggable
-	//STOP = $( this ).attr( id ) = ee-reg-form-editor-form-input-month
-	//$( this ).attr( class ) = ee-reg-form-editor-form-input draggable button ui-draggable ui-draggable-handle
-
-
-	// sortable receive
-	//draggable
-	//STOP = $( this ).attr( id ) = ee-reg-form-editor-active-form-inputs-ul
-	//$( this ).attr( class ) = sortable ui -sortable
 
 });
 
