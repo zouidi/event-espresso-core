@@ -16,23 +16,43 @@ class EE_CVV_Input extends EE_Text_Input{
 	 * }
 	 */
 	public function __construct($input_settings = array()) {
-		$this->set_sensitive_data_removal_strategy(new EE_CCV_Sensitive_Data_Removal());
-		$this->_add_validation_strategy( new EE_Int_Validation_Strategy(isset( $input_settings[ 'validation_error_message' ] ) ? $input_settings[ 'validation_error_message' ] : NULL ) );
-		parent::__construct($input_settings);
-		if( 
-				! isset( $input_settings[ 'include_whats_this_link' ] ) ||
-				( isset( $input_settings[ 'include_whats_this_link' ] ) &&
-				 $input_settings[ 'include_whats_this_link' ] == true ) ) {
-				$this->_html_label_text = sprintf( 
-						_x( 
-								'%1$s %2$s(What\'s this?)%3$s', 
-								'CVV (What\'s this?)', 
-								'event_espresso' ),
-						$this->_html_label_text,
-						'<a href="https://www.cvvnumber.com/" target="_blank">',
-						'</a>');
+		$this->set_sensitive_data_removal_strategy( new EE_CCV_Sensitive_Data_Removal() );
+		$validation_error_message = isset( $input_settings[ 'validation_error_message' ] )
+			? $input_settings[ 'validation_error_message' ]
+			: null;
+		$this->_add_validation_strategy(
+			new EE_Int_Validation_Strategy( $validation_error_message )
+		);
+		$this->_add_validation_strategy(
+			new EE_Min_Length_Validation_Strategy( $validation_error_message, 2 )
+		);
+		$this->_add_validation_strategy(
+			new EE_Max_Length_Validation_Strategy( $validation_error_message, 4 )
+		);
+		parent::__construct( $input_settings );
+		if (
+			! isset( $input_settings[ 'include_whats_this_link' ] )
+			|| (
+				isset( $input_settings[ 'include_whats_this_link' ] )
+			     && $input_settings[ 'include_whats_this_link' ] == true
+			)
+		) {
+			$this->_html_label_text = sprintf(
+				_x(
+					'%1$s %2$s(What\'s this?)%3$s',
+					'CVV (What\'s this?)',
+					'event_espresso'
+				),
+				$this->_html_label_text,
+				'<a href="https://www.cvvnumber.com/" target="_blank">',
+				'</a>'
+			);
 		}
 	}
+
+
+
+
 }
 
 // End of file EE_CCV_Input.input.php
