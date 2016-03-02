@@ -38,7 +38,7 @@ jQuery(document).ready(function($) {
 
 
 
-	var $active_inputs_list = $( '#ee-reg-form-editor-active-form-inputs-ul' );
+	var $active_inputs_list = $( '#ee-reg-form-editor-active-form-ul' );
 	$active_inputs_list.on( 'click', '.ee-reg-form-input-settings-tab-js', function ( e ) {
 			e.preventDefault();
 			var $content_tab = $( this ).attr( 'href' );
@@ -53,7 +53,7 @@ jQuery(document).ready(function($) {
 	);
 
 	$active_inputs_list.sortable({
-		connectWith : ".ee-reg-form-editor-active-form-inputs-li",
+		connectWith : ".ee-reg-form-editor-active-form-li",
 		handle : ".ee-form-input-control-sort",
 		placeholder : "ee-reg-form-editor-form-new-input-dv ee-droppable-active",
 		revert : true,
@@ -64,10 +64,10 @@ jQuery(document).ready(function($) {
 	}).on( 'click', '.ee-delete-form-input', function () {
 		if ( confirm( "The form input will be permanently deleted and cannot be recovered. Are you sure?" ) ) {
 			$( this )
-				.closest( '.ee-reg-form-editor-active-form-inputs-li' )
+				.closest( '.ee-reg-form-editor-active-form-li' )
 				.remove();
 		}
-		var listItems = $( "#ee-reg-form-editor-active-form-inputs-ul" ).find( 'li' ).length;
+		var listItems = $( "#ee-reg-form-editor-active-form-ul" ).find( 'li' ).length;
 		//console.log( JSON.stringify( 'listItems: ' + listItems, null, 4 ) );
 		if ( listItems < 1 ) {
 			$( '.droppable' ).fadeIn();
@@ -75,7 +75,7 @@ jQuery(document).ready(function($) {
 	}).on( 'click', '.ee-config-form-input', function () {
 		// find the settings section
 		var $config = $( this )
-			.closest( '.ee-reg-form-editor-active-form-inputs-li' )
+			.closest( '.ee-reg-form-editor-active-form-li' )
 			.find( '.ee-new-form-input-settings-dv' );
 		// close all other settings panels except this one
 		$( '.ee-new-form-input-settings-dv' )
@@ -100,7 +100,7 @@ jQuery(document).ready(function($) {
 	});
 
 	$( ".draggable" ).draggable({
-		connectToSortable : "#ee-reg-form-editor-active-form-inputs-ul",
+		connectToSortable : "#ee-reg-form-editor-active-form-ul",
 		cursor : "move",
 		helper : "clone",
 		revert : "invalid"
@@ -110,7 +110,7 @@ jQuery(document).ready(function($) {
 		hoverClass :  "ee-droppable-active",
 		drop : function ( event, ui ) {
 			var $inputForm = getInputForm( ui.draggable );
-			$( '#ee-reg-form-editor-active-form-inputs-ul' ).append( $inputForm );
+			$( '#ee-reg-form-editor-active-form-ul' ).append( $inputForm );
 			$( this ).hide();
 		}
 	});
