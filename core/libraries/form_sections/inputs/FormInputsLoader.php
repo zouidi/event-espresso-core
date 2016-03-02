@@ -33,15 +33,22 @@ class FormInputsLoader {
 	 * returns an array of available EE_Form_Input_Base class names
 	 *
 	 * @param array $exclude array of inputs to be removed
+	 * @param bool  $include if set to true, this will only include elements from the above list,
+	 *                       instead of excluding them, IF they are available
 	 * @return array
 	 * @throws \EE_Error
 	 */
-	public static function get( $exclude = array() ) {
+	public static function get( $exclude = array(), $include = false ) {
 		if ( empty( FormInputsLoader::$_loaded ) ) {
 			FormInputsLoader::load();
 		}
+		// make sure $exclude is an array
 		$exclude = is_array( $exclude ) ? $exclude : array( $exclude );
-		return array_diff_key( FormInputsLoader::$_loaded, array_flip( $exclude ) );
+		// and not numerically indexed
+		$exclude = array_key_exists( 0, $exclude ) ? array_flip( $exclude ) : $exclude;
+		return $include
+			? array_intersect_key( FormInputsLoader::$_loaded, $exclude )
+			: array_diff_key( FormInputsLoader::$_loaded, $exclude );
 	}
 
 
