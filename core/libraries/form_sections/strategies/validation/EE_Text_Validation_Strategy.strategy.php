@@ -10,13 +10,28 @@
 class EE_Text_Validation_Strategy extends EE_Validation_Strategy_Base{
 
 	protected $_regex = null;
+
+
+	/*
+	 * indicates whether or not this validation strategy is general enough that it can be applied to any/most input
+	 * a validation strategy that only applies to one,or very few, input type(s) would set this value to false
+	 *
+	 *  @var boolean $_generally_applicable
+	 */
+	protected static $_generally_applicable = true;
+
+
+
 	public function __construct( $validation_error_message = NULL, $regex = null ) {
 		$this->_regex = $regex;
 		parent::__construct( $validation_error_message );
 	}
 
+
+
 	/**
-	 * @param $normalized_value
+	 * @param mixed $normalized_value
+	 * @throws \EE_Validation_Error
 	 */
 	public function validate($normalized_value) {
 		if( $this->_regex && $normalized_value) {
@@ -39,15 +54,15 @@ class EE_Text_Validation_Strategy extends EE_Validation_Strategy_Base{
 	}
 
 /**
- * Translates a PHP regex into a javscript regex (eg, PHP needs separate delimieters, whereas
- * javscript does not
+ * Translates a PHP regex into a javascript regex (eg, PHP needs separate delimiters, whereas
+ * javascript does not
  * @return string
  */
 	function regex_js() {
 		//first character must be the delimiter
-		$delimeter = $this->_regex[0];
-		$last_occurence_of_delimieter = strrpos($this->_regex, $delimeter );
-		return substr( $this->_regex, 1, $last_occurence_of_delimieter - 1 );
+		$delimiter = $this->_regex[0];
+		$last_occurrence_of_delimiter = strrpos($this->_regex, $delimiter );
+		return substr( $this->_regex, 1, $last_occurrence_of_delimiter - 1 );
 	}
 }
 
