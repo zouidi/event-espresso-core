@@ -11,7 +11,18 @@
 abstract class EE_Validation_Strategy_Base extends EE_Form_Input_Strategy_Base{
 
 
+	/*
+	 *  @var string $_validation_error_message
+	 */
 	protected $_validation_error_message = '';
+
+	/*
+	 * indicates whether or not this validation strategy is general enough that it can be applied to any/most input
+	 * a validation strategy that only applies to one,or very few, input type(s) would set this value to false
+	 *
+	 *  @var boolean $_generally_applicable
+	 */
+	protected static $_generally_applicable;
 
 
 
@@ -21,6 +32,15 @@ abstract class EE_Validation_Strategy_Base extends EE_Form_Input_Strategy_Base{
 	public function __construct( $validation_error_message = NULL ) {
 		$this->_validation_error_message = $validation_error_message === NULL ? __( 'Input invalid', 'event_espresso' ) : $validation_error_message ;
 		parent::__construct();
+	}
+
+
+
+	/**
+	 * @return boolean
+	 */
+	public static function generally_applicable() {
+		return static::$_generally_applicable;
 	}
 
 
