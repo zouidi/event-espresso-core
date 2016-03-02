@@ -12,7 +12,20 @@
  *
  */
 class EE_Many_Valued_Validation_Strategy extends EE_Validation_Strategy_Base{
+
+
+	/*
+	 * indicates whether or not this validation strategy is general enough that it can be applied to any/most input
+	 * a validation strategy that only applies to one,or very few, input type(s) would set this value to false
+	 *
+	 *  @var boolean $_generally_applicable
+	 */
+	protected static $_generally_applicable = false;
+
 	protected $_individual_item_validation_strategies = array();
+
+
+
 	/**
 	 *
 	 * @param EE_Validation_Strategy_Base[] $individual_item_validation_strategies (or a single EE_Validation_Strategy_Base)
