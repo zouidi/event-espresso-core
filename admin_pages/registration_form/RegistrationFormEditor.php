@@ -140,20 +140,8 @@ class RegistrationFormEditor {
 
 
 	/**
-	 * @return \EE_Form_Section_Proper
-	 */
-	protected function editorForm() {
-		return new \EE_Form_Section_Proper(
-			array(
-				'name'            => $this->question_group->html_name(),
-				'html_id'         => $this->question_group->html_id(),
-				'layout_strategy' => new \EE_Admin_Two_Column_Layout(),
-				'subsections'     => array(),
-			)
-		);
-	}
-
-	/**
+	 * getAdminPageContent - HTML for main meta box
+	 *
 	 * @return string
 	 */
 	public function getAdminPageContent() {
@@ -164,12 +152,11 @@ class RegistrationFormEditor {
 				'ee-reg-form-editor-form-inputs-wrapper-dv',
 				'ee-reg-form-editor-form-inputs-wrapper-dv'
 			);
-				$html .= \EEH_HTML::ul( 'ee-reg-form-editor-active-form-inputs-ul', 'sortable' );
+				$html .= \EEH_HTML::ul( 'ee-reg-form-editor-active-form-ul', 'sortable' );
 				// empty list for now
 				$html .= \EEH_HTML::ulx();
 				$html .= \EEH_HTML::div( '', '', 'ee-reg-form-editor-form-new-input-dv droppable' );
 					$html .= \EEH_HTML::h2( 'drag and drop form inputs to add', '', 'ee-reg-form-editor-form-new-input-hdr' );
-					$html .= $this->editorForm()->get_html();
 				$html .= \EEH_HTML::divx();
 			$html .= \EEH_HTML::divx();
 		$html .= \EEH_HTML::divx();
@@ -179,6 +166,11 @@ class RegistrationFormEditor {
 
 
 
+	/**
+	 * formLayoutMetaBox - HTML for Form Inputs meta box
+	 *
+	 * @return string
+	 */
 	public function formLayoutMetaBox() {
 		$html = \EEH_HTML::div(
 			'',
@@ -207,6 +199,11 @@ class RegistrationFormEditor {
 
 
 
+	/**
+	 * formInputsMetaBox - HTML for Form Inputs meta box
+	 *
+	 * @return string
+	 */
 	public function formInputsMetaBox() {
 		$html = \EEH_HTML::div(
 			'',
@@ -235,15 +232,15 @@ class RegistrationFormEditor {
 				'ee-reg-form-editor-form-input-' . $form_input,
 				'ee-reg-form-editor-form-input draggable button',
 				'',
-				'data-form_input="ee-reg-form-editor-active-form-inputs-li-' . $form_input . '"'
+				'data-form_input="ee-reg-form-editor-active-form-li-' . $form_input . '"'
 			);
 			$html .= \EEH_HTML::li(
 				'',
-				'ee-reg-form-editor-active-form-inputs-li-' . $form_input,
-				'ee-reg-form-editor-active-form-inputs-li',
+				'ee-reg-form-editor-active-form-li-' . $form_input,
+				'ee-reg-form-editor-active-form-li',
 				'display:none;'
 			);
-			$html .= \EEH_HTML::div( '', '', 'ee-reg-form-editor-active-form-inputs-controls-dv' );
+			$html .= \EEH_HTML::div( '', '', 'ee-reg-form-editor-active-form-controls-dv' );
 			$html .= \EEH_HTML::span(
 				'',
 				'',
@@ -272,9 +269,9 @@ class RegistrationFormEditor {
 				'',
 				'title="' . __( 'Drag to Sort', 'event_espresso' ) . '"'
 			);
-			$html .= \EEH_HTML::divx(); // end 'ee-reg-form-editor-active-form-inputs-controls-dv'
+			$html .= \EEH_HTML::divx(); // end 'ee-reg-form-editor-active-form-controls-dv'
 			$html .= $this->input_form_generator->formHTML( $form_input, $form_input_class_name );
-			$html .= \EEH_HTML::lix(); // end 'ee-reg-form-editor-active-form-inputs-li'
+			$html .= \EEH_HTML::lix(); // end 'ee-reg-form-editor-active-form-li'
 			$html .= \EEH_HTML::lix(); // end 'ee-reg-form-editor-form-input-li'
 		}
 		$html .= \EEH_HTML::ulx();
@@ -285,6 +282,12 @@ class RegistrationFormEditor {
 
 
 
+	/**
+	 * formatInputName - changes class names to something more friendly
+	 *
+	 * @param $form_input_class_name
+	 * @return string
+	 */
 	protected function formatInputName( $form_input_class_name ) {
 		$form_input_class_name = trim(
 			str_replace(
