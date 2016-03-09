@@ -60,8 +60,6 @@ jQuery(document).ready(function($) {
 			$( '#insert_question_group_event_form' ).submit(
 				function () {
 					EE_RegFormEditor.getFormInputListOrder();
-					//$reg_form_input_list.val( $active_inputs_list.sortable( "toArray" ) );
-					//alert( 'Handler for .submit() called' + '\n' + '$reg_form_input_list.val() = ' + $reg_form_input_list.val() );
 				}
 			);
 		},
@@ -146,8 +144,11 @@ jQuery(document).ready(function($) {
 				'click', '.ee-input-option-delete ', function () {
 					EE_RegFormEditor.deleteInputOption( $( this ) );
 				}
+			).on(
+				'keydown', ':input', function ( event ) {
+					EE_RegFormEditor.blockFormSubmissionOnEnterKeyPress( event );
+				}
 			);
-
 
 		},
 
@@ -383,6 +384,19 @@ jQuery(document).ready(function($) {
 				}
 			);
 			EE_RegFormEditor.reg_form_input_list.val( $input_list );
+		},
+
+
+
+		/**
+		 * @function blockFormSubmissionOnEnterKeyPress
+		 * @param {object} event
+		 */
+		blockFormSubmissionOnEnterKeyPress : function( event ) {
+			var keyPressed = event.which;
+			if ( keyPressed === 13 ) {
+				event.preventDefault();
+			}
 		}//,
 
 
