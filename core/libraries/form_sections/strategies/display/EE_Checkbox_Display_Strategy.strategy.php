@@ -54,7 +54,7 @@ class EE_Checkbox_Display_Strategy extends EE_Display_Strategy_Base{
 			$html .= ' value="' . esc_attr( $value ) . '"';
 			$html .= ! empty( $input_raw_value ) && in_array( $value, $input_raw_value ) ? ' checked="checked"' : '';
 			$html .= '>&nbsp;';
-			$html .= $display_text;
+			$html .= EEH_HTML::span( $display_text );
 			$html .= EEH_HTML::nl( -1, 'checkbox' ) . '</label>';
 		}
 		return $html;
