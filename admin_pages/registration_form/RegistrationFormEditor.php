@@ -10,9 +10,10 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 
 
 /**
- * Class RegistrationFormEditor
+ * RegistrationFormEditor
  *
- * Description
+ * Class for controlling what appears on the Registration Form Editor Admin page
+ * when editing a top level Form Section. Contains all callbacks for metaboxes.
  *
  * @package       Event Espresso
  * @subpackage    admin_pages
@@ -21,6 +22,12 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  *
  */
 class RegistrationFormEditor {
+
+	/*
+	 * array of form input classes that exist on the system
+	 * @var array $question_group
+	 */
+	protected $available_form_inputs;
 
 	/*
 	 * the current form section being edited. If new form then $question_group will be null until saved
@@ -34,7 +41,7 @@ class RegistrationFormEditor {
 	protected $reg_form_admin_page;
 
 	/*
-	 * @var RegistrationFormEditorFormInputForm $input_form_generator
+	 * @var RegistrationFormEditorFormDisplay $input_form_generator
 	 */
 	protected $input_form_generator;
 
@@ -48,16 +55,17 @@ class RegistrationFormEditor {
 	/**
 	 * RegistrationFormEditor constructor
 	 *
-	 * @param \Registration_Form_Admin_Page $Registration_Form_Admin_Page
-	 * @param RegistrationFormEditorFormInputForm $RegistrationFormEditorFormInputForm
+	 * @param \Registration_Form_Admin_Page     $Registration_Form_Admin_Page
+	 * @param RegistrationFormEditorFormDisplay $RegistrationFormEditorFormInputForm
 	 */
 	public function __construct(
 		\Registration_Form_Admin_Page $Registration_Form_Admin_Page,
-		RegistrationFormEditorFormInputForm $RegistrationFormEditorFormInputForm
+		RegistrationFormEditorFormDisplay $RegistrationFormEditorFormInputForm
 	) {
 		// set reg admin page
 		$this->reg_form_admin_page = $Registration_Form_Admin_Page;
 		$this->input_form_generator = $RegistrationFormEditorFormInputForm;
+		$this->available_form_inputs = $this->reg_form_admin_page->getAvailableFormInputs();
 		// get copy of EE_Request
 		$request_data = $this->reg_form_admin_page->get_request_data();
 		// are we editing an existing Question Group or creating a new one ?
@@ -73,22 +81,6 @@ class RegistrationFormEditor {
 			$this->question_group = \EE_Question_Group::new_instance();
 			$this->question_group->set_order_to_latest();
 		}
-		\EE_Registry::instance()->load_helper( 'EEH_HTML' );
-		//sidebars
-		add_meta_box(
-			'espresso_reg_form_editor_form_layout_meta_box',
-			__( 'Form Layout', 'event_espresso' ),
-			array( $this, 'formLayoutMetaBox' ),
-			$this->reg_form_admin_page->get_wp_page_slug(),
-			'side'
-		);
-		add_meta_box(
-			'espresso_reg_form_editor_form_inputs_meta_box',
-			__( 'Form Inputs', 'event_espresso' ),
-			array( $this, 'formInputsMetaBox' ),
-			$this->reg_form_admin_page->get_wp_page_slug(),
-			'side'
-		);
 	}
 
 
@@ -125,7 +117,7 @@ class RegistrationFormEditor {
 	 * @return string
 	 */
 	public function getRoute() {
-		return $this->question_group->ID() ? 'insert_question_group' : 'update_question_group';
+		return $this->question_group->ID() ? 'update_question_group' : 'insert_question_group';
 	}
 
 
@@ -161,6 +153,13 @@ class RegistrationFormEditor {
 			$html .= \EEH_HTML::divx();
 		$html .= \EEH_HTML::divx();
 		do_action( 'AHEE__EE_Admin_Page__reg_form_editor_form_sections_meta_box__after_content' );
+		$input_list = new \EE_Hidden_Input(
+			array(
+				'html_id'   => 'reg_form-input_list',
+				'html_name' => 'reg_form_input_list',
+			)
+		);
+		$html .= $input_list->get_html_for_input();
 		return $html;
 	}
 
@@ -200,6 +199,30 @@ class RegistrationFormEditor {
 
 
 	/**
+	 * addMetaBoxes
+	 */
+	public function addMetaBoxes() {
+		\EE_Registry::instance()->load_helper( 'EEH_HTML' );
+		//sidebars
+		add_meta_box(
+			'espresso_reg_form_editor_form_layout_meta_box',
+			__( 'Form Layout', 'event_espresso' ),
+			array( $this, 'formLayoutMetaBox' ),
+			$this->reg_form_admin_page->get_wp_page_slug(),
+			'side'
+		);
+		add_meta_box(
+			'espresso_reg_form_editor_form_inputs_meta_box',
+			__( 'Form Inputs', 'event_espresso' ),
+			array( $this, 'formInputsMetaBox' ),
+			$this->reg_form_admin_page->get_wp_page_slug(),
+			'side'
+		);
+	}
+
+
+
+	/**
 	 * formInputsMetaBox - HTML for Form Inputs meta box
 	 *
 	 * @return string
@@ -211,17 +234,7 @@ class RegistrationFormEditor {
 			'ee-reg-form-editor-form-inputs-dv infolinks'
 		);
 		$html .= \EEH_HTML::ul( '', 'ee-reg-form-editor-form-inputs-ul draggable' );
-		$exclude = array(
-			'credit_card',
-			'credit_card_month',
-			'credit_card_year',
-			'cvv',
-			'hidden',
-			'fixed_hidden',
-			'select_multi_model',
-			//'submit',
-		);
-		foreach ( FormInputsLoader::get( $exclude ) as $form_input => $form_input_class_name ) {
+		foreach ( $this->available_form_inputs as $form_input => $form_input_class_name ) {
 			$html .= \EEH_HTML::li(
 				'',
 				'ee-reg-form-editor-form-input-li-' . $form_input,
