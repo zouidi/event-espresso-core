@@ -38,8 +38,8 @@ class EE_Div_Per_Section_Layout extends EE_Form_Section_Layout_Base{
 				EEH_HTML::nl() . $input->get_html_for_errors() .
 				EEH_HTML::nl() . $input->get_html_for_input() .
 				EEH_HTML::nl() . $input->get_html_for_help(),
-				$input->html_id() . '-input-dv',
-				$input->html_class() . '-input-dv'
+				$input->html_id() != '' ? $input->html_id() . '-input-dv' : 'input-dv',
+				$input->html_class() != '' ? $input->html_class() . '-input-dv' : 'input-dv'
 			);
 		} else if ( $input instanceof EE_Form_Input_With_Options_Base  ) {
 			$html .= EEH_HTML::div(
@@ -47,8 +47,8 @@ class EE_Div_Per_Section_Layout extends EE_Form_Section_Layout_Base{
 				EEH_HTML::nl() . $input->get_html_for_errors() .
 				EEH_HTML::nl() . $input->get_html_for_input() .
 				EEH_HTML::nl() . $input->get_html_for_help(),
-				$input->html_id() . '-input-dv',
-				$input->html_class() . '-input-dv'
+				$input->html_id() != '' ? $input->html_id() . '-input-dv' : 'input-dv',
+				$input->html_class() != '' ? $input->html_class() . '-input-dv' : 'input-dv'
 			);
 		} else {
 			$html .= EEH_HTML::div(
@@ -56,8 +56,8 @@ class EE_Div_Per_Section_Layout extends EE_Form_Section_Layout_Base{
 				EEH_HTML::nl() . $input->get_html_for_errors() .
 				EEH_HTML::nl() . $input->get_html_for_input() .
 				EEH_HTML::nl() . $input->get_html_for_help(),
-				$input->html_id() . '-input-dv',
-				$input->html_class() . '-input-dv'
+				$input->html_id() != '' ? $input->html_id() . '-input-dv' : 'input-dv',
+				$input->html_class() != '' ? $input->html_class() . '-input-dv' : 'input-dv'
 			);
 		}
 		return $html;
