@@ -1,7 +1,6 @@
 <?php
 namespace EventEspresso\admin_pages\registration_form;
 
-use EventEspresso\core\libraries\form_sections\inputs\FormInputsLoader;
 use EventEspresso\core\libraries\form_sections\strategies\validation\ValidationStrategiesLoader;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
@@ -13,7 +12,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 /**
  * Class RegistrationFormEditorForm
  *
- * No the name of this class is not some copy pasta mistake !!!
+ * No, the name of this class is not some copy pasta mistake !!!
  * On the admin page where we edit the Registration Form,
  * we need a form for configuring the individual reg form inputs.
  * So this class generates the "Registration Form Editor" Form
@@ -96,7 +95,7 @@ class RegistrationFormEditorForm {
 		$this->form_input = $this->formInput( $form_input, $form_input_class_name );
 		$this->input_has_options = $this->form_input instanceof \EE_Form_Input_With_Options_Base ? true :false;
 		if ( $this->input_has_options ) {
-			$subsections = $this->getInputOptionForm( $form_input, $this->form_input->options() );
+			$subsections = $this->getInputOptions( $form_input, $this->form_input->options() );
 		} else {
 			$subsections = array();
 		}
@@ -107,9 +106,8 @@ class RegistrationFormEditorForm {
 		);
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'            => "reg_form[{$form_input}_clone]",
-				'html_id'         => "reg_form-{$form_input}_clone",
-				'html_class'      => "ee-new-form-input-dv",
+				'name'            => "reg_form[clone]",
+				'html_id'         => "reg-form-clone",
 				'layout_strategy' => new \EE_Div_Per_Section_Layout(),
 				'subsections'     => $subsections
 			)
@@ -125,8 +123,8 @@ class RegistrationFormEditorForm {
 	public function formInputForm( $form_input ) {
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'            => "reg_form[{$form_input}_clone]",
-				'html_id'         => "reg_form-{$form_input}_clone",
+				'name'            => "reg_form[clone]",
+				'html_id'         => "reg-form-clone",
 				'html_class'      => "ee-new-form-input-dv",
 				'layout_strategy' => new \EE_Div_Per_Section_Layout(),
 				'subsections'     => array(
@@ -141,17 +139,28 @@ class RegistrationFormEditorForm {
 	/**
 	 * @param string $form_input
 	 * @param string $form_input_class_name
+	 * @param array  $options
 	 * @return \EE_Form_Input_Base
 	 */
-	public function formInput( $form_input, $form_input_class_name ) {
+	public function formInput( $form_input, $form_input_class_name, $options = array() ) {
 		if ( is_subclass_of( $form_input_class_name, 'EE_Form_Input_With_Options_Base' ) ) {
+			$options = ! empty( $options )
+				? $options
+				: array(
+					'option 1' => 'option 1 description',
+					'option 2' => 'option 2 description',
+				);
 			$this->form_input = new $form_input_class_name(
-				array( '' => __( ' - please add options via the settings - ', 'event_espresso' ) ),
-				array( 'name' => $form_input )
+				$options,
+				array(
+					'name' => $form_input,
+				)
 			);
 		} else {
 			$this->form_input = new $form_input_class_name(
-				array( 'name' => $form_input )
+				array(
+					'name' => $form_input,
+				)
 			);
 		}
 
@@ -167,7 +176,7 @@ class RegistrationFormEditorForm {
 	 * @return \EE_Form_Section_Proper
 	 * @throws \EE_Error
 	 */
-	public function getInputOptions( $form_input ) {
+	public function getInputOptionsForm( $form_input ) {
 		if ( ! $this->form_input instanceof \EE_Form_Input_With_Options_Base ) {
 			throw new \EE_Error(
 				sprintf(
@@ -179,13 +188,12 @@ class RegistrationFormEditorForm {
 				)
 			);
 		}
-		$options = $this->form_input->options();
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'            => "input_options[{$form_input}_clone]",
-				'html_id'         => "input_options-{$form_input}_clone",
+				'name'            => 'input_options[clone]',
+				'html_id'         => 'input-options-clone',
 				'layout_strategy' => new \EE_Admin_Two_Column_Layout(), // EE_Div_Per_Section_Layout
-				'subsections'     => $this->getInputOptionForm( $form_input, $options )
+				'subsections'     => $this->getInputOptions( $form_input, $this->form_input->options() )
 			)
 		);
 	}
@@ -197,12 +205,27 @@ class RegistrationFormEditorForm {
 	 * @param array  $options
 	 * @return \EE_Form_Section_Proper
 	 */
-	public function getInputOptionForm( $form_input, $options ) {
+	public function getInputOptions( $form_input, $options ) {
+		//if ( $form_input == 'checkbox_multi' ) {
+		//	\EEH_Debug_Tools::printr( $options, '$options', __FILE__, __LINE__ );
+		//}
+		$order = 0;
 		$subsections = array();
 		foreach ( $options as $key => $value ) {
-			$subsections[ 'ee-reg-form-' . $form_input . '-answer-option-' . $key ] = new \EE_Form_Section_HTML(
-				//$value
-				'yolo'
+			$order++;
+			$subsections[ 'value-' . $key ] = new \EE_Text_Input(
+				array(
+					'html_name' => "input_options[clone][{$order}][value]",
+					'html_id'   => "input-options-{$form_input}-clone-{$order}-value",
+					'default'   => $key
+				)
+			);
+			$subsections[ 'desc-' . $key ] = new \EE_Text_Input(
+				array(
+					'html_name' => "input_options[clone][{$order}][desc]",
+					'html_id'   => "input-options-{$form_input}-clone-{$order}-desc",
+					'default'   => $value
+				)
 			);
 		}
 		return $subsections;
@@ -217,8 +240,8 @@ class RegistrationFormEditorForm {
 	public function getBasicSettings( $form_input ) {
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'            => "settings[{$form_input}_clone]",
-				'html_id'         => "settings-{$form_input}_clone",
+				'name'            => "settings[clone]",
+				'html_id'         => "settings-clone",
 				'layout_strategy' => new \EE_Admin_Two_Column_Layout(),
 				'subsections'     => $this->getBasicSettingsSubsections( $form_input )
 			)
@@ -236,11 +259,8 @@ class RegistrationFormEditorForm {
 		foreach ( $this->form_input_config_fields as $field_name => $form_input_config_field ) {
 			$config_input = $this->getBasicConfigInput( $form_input, $field_name );
 			if ( $config_input instanceof \EE_Form_Input_Base ) {
-				$input_name = $config_input->html_label_text();
-				$input_name = ! empty( $input_name )
-					? $input_name
-					: str_replace( 'QST_', '', $form_input_config_field->get_name() );
-				$subsections[ $input_name ] = $config_input;
+				$field_name = str_replace( 'QST_', '', $field_name );
+				$subsections[ $field_name ] = $config_input;
 			}
 		}
 		return $subsections;
@@ -260,17 +280,15 @@ class RegistrationFormEditorForm {
 			case 'QST_display_text' :
 				return new \EE_Text_Input(
 					array(
-						'name'                  => $form_input,
 						'html_label_text'       => __( 'Label Text', 'event_espresso' ),
 						'html_class'            => 'ee-reg-form-label-text-js',
-						'html_other_attributes' => 'data-target="reg_form['.$form_input.'_clone]['.$form_input.']"',
+						'html_other_attributes' => 'data-target="reg-form-clone-' . str_replace( '_', '-', $form_input ) . '-lbl"',
 					)
 				);
 
 			case 'QST_desc' :
 				return new \EE_Text_Area_Input(
 					array(
-						'name' => $form_input,
 						'html_label_text' => __( 'Description', 'event_espresso' ),
 					)
 				);
@@ -278,7 +296,6 @@ class RegistrationFormEditorForm {
 			case 'QST_html_class' :
 				return new \EE_Text_Input(
 					array(
-						'name' => $form_input,
 						'html_label_text' => __( 'Input CSS Classes', 'event_espresso' ),
 					)
 				);
@@ -286,7 +303,6 @@ class RegistrationFormEditorForm {
 			case 'QST_html_label_class' :
 				return new \EE_Text_Input(
 					array(
-						'name' => $form_input,
 						'html_label_text' => __( 'Label CSS Classes', 'event_espresso' ),
 					)
 				);
@@ -305,8 +321,8 @@ class RegistrationFormEditorForm {
 	public function getValidationSettings( $form_input, $form_input_class_name ) {
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'    => "settings[{$form_input}_clone]",
-				'html_id' => "settings-{$form_input}_clone",
+				'name'    => "settings[clone]",
+				'html_id' => "settings-clone",
 				'layout_strategy' => new \EE_Admin_Two_Column_Layout(),
 				'subsections'     => $this->getValidationStrategies( $form_input, $form_input_class_name ),
 			)
