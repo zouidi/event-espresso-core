@@ -153,21 +153,6 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 				'noheader' => TRUE
 				),
 
-			'insert_question_group' => array(
-				'func' => '_insert_or_update_question_group',
-				'args' => array('new_question_group' => TRUE),
-				'capability' => 'ee_edit_question_groups',
-				'noheader' => TRUE
-				),
-
-			'update_question_group' => array(
-				'func' => '_insert_or_update_question_group',
-				'args' => array('new_question_group' => FALSE ),
-				'capability' => 'ee_edit_question_group',
-				'obj_id' => $qsg_id,
-				'noheader' => TRUE,
-				),
-
 			'trash_question_groups' => array(
 				'func' => '_trash_or_restore_question_groups',
 				'args' => array('trash' => TRUE),
