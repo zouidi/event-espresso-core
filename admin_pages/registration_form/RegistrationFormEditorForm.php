@@ -215,9 +215,13 @@ class RegistrationFormEditorForm {
 			$order++;
 			$subsections[ 'value-' . $key ] = new \EE_Text_Input(
 				array(
-					'html_name' => "input_options[clone][{$order}][value]",
-					'html_id'   => "input-options-{$form_input}-clone-{$order}-value",
-					'default'   => $key
+					'html_name'  => "input_options[clone][{$order}][value]",
+					'html_id'    => "input-options-{$form_input}-clone-{$order}-value",
+					'html_class' => "ee-reg-form-option-label-text-js",
+					'default'    => $key,
+					'html_other_attributes' => 'data-target="reg-form-clone-'
+					                           . str_replace( '_', '-', $form_input ) . '-'
+					                           . sanitize_key( $key ) . '-option-lbl"',
 				)
 			);
 			$subsections[ 'desc-' . $key ] = new \EE_Text_Input(
