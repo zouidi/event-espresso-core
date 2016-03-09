@@ -388,9 +388,7 @@ class EEH_Debug_Tools{
 
 
 	/**
-	 *    @ print_r an array
-	 *    @ access public
-	 *    @ return void
+	 *  print_r strings in style
 	 *
 	 * @param mixed $var
 	 * @param bool $var_name
@@ -398,8 +396,10 @@ class EEH_Debug_Tools{
 	 * @param int $line
 	 * @param int $header
 	 * @param bool $die
+	 * @param bool $echo
+	 * @return string
 	 */
-	public static function printv( $var, $var_name = false, $file = __FILE__, $line = __LINE__, $header = 5, $die = false ) {
+	public static function printv( $var, $var_name = false, $file = __FILE__, $line = __LINE__, $header = 5, $die = false, $echo = true ) {
 		$var_name = ! $var_name ? 'string' : $var_name;
 		$heading_tag = 'h';
 		$heading_tag .= is_int( $header ) ? $header : 5;
@@ -415,18 +415,19 @@ class EEH_Debug_Tools{
 		echo '<br />line no: ' . $line . '</span>';
 		echo '</' . $heading_tag . '>';
 		$result = ob_get_clean();
-		if ( $die ) {
-			die( $result );
-		} else {
+		if ( $echo ) {
 			echo $result;
+			if ( $die ) {
+				die( $result );
+			}
+			return '';
 		}
+		return $result;
 	}
 
 
 	/**
-	 *    @ print_r an array
-	 *    @ access public
-	 *    @ return void
+	 *  print_r any thing in style
 	 *
 	 * @param mixed $var
 	 * @param bool $var_name
@@ -434,13 +435,14 @@ class EEH_Debug_Tools{
 	 * @param int $line
 	 * @param int $header
 	 * @param bool $die
+	 * @param bool $echo
+	 * @return string
 	 */
-	public static function printr( $var, $var_name = false, $file = __FILE__, $line = __LINE__, $header = 5, $die = false ) {
+	public static function printr( $var, $var_name = false, $file = __FILE__, $line = __LINE__, $header = 5, $die = false, $echo = true ) {
 		$file = str_replace( rtrim( ABSPATH, '\\/' ), '', $file );
 		//$print_r = false;
 		if ( is_string( $var ) ) {
-			EEH_Debug_Tools::printv( $var, $var_name, $file, $line, $header, $die );
-			return;
+			return EEH_Debug_Tools::printv( $var, $var_name, $file, $line, $header, $die );
 		} else if ( is_object( $var ) ) {
 			$var_name = ! $var_name ? 'object' : $var_name;
 			//$print_r = true;
@@ -463,11 +465,14 @@ class EEH_Debug_Tools{
 		echo '</pre></span><br /><span style="font-size:9px;font-weight:normal;color:#666;line-height: 12px;">' . $file;
 		echo '<br />line no: ' . $line . '</span></' . $heading_tag . '>';
 		$result = ob_get_clean();
-		if ( $die ) {
-			die( $result );
-		} else {
+		if ( $echo ) {
 			echo $result;
+			if ( $die ) {
+				die( $result );
+			}
+			return '';
 		}
+		return $result;
 	}
 
 
