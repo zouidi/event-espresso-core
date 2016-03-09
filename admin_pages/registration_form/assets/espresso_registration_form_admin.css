@@ -5,6 +5,7 @@
     Description:
         Purpose of the stylesheet follows.
 */
+/*
 #question_options .sample{ display:none; }
 
 .question-groups #the-list { cursor: move; }
@@ -154,6 +155,7 @@ table.question-options-table td:last-child {
         float: none !important;
     }
 }
+*/
 
 
 
@@ -186,6 +188,20 @@ table.question-options-table td:last-child {
 	width: 100%;
 }
 
+@media screen and (max-width: 782px) {
+	#ee-reg-form-editor-form-main-meta-box {
+		padding: 0;
+	}
+	#ee-reg-form-editor-form-inputs-wrapper-dv {
+		padding: 0 1em;
+	}
+
+	.ee-reg-form-editor-form-new-input-dv {
+		margin: 0 0 1em;
+	}
+}
+
+.ee-reg-form-editor-form-layout-li,
 .ee-reg-form-editor-form-input-li {
 	display: inline-block;
 	margin-right: 1%;
@@ -196,9 +212,12 @@ table.question-options-table td:last-child {
 .ee-reg-form-editor-form-input {
 	color: #222 !important;
 	font-size: 11px !important;
+	height: 28px !important;
+	line-height: 28px !important;
 	padding: 0 0 1px !important;
 	text-align: center;
-	width: 122px;
+	vertical-align: middle !important;
+	width: 100%;
 }
 
 .ee-droppable-active {
@@ -213,10 +232,14 @@ table.question-options-table td:last-child {
 .ee-reg-form-editor-form-new-input-form {
 	margin: 1em 0;
 	padding: 0 1em 1em !important;
-	/*position: relative;*/
 }
 .ee-reg-form-editor-form-new-input-form.hover {
 	border: 1px solid #ddd !important;
+}
+@media screen and (max-width: 782px) {
+	.ee-reg-form-editor-form-new-input-form {
+		clear: both;
+	}
 }
 
 .ee-new-form-input-dv label {
@@ -251,6 +274,23 @@ table.question-options-table td:last-child {
 	max-width: 75%;
 }
 
+@media screen and (max-width: 782px) {
+	.ee-new-form-input-dv select,
+	.ee-new-form-input-dv textarea,
+	.ee-new-form-input-dv input[type="text"],
+	.ee-new-form-input-dv input[type="email"],
+	.ee-new-form-input-dv input[type="password"],
+	.ee-new-form-input-settings-dv select,
+	.ee-new-form-input-settings-dv textarea,
+	.ee-new-form-input-settings-dv input[type="text"],
+	.ee-new-form-input-settings-dv input[type="email"],
+	.ee-new-form-input-settings-dv input[type="password"] {
+		min-width: 100%;
+		max-width: 100%;
+	}
+
+}
+
 .ee-reg-form-editor-active-form-li + .ee-reg-form-editor-active-form-li {
 	margin-top: 4em;
 }
@@ -267,6 +307,18 @@ table.question-options-table td:last-child {
 	float: right;
 	text-align: right;
 }
+
+.input-options-table .ee-input-option-controls {
+	text-align: right;
+	width: 100px;
+}
+@media screen and (max-width: 782px) {
+	.input-options-table .ee-input-option-controls {
+		width: 100% !important;
+	}
+}
+
+.input-options-table .ee-input-option-controls span,
 .ee-reg-form-editor-active-form-controls-dv span {
 	/*border: 1px solid #ccc !important;*/
 	/*border-radius: 2px;*/
@@ -278,20 +330,35 @@ table.question-options-table td:last-child {
 	vertical-align:middle;
 	width: 24px;
 }
+.input-options-table .ee-input-option-controls span {
+	margin: 2px 0 0 0;
+}
+.input-options-table .ee-input-option-controls span + span {
+	margin-left: 12px;
+}
+
+
+.input-options-table .ee-input-option-add,
+.input-options-table .ee-input-option-delete,
 .ee-reg-form-editor-active-form-controls-dv .ee-form-input-control-config,
 .ee-reg-form-editor-active-form-controls-dv .ee-form-input-control-delete {
 	cursor: pointer;
 }
+
+.input-options-table .ee-input-option-sort,
 .ee-reg-form-editor-active-form-controls-dv .ee-form-input-control-sort {
 	cursor: move;
 }
 
+.input-options-table .ee-input-option-sort.dashicons-arrow-up-alt2,
 .ee-form-input-control-sort.dashicons-arrow-up-alt2 {
 	margin-left: -24px;
 	position: relative;
 	right:-36px;
 	top: -6px;
 }
+
+.input-options-table .ee-input-option-sort.dashicons-arrow-down-alt2,
 .ee-form-input-control-sort.dashicons-arrow-down-alt2 {
 	position: relative;
 	top:3px;
@@ -305,31 +372,39 @@ table.question-options-table td:last-child {
 }
 
 .ee-reg-form-input-settings-tab-ul li {
+	float: left;
 	list-style: none;
 	margin: 0 !important;
 }
 
+@media screen and (max-width: 782px) {
+	.ee-reg-form-input-settings-tab-ul li {
+		width: 33.333%;
+	}
+
+}
 .ee-reg-form-input-settings-tab-li {
 	background: #f8f8f8;
 	border: 1px solid #ddd;
-	/*border-bottom: none !important;*/
 	border-top-left-radius: 2px;
 	border-top-right-radius: 2px;
 	bottom: -1px;
 	box-shadow: none !important;
+	box-sizing: border-box;
 	color: #787878 ;
 	cursor: pointer;
 	display: block;
-	float: left;
 	font-size: 14px;
-	height: 24px;
+	height: 48px;
 	line-height: 24px;
 	margin: 0 6px 0 0 !important;
 	padding: 12px 24px;
 	position: relative;
 	text-align: center;
 	text-decoration: none;
+	vertical-align: middle;
 	white-space: nowrap;
+	width: 100%;
 	z-index: 10;
 }
 .ee-reg-form-input-settings-tab-li:hover {
@@ -345,12 +420,28 @@ table.question-options-table td:last-child {
 	z-index: 30;
 }
 
+@media only screen and (max-width: 799px) {
+	.ee-reg-form-input-settings-tab-li {
+		/*clear: both;*/
+		/*float: none;*/
+		font-size: 12px;
+		margin: 0 !important;
+		/*padding: 3px 12px;*/
+		white-space: normal;
+	}
+}
+
+/*@media only screen and (max-width: 799px) {*/
+	/*.ee-reg-form-input-settings-tab-li {*/
+		/*font-size: 14px;*/
+		/*margin: 0 6px 0 0 !important;*/
+		/*white-space: nowrap;*/
+	/*}*/
+/*}*/
+
 .ee-reg-form-input-settings-tab-panel-dv {
 	background-color: #fff;
 	border: 1px solid #ddd;
-	/*border-bottom: 1px solid #eee;*/
-	/*border-left: 1px solid #eee;*/
-	/*border-right: 1px solid #eee;*/
 	box-sizing: border-box;
 	clear: both;
 	display: none;
@@ -361,4 +452,25 @@ table.question-options-table td:last-child {
 }
 #ee-reg-form-input-settings-tab-panel-1 {
 	display: block;
+}
+
+.ee-reg-form-input-settings-tab-panel-dv .input-options-table {
+	width: 100%;
+}
+.ee-reg-form-input-settings-tab-panel-dv .input-options-table td:first-child {
+	width: 27.5%;
+}
+.ee-reg-form-input-settings-tab-panel-dv .input-options-table td:last-child {
+	width: 10%;
+}
+
+@media screen and (max-width: 782px) {
+	.ee-reg-form-input-settings-tab-panel-dv .input-options-table td {
+		width: 100% !important;
+	}
+}
+
+.ee-reg-form-input-settings-tab-panel-dv .input-options-table input {
+	max-width: 100%;
+	width: 100%;
 }
