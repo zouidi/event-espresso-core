@@ -139,6 +139,43 @@ table .espresso-radio-btn-options-ul .big-lbl,
 	display : inline-block; width : 99%; min-width : 486px;
 }
 
+@media screen and (max-width: 782px) {
+
+	.ee-radio-label-after.nano-lbl,
+	.ee-checkbox-label-after.nano-lbl,
+	.espresso-radio-btn-options-ul .nano-lbl,
+	table .espresso-radio-btn-options-ul .nano-lbl,
+	.inside table .espresso-radio-btn-options-ul .nano-lbl,
+	.ee-radio-label-after.micro-lbl,
+	.ee-checkbox-label-after.micro-lbl,
+	.espresso-radio-btn-options-ul .micro-lbl,
+	table .espresso-radio-btn-options-ul .micro-lbl,
+	.inside table .espresso-radio-btn-options-ul .micro-lbl,
+	.ee-radio-label-after.tiny-lbl,
+	.ee-checkbox-label-after.tiny-lbl,
+	.espresso-radio-btn-options-ul .tiny-lbl,
+	table .espresso-radio-btn-options-ul .tiny-lbl,
+	.inside table .espresso-radio-btn-options-ul .tiny-lbl,
+	.ee-radio-label-after.small-lbl,
+	.ee-checkbox-label-after.small-lbl,
+	.espresso-radio-btn-options-ul .small-lbl,
+	table .espresso-radio-btn-options-ul .small-lbl,
+	.inside table .espresso-radio-btn-options-ul .small-lbl,
+	.ee-radio-label-after.medium-lbl,
+	.ee-checkbox-label-after.medium-lbl,
+	.espresso-radio-btn-options-ul .medium-lbl,
+	table .espresso-radio-btn-options-ul .medium-lbl,
+	.inside table .espresso-radio-btn-options-ul .medium-lbl,
+	.ee-radio-label-after.big-lbl,
+	.ee-checkbox-label-after.big-lbl,
+	.espresso-radio-btn-options-ul .big-lbl,
+	table .espresso-radio-btn-options-ul .big-lbl,
+	.inside table .espresso-radio-btn-options-ul .big-lbl {
+		display: block;
+		width: 99%;
+	}
+}
+
 .ee_media_url {
 	width: 90% !important;
 }
