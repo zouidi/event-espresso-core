@@ -286,6 +286,85 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 		//so it should equal 5
 		$this->assertEquals( 5, $parent_li->taxable_total() );
 	}
+	
+	/**
+	 * @group 9478
+	 */
+	function test_recalculate_total_including_taxes__incorrect_total_with_specific_numbers_and_tax() {
+		$total_li = EE_Line_Item::new_instance(
+			array(
+				'LIN_name' => 'total',
+				'LIN_type' => EEM_Line_Item::type_total,
+			)
+		);
+		$total_li->save();
+		
+		$pretax_subtotal = EE_Line_Item::new_instance(
+			array(
+				'LIN_name' => 'pretax',
+				'LIN_type' => EEM_Line_Item::type_sub_total,
+				'LIN_code' =>  'pre-tax-subtotal',
+				'LIN_parent' => $total_li->ID(),
+				'LIN_order' => 1
+			)
+		);
+		$pretax_subtotal->save();
+		$event_subtotal = EE_Line_Item::new_instance(
+			array(
+				'LIN_name' => 'subtotal',
+				'LIN_type' => EEM_Line_Item::type_sub_total,
+				'LIN_parent' => $pretax_subtotal->ID(),
+				'LIN_order' => 1
+			)
+		);
+		$event_subtotal->save();
+		$line_item = EE_Line_Item::new_instance(
+				array(
+					'LIN_name' => 'ticket',
+					'LIN_type' => EEM_Line_Item::type_line_item,
+					'LIN_quantity' => 5,
+					'LIN_is_taxable' => true,
+					'LIN_parent' => $event_subtotal->ID(),
+					'LIN_order' => 1,
+				));
+		$line_item->save();
+		$flat_sub_line_item = EE_Line_Item::new_instance(
+				array(
+					'LIN_name' => 'flat',
+					'LIN_type' => EEM_Line_Item::type_sub_line_item,
+					'LIN_unit_price' => 53.780,
+					'LIN_quantity' => 5,
+					'LIN_order' => 1,
+					'LIN_parent' => $line_item->ID(),
+				));
+		$flat_sub_line_item->save();
+		$tax_subtotal = EE_Line_Item::new_instance( 
+			array(
+				'LIN_name' => 'tax-sub-total',
+				'LIN_code' => 'taxes',
+				'LIN_type' => EEM_Line_Item::type_tax_sub_total,
+				'LIN_order' => 100,
+				'LIN_parent' => $total_li->ID(),
+			)
+		);
+		$tax_subtotal->save();
+		$tax = EE_Line_Item::new_instance(
+			array(
+				'LIN_name' => 'tax',
+				'LIN_code' => 'a_tax',
+				'LIN_type' => EEM_Line_Item::type_tax,
+				'LIN_percent' => 19,
+				'LIN_parent' => $tax_subtotal->ID(),
+			)
+		);
+		$tax->save();
+		$total_li->recalculate_total_including_taxes();
+		//this is what our UI suggests should be correct; ie, they expect taxes to be
+		//calculated on each individual ticket, then rounded, then summed; but instead
+		//we actually calculate taxes based on the pre-tax-total (and because rounding
+		//happens as we add each ticket to the pre-tax total, tax calculations are different)
+		$this->assertEquals( round( $line_item->unit_price() * ( 1 + $tax->percent() / 100 ) ) * $line_item->quantity(), $total_li->total() );
+	}
 
 	/**
 	 * @group 8488
