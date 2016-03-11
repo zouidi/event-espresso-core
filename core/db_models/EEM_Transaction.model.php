@@ -169,7 +169,7 @@ class EEM_Transaction extends EEM_Base {
 							ON Registration.TXN_ID = Transaction.TXN_ID
 						JOIN $payment_table AS Payment
 							ON Payment.TXN_ID = Registration.TXN_ID
-							AND Payment.PAY_timestamp > '$sql_date'
+							AND Payment.PAY_timestamp >= '$sql_date'
 							AND Payment.STS_ID = '$approved_payment_status'
 						JOIN $event_table AS Event ON Registration.EVT_ID = Event.ID
 							$extra_event_on_join
