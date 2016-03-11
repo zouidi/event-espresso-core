@@ -148,7 +148,7 @@ class EEM_Transaction extends EEM_Base {
 		$sql_date = date( 'Y-m-d H:i:s', strtotime( $period ) );
 		$extra_event_on_join = '';
 		//exclude events not authored by user if permissions in effect
-		if ( ! EE_Registry::instance()->CAP->current_user_can( 'ee_read_others_registrations', 'reg_per_event_report' ) ) {
+		if ( ! EE_Registry::instance()->CAP->current_user_can( 'ee_read_others_registrations', 'revenue_per_event_report' ) ) {
 			$extra_event_on_join = ' AND Event.post_author = ' . get_current_user_id();
 		}
 

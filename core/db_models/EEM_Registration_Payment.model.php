@@ -62,7 +62,7 @@ class EEM_Registration_Payment extends EEM_Base {
 			'Payment.STS_ID' => EEM_Payment::status_id_approved
 		);
 
-		if ( ! EE_Registry::instance()->CAP->current_user_can( 'ee_read_others_registrations', 'txn_per_day_report' ) ) {
+		if ( ! EE_Registry::instance()->CAP->current_user_can( 'ee_read_others_registrations', 'revenue_per_day_report' ) ) {
 			$where['Registration.Event.EVT_wp_user'] = get_current_user_id();
 		}
 
