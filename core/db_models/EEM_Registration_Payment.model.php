@@ -43,5 +43,43 @@ class EEM_Registration_Payment extends EEM_Base {
 
 
 
+
+	/**
+	 * Get the sum of the revenue per day for the period given.
+	 * This also considers whether the current user should see revenue for registrations attached to events
+	 * they did not author (`read_others_events` required to see revenue for all events)
+	 * @param string $period
+	 * @return stdClass[]
+	 */
+	public function get_revenue_per_day_report( $period = '-1 month' ) {
+		$sql_date = EEM_Payment::instance()->convert_datetime_for_query( 'PAY_timestamp', date( 'Y-m-d H:i:s', strtotime( $period ) ), 'Y-m-d H:i:s', 'UTC' );
+
+		EE_Registry::instance()->load_helper( 'DTT_Helper' );
+		$query_interval = EEH_DTT_Helper::get_sql_query_interval_for_offset( $this->get_timezone(), 'Payment.PAY_timestamp' );
+
+		$where = array(
+			'Payment.PAY_timestamp' => array( '>=', $sql_date ),
+			'Payment.STS_ID' => EEM_Payment::status_id_approved
+		);
+
+		if ( ! EE_Registry::instance()->CAP->current_user_can( 'ee_read_others_registrations', 'txn_per_day_report' ) ) {
+			$where['Registration.Event.EVT_wp_user'] = get_current_user_id();
+		}
+
+		$results = $this->_get_all_wpdb_results(
+			array(
+				$where,
+				'group_by' => 'txnDate',
+				'order_by' => array( 'Payment.PAY_timestamp' => 'ASC' )
+			),
+			OBJECT,
+			array(
+				'txnDate' => array( 'DATE(' . $query_interval . ')', '%s' ),
+				'revenue' => array( 'SUM(Registration_Payment.RPY_amount)', '%d' )
+			)
+		);
+		return $results;
+	}
+
 }
 // end of file: /core/db_models/EEM_Registration_Payment.model.php
