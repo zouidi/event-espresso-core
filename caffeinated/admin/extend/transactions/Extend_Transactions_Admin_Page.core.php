@@ -147,7 +147,7 @@ class Extend_Transactions_Admin_Page extends Transactions_Admin_Page {
 
 		$report_ID = 'txn-admin-revenue-per-day-report-dv';
 
-		$TXN = EEM_Transaction::instance();
+		$TXN = EEM_Registration_Payment::instance();
 
 		$results = $TXN->get_revenue_per_day_report( $period );
 		$results = (array) $results;
