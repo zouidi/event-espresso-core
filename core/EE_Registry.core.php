@@ -144,8 +144,17 @@ final class EE_Registry {
 	*/
 	public $main_file;
 
+	/**
+	 * @access    protected
+	 * @type    \EE_Request $_request
+	 */
+	protected $request;
 
-
+	/**
+	 * @access    protected
+	 * @type    \EE_Response $_response
+	 */
+	protected $response;
 
 
 
@@ -179,6 +188,24 @@ final class EE_Registry {
 		$this->shortcodes = new StdClass();
 		$this->widgets = new StdClass();
 		add_action( 'AHEE__EE_System__set_hooks_for_core', array( $this, 'init' ));
+	}
+
+
+
+	/**
+	 * @param \EE_Request $request
+	 */
+	public function set_request( \EE_Request $request ) {
+		$this->request = $request;
+	}
+
+
+
+	/**
+	 * @param \EE_Response $response
+	 */
+	public function set_response( \EE_Response $response ) {
+		$this->response = $response;
 	}
 
 
@@ -228,7 +255,11 @@ final class EE_Registry {
 			if ( ! class_exists( 'EE_Module_Request_Router' )) {
 				$this->load_core( 'Module_Request_Router' );
 			}
-			$this->modules->{$module} = EE_Module_Request_Router::module_factory( $module );
+			$this->modules->{$module} = EE_Module_Request_Router::module_factory(
+				$module,
+				$this->request,
+				$this->response
+			);
 		}
 	}
 
