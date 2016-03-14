@@ -111,8 +111,8 @@ class EE_Bootstrap {
 			'FHEE__EE_Bootstrap__build_request_stack__stack_apps',
 			array(
 				'EE_Recommended_Versions',
+				'DetectActivationsUpgradesMigrations',
 				'EE_Alpha_Banner_Warning',
-				//'EE_Activation',
 				//'EE_Cache_Buster',
 				//'EE_Admin_Bar',
 			)
