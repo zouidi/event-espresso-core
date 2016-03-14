@@ -31,6 +31,18 @@ abstract class EED_Module extends EE_Configurable {
 	protected static $_instance = NULL;
 
 	/**
+	 * @access    protected
+	 * @type    EE_Request $request
+	 */
+	protected $request;
+
+	/**
+	 * @access    protected
+	 * @type    EE_Response $response
+	 */
+	protected $response;
+
+	/**
 	 * 	rendered output to be returned to WP
 	 * 	@access 	protected
 	 *	@var 	string $output
@@ -78,13 +90,16 @@ abstract class EED_Module extends EE_Configurable {
 
 
 	/**
-	 *    class constructor - can ONLY be instantiated by EE_Front_Controller
+	 * class constructor - should ONLY be instantiated by \EE_Front_Controller
 	 *
-	 * @override default exception handling
 	 * @access   public
+	 * @param    \EE_Request  $request
+	 * @param    \EE_Response $response
 	 * @return \EED_Module
 	 */
-	final public function __construct() {
+	final public function __construct( \EE_Request $request, \EE_Response $response ) {
+		$this->request = $request;
+		$this->response = $response;
 		$this->theme = EE_Config::get_current_theme();
 		$module_name = $this->module_name();
 		EE_Registry::instance()->modules->{$module_name} = $this;
