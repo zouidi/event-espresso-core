@@ -30,6 +30,9 @@ class EED_Core_Rest_Api extends \EED_Module {
 	 * @var Calculated_Model_Fields
 	 */
 	protected static $_field_calculator = null;
+
+
+
 	/**
 	 * @return EED_Core_Rest_Api
 	 */
@@ -139,7 +142,7 @@ class EED_Core_Rest_Api extends \EED_Module {
 	 * next time the WP API is used
 	 */
 	public static function invalidate_cached_route_data_on_version_change() {
-		if( EE_System::instance()->detect_req_type() != EE_System::req_type_normal ) {
+		if( EED_Core_Rest_Api::instance()->request->activation_type() != EE_System::req_type_normal ) {
 			EED_Core_Rest_Api::invalidate_cached_route_data();
 		}
 		foreach( EE_Registry::instance()->addons as $addon ){
