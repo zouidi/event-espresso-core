@@ -1,18 +1,5 @@
 <?php if ( ! defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
 /**
- * Event Espresso
- *
- * Event Registration and Management Plugin for WordPress
- *
- * @ package			Event Espresso
- * @ author			Seth Shoultes
- * @ copyright		(c) 2008-2011 Event Espresso  All Rights Reserved.
- * @ license			http://eventespresso.com/support/terms-conditions/   * see Plugin Licensing *
- * @ link					http://www.eventespresso.com
- * @ version		 	4.0
- *
- * ------------------------------------------------------------------------
- *
  * EE_Front_Controller
  *
  * @package			Event Espresso
@@ -30,6 +17,18 @@ final class EE_Front_Controller {
 	 * 	@access 	private
 	 */
 	private static $_instance = NULL;
+
+	/**
+	 * @access    protected
+	 * @type    EE_Request $request
+	 */
+	protected $request;
+
+	/**
+	 * @access    protected
+	 * @type    EE_Response $response
+	 */
+	protected $response;
 
 	/**
 	 * 	$_template_path
@@ -55,13 +54,13 @@ final class EE_Front_Controller {
 
 
 	/**
-	 *	@singleton method used to instantiate class object
-	 *	@access public
-	 *	@return EE_Front_Controller
+	 * @singleton method used to instantiate class object
+	 * @access public
+	 * @return EE_Front_Controller
 	 */
 	public static function instance() {
 		// check if class object is instantiated, and instantiated properly
-		if ( self::$_instance === NULL  or ! is_object( self::$_instance ) or ! ( self::$_instance instanceof  EE_Front_Controller )) {
+		if ( ! self::$_instance instanceof  EE_Front_Controller ) {
 			self::$_instance = new self();
 		}
 		return self::$_instance;
@@ -70,11 +69,11 @@ final class EE_Front_Controller {
 
 
 	/**
-	 *    class constructor
+	 * class constructor
 	 *
-	 *    should fire after shortcode, module, addon, or other plugin's default priority init phases have run
+	 * should fire after shortcode, module, addon, or other plugin's default priority init phases have run
 	 *
-	 * @access    private
+	 * @access private
 	 * @return \EE_Front_Controller
 	 */
 	private function __construct() {
@@ -111,6 +110,24 @@ final class EE_Front_Controller {
 		if ( apply_filters( 'FHEE__EE_Front_Controller____construct__set_test_cookie', true )) {
 			setcookie( 'ee_cookie_test', uniqid(), time() + 24 * HOUR_IN_SECONDS, '/' );
 		}
+	}
+
+
+
+	/**
+	 * @param \EE_Request $request
+	 */
+	public function set_request( \EE_Request $request ) {
+		$this->request = $request;
+	}
+
+
+
+	/**
+	 * @param \EE_Response $response
+	 */
+	public function set_response( \EE_Response $response ) {
+		$this->response = $response;
 	}
 
 
@@ -326,9 +343,12 @@ final class EE_Front_Controller {
 		// only load Module_Request_Router if this is the main query
 		if ( $WP_Query->is_main_query() ) {
 			// load module request router
+			/** @var EE_Module_Request_Router $Module_Request_Router */
 			$Module_Request_Router = EE_Registry::instance()->load_core( 'Module_Request_Router' );
 			// verify object
 			if ( $Module_Request_Router instanceof EE_Module_Request_Router ) {
+				$Module_Request_Router->set_request( $this->request );
+				$Module_Request_Router->set_response( $this->response );
 				// cycle thru module routes
 				while ( $route = $Module_Request_Router->get_route( $WP_Query )) {
 					// determine module and method for route
