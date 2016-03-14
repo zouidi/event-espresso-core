@@ -66,8 +66,10 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 		//// WP cron jobs
 		EE_Registry::instance()->load_core( 'Cron_Tasks' );
 		EE_Registry::instance()->load_core( 'Request_Handler' );
-		EE_Registry::instance()->load_core( 'EE_System' );
-
+		/** @var EE_System $EE_System */
+		$EE_System = EE_Registry::instance()->load_core( 'EE_System' );
+		$EE_System->set_request( $this->request );
+		$EE_System->set_response( $this->response );
 		return $this->response;
 	}
 
@@ -82,6 +84,8 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	private function _load_registry() {
 		if ( is_readable( EE_CORE . 'EE_Registry.core.php' )) {
 			require_once( EE_CORE . 'EE_Registry.core.php' );
+			EE_Registry::instance()->set_request( $this->request );
+			EE_Registry::instance()->set_response( $this->response );
 		} else {
 			$msg = __( 'The EE_Registry core class could not be loaded.', 'event_espresso' );
 			EE_Error::add_error( $msg, __FILE__, __FUNCTION__, __LINE__ );
