@@ -51,6 +51,16 @@ class EE_Request {
 	public $front_ajax = false;
 
 
+	/**
+	 * Stores which type of request this is,
+	 * options being one of the constants on DetectActivationsUpgradesMigrations starting with req_type_*.
+	 * It can be a brand-new activation, a reactivation, an upgrade, a downgrade, or a normal request.
+	 *
+	 * @var int
+	 */
+	private $activation_type;
+
+
 
 	/**
 	 *    class constructor
@@ -106,6 +116,24 @@ class EE_Request {
 	 */
 	public function params() {
 		return $this->_params;
+	}
+
+
+
+	/**
+	 * @return int
+	 */
+	public function activation_type() {
+		return $this->activation_type;
+	}
+
+
+
+	/**
+	 * @param int $activation_type
+	 */
+	public function set_activation_type( $activation_type ) {
+		$this->activation_type = $activation_type;
 	}
 
 
