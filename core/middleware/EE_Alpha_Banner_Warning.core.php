@@ -22,11 +22,11 @@ class EE_Alpha_Banner_Warning extends EE_Middleware {
 	 * @return 	EE_Response
 	 */
 	public function handle_request( EE_Request $request, EE_Response $response ) {
-		$this->_request = $request;
-		$this->_response = $response;
+		$this->request = $request;
+		$this->response = $response;
 		$this->display_alpha_banner_warning();
-		$this->_response = $this->process_request_stack( $this->_request, $this->_response );
-		return $this->_response;
+		$this->response = $this->process_request_stack( $this->request, $this->response );
+		return $this->response;
 	}
 
 
