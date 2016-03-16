@@ -984,6 +984,15 @@ final class EE_System {
 
 
 
+	/**
+	 * @deprecated
+	 */
+	public function detect_req_type() {
+
+	}
+
+
+
 }
 // End of file EE_System.core.php
 // Location: /core/EE_System.core.php
