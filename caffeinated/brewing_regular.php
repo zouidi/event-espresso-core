@@ -73,7 +73,7 @@ class EE_Brewing_Regular extends EE_Base {
 	 * Right now the only CAF content are these global prices. If there's more in the future, then
 	 * we should probably create a caf file to contain it all instead just a function like this.
 	 * Right now, we ASSUME the only price types in the system are default ones
-	 * @global type $wpdb
+	 * @global WPDB $wpdb
 	 */
 	function initialize_caf_db_content(){
 //		echo "initialize caf db content!";
@@ -91,67 +91,70 @@ class EE_Brewing_Regular extends EE_Base {
 			$tax_price_type_count = $wpdb->get_var( $SQL );
 
 			if ( $tax_price_type_count <= 1) {
-				$result = $wpdb->insert($price_type_table,
-						array(
-							'PRT_name'=>  __("Regional Tax", "event_espresso"),
-							'PBT_ID'=>4,
-							'PRT_is_percent'=>true,
-							'PRT_order'=>60,
-							'PRT_deleted'=>false,
-							'PRT_wp_user' => $default_creator_id
-						),
-						array(
-							'%s',//PRT_name
-							'%d',//PBT_id
-							'%d',//PRT_is_percent
-							'%d',//PRT_order
-							'%d',//PRT_deleted
-							'%d', //PRT_wp_user
-						));
+				$wpdb->insert($price_type_table,
+					array(
+						'PRT_name'=>  __("Regional Tax", "event_espresso"),
+						'PBT_ID'=>4,
+						'PRT_is_percent'=>true,
+						'PRT_order'=>60,
+						'PRT_deleted'=>false,
+						'PRT_wp_user' => $default_creator_id
+					),
+					array(
+						'%s',//PRT_name
+						'%d',//PBT_id
+						'%d',//PRT_is_percent
+						'%d',//PRT_order
+						'%d',//PRT_deleted
+						'%d', //PRT_wp_user
+					)
+				);
 				//federal tax
 				$result = $wpdb->insert($price_type_table,
-						array(
-							'PRT_name'=>  __("Federal Tax", "event_espresso"),
-							'PBT_ID'=>4,
-							'PRT_is_percent'=>true,
-							'PRT_order'=>70,
-							'PRT_deleted'=>false,
-							'PRT_wp_user' => $default_creator_id,
-						),
-						array(
-							'%s',//PRT_name
-							'%d',//PBT_id
-							'%d',//PRT_is_percent
-							'%d',//PRT_order
-							'%d',//PRT_deleted
-							'%d' //PRT_wp_user
-						));
+					array(
+						'PRT_name'=>  __("Federal Tax", "event_espresso"),
+						'PBT_ID'=>4,
+						'PRT_is_percent'=>true,
+						'PRT_order'=>70,
+						'PRT_deleted'=>false,
+						'PRT_wp_user' => $default_creator_id,
+					),
+					array(
+						'%s',//PRT_name
+						'%d',//PBT_id
+						'%d',//PRT_is_percent
+						'%d',//PRT_order
+						'%d',//PRT_deleted
+						'%d' //PRT_wp_user
+					)
+				);
 				if( $result){
 					$wpdb->insert($price_table,
-							array(
-								'PRT_ID'=>$wpdb->insert_id,
-								'PRC_amount'=>15.00,
-								'PRC_name'=>  __("Sales Tax", "event_espresso"),
-								'PRC_desc'=>  '',
-								'PRC_is_default'=>true,
-								'PRC_overrides'=>NULL,
-								'PRC_deleted'=>false,
-								'PRC_order'=>50,
-								'PRC_parent'=>null,
-								'PRC_wp_user' => $default_creator_id
-							),
-							array(
-								'%d',//PRT_id
-								'%f',//PRC_amount
-								'%s',//PRC_name
-								'%s',//PRC_desc
-								'%d',//PRC_is_default
-								'%d',//PRC_overrides
-								'%d',//PRC_deleted
-								'%d',//PRC_order
-								'%d',//PRC_parent
-								'%d' //PRC_wp_user
-							));
+						array(
+							'PRT_ID'=>$wpdb->insert_id,
+							'PRC_amount'=>15.00,
+							'PRC_name'=>  __("Sales Tax", "event_espresso"),
+							'PRC_desc'=>  '',
+							'PRC_is_default'=>true,
+							'PRC_overrides'=>NULL,
+							'PRC_deleted'=>false,
+							'PRC_order'=>50,
+							'PRC_parent'=>null,
+							'PRC_wp_user' => $default_creator_id
+						),
+						array(
+							'%d',//PRT_id
+							'%f',//PRC_amount
+							'%s',//PRC_name
+							'%s',//PRC_desc
+							'%d',//PRC_is_default
+							'%d',//PRC_overrides
+							'%d',//PRC_deleted
+							'%d',//PRC_order
+							'%d',//PRC_parent
+							'%d' //PRC_wp_user
+						)
+					);
 				}
 
 
@@ -198,10 +201,11 @@ class EE_Brewing_Regular extends EE_Base {
 	}
 
 
-	/**
-	 * callbacks below here
-	 */
 
+	/**
+	 * @param array $taxonomy_array
+	 * @return array
+	 */
 	public function filter_taxonomies( $taxonomy_array ) {
 		$taxonomy_array['espresso_venue_categories']['args']['show_in_nav_menus'] = TRUE;
 		return $taxonomy_array;
@@ -209,20 +213,31 @@ class EE_Brewing_Regular extends EE_Base {
 
 
 
+	/**
+	 * @param array $cpt_array
+	 * @return array
+	 */
 	public function filter_cpts( $cpt_array ) {
 		$cpt_array['espresso_venues']['args']['show_in_nav_menus'] = TRUE;
 		return $cpt_array;
 	}
 
 
-	public function nav_metabox_items( $menuitems ) {
-		$menuitems[] = array(
+
+	/**
+	 * @param array $menu_items
+	 * @return array
+	 */
+	public function nav_metabox_items( $menu_items ) {
+		$menu_items[] = array(
 			'title' => __('Venue List', 'event_espresso'),
 			'url' => get_post_type_archive_link( 'espresso_venues' ),
 			'description' => __('Archive page for all venues.', 'event_espresso')
 			);
-		return $menuitems;
+		return $menu_items;
 	}
+
+
 
 	/**
 	 * Adds the payment methods in {event-espresso-core}/caffeinated/payment_methods
@@ -234,5 +249,6 @@ class EE_Brewing_Regular extends EE_Base {
 		$payment_method_paths = array_merge( $payment_method_paths, $caf_payment_methods_paths );
 		return $payment_method_paths;
 	}
+
+
 }
-$brewing = new EE_Brewing_Regular();
