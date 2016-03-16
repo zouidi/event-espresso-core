@@ -100,30 +100,33 @@ class DetectActivationsUpgradesMigrations extends \EE_Middleware {
 			\EE_Registry::instance()->load_helper( 'Activation' );
 		}
 		switch ( $request_type ) {
+
 			case DetectActivationsUpgradesMigrations::req_type_new_activation:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__new_activation' );
 				$this->_handle_core_version_change( $espresso_db_update );
 				break;
+
 			case DetectActivationsUpgradesMigrations::req_type_reactivation:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__reactivation' );
 				$this->_handle_core_version_change( $espresso_db_update );
 				break;
+
 			case DetectActivationsUpgradesMigrations::req_type_upgrade:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__upgrade' );
 				//migrations may be required now that we've upgraded
 				\EE_Maintenance_Mode::instance()->set_maintenance_mode_if_db_old();
 				$this->_handle_core_version_change( $espresso_db_update );
-//				echo "done upgrade";die;
 				break;
+
 			case DetectActivationsUpgradesMigrations::req_type_downgrade:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__downgrade' );
 				//its possible migrations are no longer required
 				\EE_Maintenance_Mode::instance()->set_maintenance_mode_if_db_old();
 				$this->_handle_core_version_change( $espresso_db_update );
 				break;
+
 			case DetectActivationsUpgradesMigrations::req_type_normal:
 			default:
-//				$this->_maybe_redirect_to_ee_about();
 				break;
 		}
 		do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__complete' );
