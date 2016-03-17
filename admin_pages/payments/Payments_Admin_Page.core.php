@@ -273,7 +273,20 @@ class Payments_Admin_Page extends EE_Admin_Page {
 			}
 			$payment_methods[ $payment_method->slug() ] = $payment_method;
 		}
-		$payment_methods = apply_filters( 'FHEE__Payments_Admin_Page___payment_methods_list__payment_methods', $payment_methods );
+		$payment_methods = apply_filters( 
+			'FHEE__Payments_Admin_Page___payment_methods_list__payment_methods', 
+			array_merge( 
+				$payment_methods, 
+				EEM_Payment_Method::instance()->get_all( 
+					array( 
+						array( 
+							'PMD_type' => 'Admin_Only' 
+						) 
+					) 
+				) 
+			) 
+		);
+		
 		foreach( $payment_methods as $payment_method ) {
 			if ( $payment_method instanceof EE_Payment_Method ) {
 				add_meta_box(
