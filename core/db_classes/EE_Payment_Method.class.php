@@ -83,6 +83,15 @@ class EE_Payment_Method extends EE_Base_Class{
 	function active() {
 		return array_intersect(array_keys(EEM_Payment_Method::instance()->scopes()),$this->scope());
 	}
+	
+	/**
+	 * Returns whether or not this paymetn method is active for this scope
+	 * @param string $scope one of EEM_Payment_Method::scopes()
+	 * @return boolean
+	 */
+	function active_in( $scope ) {
+		return in_array( $scope, $this->scope() );
+	}
 
 
 

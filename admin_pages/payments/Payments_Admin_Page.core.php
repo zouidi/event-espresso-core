@@ -306,9 +306,16 @@ class Payments_Admin_Page extends EE_Admin_Page {
 					array( 'payment_method' => $payment_method )
 				);
 				//setup for tabbed content
+				$class = '';
+				if( $payment_method->active_in( EEM_Payment_Method::scope_cart ) ) {
+					$class = 'gateway-active';
+				}else if( $payment_method->active_in( EEM_Payment_Method::scope_admin ) ) {
+					$class = 'gateway-active-admin';
+				}
+				
 				$tabs[ $payment_method->slug() ] = array(
 					'label' => $payment_method->admin_name(),
-					'class' => $payment_method->active() ? 'gateway-active' : '',
+					'class' => $class,
 					'href'  => 'espresso_' . $payment_method->slug() . '_payment_settings',
 					'title' => __( 'Modify this Payment Method', 'event_espresso' ),
 					'slug'  => $payment_method->slug()
