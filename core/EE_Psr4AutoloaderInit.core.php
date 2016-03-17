@@ -43,6 +43,9 @@ class EE_Psr4AutoloaderInit {
 	 * @return \EventEspresso\Core\Psr4Autoloader
 	 */
 	public static function psr4_loader() {
+		if ( ! self::$psr4_loader instanceof \EventEspresso\Core\Psr4Autoloader ) {
+			new self();
+		}
 		return self::$psr4_loader;
 	}
 
