@@ -1375,7 +1375,7 @@ class EEH_Activation {
 
 		//still need to see if there are any message types to activate for active messengers
 		foreach ( $active_messengers as $messenger => $settings ) {
-			$msg_obj = $settings['obj'];
+			$msg_obj = isset( $settings['obj'] ) ? $settings['obj'] : null;
 			if ( ! $msg_obj instanceof EE_messenger ) {
 				continue;
 			}
