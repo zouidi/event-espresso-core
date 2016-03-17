@@ -1,6 +1,4 @@
 <?php
-namespace EventEspresso\core;
-
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
@@ -8,7 +6,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 
 
 /**
- * Class DetectActivationsUpgradesMigrations
+ * Class EE_Activation_Manager
  *
  * Description
  *
@@ -18,37 +16,37 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @since         $VID:$
  *
  */
-class DetectActivationsUpgradesMigrations {
+class EE_Activation_Manager {
 
 	/**
-	 * indicates this is a 'normal' request. Ie, not activation, nor upgrade, nor activation.
+	 * indicates this is a 'normal' request. ie, not an activation, nor upgrade, nor reactivation.
 	 * So examples of this would be a normal GET request on the frontend or backend, or a POST, etc
 	 */
-	const req_type_normal = 0;
+	const activation_type_none = 0;
 
 	/**
 	 * Indicates this is a brand new installation of EE so we should install
 	 * tables and default data etc
 	 */
-	const req_type_new_activation = 1;
+	const activation_type_new = 1;
 
 	/**
 	 * we've detected that EE has been reactivated (or EE was activated during maintenance mode,
 	 * and we just exited maintenance mode). We MUST check the database is setup properly
 	 * and that default data is setup too
 	 */
-	const req_type_reactivation = 2;
+	const activation_type_reactivation = 2;
 
 	/**
 	 * indicates that EE has been upgraded since its previous request.
 	 * We may have data migration scripts to call and will want to trigger maintenance mode
 	 */
-	const req_type_upgrade = 3;
+	const activation_type_upgrade = 3;
 
 	/**
 	 * TODO  will detect that EE has been DOWNGRADED. We probably don't want to run in this case...
 	 */
-	const req_type_downgrade = 4;
+	const activation_type_downgrade = 4;
 
 	/**
 	 * option prefix for recording the activation history (like core's "espresso_db_update") of addons
@@ -56,22 +54,56 @@ class DetectActivationsUpgradesMigrations {
 	const addon_activation_history_option_prefix = 'ee_addon_activation_history_';
 
 
+	/**
+	 * Stores which type of request this is, and whether any type of activation is involved,
+	 * options being one of the above class constants starting with activation_type_*.
+	 * It can be a brand-new activation, a reactivation, an upgrade, a downgrade, or a normal request.
+	 *
+	 * @var int $activation_type
+	 */
+	private $activation_type;
+
+
 
 	/**
-	 * DetectActivationsUpgradesMigrations constructor.
-	 *
-	 * @param    \EE_Request  $request
-	 * @param    \EE_Response $response
+	 * EE_Activation_Manager constructor.
 	 */
-	public function __construct( \EE_Request $request, \EE_Response $response ) {
-		$this->request = $request;
-		$this->response = $response;
+	public function __construct() {
 		// detect whether install or upgrade
 		add_action(
 			'AHEE__EE_System__detect_activations_or_upgrades__begin',
 			array( $this, 'detect_if_activation_or_upgrade' ),
 			1
 		);
+		// allow addons to load first so that they can register autoloaders, set hooks for running DMS's, etc
+		add_action( 'AHEE__EE_Bootstrap__load_espresso_addons', array( $this, 'load_espresso_addons' ) );
+		// when an ee addon is activated, we want to call the core hook(s) again
+		// because the newly-activated addon didn't get a chance to run at all
+		add_action( 'activate_plugin', array( $this, 'load_espresso_addons' ), 10 );
+		// detect whether install or upgrade
+		add_action(
+			'AHEE__EE_Bootstrap__detect_activations_or_upgrades',
+			array( $this, 'detect_activations_or_upgrades' ),
+			10
+		);
+	}
+
+
+
+	/**
+	 * @return int
+	 */
+	public function activation_type() {
+		return $this->activation_type;
+	}
+
+
+
+	/**
+	 * @param int $activation_type
+	 */
+	public function set_activation_type( $activation_type ) {
+		$this->activation_type = $activation_type;
 	}
 
 
@@ -83,46 +115,45 @@ class DetectActivationsUpgradesMigrations {
 	 * and either setting up the DB or setting up maintenance mode etc.
 	 *
 	 * @access public
-	 * @param \EE_System $system
 	 */
-	public function detect_if_activation_or_upgrade( \EE_System $system ) {
+	public function detect_if_activation_or_upgrade() {
 		do_action( 'AHEE__EE_System___detect_if_activation_or_upgrade__begin' );
 		// load M-Mode class
 		\EE_Registry::instance()->load_core( 'Maintenance_Mode' );
 		// check if db has been updated, or if its a brand-new installation
 		$espresso_db_update = $this->fix_espresso_db_upgrade_option();
-		$request_type = $this->detect_req_type( $espresso_db_update );
-		//\EEH_Debug_Tools::printr( $request_type, '$request_type', __FILE__, __LINE__ );
-		if ( $request_type != DetectActivationsUpgradesMigrations::req_type_normal ) {
+		$request_type = $this->detect_activation_type( $espresso_db_update );
+		// load activation helper if need be
+		if ( $request_type != EE_Activation_Manager::activation_type_none ) {
 			\EE_Registry::instance()->load_helper( 'Activation' );
 		}
 		switch ( $request_type ) {
 
-			case DetectActivationsUpgradesMigrations::req_type_new_activation:
+			case EE_Activation_Manager::activation_type_new:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__new_activation' );
 				$this->_handle_core_version_change( $espresso_db_update );
 				break;
 
-			case DetectActivationsUpgradesMigrations::req_type_reactivation:
+			case EE_Activation_Manager::activation_type_reactivation:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__reactivation' );
 				$this->_handle_core_version_change( $espresso_db_update );
 				break;
 
-			case DetectActivationsUpgradesMigrations::req_type_upgrade:
+			case EE_Activation_Manager::activation_type_upgrade:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__upgrade' );
 				//migrations may be required now that we've upgraded
 				\EE_Maintenance_Mode::instance()->set_maintenance_mode_if_db_old();
 				$this->_handle_core_version_change( $espresso_db_update );
 				break;
 
-			case DetectActivationsUpgradesMigrations::req_type_downgrade:
+			case EE_Activation_Manager::activation_type_downgrade:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__downgrade' );
 				//its possible migrations are no longer required
 				\EE_Maintenance_Mode::instance()->set_maintenance_mode_if_db_old();
 				$this->_handle_core_version_change( $espresso_db_update );
 				break;
 
-			case DetectActivationsUpgradesMigrations::req_type_normal:
+			case EE_Activation_Manager::activation_type_none:
 			default:
 				break;
 		}
@@ -212,7 +243,7 @@ class DetectActivationsUpgradesMigrations {
 	 * @return void
 	 */
 	public function initialize_db_if_no_migrations_required( $initialize_addons_too = false, $verify_db_schema = true ) {
-		$request_type = $this->detect_req_type();
+		$request_type = $this->detect_activation_type();
 		//only initialize system if we're not in maintenance mode.
 		if ( \EE_Maintenance_Mode::instance()->level() != \EE_Maintenance_Mode::level_2_complete_maintenance ) {
 			update_option( 'ee_flush_rewrite_rules', true );
@@ -227,9 +258,9 @@ class DetectActivationsUpgradesMigrations {
 		} else {
 			\EE_Data_Migration_Manager::instance()->enqueue_db_initialization_for( 'Core' );
 		}
-		if ( $request_type == DetectActivationsUpgradesMigrations::req_type_new_activation
-		     || $request_type == DetectActivationsUpgradesMigrations::req_type_reactivation
-		     || $request_type == DetectActivationsUpgradesMigrations::req_type_upgrade
+		if ( $request_type == EE_Activation_Manager::activation_type_new
+		     || $request_type == EE_Activation_Manager::activation_type_reactivation
+		     || $request_type == EE_Activation_Manager::activation_type_upgrade
 		) {
 			add_action( 'AHEE__EE_System__load_CPTs_and_session__start', array( $this, 'redirect_to_about_ee' ), 9 );
 		}
@@ -279,22 +310,22 @@ class DetectActivationsUpgradesMigrations {
 	 *                                  Also, caches its result so later parts of the code can also know whether there's been an
 	 *                                  update or not. This way we can add the current version to espresso_db_update,
 	 *                                  but still know if this is a new install or not
-	 * @return int one of the constants on DetectActivationsUpgradesMigrations::req_type_
+	 * @return int one of the constants on EE_Activation_Manager::activation_type_
 	 */
-	public function detect_req_type( $espresso_db_update = null ) {
-		if ( $this->request->activation_type() === null ) {
+	public function detect_activation_type( $espresso_db_update = null ) {
+		if ( $this->activation_type() === null ) {
 			$espresso_db_update = ! empty( $espresso_db_update )
 				? $espresso_db_update
 				: $this->fix_espresso_db_upgrade_option();
-			$this->request->set_activation_type(
-				$this->detect_req_type_given_activation_history(
+			$this->set_activation_type(
+				$this->detect_activation_type_given_activation_history(
 					$espresso_db_update,
 					'ee_espresso_activation',
 					espresso_version()
 				)
 			);
 		}
-		return $this->request->activation_type();
+		return $this->activation_type();
 	}
 
 
@@ -307,9 +338,9 @@ class DetectActivationsUpgradesMigrations {
 	 *                                                 for core that's 'espresso_db_update'
 	 * @param string $activation_indicator_option_name the name of the wordpress option that is temporarily set to indicate that this plugin was just activated
 	 * @param string $version_to_upgrade_to            the version that was just upgraded to (for core that will be espresso_version())
-	 * @return int one of the constants on DetectActivationsUpgradesMigrations::req_type_*
+	 * @return int one of the constants on EE_Activation_Manager::activation_type_*
 	 */
-	public static function detect_req_type_given_activation_history(
+	public static function detect_activation_type_given_activation_history(
 		$activation_history_for_addon,
 		$activation_indicator_option_name,
 		$version_to_upgrade_to
@@ -321,41 +352,41 @@ class DetectActivationsUpgradesMigrations {
 			if ( ! isset( $activation_history_for_addon[ $version_to_upgrade_to ] ) ) {
 				//it a version we haven't seen before
 				if ( $version_is_higher === 1 ) {
-					$req_type = DetectActivationsUpgradesMigrations::req_type_upgrade;
+					$activation_type = EE_Activation_Manager::activation_type_upgrade;
 				} else {
-					$req_type = DetectActivationsUpgradesMigrations::req_type_downgrade;
+					$activation_type = EE_Activation_Manager::activation_type_downgrade;
 				}
 				delete_option( $activation_indicator_option_name );
 			} else {
 				// its not an update. maybe a reactivation?
 				if ( get_option( $activation_indicator_option_name, false ) ) {
 					if ( $version_is_higher === -1 ) {
-						$req_type = DetectActivationsUpgradesMigrations::req_type_downgrade;
+						$activation_type = EE_Activation_Manager::activation_type_downgrade;
 					} elseif ( $version_is_higher === 0 ) {
 						//we've seen this version before, but it's an activation. must be a reactivation
-						$req_type = DetectActivationsUpgradesMigrations::req_type_reactivation;
+						$activation_type = EE_Activation_Manager::activation_type_reactivation;
 					} else {//$version_is_higher === 1
-						$req_type = DetectActivationsUpgradesMigrations::req_type_upgrade;
+						$activation_type = EE_Activation_Manager::activation_type_upgrade;
 					}
 					delete_option( $activation_indicator_option_name );
 				} else {
 					//we've seen this version before and the activation indicate doesn't show it was just activated
 					if ( $version_is_higher === -1 ) {
-						$req_type = DetectActivationsUpgradesMigrations::req_type_downgrade;
+						$activation_type = EE_Activation_Manager::activation_type_downgrade;
 					} elseif ( $version_is_higher === 0 ) {
 						//we've seen this version before and it's not an activation. its normal request
-						$req_type = DetectActivationsUpgradesMigrations::req_type_normal;
+						$activation_type = EE_Activation_Manager::activation_type_none;
 					} else {//$version_is_higher === 1
-						$req_type = DetectActivationsUpgradesMigrations::req_type_upgrade;
+						$activation_type = EE_Activation_Manager::activation_type_upgrade;
 					}
 				}
 			}
 		} else {
 			//brand new install
-			$req_type = DetectActivationsUpgradesMigrations::req_type_new_activation;
+			$activation_type = EE_Activation_Manager::activation_type_new;
 			delete_option( $activation_indicator_option_name );
 		}
-		return $req_type;
+		return $activation_type;
 	}
 
 
@@ -416,10 +447,10 @@ class DetectActivationsUpgradesMigrations {
 		     && ! isset( $notices['errors'] )
 		) {
 			$query_params = array( 'page' => 'espresso_about' );
-			if ( $this->detect_req_type() == DetectActivationsUpgradesMigrations::req_type_new_activation ) {
+			if ( $this->detect_activation_type() == EE_Activation_Manager::activation_type_new ) {
 				$query_params['new_activation'] = true;
 			}
-			if ( $this->detect_req_type() == DetectActivationsUpgradesMigrations::req_type_reactivation ) {
+			if ( $this->detect_activation_type() == EE_Activation_Manager::activation_type_reactivation ) {
 				$query_params['reactivation'] = true;
 			}
 			$url = add_query_arg( $query_params, admin_url( 'admin.php' ) );
@@ -430,22 +461,7 @@ class DetectActivationsUpgradesMigrations {
 
 
 
-	/**
-	 * resets the instance and returns it
-	 *
-	 * @return EE_System
-	 */
-	public static function reset() {
-		//we need to reset the migration manager in order for it to detect DMSs properly
-		\EE_Data_Migration_Manager::reset();
-		//make sure none of the old hooks are left hanging around
-		remove_all_actions( 'AHEE__EE_System__perform_activations_upgrades_and_migrations' );
-		self::instance()->detect_activations_or_upgrades();
-		self::instance()->perform_activations_upgrades_and_migrations();
-		return self::instance();
-	}
-
 
 }
-// End of file DetectActivationsUpgradesMigrations.php
-// Location: /DetectActivationsUpgradesMigrations.php
+// End of file EE_Activation_Manager.php
+// Location: /EE_Activation_Manager.php
