@@ -49,6 +49,7 @@ class EE_Bootstrap {
 		add_action( 'plugins_loaded', array( 'EE_Bootstrap', 'load_core_configuration' ), 5 );
 		add_action( 'plugins_loaded', array( 'EE_Bootstrap', 'register_shortcodes_modules_and_widgets' ), 7 );
 		add_action( 'plugins_loaded', array( 'EE_Bootstrap', 'brew_espresso' ), 9 );
+		add_action( 'plugins_loaded', array( 'EE_Bootstrap', 'after_brew_espresso' ), 999 );
 	}
 
 
@@ -62,13 +63,39 @@ class EE_Bootstrap {
 		$this->set_autoloaders_for_required_files();
 		$this->_request_stack_builder = $this->build_request_stack();
 		$this->_request_stack = $this->_request_stack_builder->resolve(
-			new EE_Load_Espresso_Core()
+			EE_Load_Espresso_Core::instance(
+				new EE_Activation_Manager(
+					EE_Maintenance_Mode::instance()
+				)
+			)
 		);
 		$this->_request_stack->handle_request(
-			new EE_Request( $_GET, $_POST, $_COOKIE ),
-			new EE_Response()
+			EE_Bootstrap::get_request(),
+			EE_Bootstrap::get_response()
 		);
 		$this->_request_stack->handle_response();
+	}
+
+
+
+	/**
+	 * get_request
+	 *
+	 * @return \EE_Request
+	 */
+	public static function get_request() {
+		return new \EE_Request( $_GET, $_POST, $_COOKIE );
+	}
+
+
+
+	/**
+	 * get_response
+	 *
+	 * @return \EE_Response
+	 */
+	public static function get_response() {
+		return new \EE_Response();
 	}
 
 
@@ -111,7 +138,6 @@ class EE_Bootstrap {
 			'FHEE__EE_Bootstrap__build_request_stack__stack_apps',
 			array(
 				'EE_Recommended_Versions',
-				'DetectActivationsUpgradesMigrations',
 				'EE_Alpha_Banner_Warning',
 				//'EE_Cache_Buster',
 				//'EE_Admin_Bar',
@@ -186,6 +212,18 @@ class EE_Bootstrap {
 	 */
 	public static function brew_espresso() {
 		do_action( 'AHEE__EE_Bootstrap__brew_espresso' );
+	}
+
+
+
+	/**
+	 * after_brew_espresso
+	 * runs at the end of the WP 'plugins_loaded' action at priority 999
+	 * core EE bootstrapping is already complete,
+	 * but this allows us to hook in and do things after other plugins are (hopefully) all loaded
+	 */
+	public static function after_brew_espresso() {
+		do_action( 'AHEE__EE_Bootstrap__after_brew_espresso' );
 	}
 
 
