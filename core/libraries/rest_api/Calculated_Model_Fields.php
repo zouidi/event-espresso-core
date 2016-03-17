@@ -1,10 +1,11 @@
 <?php
 namespace EventEspresso\core\libraries\rest_api;
+
 use EventEspresso\core\libraries\rest_api\controllers\Base;
-use EventEspresso\core\libraries\rest_api\Rest_Exception;
+
 /**
  *
- * Class Calculationshelpers
+ * Class Calculated_Model_Fields
  *
  * Class for defining which model fields can be calculated, and performing those calculations
  * as requested
@@ -31,8 +32,8 @@ class Calculated_Model_Fields {
 	/**
 	 * @param bool $refresh
 	 * @return array top-level-keys are model names (eg "Event")
-	 * next-level are the calculated field names AND method names on classes 
-	 * which perform calculations, values are the fully qualified classnames which do the calculationss
+	 * next-level are the calculated field names AND method names on classes
+	 * which perform calculations, values are the fully qualified classnames which do the calculations
 	 * These callbacks should accept as arguments:
 	 * the wpdb row results,
 	 * the WP_Request object,
@@ -116,13 +117,13 @@ class Calculated_Model_Fields {
 			$classname = $mapping[ $model->get_this_model_name() ][ $field_name ];
 			return call_user_func( array( $classname, $field_name ), $wpdb_row, $rest_request, $controller );
 		}
-		throw new Rest_Exception( 
+		throw new Rest_Exception(
 			'calculated_field_does_not_exist',
-			sprintf( 
-				__( 'There is no calculated field %1$s on resource %2$s', 'event_espresso' ), 
-				$field_name, 
-				$model->get_this_model_name() 
-			) 
+			sprintf(
+				__( 'There is no calculated field %1$s on resource %2$s', 'event_espresso' ),
+				$field_name,
+				$model->get_this_model_name()
+			)
 		);
 	}
 }
