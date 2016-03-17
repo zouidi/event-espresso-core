@@ -57,9 +57,9 @@ class EspressoCore {
 
 	/**
 	 * @access protected
-	 * @type   \EE_Activation_Manager $activations
+	 * @type   array $db_version_history
 	 */
-	protected $activations;
+	protected $db_version_history;
 
 
 
@@ -180,20 +180,23 @@ class EspressoCore {
 
 
 	/**
-	 * @return \EE_Activation_Manager
+	 * @return array
 	 */
-	public function activations() {
-		return $this->activations;
+	public function db_version_history() {
+		return $this->db_version_history;
 	}
 
 
 
 	/**
-	 * @param \EE_Activation_Manager $activations
+	 * @param array $db_version_history
 	 */
-	public function set_activations( \EE_Activation_Manager $activations ) {
-		$this->activations = $activations;
+	public function set_db_version_history( $db_version_history ) {
+		$this->db_version_history = $db_version_history;
 	}
+
+
+
 
 
 
