@@ -138,9 +138,8 @@ class EEH_Autoloader extends EEH_Base {
 	 * 	@return void
 	 */
 	private function _register_custom_autoloaders() {
-		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_CORE . 'interfaces' );
-		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_CORE );
 		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_INTERFACES, true );
+		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_CORE );
 		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_MODELS, true );
 		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_CLASSES );
 		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_FORM_SECTIONS, true );
