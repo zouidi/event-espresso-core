@@ -1,6 +1,8 @@
 <?php
+if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
+	exit( 'No direct script access allowed' );
+}
 
-if ( ! defined( 'EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
 /**
  *
  * EE_Load_Espresso_Core
@@ -23,7 +25,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * @access private
 	 * @type   EE_Load_Espresso_Core $_instance
 	 */
-	private static $_instance = null;
+	private static $_instance;
 
 	/**
 	 * @access protected
@@ -239,6 +241,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * reset too
 	 *
 	 * @param int $blog_id
+	 * @throws \EE_Error
 	 */
 	public static function switchToBlog( $blog_id = 0 ) {
 		\EE_Load_Espresso_Core::instance()->getEspressoCore( $blog_id );
@@ -253,6 +256,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	/**
 	 * @param int $blog_id
 	 * @return \EE_Registry
+	 * @throws \EE_Error
 	 */
 	public static function getRegistryForBlog( $blog_id = 0 ) {
 		\EE_Load_Espresso_Core::instance()->getEspressoCore( $blog_id );
@@ -264,6 +268,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	/**
 	 * @param int          $blog_id
 	 * @param \EE_Registry $registry
+	 * @throws \EE_Error
 	 */
 	public static function setRegistryForBlog( \EE_Registry $registry, $blog_id = 0 ) {
 		\EE_Load_Espresso_Core::instance()->getEspressoCore( $blog_id );
