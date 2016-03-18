@@ -36,14 +36,19 @@ class EE_CPT_Venue_Strategy {
 	 *    class constructor
 	 *
 	 * @access    public
-	 * @param 	array 	$arguments
-	 * @return \EE_CPT_Venue_Strategy
+	 * @param    array $arguments
+	 * @param          $CPT
 	 */
-	public function __construct( $arguments = array() ) {
-		$this->CPT = isset( $arguments['CPT'] ) ? $arguments['CPT'] : NULL;
-		$WP_Query = isset( $arguments['WP_Query'] ) ? $arguments['WP_Query'] : NULL;
+	public function __construct( $arguments = array(), $CPT ) {
+		if ( $arguments instanceof WP_Query ) {
+			$this->CPT = $CPT;
+			$WP_Query = $arguments;
+		} else {
+			$this->CPT = isset( $arguments['CPT'] ) ? $arguments['CPT'] : null;
+			$WP_Query = isset( $arguments['WP_Query'] ) ? $arguments['WP_Query'] : null;
+		}
 		if ( $WP_Query instanceof WP_Query && ! $WP_Query->is_tag ) {
-			$WP_Query->is_espresso_venue_single = is_singular() && isset( $WP_Query->query->post_type ) && $WP_Query->query->post_type == 'espresso_venues' ? TRUE : FALSE;
+			$WP_Query->is_espresso_venue_single = is_singular() && isset( $WP_Query->query->post_type ) && $WP_Query->query->post_type === 'espresso_venues' ? TRUE : FALSE;
 			$WP_Query->is_espresso_venue_archive = is_post_type_archive('espresso_venues') ? TRUE : FALSE;
 			$WP_Query->is_espresso_venue_taxonomy = is_tax( 'espresso_venue_categories' ) ? TRUE : FALSE;
 		}
@@ -58,7 +63,7 @@ class EE_CPT_Venue_Strategy {
 	 * @access    public
 	 * @param          $posts
 	 * @param WP_Query $wp_query
-	 * @return    void
+	 * @return    array
 	 */
 	public function the_posts( $posts, WP_Query $wp_query) {
 		// automagically load the EEH_Venue_View helper so that it's functions are available
@@ -67,7 +72,7 @@ class EE_CPT_Venue_Strategy {
 			EE_Registry::instance()->load_helper( 'Maps' );
 			EEH_Maps::espresso_google_map_js();
 		}
-		remove_filter( 'the_posts', array( $this, 'the_posts' ), 1, 2 );
+		remove_filter( 'the_posts', array( $this, 'the_posts' ), 1 );
 		return $posts;
 	}
 
