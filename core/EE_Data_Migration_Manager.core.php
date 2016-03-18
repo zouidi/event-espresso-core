@@ -159,13 +159,25 @@ class EE_Data_Migration_Manager{
 			self::status_fatal_error
 			//note: status_no_more_migration_scripts doesn't apply
 		);
-		//make sure we've included the base migration script, because we may need the EE_DMS_Unknown_1_0_0 class
-		//to be defined, because right now it doesn't get autoloaded on its own
-		EE_Registry::instance()->load_core( 'Data_Migration_Class_Base', array(), TRUE );
-		EE_Registry::instance()->load_core( 'Data_Migration_Script_Base', array(), TRUE );
-		EE_Registry::instance()->load_core( 'DMS_Unknown_1_0_0', array(), TRUE );
-		EE_Registry::instance()->load_core( 'Data_Migration_Script_Stage', array(), TRUE );
-		EE_Registry::instance()->load_core( 'Data_Migration_Script_Stage_Table', array(), TRUE );
+	}
+
+
+
+	/**
+	 * _load_dms_classes
+	 */
+	protected function _load_dms_classes() {
+		static $loaded = false;
+		if ( ! $loaded ) {
+			//make sure we've included the base migration script, because we may need the EE_DMS_Unknown_1_0_0 class
+			//to be defined, because right now it doesn't get autoloaded on its own
+			EE_Registry::instance()->load_core( 'Data_Migration_Class_Base', array(), true );
+			EE_Registry::instance()->load_core( 'Data_Migration_Script_Base', array( $this ), true );
+			EE_Registry::instance()->load_core( 'DMS_Unknown_1_0_0', array(), true );
+			EE_Registry::instance()->load_core( 'Data_Migration_Script_Stage', array(), true );
+			EE_Registry::instance()->load_core( 'Data_Migration_Script_Stage_Table', array(), true );
+			$loaded = true;
+		}
 	}
 
 
@@ -204,6 +216,7 @@ class EE_Data_Migration_Manager{
 	 * @throws EE_Error
 	 */
 	private function _get_dms_class_from_wp_option($dms_option_name,$dms_option_value){
+		$this->_load_dms_classes();
 		$data_migration_data = maybe_unserialize($dms_option_value);
 		if(isset($data_migration_data['class']) && class_exists($data_migration_data['class'])){
 			$class = new $data_migration_data['class'];
@@ -227,6 +240,7 @@ class EE_Data_Migration_Manager{
 	 */
 	public function get_data_migrations_ran(){
 		if( ! $this->_data_migrations_ran ){
+			$this->_load_dms_classes();
 			//setup autoloaders for each of the scripts in there
 			$this->get_all_data_migration_scripts_available();
 			$data_migrations_options = $this->get_all_migration_script_options();//get_option(EE_Data_Migration_Manager::data_migrations_option_name,get_option('espresso_data_migrations',array()));
@@ -318,12 +332,28 @@ class EE_Data_Migration_Manager{
 	 */
 	public function parse_dms_classname($classname){
 		$matches = array();
-		preg_match('~EE_DMS_(.*)_([0-9]*)_([0-9]*)_([0-9]*)~',$classname,$matches);
-		if( ! $matches || ! (isset($matches[1]) && isset($matches[2]) && isset($matches[3]))){
-				throw new EE_Error(sprintf(__("%s is not a valid Data Migration Script. The classname should be like EE_DMS_w_x_y_z, where w is either 'Core' or the slug of an addon and x, y and z are numbers, ", "event_espresso"),$classname));
+		preg_match( '~EE_DMS_(.*)_([0-9]*)_([0-9]*)_([0-9]*)~', $classname, $matches );
+		if ( ! $matches || ! isset( $matches[1], $matches[2], $matches[3] ) ) {
+			throw new EE_Error(
+				sprintf(
+					__(
+						"%s is not a valid Data Migration Script. The classname should be like EE_DMS_w_x_y_z, where w is either 'Core' or the slug of an addon and x, y and z are numbers, ",
+						"event_espresso"
+					),
+					$classname
+				)
+			);
 		}
-		return array('slug'=>$matches[1],'major_version'=>intval($matches[2]),'minor_version'=>intval($matches[3]),'micro_version'=>intval($matches[4]));
+		return array(
+			'slug' => $matches[1],
+			'major_version' => intval( $matches[2] ),
+			'minor_version' => intval( $matches[3] ),
+			'micro_version' => intval( $matches[4] )
+		);
 	}
+
+
+
 	/**
 	 * Ensures that the option indicating the current DB version is set. This should only be
 	 * a concern when activating EE for the first time, THEORETICALLY.
@@ -369,6 +399,7 @@ class EE_Data_Migration_Manager{
 	 * @return EE_Data_Migration_Script_Base[]
 	 */
 	public function check_for_applicable_data_migration_scripts(){
+		$this->_load_dms_classes();
 		//get the option describing what options have already run
 		$scripts_ran = $this->get_data_migrations_ran();
 		//$scripts_ran = array('4.1.0.core'=>array('monkey'=>null));
@@ -496,7 +527,7 @@ class EE_Data_Migration_Manager{
 					//we should be good to allow them to exit maintenance mode now
 					EE_Maintenance_Mode::instance()->set_maintenance_level(intval(EE_Maintenance_Mode::level_0_not_in_maintenance));
 					//saving migrations ran should actually be unnecessary, but leaving in place just in case
-					//remember this migration was finished (even if we timeout initing db for core and plugins)
+					//remember this migration was finished (even if we timeout initializing db for core and plugins)
 					$this->_save_migrations_ran();
 					//make sure DB was updated AFTER we've recorded the migration was done
 					$this->initialize_db_for_enqueued_ee_plugins();
@@ -531,6 +562,7 @@ class EE_Data_Migration_Manager{
 				'message'=> $message
 			);
 		}
+		$init_dbs = false;
 		//ok so we definitely have a data migration script
 		try{
 			//how big of a bite do we want to take? Allow users to easily override via their wp-config
@@ -540,7 +572,6 @@ class EE_Data_Migration_Manager{
 			//do what we came to do!
 			$currently_executing_script->migration_step($step_size);
 			//can we wrap it up and verify default data?
-			$init_dbs = false;
 			switch($currently_executing_script->get_status()){
 				case EE_Data_Migration_Manager::status_continue:
 					$response_array = array(
@@ -702,6 +733,7 @@ class EE_Data_Migration_Manager{
 	 */
 	public function get_all_data_migration_scripts_available(){
 		if( ! $this->_data_migration_class_to_filepath_map){
+			$this->_load_dms_classes();
 			$this->_data_migration_class_to_filepath_map = array();
 			foreach($this->get_data_migration_script_folders() as $folder_path){
 				if($folder_path[count($folder_path-1)] != DS ){
@@ -722,7 +754,24 @@ class EE_Data_Migration_Manager{
 					//the slug of an addon or core
 					if( $slug != 'Core' ){
 						if( ! EE_Registry::instance()->get_addon_by_name( $slug ) ) {
-							EE_Error::doing_it_wrong(__FUNCTION__, sprintf( __( 'The data migration script "%s" migrates the "%s" data, but there is no EE addon with that name. There is only: %s. ', 'event_espresso' ),$classname,$slug,implode(",", array_keys( EE_Registry::instance()->get_addons_by_name() ) ) ), '4.3.0.alpha.019' );
+							EE_Error::doing_it_wrong(
+								__FUNCTION__,
+								sprintf(
+									__(
+										'The data migration script "%s" migrates the "%s" data, but there is no EE addon with that name. There is only: %s. ',
+										'event_espresso'
+									),
+									$classname,
+									$slug,
+									implode(
+										",",
+										array_keys(
+											EE_Registry::instance()->get_addons_by_name()
+										)
+									)
+								),
+								'4.3.0.alpha.019'
+							);
 						}
 					}
 					$this->_data_migration_class_to_filepath_map[$classname] = $file;
@@ -839,6 +888,7 @@ class EE_Data_Migration_Manager{
 		if( ! isset($properties_array['class'])){
 			throw new EE_Error(sprintf(__("Properties array  has no 'class' properties. Here's what it has: %s", "event_espresso"),implode(",",$properties_array)));
 		}
+		$this->_load_dms_classes();
 		$class_name = $properties_array['class'];
 		if( ! class_exists($class_name)){
 			throw new EE_Error(sprintf(__("There is no migration script named %s", "event_espresso"),$class_name));
@@ -948,10 +998,13 @@ class EE_Data_Migration_Manager{
 		}
 		update_option( self::db_init_queue_option_name, $queue );
 	}
+
+
+
 	/**
 	 * Calls EE_Addon::initialize_db_if_no_migrations_required() on each addon
 	 * specified in EE_Data_Migration_Manager::get_db_init_queue(), and if 'Core' is
-	 * in the queue, calls EE_System::initialize_db_if_no_migrations_required().
+	 * in the queue, calls EE_Activation_Manager::initialize_db_if_no_migrations_required().
 	 */
 	public function initialize_db_for_enqueued_ee_plugins() {
 //		EE_Registry::instance()->load_helper( 'Debug_Tools' );
@@ -967,15 +1020,14 @@ class EE_Data_Migration_Manager{
 				$verify_db = $this->database_needs_updating_to( $most_up_to_date_dms_migrates_to );
 			}
 			if( $plugin_slug == 'Core' ){
-				EE_System::instance()->initialize_db_if_no_migrations_required(
-						false,
-						$verify_db
-					);
+				EE_Activation_Manager::instance()->initialize_db_if_no_migrations_required(
+					false,
+					$verify_db
+				);
 			}else{
 				//just loop through the addons to make sure their database is setup
 				foreach( EE_Registry::instance()->addons as $addon ) {
 					if( $addon->name() == $plugin_slug ) {
-
 						$addon->initialize_db_if_no_migrations_required( $verify_db );
 						break;
 					}
