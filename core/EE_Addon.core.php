@@ -69,10 +69,10 @@ abstract class EE_Addon extends EE_Configurable {
 	protected $_addon_name = '';
 
 	/**
-	 * one of the DetectActivationsUpgradesMigrations::req_type_* constants
+	 * one of the EE_Activation_Manager::req_type_* constants
 	 * @type int $_req_type
 	 */
-	protected $_req_type = NULL;
+	protected $_req_type;
 
 	/**
 	 * page slug to be used when generating the "Settings" link on the WP plugin page
@@ -89,27 +89,12 @@ abstract class EE_Addon extends EE_Configurable {
 	 */
 	protected $_plugins_page_row = array();
 
-	/**
-	 * @access    protected
-	 * @type    EE_Request $_request
-	 */
-	protected $_request;
-
-	/**
-	 * @access    protected
-	 * @type    EE_Response $_response
-	 */
-	protected $_response;
 
 
 
 	/**
-	 * @param    \EE_Request  $request
-	 * @param    \EE_Response $response
 	 */
-	public function __construct( \EE_Request $request, \EE_Response $response ) {
-		$this->_request = $request;
-		$this->_response = $response;
+	public function __construct() {
 		add_action( 'AHEE__EE_System__load_controllers__load_admin_controllers', array( $this, 'admin_init' ) );
 	}
 
@@ -157,7 +142,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @param string $addon_name
 	 * @return boolean
 	 */
-	function set_name( $addon_name ) {
+	public function set_name( $addon_name ) {
 		return $this->_addon_name = $addon_name;
 	}
 
@@ -166,7 +151,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * Gets addon_name
 	 * @return string
 	 */
-	function name() {
+	public function name() {
 		return $this->_addon_name;
 	}
 
@@ -300,8 +285,9 @@ abstract class EE_Addon extends EE_Configurable {
 	 * Takes care of double-checking that we're not in maintenance mode, and then
 	 * initializing this addon's necessary initial data. This is called by default on new activations
 	 * and reactivations
+	 *
 	 * @param boolean $verify_schema whether to verify the database's schema for this addon, or just its data.
-	 * This is a resource-intensive job so we prefer to only do it when necessary
+	 *                               This is a resource-intensive job so we prefer to only do it when necessary
 	 * @return void
 	 */
 	public function initialize_db_if_no_migrations_required( $verify_schema = true ) {
@@ -474,7 +460,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * Used by EE_System to set the request type of this addon. Should not be used by addon developers
 	 * @param int $req_type
 	 */
-	function set_req_type( $req_type ) {
+	public function set_req_type( $req_type ) {
 		$this->_req_type = $req_type;
 	}
 
@@ -482,15 +468,15 @@ abstract class EE_Addon extends EE_Configurable {
 
 	/**
 	 * Returns the request type of this addon ie:
-	 *      DetectActivationsUpgradesMigrations::req_type_normal,
-	 *      DetectActivationsUpgradesMigrations::req_type_new_activation,
-	 *      DetectActivationsUpgradesMigrations::req_type_reactivation,
-	 *      DetectActivationsUpgradesMigrations::req_type_upgrade, or
-	 *      DetectActivationsUpgradesMigrations::req_type_downgrade
-	 * This is set by DetectActivationsUpgradesMigrations when it is checking for new install or upgrades
+	 *      EE_Activation_Manager::activation_type_none,
+	 *      EE_Activation_Manager::activation_type_new,
+	 *      EE_Activation_Manager::activation_type_reactivation,
+	 *      EE_Activation_Manager::activation_type_upgrade, or
+	 *      EE_Activation_Manager::activation_type_downgrade
+	 * This is set by EE_Activation_Manager when it is checking for new install or upgrades
 	 * of addons
 	 */
-	function detect_req_type() {
+	public function detect_req_type() {
 		if( ! $this->_req_type ){
 			$this->detect_activation_or_upgrade();
 		}
@@ -504,11 +490,13 @@ abstract class EE_Addon extends EE_Configurable {
 	 * Should only be called once per request
 	 * @return void
 	 */
-	function detect_activation_or_upgrade(){
+	public function detect_activation_or_upgrade(){
+
 		$activation_history_for_addon = $this->get_activation_history();
 
-		$request_type = DetectActivationsUpgradesMigrations::detect_req_type_given_activation_history(
-			$activation_history_for_addon, $this->get_activation_indicator_option_name(),
+		$request_type = EE_Activation_Manager::detect_activation_type_given_activation_history(
+			$activation_history_for_addon,
+			$this->get_activation_indicator_option_name(),
 			$this->version()
 		);
 
@@ -516,41 +504,43 @@ abstract class EE_Addon extends EE_Configurable {
 		$classname = get_class ($this );
 		switch( $request_type ){
 
-			case DetectActivationsUpgradesMigrations::req_type_new_activation:
+			case EE_Activation_Manager::activation_type_new:
 				do_action( "AHEE__{$classname}__detect_activations_or_upgrades__new_activation" );
 				do_action( "AHEE__EE_Addon__detect_activations_or_upgrades__new_activation", $this );
 				$this->new_install();
 				$this->update_list_of_installed_versions( $activation_history_for_addon );
 				break;
 
-			case DetectActivationsUpgradesMigrations::req_type_reactivation:
+			case EE_Activation_Manager::activation_type_reactivation:
 				do_action( "AHEE__{$classname}__detect_activations_or_upgrades__reactivation" );
 				do_action( "AHEE__EE_Addon__detect_activations_or_upgrades__reactivation", $this );
 				$this->reactivation();
 				$this->update_list_of_installed_versions( $activation_history_for_addon );
 				break;
 
-			case DetectActivationsUpgradesMigrations::req_type_upgrade:
+			case EE_Activation_Manager::activation_type_upgrade:
 				do_action( "AHEE__{$classname}__detect_activations_or_upgrades__upgrade" );
 				do_action( "AHEE__EE_Addon__detect_activations_or_upgrades__upgrade", $this );
 				$this->upgrade();
 				$this->update_list_of_installed_versions($activation_history_for_addon );
 				break;
 
-			case DetectActivationsUpgradesMigrations::req_type_downgrade:
+			case EE_Activation_Manager::activation_type_downgrade:
 				do_action( "AHEE__{$classname}__detect_activations_or_upgrades__downgrade" );
 				do_action( "AHEE__EE_Addon__detect_activations_or_upgrades__downgrade", $this );
 				$this->downgrade();
 				$this->update_list_of_installed_versions($activation_history_for_addon );
 				break;
 
-			case DetectActivationsUpgradesMigrations::req_type_normal:
+			case EE_Activation_Manager::activation_type_none:
 			default:
 				break;
 		}
 
 		do_action( "AHEE__{$classname}__detect_if_activation_or_upgrade__complete" );
 	}
+
+
 
 	/**
 	 * Updates the version history for this addon
@@ -576,7 +566,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * of this addon
 	 * @return string
 	 */
-	function get_activation_history_option_name(){
+	public function get_activation_history_option_name(){
 		return self::ee_addon_version_history_option_prefix . $this->name();
 	}
 
@@ -586,7 +576,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * Gets the wp option which stores the activation history for this addon
 	 * @return array
 	 */
-	function get_activation_history(){
+	public function get_activation_history(){
 		return get_option($this->get_activation_history_option_name(), NULL);
 	}
 
