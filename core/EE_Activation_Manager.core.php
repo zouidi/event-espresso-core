@@ -53,104 +53,201 @@ class EE_Activation_Manager {
 	 */
 	const addon_activation_history_option_prefix = 'ee_addon_activation_history_';
 
+	/**
+	 * option name for the array of data that tracks EE core db versions
+	 */
+	const db_version_option_name = 'espresso_db_update';
 
 	/**
-	 * Stores which type of request this is, and whether any type of activation is involved,
-	 * options being one of the above class constants starting with activation_type_*.
-	 * It can be a brand-new activation, a reactivation, an upgrade, a downgrade, or a normal request.
-	 *
-	 * @var int $activation_type
+	 * option name for the data that is temporarily set to indicate that this plugin was just activated
 	 */
-	private $activation_type;
+	const activation_indicator_option_name = 'ee_espresso_activation';
+
+
+
+	/**
+	 * @access private
+	 * @type   EE_Load_Espresso_Core $_instance
+	 */
+	private static $_instance;
+
+	/**
+	 * @access protected
+	 * @type   \EE_Maintenance_Mode $maintenanceMode
+	 */
+	protected $maintenanceMode;
+
+	/**
+	 * EspressoCore object for the current site
+	 *
+	 * @access protected
+	 * @type   EspressoCore $espressoCore
+	 */
+	protected $espressoCore;
+
+
+
+	/**
+	 * @singleton method used to instantiate class object
+	 * @access    public
+	 * @param \EE_Maintenance_Mode $maintenanceMode
+	 * @return \EE_Activation_Manager
+	 * @throws \EE_Error
+	 */
+	public static function instance( \EE_Maintenance_Mode $maintenanceMode = null ) {
+		// check if class object is instantiated
+		if ( ! self::$_instance instanceof EE_Activation_Manager ) {
+			if ( ! $maintenanceMode instanceof \EE_Maintenance_Mode ) {
+				throw new EE_Error(
+					__(
+						'A valid instance of the EE_Maintenance_Mode class is required to instantiate EE_Activation_Manager.',
+						'event_espresso'
+					)
+				);
+			}
+			self::$_instance = new self( $maintenanceMode );
+		}
+		return self::$_instance;
+	}
 
 
 
 	/**
 	 * EE_Activation_Manager constructor.
+	 *
+	 * @param \EE_Maintenance_Mode $maintenanceMode
 	 */
-	public function __construct() {
-		// detect whether install or upgrade
-		add_action(
-			'AHEE__EE_System__detect_activations_or_upgrades__begin',
-			array( $this, 'detect_if_activation_or_upgrade' ),
-			1
-		);
-		// allow addons to load first so that they can register autoloaders, set hooks for running DMS's, etc
-		add_action( 'AHEE__EE_Bootstrap__load_espresso_addons', array( $this, 'load_espresso_addons' ) );
-		// when an ee addon is activated, we want to call the core hook(s) again
-		// because the newly-activated addon didn't get a chance to run at all
-		add_action( 'activate_plugin', array( $this, 'load_espresso_addons' ), 10 );
+	private function __construct( \EE_Maintenance_Mode $maintenanceMode  ) {
+		$this->maintenanceMode = $maintenanceMode;
 		// detect whether install or upgrade
 		add_action(
 			'AHEE__EE_Bootstrap__detect_activations_or_upgrades',
 			array( $this, 'detect_activations_or_upgrades' ),
 			10
 		);
+		add_action( 'init', array( $this, 'perform_activations_upgrades_and_migrations' ), 3 );
 	}
 
 
 
 	/**
-	 * @return int
+	 * @param EspressoCore $espressoCore
 	 */
-	public function activation_type() {
-		return $this->activation_type;
+	public function setEspressoCore( $espressoCore ) {
+		$this->espressoCore = $espressoCore;
 	}
 
 
 
 	/**
-	 * @param int $activation_type
+	 * detect_activations_or_upgrades
+	 *
+	 * Checks for activation or upgrade of core first;
+	 * then also checks if any registered addons have been activated or upgraded
+	 * This is hooked into 'AHEE__EE_Bootstrap__detect_activations_or_upgrades'
+	 * which runs during the WP 'plugins_loaded' action at priority 3
+	 *
+	 * @access public
+	 * @return void
 	 */
-	public function set_activation_type( $activation_type ) {
-		$this->activation_type = $activation_type;
+	public function detect_activations_or_upgrades() {
+		do_action( 'AHEE__EE_System__detect_activations_or_upgrades__begin', $this );
+		// check if db has been updated, or if its a brand-new installation
+		$db_version_history = $this->get_db_version_history();
+		$activation_type = $this->detect_activation_type();
+		$this->process_activation_type( $activation_type, $db_version_history );
+		foreach ( $this->espressoCore->registry()->addons as $addon ) {
+			//detect the request type for that addon
+			$addon->detect_activation_or_upgrade();
+		}
 	}
 
 
 
 	/**
-	 * detect_if_activation_or_upgrade
+	 * get_db_version
+	 *
+	 * retrieves the data from the "espresso_db_update" option and sets it to the db_version
+	 *
+	 * @access public
+	 */
+	public function get_db_version_history() {
+		$db_version_history = $this->espressoCore->db_version_history();
+		if ( empty( $db_version_history ) ) {
+			$db_version_history = $this->fix_espresso_db_upgrade_option( $db_version_history );
+			$this->espressoCore->set_db_version_history( $db_version_history );
+		}
+		return $db_version_history;
+	}
+
+
+
+	/**
+	 * Detects if the current version indicated in the has existed in the list of
+	 * previously-installed versions of EE (espresso_db_update). Does NOT modify it (ie, no side-effect)
+	 *
+	 * @return int one of the constants on EE_Activation_Manager::activation_type_
+	 */
+	public function detect_activation_type() {
+		$activation_type = $this->espressoCore->registry()->request()->activation_type();
+		if ( is_int( $activation_type ) ) {
+			return $activation_type;
+		}
+		$activation_type = EE_Activation_Manager::detect_activation_type_given_activation_history(
+			$this->get_db_version_history(),
+			EE_Activation_Manager::activation_indicator_option_name,
+			EVENT_ESPRESSO_VERSION
+		);
+		$this->espressoCore->registry()->request()->set_activation_type( $activation_type );
+		return $activation_type;
+	}
+
+
+
+	/**
+	 * process_activation_type
 	 *
 	 * Takes care of detecting whether this is a brand new install or code upgrade,
 	 * and either setting up the DB or setting up maintenance mode etc.
 	 *
 	 * @access public
+	 * @param  int   $activation_type
+	 * @param  array $db_version_history
 	 */
-	public function detect_if_activation_or_upgrade() {
+	public function process_activation_type( $activation_type, $db_version_history ) {
 		do_action( 'AHEE__EE_System___detect_if_activation_or_upgrade__begin' );
 		// load M-Mode class
-		\EE_Registry::instance()->load_core( 'Maintenance_Mode' );
-		// check if db has been updated, or if its a brand-new installation
-		$espresso_db_update = $this->fix_espresso_db_upgrade_option();
-		$request_type = $this->detect_activation_type( $espresso_db_update );
+		$this->espressoCore->registry()->load_core( 'Maintenance_Mode' );
 		// load activation helper if need be
-		if ( $request_type != EE_Activation_Manager::activation_type_none ) {
-			\EE_Registry::instance()->load_helper( 'Activation' );
+		if ( $activation_type !== EE_Activation_Manager::activation_type_none ) {
+			$this->espressoCore->registry()->load_helper( 'Activation' );
+			// do NOT proceed with regular application execution because we are performing some type of activation
+			add_filter( 'FHEE__EE_System__brew_espresso', '__return_false' );
 		}
-		switch ( $request_type ) {
+		switch ( $activation_type ) {
 
 			case EE_Activation_Manager::activation_type_new:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__new_activation' );
-				$this->_handle_core_version_change( $espresso_db_update );
+				$this->_handle_core_version_change( $db_version_history );
 				break;
 
 			case EE_Activation_Manager::activation_type_reactivation:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__reactivation' );
-				$this->_handle_core_version_change( $espresso_db_update );
+				$this->_handle_core_version_change( $db_version_history );
 				break;
 
 			case EE_Activation_Manager::activation_type_upgrade:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__upgrade' );
 				//migrations may be required now that we've upgraded
-				\EE_Maintenance_Mode::instance()->set_maintenance_mode_if_db_old();
-				$this->_handle_core_version_change( $espresso_db_update );
+				$this->maintenanceMode->set_maintenance_mode_if_db_old();
+				$this->_handle_core_version_change( $db_version_history );
 				break;
 
 			case EE_Activation_Manager::activation_type_downgrade:
 				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__downgrade' );
 				//its possible migrations are no longer required
-				\EE_Maintenance_Mode::instance()->set_maintenance_mode_if_db_old();
-				$this->_handle_core_version_change( $espresso_db_update );
+				$this->maintenanceMode->set_maintenance_mode_if_db_old();
+				$this->_handle_core_version_change( $db_version_history );
 				break;
 
 			case EE_Activation_Manager::activation_type_none:
@@ -166,10 +263,10 @@ class EE_Activation_Manager {
 	 * Updates the list of installed versions and sets hooks for
 	 * initializing the database later during the request
 	 *
-	 * @param array $espresso_db_update
+	 * @param array $db_version_history
 	 */
-	protected function _handle_core_version_change( $espresso_db_update ) {
-		$this->update_list_of_installed_versions( $espresso_db_update );
+	protected function _handle_core_version_change( $db_version_history ) {
+		$this->update_list_of_installed_versions( $db_version_history );
 		//get ready to verify the DB is ok (provided we aren't in maintenance mode, of course)
 		add_action(
 			'AHEE__EE_System__perform_activations_upgrades_and_migrations',
@@ -184,31 +281,31 @@ class EE_Activation_Manager {
 	 * information about what versions of EE have been installed and activated,
 	 * NOT necessarily the state of the database
 	 *
-	 * @param null $espresso_db_update
+	 * @param array() $db_version_history
 	 * @internal param array $espresso_db_update_value the value of the WordPress option. If not supplied, fetches it from the options table
 	 * @return array the correct value of 'espresso_db_upgrade', after saving it, if it needed correction
 	 */
-	private function fix_espresso_db_upgrade_option( $espresso_db_update = null ) {
-		do_action( 'FHEE__EE_System__manage_fix_espresso_db_upgrade_option__begin', $espresso_db_update );
-		if ( ! $espresso_db_update ) {
-			$espresso_db_update = get_option( 'espresso_db_update' );
+	private function fix_espresso_db_upgrade_option( $db_version_history = null ) {
+		do_action( 'FHEE__EE_System__manage_fix_espresso_db_upgrade_option__begin', $db_version_history );
+		if ( empty( $db_version_history ) ) {
+			$db_version_history = get_option( EE_Activation_Manager::db_version_option_name );
 		}
 		// check that option is an array
-		if ( ! is_array( $espresso_db_update ) ) {
+		if ( ! is_array( $db_version_history ) ) {
 			// if option is FALSE, then it never existed
-			if ( $espresso_db_update === false ) {
+			if ( $db_version_history === false ) {
 				// make $espresso_db_update an array and save option with autoload OFF
-				$espresso_db_update = array();
-				add_option( 'espresso_db_update', $espresso_db_update, '', 'no' );
+				$db_version_history = array();
+				add_option( EE_Activation_Manager::db_version_option_name, $db_version_history, '', 'no' );
 			} else {
 				// option is NOT FALSE but also is NOT an array, so make it an array and save it
-				$espresso_db_update = array( $espresso_db_update => array() );
-				update_option( 'espresso_db_update', $espresso_db_update );
+				$db_version_history = array( $db_version_history => array() );
+				update_option( EE_Activation_Manager::db_version_option_name, $db_version_history );
 			}
 		} else {
 			$corrected_db_update = array();
 			//if IS an array, but is it an array where KEYS are version numbers, and values are arrays?
-			foreach ( $espresso_db_update as $should_be_version_string => $should_be_array ) {
+			foreach ( $db_version_history as $should_be_version_string => $should_be_array ) {
 				if ( is_int( $should_be_version_string ) && ! is_array( $should_be_array ) ) {
 					//the key is an int, and the value IS NOT an array
 					//so it must be numerically-indexed, where values are versions installed...
@@ -220,112 +317,35 @@ class EE_Activation_Manager {
 					$corrected_db_update[ $should_be_version_string ] = $should_be_array;
 				}
 			}
-			$espresso_db_update = $corrected_db_update;
-			update_option( 'espresso_db_update', $espresso_db_update );
+			$db_version_history = $corrected_db_update;
+			update_option( EE_Activation_Manager::db_version_option_name, $db_version_history );
 		}
-		do_action( 'FHEE__EE_System__manage_fix_espresso_db_upgrade_option__complete', $espresso_db_update );
-		return $espresso_db_update;
+		do_action( 'FHEE__EE_System__manage_fix_espresso_db_upgrade_option__complete', $db_version_history );
+		return $db_version_history;
 	}
 
-
-
-	/**
-	 * Does the traditional work of setting up the plugin's database and adding default data.
-	 * If migration script/process did not exist, this is what would happen on every activation/reactivation/upgrade.
-	 * NOTE: if we're in maintenance mode (which would be the case if we detect there are data
-	 * migration scripts that need to be run and a version change happens), enqueues core for database initialization,
-	 * so that it will be done when migrations are finished
-	 *
-	 * @param boolean $initialize_addons_too if true, we double-check addons' database tables etc too;
-	 *                                       however,
-	 * @param boolean $verify_db_schema      if true will re-check the database tables have the correct schema.
-	 *                                       This is a resource-intensive job so only do it when necessary
-	 * @return void
-	 */
-	public function initialize_db_if_no_migrations_required( $initialize_addons_too = false, $verify_db_schema = true ) {
-		$request_type = $this->detect_activation_type();
-		//only initialize system if we're not in maintenance mode.
-		if ( \EE_Maintenance_Mode::instance()->level() != \EE_Maintenance_Mode::level_2_complete_maintenance ) {
-			update_option( 'ee_flush_rewrite_rules', true );
-			if ( $verify_db_schema ) {
-				\EEH_Activation::initialize_db_and_folders();
-			}
-			\EEH_Activation::initialize_db_content();
-			\EEH_Activation::system_initialization();
-			if ( $initialize_addons_too ) {
-				$this->initialize_addons();
-			}
-		} else {
-			\EE_Data_Migration_Manager::instance()->enqueue_db_initialization_for( 'Core' );
-		}
-		if ( $request_type == EE_Activation_Manager::activation_type_new
-		     || $request_type == EE_Activation_Manager::activation_type_reactivation
-		     || $request_type == EE_Activation_Manager::activation_type_upgrade
-		) {
-			add_action( 'AHEE__EE_System__load_CPTs_and_session__start', array( $this, 'redirect_to_about_ee' ), 9 );
-		}
-	}
-
-
-
-	/**
-	 * Initializes the db for all registered addons
-	 */
-	public function initialize_addons() {
-		//foreach registered addon, make sure its db is up-to-date too
-		foreach ( \EE_Registry::instance()->addons as $addon ) {
-			$addon->initialize_db_if_no_migrations_required();
-		}
-	}
 
 
 
 	/**
 	 * Adds the current code version to the saved wp option which stores a list of all ee versions ever installed.
 	 *
-	 * @param    array  $version_history
+	 * @param    array $db_version_history
 	 * @param    string $current_version_to_add version to be added to the version history
 	 * @return    boolean success as to whether or not this option was changed
 	 */
-	public function update_list_of_installed_versions( $version_history = null, $current_version_to_add = null ) {
-		if ( ! $version_history ) {
-			$version_history = $this->fix_espresso_db_upgrade_option( $version_history );
-		}
-		if ( $current_version_to_add == null ) {
-			$current_version_to_add = espresso_version();
-		}
-		$version_history[ $current_version_to_add ][] = date( 'Y-m-d H:i:s', time() );
-		// re-save
-		return update_option( 'espresso_db_update', $version_history );
-	}
-
-
-
-	/**
-	 * Detects if the current version indicated in the has existed in the list of
-	 * previously-installed versions of EE (espresso_db_update). Does NOT modify it (ie, no side-effect)
-	 *
-	 * @param array $espresso_db_update array from the wp option stored under the name 'espresso_db_update'.
-	 *                                  If not supplied, fetches it from the options table.
-	 *                                  Also, caches its result so later parts of the code can also know whether there's been an
-	 *                                  update or not. This way we can add the current version to espresso_db_update,
-	 *                                  but still know if this is a new install or not
-	 * @return int one of the constants on EE_Activation_Manager::activation_type_
-	 */
-	public function detect_activation_type( $espresso_db_update = null ) {
-		if ( $this->activation_type() === null ) {
-			$espresso_db_update = ! empty( $espresso_db_update )
-				? $espresso_db_update
-				: $this->fix_espresso_db_upgrade_option();
-			$this->set_activation_type(
-				$this->detect_activation_type_given_activation_history(
-					$espresso_db_update,
-					'ee_espresso_activation',
-					espresso_version()
-				)
-			);
-		}
-		return $this->activation_type();
+	protected function update_list_of_installed_versions( $db_version_history = null, $current_version_to_add = null ) {
+		// check db version history is set
+		$db_version_history = ! empty( $db_version_history )
+			? $db_version_history
+			: $this->get_db_version_history();
+		// check current version is set
+		$current_version_to_add = ! empty( $current_version_to_add )
+			? $current_version_to_add
+			: EVENT_ESPRESSO_VERSION;
+		// add this version and save
+		$db_version_history[ $current_version_to_add ][] = date( 'Y-m-d H:i:s', time() );
+		return update_option( EE_Activation_Manager::db_version_option_name, $db_version_history );
 	}
 
 
@@ -418,12 +438,12 @@ class EE_Activation_Manager {
 					$times_activated = array( $times_activated );
 				}
 				foreach ( $times_activated as $an_activation ) {
-					if ( $an_activation != 'unknown-date'
+					if ( $an_activation !== 'unknown-date'
 					     && $an_activation
 					        > $most_recently_active_version_activation
 					) {
 						$most_recently_active_version = $version;
-						$most_recently_active_version_activation = $an_activation == 'unknown-date'
+						$most_recently_active_version_activation = $an_activation === 'unknown-date'
 							? '1970-01-01 00:00:00' : $an_activation;
 					}
 				}
@@ -442,15 +462,14 @@ class EE_Activation_Manager {
 	public function redirect_to_about_ee() {
 		$notices = \EE_Error::get_notices( false );
 		//if current user is an admin and it's not an ajax request
-		if ( \EE_Registry::instance()->CAP->current_user_can( 'manage_options', 'espresso_about_default' )
+		if ( $this->espressoCore->registry()->CAP->current_user_can( 'manage_options', 'espresso_about_default' )
 		     && ! ( defined( 'DOING_AJAX' ) && DOING_AJAX )
 		     && ! isset( $notices['errors'] )
 		) {
 			$query_params = array( 'page' => 'espresso_about' );
-			if ( $this->detect_activation_type() == EE_Activation_Manager::activation_type_new ) {
+			if ( $this->detect_activation_type() === EE_Activation_Manager::activation_type_new ) {
 				$query_params['new_activation'] = true;
-			}
-			if ( $this->detect_activation_type() == EE_Activation_Manager::activation_type_reactivation ) {
+			} else if ( $this->detect_activation_type() === EE_Activation_Manager::activation_type_reactivation ) {
 				$query_params['reactivation'] = true;
 			}
 			$url = add_query_arg( $query_params, admin_url( 'admin.php' ) );
@@ -460,6 +479,76 @@ class EE_Activation_Manager {
 	}
 
 
+
+	/**
+	 *    perform_activations_upgrades_and_migrations
+	 *
+	 * @access public
+	 * @return    void
+	 */
+	public function perform_activations_upgrades_and_migrations() {
+		//first check if we had previously attempted to setup EE's directories but failed
+		if ( EEH_Activation::upload_directories_incomplete() ) {
+			EEH_Activation::create_upload_directories();
+		}
+		do_action( 'AHEE__EE_System__perform_activations_upgrades_and_migrations', $this );
+	}
+
+
+
+	/**
+	 * Does the traditional work of setting up the plugin's database and adding default data.
+	 * If migration script/process did not exist, this is what would happen on every activation/reactivation/upgrade.
+	 * NOTE: if we're in maintenance mode (which would be the case if we detect there are data
+	 * migration scripts that need to be run and a version change happens), enqueues core for database initialization,
+	 * so that it will be done when migrations are finished
+	 *
+	 * @param boolean $initialize_addons_too if true, we double-check addons' database tables etc too;
+	 *                                       however,
+	 * @param boolean $verify_db_schema      if true will re-check the database tables have the correct schema.
+	 *                                       This is a resource-intensive job so only do it when necessary
+	 * @return void
+	 */
+	public function initialize_db_if_no_migrations_required(
+		$initialize_addons_too = false,
+		$verify_db_schema = true
+	) {
+		$this->detect_activation_type();
+		//only initialize system if we're not in maintenance mode.
+		if ( $this->maintenanceMode->level() !== \EE_Maintenance_Mode::level_2_complete_maintenance ) {
+			update_option( 'ee_flush_rewrite_rules', true );
+			if ( $verify_db_schema ) {
+				\EEH_Activation::initialize_db_and_folders();
+			}
+			\EEH_Activation::initialize_db_content();
+			\EEH_Activation::system_initialization();
+			if ( $initialize_addons_too ) {
+				$this->initialize_addons();
+			}
+		} else {
+			EE_Data_Migration_Manager::instance()->enqueue_db_initialization_for( 'Core' );
+		}
+		$activation_type = $this->espressoCore->registry()->request()->activation_type();
+		if (
+			$activation_type === EE_Activation_Manager::activation_type_new
+			|| $activation_type === EE_Activation_Manager::activation_type_upgrade
+			//|| $activation_type == EE_Activation_Manager::activation_type_reactivation
+		) {
+			add_action( 'AHEE__EE_System__load_CPTs_and_session__start', array( $this, 'redirect_to_about_ee' ), 9 );
+		}
+	}
+
+
+
+	/**
+	 * Initializes the db for all registered addons
+	 */
+	public function initialize_addons() {
+		//foreach registered addon, make sure its db is up-to-date too
+		foreach ( $this->espressoCore->registry()->addons as $addon ) {
+			$addon->initialize_db_if_no_migrations_required();
+		}
+	}
 
 
 }
