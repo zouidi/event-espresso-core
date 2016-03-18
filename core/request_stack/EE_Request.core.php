@@ -52,11 +52,11 @@ class EE_Request {
 
 
 	/**
-	 * Stores which type of request this is,
-	 * options being one of the constants on DetectActivationsUpgradesMigrations starting with req_type_*.
+	 * Stores which type of request this is, and whether any type of activation is involved,
+	 * options being one of the above class constants starting with activation_type_*.
 	 * It can be a brand-new activation, a reactivation, an upgrade, a downgrade, or a normal request.
 	 *
-	 * @var int
+	 * @var int $activation_type
 	 */
 	private $activation_type;
 
