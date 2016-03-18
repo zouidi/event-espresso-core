@@ -30,13 +30,13 @@ class EE_Bootstrap {
 	 * @access 	protected
 	 * @type 	EE_Request_Stack_Builder $_request_stack_builder
 	 */
-	protected $_request_stack_builder = null;
+	protected $_request_stack_builder;
 
 	/**
 	 * @access 	protected
 	 * @type 	EE_Request_Stack $_request_stack
 	 */
-	protected $_request_stack = null;
+	protected $_request_stack;
 
 
 
@@ -62,13 +62,16 @@ class EE_Bootstrap {
 		$this->load_autoloader();
 		$this->set_autoloaders_for_required_files();
 		$this->_request_stack_builder = $this->build_request_stack();
-		$this->_request_stack = $this->_request_stack_builder->resolve(
-			EE_Load_Espresso_Core::instance(
-				new EE_Activation_Manager(
+		try {
+			$espressoCore = EE_Load_Espresso_Core::instance(
+				EE_Activation_Manager::instance(
 					EE_Maintenance_Mode::instance()
 				)
-			)
-		);
+			);
+		} catch ( Exception $e ) {
+			EE_Error::add_error( $e->getMessage(), __FILE__, __FUNCTION__, __LINE__ );
+		}
+		$this->_request_stack = $this->_request_stack_builder->resolve( $espressoCore );
 		$this->_request_stack->handle_request(
 			EE_Bootstrap::get_request(),
 			EE_Bootstrap::get_response()
@@ -139,8 +142,7 @@ class EE_Bootstrap {
 			array(
 				'EE_Recommended_Versions',
 				'EE_Alpha_Banner_Warning',
-				//'EE_Cache_Buster',
-				//'EE_Admin_Bar',
+				'EE_Request_Logger',
 			)
 		);
 		// load middleware onto stack : FILO (First In Last Out)
