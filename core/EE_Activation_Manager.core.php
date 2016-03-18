@@ -12,8 +12,8 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  *
  * @package       Event Espresso
  * @subpackage    core
- * @author        Brent Christensen
- * @since         $VID:$
+ * @author        Michael Nelson, Brent Christensen
+ * @since         4.8.36.rc.024
  *
  */
 class EE_Activation_Manager {
@@ -149,6 +149,7 @@ class EE_Activation_Manager {
 	 *
 	 * @access public
 	 * @return void
+	 * @throws \EE_Error
 	 */
 	public function detect_activations_or_upgrades() {
 		do_action( 'AHEE__EE_System__detect_activations_or_upgrades__begin', $this );
@@ -213,6 +214,7 @@ class EE_Activation_Manager {
 	 * @access public
 	 * @param  int   $activation_type
 	 * @param  array $db_version_history
+	 * @throws \EE_Error
 	 */
 	public function process_activation_type( $activation_type, $db_version_history ) {
 		do_action( 'AHEE__EE_System___detect_if_activation_or_upgrade__begin' );
@@ -462,9 +464,9 @@ class EE_Activation_Manager {
 	public function redirect_to_about_ee() {
 		$notices = \EE_Error::get_notices( false );
 		//if current user is an admin and it's not an ajax request
-		if ( $this->espressoCore->registry()->CAP->current_user_can( 'manage_options', 'espresso_about_default' )
-		     && ! ( defined( 'DOING_AJAX' ) && DOING_AJAX )
+		if ( ! ( defined( 'DOING_AJAX' ) && DOING_AJAX )
 		     && ! isset( $notices['errors'] )
+		     && $this->espressoCore->registry()->CAP->current_user_can( 'manage_options', 'espresso_about_default' )
 		) {
 			$query_params = array( 'page' => 'espresso_about' );
 			if ( $this->detect_activation_type() === EE_Activation_Manager::activation_type_new ) {
@@ -508,6 +510,7 @@ class EE_Activation_Manager {
 	 * @param boolean $verify_db_schema      if true will re-check the database tables have the correct schema.
 	 *                                       This is a resource-intensive job so only do it when necessary
 	 * @return void
+	 * @throws \EE_Error
 	 */
 	public function initialize_db_if_no_migrations_required(
 		$initialize_addons_too = false,
