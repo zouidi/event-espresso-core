@@ -1,26 +1,12 @@
 <?php if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
 /**
- *
- * Event Espresso
- *
- * Event Registration and Ticketing Management Plugin for WordPress
- *
- * @ package			Event Espresso
- * @ author			Seth Shoultes
- * @ copyright		(c) 2008-2011 Event Espresso  All Rights Reserved.
- * @ license			http://eventespresso.com/support/terms-conditions/   * see Plugin Licensing *
- * @ link					http://www.eventespresso.com
- * @ version		 	$VID:$
- *
- * ------------------------------------------------------------------------
- *
  * EE_Maintenance_Mode Class
  *
  * Super Duper Class Description
  *
  * @package			Event Espresso
  * @subpackage		core
- * @author				Michael Nelson
+ * @author			Michael Nelson
  *
  * ------------------------------------------------------------------------
  */
@@ -47,22 +33,15 @@ class EE_Maintenance_Mode {
 	 * the name of the option which stores the current level of maintenance mode
 	 */
 	const option_name_maintenance_mode = 'ee_maintenance_mode';
+
+
+
    /**
      * 	EE_Maintenance_Mode Object
      * 	@var EE_Maintenance_Mode $_instance
 	 * 	@access 	private
      */
 	private static $_instance = NULL;
-
-	/**
-	 * 	EE_Registry Object
-	 *	@var 	EE_Registry	$EE
-	 * 	@access 	protected
-	 */
-	protected $EE = NULL;
-
-
-
 
 
 
