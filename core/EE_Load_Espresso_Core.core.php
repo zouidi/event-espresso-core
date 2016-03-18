@@ -120,6 +120,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * @param 	EE_Request 	$request
 	 * @param 	EE_Response $response
 	 * @return 	EE_Response
+	 * @throws \EE_Error
 	 */
 	public function handle_request( EE_Request $request, EE_Response $response ) {
 		$this->initializeEspressoCore( $request, $response );
@@ -132,6 +133,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * @param    EE_Request  $request
 	 * @param    EE_Response $response
 	 * @return void
+	 * @throws \EE_Error
 	 */
 	protected function initializeEspressoCore( EE_Request $request, EE_Response $response ) {
 		$this->espressoCore->set_request( $request );
