@@ -1,5 +1,5 @@
 <?php
-namespace EventEspresso\core\services;
+namespace EventEspresso\Core\Services;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
@@ -51,14 +51,15 @@ class adminToolbarItems {
 	/**
 	 *  espresso_toolbar_items
 	 *
-	 * @access    public
-	 * @param  \WP_Admin_bar $admin_bar
+	 * @access public
+	 * @param  \WP_Admin_Bar $admin_bar
+	 * @throws \EE_Error
 	 */
-	public function addToolbarItems( \WP_Admin_bar $admin_bar ) {
+	public function addToolbarItems( \WP_Admin_Bar $admin_bar ) {
 		// if in full M-Mode, or its an AJAX request, or user is NOT an admin
 		if (
 			defined( 'DOING_AJAX' )
-			|| $this->maintenanceMode->level() == \EE_Maintenance_Mode::level_2_complete_maintenance
+			|| $this->maintenanceMode->level() === \EE_Maintenance_Mode::level_2_complete_maintenance
 		    || ! $this->registry->CAP->current_user_can( 'ee_read_ee', 'ee_admin_bar_menu_top_level' )
 		) {
 			return;
@@ -129,7 +130,7 @@ class adminToolbarItems {
 				)
 			);
 		}
-		if ( is_single() && ( get_post_type() == 'espresso_events' ) ) {
+		if ( is_single() && ( get_post_type() === 'espresso_events' ) ) {
 			//Current post
 			global $post;
 			if ( $this->registry->CAP->current_user_can(
