@@ -40,6 +40,9 @@ class EE_Bootstrap {
 
 
 
+	/**
+	 * EE_Bootstrap constructor.
+	 */
 	public function __construct() {
 		// construct request stack and run middleware apps as soon as all WP plugins are loaded
 		add_action( 'plugins_loaded', array( $this, 'run_request_stack' ), 0 );
@@ -70,13 +73,16 @@ class EE_Bootstrap {
 			);
 		} catch ( Exception $e ) {
 			EE_Error::add_error( $e->getMessage(), __FILE__, __FUNCTION__, __LINE__ );
+			$espressoCore = null;
 		}
-		$this->_request_stack = $this->_request_stack_builder->resolve( $espressoCore );
-		$this->_request_stack->handle_request(
-			EE_Bootstrap::get_request(),
-			EE_Bootstrap::get_response()
-		);
-		$this->_request_stack->handle_response();
+		if ( $espressoCore instanceof EE_Load_Espresso_Core ) {
+			$this->_request_stack = $this->_request_stack_builder->resolve( $espressoCore );
+			$this->_request_stack->handle_request(
+				EE_Bootstrap::get_request(),
+				EE_Bootstrap::get_response()
+			);
+			$this->_request_stack->handle_response();
+		}
 	}
 
 
