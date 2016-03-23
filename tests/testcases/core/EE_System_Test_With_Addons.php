@@ -83,7 +83,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase{
 		//now check for activations/upgrades in addons
 
 		EE_System::reset();
-		$this->assertEquals(EE_System::req_type_new_activation,$this->_addon->detect_req_type());
+		$this->assertEquals(EE_Activation_Manager::activation_type_new,$this->_addon->detect_req_type());
 		$this->assertEquals($times_its_new_install_hook_fired_before + 1, $wp_actions["AHEE__{$this->_addon_classname}__new_install"]);
 		$this->assertWPOptionDoesNotExist($this->_addon->get_activation_indicator_option_name());
 		//now we also want to check that the addon will have created the necessary table
@@ -118,9 +118,9 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase{
 		$this->assertTableDoesNotExist('esp_new_addon_thing');
 
 		EE_System::reset();
-		$this->assertEquals( EE_System::req_type_new_activation, EE_System::instance()->detect_req_type() );
+		$this->assertEquals( EE_Activation_Manager::activation_type_new, EE_System::instance()->detect_req_type() );
 
-		$this->assertEquals(EE_System::req_type_new_activation,$this->_addon->detect_req_type());
+		$this->assertEquals(EE_Activation_Manager::activation_type_new,$this->_addon->detect_req_type());
 		$this->assertEquals($times_addon_new_install_hook_fired + 1, $wp_actions["AHEE__{$this->_addon_classname}__new_install"]);
 		$this->assertEquals( $times_core_new_install_hook_fired + 1, $wp_actions[ 'AHEE__EE_System__detect_if_activation_or_upgrade__new_activation' ] );
 		$this->assertWPOptionDoesNotExist($this->_addon->get_activation_indicator_option_name());
@@ -164,7 +164,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase{
 
 		//now check for activations/upgrades in addons
 		EE_System::reset();
-		$this->assertEquals(EE_System::req_type_upgrade,$this->_addon->detect_req_type());
+		$this->assertEquals(EE_Activation_Manager::activation_type_upgrade,$this->_addon->detect_req_type());
 		$this->assertEquals($times_its_new_install_hook_fired_before + 1, $wp_actions["AHEE__{$this->_addon_classname}__upgrade"]);
 		//the fact that there's an applicable DMS means the site should be placed in maintenance mode
 		$this->assertEquals(EE_Maintenance_Mode::level_2_complete_maintenance,  EE_Maintenance_Mode::instance()->level());
@@ -196,7 +196,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase{
 		$this->assertEquals(EE_Maintenance_Mode::level_0_not_in_maintenance,  EE_Maintenance_Mode::instance()->level());
 		//now check for activations/upgrades in addons
 		EE_System::reset();
-		$this->assertEquals(EE_System::req_type_upgrade,$this->_addon->detect_req_type());
+		$this->assertEquals(EE_Activation_Manager::activation_type_upgrade,$this->_addon->detect_req_type());
 		$this->assertEquals($times_its_new_install_hook_fired_before + 1, $wp_actions["AHEE__{$this->_addon_classname}__upgrade"]);
 		//the fact that there's an applicable DMS means the site should be placed in maintenance mode
 		$this->assertEquals(EE_Maintenance_Mode::level_2_complete_maintenance,  EE_Maintenance_Mode::instance()->level());
@@ -223,7 +223,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase{
 		$times_its_new_install_hook_fired_before = isset($wp_actions["AHEE__{$this->_addon_classname}__reactivation"]) ? $wp_actions["AHEE__{$this->_addon_classname}__reactivation"] : 0;
 		//now check for activations/upgrades in addons
 		EE_System::reset();
-		$this->assertEquals(EE_System::req_type_reactivation,$this->_addon->detect_req_type());
+		$this->assertEquals(EE_Activation_Manager::activation_type_reactivation,$this->_addon->detect_req_type());
 		$this->assertEquals($times_its_new_install_hook_fired_before + 1, $wp_actions["AHEE__{$this->_addon_classname}__reactivation"]);
 		$this->assertEquals(EE_Maintenance_Mode::level_0_not_in_maintenance,  EE_Maintenance_Mode::instance()->level());
 		$this->assertWPOptionDoesNotExist($this->_addon->get_activation_indicator_option_name());
@@ -260,7 +260,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase{
 		//now check for activations/upgrades in addons
 		EE_System::reset();
 		$this->assertEquals( EE_Maintenance_Mode::level_2_complete_maintenance, EE_Maintenance_Mode::instance()->level() );
-		$this->assertEquals( EE_System::req_type_new_activation,$this->_addon->detect_req_type() );
+		$this->assertEquals( EE_Activation_Manager::activation_type_new,$this->_addon->detect_req_type() );
 		$this->assertEquals( $times_reactivation_hook_fired_before + 1, isset( $wp_actions["AHEE__{$this->_addon_classname}__new_install"] ) ? $wp_actions["AHEE__{$this->_addon_classname}__new_install"] : 0 );
 		$this->assertArrayContains( 'New_Addon', EE_Data_Migration_Manager::instance()->get_db_initialization_queue() );
 		$this->assertWPOptionDoesNotExist( $this->_addon->get_activation_indicator_option_name() );
@@ -279,7 +279,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase{
 
 		//check for activations/upgrades again. It should be a normal request
 		EE_System::reset();
-		$this->assertEquals(EE_System::req_type_normal,$this->_addon->detect_req_type());
+		$this->assertEquals(EE_Activation_Manager::activation_type_none,$this->_addon->detect_req_type());
 		$this->assertEquals($times_reactivation_hook_fired_before + 1 , $wp_actions["AHEE__{$this->_addon_classname}__new_install"]);
 		$this->assertWPOptionDoesNotExist($this->_addon->get_activation_indicator_option_name());
 	}
@@ -309,7 +309,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase{
 		//now check for activations/upgrades in addons
 		EE_System::reset();
 		$this->assertEquals( EE_Maintenance_Mode::level_2_complete_maintenance, EE_Maintenance_Mode::instance()->level() );
-		$this->assertEquals(EE_System::req_type_upgrade,$this->_addon->detect_req_type());
+		$this->assertEquals(EE_Activation_Manager::activation_type_upgrade,$this->_addon->detect_req_type());
 		$this->assertEquals($times_reactivation_hook_fired_before + 1, isset( $wp_actions["AHEE__{$this->_addon_classname}__upgrade"] ) ? $wp_actions["AHEE__{$this->_addon_classname}__upgrade"] : 0);
 		$this->assertArrayContains( 'New_Addon', EE_Data_Migration_Manager::instance()->get_db_initialization_queue() );
 		$addon_activation_history = $this->_addon->get_activation_history();
@@ -330,7 +330,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase{
 
 		//check for activations/upgrades again. It should be a normal request
 		EE_System::reset();
-		$this->assertEquals(EE_System::req_type_normal,$this->_addon->detect_req_type());
+		$this->assertEquals(EE_Activation_Manager::activation_type_none,$this->_addon->detect_req_type());
 		$this->assertEquals($times_reactivation_hook_fired_before + 1 , $wp_actions["AHEE__{$this->_addon_classname}__upgrade"]);
 		$this->assertWPOptionDoesNotExist($this->_addon->get_activation_indicator_option_name());
 	}
