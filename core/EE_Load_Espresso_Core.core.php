@@ -207,9 +207,13 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * @return void
 	 */
 	public function loadEspressoAddons() {
-		// set autoloaders for all of the classes implementing EEI_Plugin_API
-		// which provide helpers for EE plugin authors to more easily register certain components with EE.
-		EEH_Autoloader::instance()->register_autoloaders_for_each_file_in_folder( EE_LIBRARIES . 'plugin_api' );
+		try {
+			// set autoloaders for all of the classes implementing EEI_Plugin_API
+			// which provide helpers for EE plugin authors to more easily register certain components with EE.
+			EEH_Autoloader::instance()->register_autoloaders_for_each_file_in_folder( EE_LIBRARIES . 'plugin_api' );
+		} catch ( Exception $e ) {
+			EE_Error::add_error( $e->getMessage(), __FILE__, __FUNCTION__, __LINE__ );
+		}
 		//load and setup EE_Capabilities
 		$this->espressoCore->registry()->load_core( 'Capabilities' );
 		//caps need to be initialized on every request so that capability maps are set.
