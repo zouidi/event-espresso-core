@@ -1,7 +1,7 @@
 <?php
-if (!defined('EVENT_ESPRESSO_VERSION') )
+if (!defined('EVENT_ESPRESSO_VERSION') ) {
 	exit('NO direct script access allowed');
-
+}
 /**
  * EEH_Autoloader
  *
@@ -22,7 +22,7 @@ class EEH_Autoloader extends EEH_Base {
 	 * @var    $_instance
 	 * @access    private
 	 */
-	private static $_instance = null;
+	private static $_instance;
 
 	/**
 	* 	$_autoloaders
@@ -91,8 +91,7 @@ class EEH_Autoloader extends EEH_Base {
 	 * @throws \EE_Error
 	 */
 	public static function register_autoloader( $class_paths, $read_check = true, $debug = false ) {
-		$class_paths = is_array( $class_paths ) ? $class_paths : array( $class_paths );
-		foreach ( $class_paths as $class => $path ) {
+		foreach ( (array)$class_paths as $class => $path ) {
 			// don't give up! you gotta...
 			// get some class
 			if ( empty( $class )) {
@@ -214,7 +213,7 @@ class EEH_Autoloader extends EEH_Base {
 	 */
 	public static function register_autoloaders_for_each_file_in_folder( $folder, $recursive = false, $debug = false ){
 		// make sure last char is a /
-		$folder .= $folder[strlen($folder)-1] != DS ? DS : '';
+		$folder .= $folder[strlen($folder)-1] !== DS ? DS : '';
 		$class_to_filepath_map = array();
 		$exclude = array( 'index' );
 		//get all the files in that folder that end in php
@@ -225,7 +224,7 @@ class EEH_Autoloader extends EEH_Base {
 		}
 
 		foreach( $filepaths as $filepath ) {
-			if ( substr( $filepath, -4, 4 ) == '.php' ) {
+			if ( substr( $filepath, -4, 4 ) === '.php' ) {
 				$class_name = EEH_File::get_classname_from_filepath_with_standard_filename( $filepath );
 				if ( ! in_array( $class_name, $exclude )) {
 					$class_to_filepath_map [ $class_name ] = $filepath;
