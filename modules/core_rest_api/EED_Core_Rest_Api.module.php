@@ -11,14 +11,13 @@ if ( !defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @package			Event Espresso
  * @subpackage		eea-rest-api
  * @author          Mike Nelson
- *
- * ------------------------------------------------------------------------
  */
 class EED_Core_Rest_Api extends \EED_Module {
 
 	const ee_api_namespace = 'ee/v';
 	const ee_api_namespace_for_regex = 'ee\/v([^/]*)\/';
 	const saved_routes_option_names = 'ee_core_routes';
+
 	/**
 	 * string used in _links response bodies to make them globally unique.
 	 * @see http://v2.wp-api.org/extending/linking/
@@ -29,7 +28,7 @@ class EED_Core_Rest_Api extends \EED_Module {
 	 *
 	 * @var Calculated_Model_Fields
 	 */
-	protected static $_field_calculator = null;
+	protected static $_field_calculator;
 
 
 
@@ -46,8 +45,9 @@ class EED_Core_Rest_Api extends \EED_Module {
 	/**
 	 * 	set_hooks - for hooking into EE Core, other modules, etc
 	 *
-	 *  @access 	public
-	 *  @return 	void
+	 * @access 	public
+	 * @return 	void
+	 * @throws \EE_Error
 	 */
 	public static function set_hooks() {
 		self::set_hooks_both();
@@ -58,8 +58,9 @@ class EED_Core_Rest_Api extends \EED_Module {
 	/**
 	 * 	set_hooks_admin - for hooking into EE Admin Core, other modules, etc
 	 *
-	 *  @access 	public
-	 *  @return 	void
+	 * @access 	public
+	 * @return 	void
+	 * @throws \EE_Error
 	 */
 	public static function set_hooks_admin() {
 		self::set_hooks_both();
@@ -67,6 +68,11 @@ class EED_Core_Rest_Api extends \EED_Module {
 
 
 
+	/**
+	 * set_hooks_both - sets hooks for both set_hooks() and set_hooks_admin()
+	 *
+	 * @throws \EE_Error
+	 */
 	public static function set_hooks_both() {
 		add_action( 'AHEE__EE_System__after_brew_espresso', array( 'EED_Core_Rest_Api', 'maybe_load_basic_auth' ), 10 );
 		add_action( 'rest_api_init', array( 'EED_Core_Rest_Api', 'register_routes' ), 10 );
@@ -76,26 +82,39 @@ class EED_Core_Rest_Api extends \EED_Module {
 		EED_Core_Rest_Api::invalidate_cached_route_data_on_version_change();
 	}
 
+
+
 	/**
 	 * sets up hooks which only need to be included as part of REST API requests;
 	 * other requests like to the frontend or admin etc don't need them
+	 *
+	 * @throws \EE_Error
 	 */
 	public static function set_hooks_rest_api() {
 		//set hooks which account for changes made to the API
 		EED_Core_Rest_Api::_set_hooks_for_changes();
 	}
 
+
+
 	/**
 	 * public wrapper of _set_hooks_for_changes.
 	 * Loads all the hooks which make requests to old versions of the API
 	 * appear the same as they always did
+	 *
+	 * @throws \EE_Error
 	 */
 	public static function set_hooks_for_changes(){
 		self::_set_hooks_for_changes();
 	}
+
+
+
 	/**
 	 * Loads all the hooks which make requests to old versions of the API
 	 * appear the same as they always did
+	 *
+	 * @throws \EE_Error
 	 */
 	protected static function _set_hooks_for_changes() {
 		$folder_contents = EEH_File::get_contents_of_folders( array( EE_LIBRARIES . 'rest_api' . DS . 'changes' ), false );
@@ -133,14 +152,21 @@ class EED_Core_Rest_Api extends \EED_Module {
 				&& in_array( $_GET['action'], array( 'activate', 'activate-selected' ) )
 			)
 		) {
-			include_once EE_THIRD_PARTY . 'wp-api-basic-auth' . DS . 'basic-auth.php';
+			try {
+				include_once EE_THIRD_PARTY . 'wp-api-basic-auth' . DS . 'basic-auth.php';
+			} catch ( Exception $e ) {
+				EE_Error::add_error( $e->getMessage(), __FILE__, __FUNCTION__, __LINE__ );
+			}
 		}
 	}
+
 
 
 	/**
 	 * Filters the WP routes to add our EE-related ones. This takes a bit of time
 	 * so we actually prefer to only do it when an EE plugin is activated or upgraded
+	 *
+	 * @throws \EE_Error
 	 */
 	public static function register_routes() {
 		foreach( EED_Core_Rest_Api::get_ee_route_data() as $namespace => $relative_urls ) {
@@ -164,13 +190,18 @@ class EED_Core_Rest_Api extends \EED_Module {
 	 * Checks if there was a version change or something that merits invalidating the cached
 	 * route data. If so, invalidates the cached route data so that it gets refreshed
 	 * next time the WP API is used
+	 *
+	 * @throws \EE_Error
 	 */
 	public static function invalidate_cached_route_data_on_version_change() {
-		if( EE_Registry::instance()->request()->activation_type() != EE_Activation_Manager::activation_type_none ) {
+		if( EE_Registry::instance()->request()->activation_type() !== EE_Activation_Manager::activation_type_none ) {
 			EED_Core_Rest_Api::invalidate_cached_route_data();
 		}
 		foreach( EE_Registry::instance()->addons as $addon ){
-			if( $addon instanceof EE_Addon && $addon->detect_req_type() != EE_Activation_Manager::activation_type_none ) {
+			if(
+				$addon instanceof EE_Addon
+				&& $addon->detect_req_type() !== EE_Activation_Manager::activation_type_none
+			) {
 				EED_Core_Rest_Api::invalidate_cached_route_data();
 			}
 		}
@@ -186,10 +217,12 @@ class EED_Core_Rest_Api extends \EED_Module {
 
 	/**
 	 * Gets the EE route data
+	 *
 	 * @return array top-level key is the namespace, next-level key is the route and its value is array{
-	 * 	@type string|array $callback
-	 * 	@type string $methods
-	 * 	@type boolean $hidden_endpoint
+	 * @type string|array $callback
+	 * @type string $methods
+	 * @type boolean $hidden_endpoint
+	 * @throws \EE_Error
 	 * }
 	 */
 	public static function get_ee_route_data() {
@@ -204,7 +237,9 @@ class EED_Core_Rest_Api extends \EED_Module {
 	/**
 	 * Calculates all the EE routes and saves it to a wordpress option so we don't
 	 * need to calculate it on every request
+	 *
 	 * @return void
+	 * @throws \EE_Error
 	 */
 	public static function save_ee_routes() {
 		if( EE_Maintenance_Mode::instance()->models_can_query() ){
@@ -224,7 +259,9 @@ class EED_Core_Rest_Api extends \EED_Module {
 
 	/**
 	 * Gets all the route information relating to EE models
+	 *
 	 * @return array @see get_ee_route_data
+	 * @throws \EE_Error
 	 */
 	protected function _register_model_routes() {
 		EE_Registry::instance()->load_helper( 'Inflector' );
@@ -233,15 +270,13 @@ class EED_Core_Rest_Api extends \EED_Module {
 			EE_Registry::instance()->non_abstract_db_models
 		);
 		//let's not bother having endpoints for extra metas
-		unset($models_to_register['Extra_Meta']);
-		unset($models_to_register['Extra_Join']);
+		unset( $models_to_register['Extra_Meta'], $models_to_register['Extra_Join'] );
 		$model_routes = array( );
 		foreach( self::versions_served() as $version => $hidden_endpoint ) {
-
+			$ee_namespace = self::ee_api_namespace . $version;
 			foreach ( $models_to_register as $model_name => $model_classname ) {
 				$model = \EE_Registry::instance()->load_model( $model_name );
 				//yes we could just register one route for ALL models, but then they wouldn't show up in the index
-				$ee_namespace = self::ee_api_namespace . $version;
 				$plural_model_route = EEH_Inflector::pluralize_and_lower( $model_name );
 				$singular_model_route = $plural_model_route . '/(?P<id>\d+)' ;
 				$model_routes[ $ee_namespace ][ $plural_model_route ] = array(
@@ -473,6 +508,7 @@ class EED_Core_Rest_Api extends \EED_Module {
 	 *
 	 * @param array $route_data
 	 * @return array
+	 * @throws \EE_Error
 	 */
 	public static function hide_old_endpoints( $route_data ) {
 		foreach( EED_Core_Rest_Api::get_ee_route_data() as $namespace => $relative_urls ) {
@@ -541,12 +577,12 @@ class EED_Core_Rest_Api extends \EED_Module {
 		//for each version of core we have ever served:
 		foreach ( $versions_served_historically as $key_versioned_endpoint ) {
 			//if it's not above the current core version, and it's compatible with the current version of core
-			if( $key_versioned_endpoint == $latest_version ) {
+			if( $key_versioned_endpoint === $latest_version ) {
 				//don't hide the latest version in the index
 				$versions_served[ $key_versioned_endpoint ] = false;
 			} else if(
-				$key_versioned_endpoint < EED_Core_Rest_Api::core_version()
-				&& $key_versioned_endpoint >= $lowest_compatible_version
+				$key_versioned_endpoint >= $lowest_compatible_version
+				&& $key_versioned_endpoint < EED_Core_Rest_Api::core_version()
 			) {
 				//include, but hide, previous versions which are still supported
 				$versions_served[ $key_versioned_endpoint ] = true;
