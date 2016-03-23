@@ -68,6 +68,7 @@ class EED_Core_Rest_Api extends \EED_Module {
 
 
 	public static function set_hooks_both() {
+		add_action( 'AHEE__EE_System__after_brew_espresso', array( 'EED_Core_Rest_Api', 'maybe_load_basic_auth' ), 10 );
 		add_action( 'rest_api_init', array( 'EED_Core_Rest_Api', 'register_routes' ), 10 );
 		add_action( 'rest_api_init', array( 'EED_Core_Rest_Api', 'set_hooks_rest_api' ), 5 );
 		add_filter( 'rest_route_data', array( 'EED_Core_Rest_Api', 'hide_old_endpoints' ), 10, 2 );
@@ -115,6 +116,29 @@ class EED_Core_Rest_Api extends \EED_Module {
 
 
 	/**
+	 * If the WP API basic auth plugin isn't already loaded, load it now.
+	 * We want it for mobile apps. Just include the entire plugin also,
+	 * don't load the basic auth when a plugin is getting activated,
+	 * because it could be the basic auth plugin,
+	 * and it doesn't check if its methods are already defined,
+	 * which causes a fatal error
+	 */
+	public static function maybe_load_basic_auth() {
+		if (
+			! ( isset( $_GET['activate'] ) && $_GET['activate'] === 'true' )
+			&& ! function_exists( 'json_basic_auth_handler' )
+			&& ! function_exists( 'json_basic_auth_error' )
+			&& ! (
+				isset( $_GET['action'] )
+				&& in_array( $_GET['action'], array( 'activate', 'activate-selected' ) )
+			)
+		) {
+			include_once EE_THIRD_PARTY . 'wp-api-basic-auth' . DS . 'basic-auth.php';
+		}
+	}
+
+
+	/**
 	 * Filters the WP routes to add our EE-related ones. This takes a bit of time
 	 * so we actually prefer to only do it when an EE plugin is activated or upgraded
 	 */
@@ -142,11 +166,11 @@ class EED_Core_Rest_Api extends \EED_Module {
 	 * next time the WP API is used
 	 */
 	public static function invalidate_cached_route_data_on_version_change() {
-		if( EED_Core_Rest_Api::instance()->request->activation_type() != EE_System::req_type_normal ) {
+		if( EE_Registry::instance()->request()->activation_type() != EE_Activation_Manager::activation_type_none ) {
 			EED_Core_Rest_Api::invalidate_cached_route_data();
 		}
 		foreach( EE_Registry::instance()->addons as $addon ){
-			if( $addon instanceof EE_Addon && $addon->detect_req_type() != EE_System::req_type_normal ) {
+			if( $addon instanceof EE_Addon && $addon->detect_req_type() != EE_Activation_Manager::activation_type_none ) {
 				EED_Core_Rest_Api::invalidate_cached_route_data();
 			}
 		}
