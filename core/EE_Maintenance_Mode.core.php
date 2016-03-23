@@ -248,8 +248,9 @@ class EE_Maintenance_Mode {
 	 *
 	 * 	displays message on frontend of site notifying admin that EE has been temporarily placed into maintenance mode
 	 *
-	 *  @access 	public
-	 *  @return 	string
+	 * @access 	public
+	 * @return 	string
+	 * @throws \EE_Error
 	 */
 	public function display_maintenance_mode_notice() {
 		// check if M-mode is engaged and for EE shortcode
