@@ -1,19 +1,10 @@
-<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
+<?php
+if ( ! defined('EVENT_ESPRESSO_VERSION')) {
+	exit('No direct script access allowed');
+}
 /**
- * Event Espresso
- *
- * Event Registration and Management Plugin for WordPress
- *
- * @ package		Event Espresso
- * @ author			Seth Shoultes
- * @ copyright		(c) 2008-2011 Event Espresso  All Rights Reserved.
- * @ license		http://eventespresso.com/support/terms-conditions/   * see Plugin Licensing *
- * @ link			http://www.eventespresso.com
- * @ version		4.1
- *
- * ------------------------------------------------------------------------
- *
  * EE_Network_Config
+ *
  * This sets up the configuration object for items saved to the db using update_site_option (and retrieved using get_site_option).  On multi-site WP installs these options function as network wide options.  On single-site WP installs these options work the same as update_option and get_option.
  *
  * EE_Network_Config is assigned to the NET_CFG property on EE_Registry.
@@ -32,12 +23,12 @@ final class EE_Network_Config {
 	 * @var EE_Network_Config
 	 * @access  private
 	 */
-	private static $_instance = NULL;
+	private static $_instance;
 
 
 
 	/**
-	 * addons can add their specific network_confg objects to this property
+	 * addons can add their specific network_config objects to this property
 	 * @var EE_Config_Base[]
 	 */
 	public $addons;
@@ -52,13 +43,13 @@ final class EE_Network_Config {
 
 
 	/**
-	 *		@singleton method used to instantiate class object
-	 *		@access public
-	 *		@return EE_Network_Config instance
+	 * @singleton method used to instantiate class object
+	 * @access public
+	 * @return EE_Network_Config instance
 	 */
 	public static function instance() {
 		// check if class object is instantiated, and instantiated properly
-		if ( self::$_instance === NULL  or ! is_object( self::$_instance ) or ! ( self::$_instance instanceof EE_Network_Config )) {
+		if ( ! self::$_instance instanceof EE_Network_Config ) {
 			self::$_instance = new self();
 		}
 		return self::$_instance;
@@ -68,10 +59,9 @@ final class EE_Network_Config {
 
 
 	/**
-	 * 	class constructor
+	 * EE_Network_Config constructor
 	 *
 	 *  @access 	private
-	 *  @return 	void
 	 */
 	private function __construct() {
 		do_action( 'AHEE__EE_Network_Config__construct__begin',$this );
@@ -122,17 +112,19 @@ final class EE_Network_Config {
 
 
 	/**
-	 * 	update_config'
+	 * update_config
 	 *
-	 *  @access 	public
-	 *  @return 	boolean success
+	 * @access public
+	 * @param bool $add_success
+	 * @param bool $add_error
+	 * @return bool success
 	 */
-	public function update_config( $add_success = FALSE, $add_error = TRUE ) {
+	public function update_config( $add_success = false, $add_error = true ) {
 		do_action( 'AHEE__EE_Network_Config__update_config__begin',$this );
 		// compare existing settings with what's already saved'
 		$saved_config = $this->get_config();
 		// update
-		$saved = $saved_config == $this ? TRUE : update_site_option( 'ee_network_config', $this );
+		$saved = $saved_config == $this ? true : update_site_option( 'ee_network_config', $this );
 		do_action( 'AHEE__EE_Network_Config__update_config__end', $this, $saved );
 		// if config remains the same or was updated successfully
 		if ( $saved ) {
@@ -158,9 +150,7 @@ final class EE_Network_Config {
 	 *  @return 	array
 	 */
 	public function __sleep() {
-		return apply_filters( 'FHEE__EE_Network_Config__sleep',array(
-			'core',
-		) );
+		return (array)apply_filters( 'FHEE__EE_Network_Config__sleep', array( 'core' ) );
 	}
 
 } //end EE_Network_Config.
@@ -180,6 +170,9 @@ class EE_Network_Core_Config extends EE_Config_Base {
 
 
 
+	/**
+	 * EE_Network_Core_Config constructor.
+	 */
 	public function __construct() {
 		$this->site_license_key = NULL;
 	}
