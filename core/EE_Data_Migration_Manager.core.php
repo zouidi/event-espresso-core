@@ -179,6 +179,8 @@ class EE_Data_Migration_Manager{
 
 	/**
 	 * _load_dms_classes
+	 *
+	 * @throws \EE_Error
 	 */
 	protected function _load_dms_classes() {
 		static $loaded = false;
