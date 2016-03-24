@@ -2,6 +2,7 @@
 /**
  * For displaying the migration page. Does not allow the user to migrate until all known EE
  * addons are updated from PUE. Using AJAX to run the migration and update the progress bar
+ *
  * @type array $script_names array of strings
  * @type EE_Data_Migration_Script_Base $most_recent_migration
  * @type boolean $show_backup_db_text
@@ -9,6 +10,7 @@
  * @type boolean $show_most_recent_migration
  * @type boolean $show_maintenance_switch
  * @type boolean $show_migration_progress
+ * @type boolean $maintenance_mode_on
  * @type string $update_migration_script_page_link
  * @type string $current_db_state
  * @type string $next_db_state
@@ -144,39 +146,40 @@ if ( $show_backup_db_text ) { ?>
 	<?php } ?>
 
 	<?php
-		if ( $show_most_recent_migration ) {
-			if( $most_recent_migration && $most_recent_migration instanceof EE_Data_Migration_Script_Base ) {
-				if( $most_recent_migration->can_continue() ) {
-					//tell the user they should continue their migration because it appears to be unfinished... well, assuming there were no errors ?>
-					<h3 class="espresso-header">
-						<span class="dashicons dashicons-star-half ee-icon-size-22"></span>
-						<?php printf(__("It appears that your previous Data Migration Task (%s) is incomplete, and should be resumed", "event_espresso"),$most_recent_migration->pretty_name());?>
-					</h3>
-			<?php } elseif ( $most_recent_migration->is_broken() ) {
-					//tell the user the migration failed and they should notify EE?>
-					<h3 class="espresso-header">
-						<span class="dashicons dashicons-no ee-icon-size-22"></span>
-						<?php echo $most_recent_migration->get_feedback_message()?>
-					</h3>
-			<?php }
+		if (
+			$show_most_recent_migration
+			&& $most_recent_migration
+			&& $most_recent_migration instanceof EE_Data_Migration_Script_Base
+		) {
+			if( $most_recent_migration->can_continue() ) {
+				//tell the user they should continue their migration because it appears to be unfinished... well, assuming there were no errors ?>
+				<h3 class="espresso-header">
+					<span class="dashicons dashicons-star-half ee-icon-size-22"></span>
+					<?php printf(__("It appears that your previous Data Migration Task (%s) is incomplete, and should be resumed", "event_espresso"),$most_recent_migration->pretty_name());?>
+				</h3>
+		<?php } elseif ( $most_recent_migration->is_broken() ) {
+				//tell the user the migration failed and they should notify EE?>
+				<h3 class="espresso-header">
+					<span class="dashicons dashicons-no ee-icon-size-22"></span>
+					<?php echo $most_recent_migration->get_feedback_message()?>
+				</h3>
+		<?php }
 
-				//display errors or not of the most recent migration ran
-				if ( $most_recent_migration->get_errors() ){ ?>
-					<div class="ee-attention">
-						<strong><?php printf(__("Warnings occurred during your last migration (%s):",'event_espresso'),$most_recent_migration->pretty_name()) ?></strong>
-						<a id="show-hide-migration-warnings" class="display-the-hidden"><?php _e("Show Warnings", 'event_espresso');?></a>
-						<ul class="migration-warnings" style="display:none">
-						<?php foreach($most_recent_migration->get_errors() as $error){ ?>
-							<li><?php echo $error ?></li>
-						<?php }?>
-						</ul>
-					</div>
-				<?php } else {
-					//there were no errors during the last migration, just say so?>
-					<h2><?php printf(__("The last data migration task (%s) ran successfully without errors.", "event_espresso"),$most_recent_migration->pretty_name())?></h2>
-				<?php }
-				} else {
-			}
+			//display errors or not of the most recent migration ran
+			if ( $most_recent_migration->get_errors() ){ ?>
+				<div class="ee-attention">
+					<strong><?php printf(__("Warnings occurred during your last migration (%s):",'event_espresso'),$most_recent_migration->pretty_name()) ?></strong>
+					<a id="show-hide-migration-warnings" class="display-the-hidden"><?php _e("Show Warnings", 'event_espresso');?></a>
+					<ul class="migration-warnings" style="display:none">
+					<?php foreach($most_recent_migration->get_errors() as $error){ ?>
+						<li><?php echo $error ?></li>
+					<?php }?>
+					</ul>
+				</div>
+		<?php } else {
+			//there were no errors during the last migration, just say so?>
+			<h2><?php printf(__("The last data migration task (%s) ran successfully without errors.", "event_espresso"),$most_recent_migration->pretty_name())?></h2>
+		<?php }
 		}
  		// end of: if ( $show_most_recent_migration )
  	?>
@@ -263,7 +266,7 @@ if ( $show_backup_db_text ) { ?>
 			<table>
 				<tr>
 					<td width="40px" align="center">
-						<input type="radio" id="maintenance_mode_level_off" name="maintenance_mode_level" value="0" <?php echo EE_Maintenance_Mode::instance()->level() == EE_Maintenance_Mode::level_0_not_in_maintenance ? 'checked="checked"' : ''?>>
+						<input type="radio" id="maintenance_mode_level_off" name="maintenance_mode_level" value="0" <?php echo ! $maintenance_mode_on ? 'checked="checked"' : ''?>>
 					</td>
 					<th align="left">
 						<label for="maintenance_mode_level_off"><?php  _e('Maintenance Mode OFF', 'event_espresso');?></label>
@@ -274,7 +277,7 @@ if ( $show_backup_db_text ) { ?>
 				</tr>
 				<tr>
 					<td width="40px" align="center">
-						<input type="radio" id="maintenance_mode_level_on" name="maintenance_mode_level" value="1" <?php echo EE_Maintenance_Mode::instance()->level() == EE_Maintenance_Mode::level_1_frontend_only_maintenance ? 'checked="checked"' : ''?>>
+						<input type="radio" id="maintenance_mode_level_on" name="maintenance_mode_level" value="1" <?php echo $maintenance_mode_on ? 'checked="checked"' : ''?>>
 					</td>
 					<th align="left">
 						<label for="maintenance_mode_level_on">
