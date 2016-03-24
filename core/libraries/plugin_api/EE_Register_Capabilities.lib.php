@@ -59,8 +59,8 @@ class EE_Register_Capabilities implements EEI_Plugin_API {
 			return;
 		}
 		//make sure this is not registered too late or too early.
-		if ( ! did_action( 'AHEE__EE_System__load_espresso_addons' ) || did_action( 'AHEE__EE_System___detect_if_activation_or_upgrade__begin' ) ) {
-			EE_Error::doing_it_wrong( __METHOD__, sprintf( __('%s has been registered too late.  Please ensure that EE_Register_Capabilities::register has been called at some point before the "AHEE__EE_System___detect_if_activation_or_upgrade__begin" action hook has been called.', 'event_espresso'), $cap_reference ), '4.5.0' );
+		if ( ! did_action( 'AHEE__EE_System__load_espresso_addons' ) || did_action( 'AHEE__EE_Activation_Manager__detect_activations_or_upgrades__end' ) ) {
+			EE_Error::doing_it_wrong( __METHOD__, sprintf( __('%s has been registered too late.  Please ensure that EE_Register_Capabilities::register has been called at some point before the "AHEE__EE_Activation_Manager__detect_activations_or_upgrades__end" action hook has been called.', 'event_espresso'), $cap_reference ), '4.5.0' );
 		}
 		//some preliminary sanitization and setting to the $_registry property
 		self::$_registry[$cap_reference] = array(
