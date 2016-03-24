@@ -54,19 +54,13 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	/**
 	 * @singleton method used to instantiate class object
 	 * @access    public
-	 * @param \EE_Activation_Manager $activationManager
 	 * @return \EE_Load_Espresso_Core
 	 * @throws \EE_Error
 	 */
-	public static function instance( \EE_Activation_Manager $activationManager = null ) {
+	public static function instance() {
 		// check if class object is instantiated
 		if ( ! self::$_instance instanceof EE_Load_Espresso_Core ) {
-			if ( ! $activationManager instanceof \EE_Activation_Manager ) {
-				throw new EE_Error(
-					__( 'A valid instance of the EE_Activation_Manager class is required to instantiate EE_Load_Espresso_Core.', 'event_espresso' )
-				);
-			}
-			self::$_instance = new self( $activationManager );
+			self::$_instance = new self();
 		}
 		return self::$_instance;
 	}
@@ -75,37 +69,53 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 
 	/**
 	 * @access    private
-	 * @param \EE_Activation_Manager $activationManager
 	 * @throws \EE_Error
 	 */
-	private function __construct( \EE_Activation_Manager $activationManager ) {
-		$this->activationManager = $activationManager;
+	private function __construct() {
 		// PSR4 Autoloaders
 		espresso_load_required( 'EE_Psr4AutoloaderInit', EE_CORE . 'EE_Psr4AutoloaderInit.core.php' );
 		new EE_Psr4AutoloaderInit();
-		// deprecated functions
-		espresso_load_required( 'EE_Deprecated', EE_CORE . 'EE_Deprecated.core.php' );
-		// load interfaces
-		espresso_load_required(
-			'EEI_Payment_Method_Interfaces',
-			EE_LIBRARIES . 'payment_methods' . DS . 'EEI_Payment_Method_Interfaces.php'
-		);
-		// workarounds for PHP < 5.3
-		espresso_load_required( 'EEH_Class_Tools', EE_HELPERS . 'EEH_Class_Tools.helper.php' );
-		// manages activations, upgrades, and migrations
-		espresso_load_required( 'EE_Activation_Manager', EE_CORE . 'EE_Activation_Manager.core.php' );
-		// now setup the first core
-		$this->getEspressoCore();
-		$this->activationManager->setEspressoCore( $this->espressoCore );
-		// central repository for classes
-		espresso_load_required( 'EE_Registry', EE_CORE . 'EE_Registry.core.php' );
-		// updates the database to the current version
-		espresso_load_required( 'EE_Data_Migration_Manager', EE_CORE . 'EE_Data_Migration_Manager.core.php' );
-		// allow addons to load first so that they can register autoloaders, set hooks for running DMS's, etc
-		add_action( 'AHEE__EE_Bootstrap__load_espresso_addons', array( $this, 'loadEspressoAddons' ) );
-		// when an ee addon is activated, we want to call the core hook(s) again
-		// because the newly-activated addon didn't get a chance to run at all
-		add_action( 'activate_plugin', array( $this, 'loadEspressoAddons' ), 10 );
+	}
+
+
+	/**
+	 * @access private
+	 * @throws \EE_Error
+	 */
+	private function init() {
+		static $initialized = false;
+		if ( ! $initialized ) {
+			// load text domain right away so that any error messages can be translated asap
+			espresso_load_required( 'EE_Load_Textdomain', EE_CORE . 'EE_Load_Textdomain.core.php' );
+			espresso_load_required( 'EEH_Sideloader', EE_CORE . 'helpers' . DS . 'EEH_Sideloader.helper.php' );
+			EE_Load_Textdomain::set_sideloader( new EEH_Sideloader() );
+			EE_Load_Textdomain::load_textdomain();
+			// deprecated functions
+			espresso_load_required( 'EE_Deprecated', EE_CORE . 'EE_Deprecated.core.php' );
+			// load interfaces
+			espresso_load_required(
+				'EEI_Payment_Method_Interfaces',
+				EE_LIBRARIES . 'payment_methods' . DS . 'EEI_Payment_Method_Interfaces.php'
+			);
+			// workarounds for PHP < 5.3
+			espresso_load_required( 'EEH_Class_Tools', EE_HELPERS . 'EEH_Class_Tools.helper.php' );
+			// manages activations, upgrades, and migrations
+			espresso_load_required( 'EE_Activation_Manager', EE_CORE . 'EE_Activation_Manager.core.php' );
+			$this->activationManager = EE_Activation_Manager::instance(
+				EE_Maintenance_Mode::instance()
+			);
+			// now setup the first core
+			$this->getEspressoCore();
+			//$this->activationManager->setEspressoCore( $this->espressoCore );
+			// central repository for classes
+			espresso_load_required( 'EE_Registry', EE_CORE . 'EE_Registry.core.php' );
+			// allow addons to load first so that they can register autoloaders, set hooks for running DMS's, etc
+			add_action( 'AHEE__EE_Bootstrap__load_espresso_addons', array( $this, 'loadAddonsAndSetCaps' ) );
+			// when an ee addon is activated, we want to call the core hook(s) again
+			// because the newly-activated addon didn't get a chance to run at all
+			add_action( 'activate_plugin', array( $this, 'loadAddonsAndSetCaps' ), 10 );
+			$initialized = true;
+		}
 	}
 
 
@@ -123,6 +133,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * @throws \EE_Error
 	 */
 	public function handle_request( EE_Request $request, EE_Response $response ) {
+		$this->init();
 		$this->initializeEspressoCore( $request, $response );
 		return $this->espressoCore->response();
 	}
@@ -195,7 +206,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 
 
 	/**
-	 * loadEspressoAddons
+	 * loadAddonsAndSetCaps
 	 *
 	 * allow addons to load first so that they can set hooks for running DMS's, etc
 	 * this is hooked into both:
@@ -206,7 +217,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * @access public
 	 * @return void
 	 */
-	public function loadEspressoAddons() {
+	public function loadAddonsAndSetCaps() {
 		try {
 			// set autoloaders for all of the classes implementing EEI_Plugin_API
 			// which provide helpers for EE plugin authors to more easily register certain components with EE.
