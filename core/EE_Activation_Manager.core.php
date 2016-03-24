@@ -511,6 +511,7 @@ class EE_Activation_Manager {
 				$this->initialize_addons();
 			}
 		} else {
+			$this->espressoCore->registry()->load_core('Data_Migration_Manager');
 			EE_Data_Migration_Manager::instance()->enqueue_db_initialization_for( 'Core' );
 		}
 		$activation_type = $this->espressoCore->registry()->request()->activation_type();
