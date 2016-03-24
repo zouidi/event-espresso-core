@@ -588,24 +588,25 @@ final class EE_Registry {
 			// instantiate the class and add to the LIB array for tracking
 			// EE_Base_Classes are instantiated via new_instance by default (models call them via new_instance_from_db)
 			if ( $load_only || $reflector->getConstructor() === NULL || $reflector->isAbstract() ) {
-//				$instantiation_mode = 0;
+				//$instantiation_mode = 0;
 				// no constructor = static methods only... nothing to instantiate, loading file was enough
 				return TRUE;
 			} else if ( $from_db && method_exists( $class_name, 'new_instance_from_db' ) ) {
-//				$instantiation_mode = 1;
+				//$instantiation_mode = 1;
 				$class_obj =  call_user_func_array( array( $class_name, 'new_instance_from_db' ), $arguments );
 			} else if ( method_exists( $class_name, 'new_instance' ) ) {
-//				$instantiation_mode = 2;
+				//$instantiation_mode = 2;
 				$class_obj =  call_user_func_array( array( $class_name, 'new_instance' ), $arguments );
 			} else if ( method_exists( $class_name, 'instance' )) {
-//				$instantiation_mode = 3;
+				//$instantiation_mode = 3;
 				$class_obj =  call_user_func_array( array( $class_name, 'instance' ), $arguments );
 			} else if ( $reflector->isInstantiable() ) {
-//				$instantiation_mode = 4;
+				//$instantiation_mode = 4;
+				$arguments = is_array( $arguments ) ? $arguments : array( $arguments );
 				$class_obj =  $reflector->newInstanceArgs( $arguments );
 			} else if ( ! $load_only ) {
 				// heh ? something's not right !
-//				$instantiation_mode = 5;
+				//$instantiation_mode = 5;
 				throw new EE_Error(
 					sprintf(
 						__('The %s file %s could not be instantiated.','event_espresso'),
@@ -619,13 +620,15 @@ final class EE_Registry {
 			$e->get_error();
 		}
 
-//	echo '<h4>$class_name : ' . $class_name . '  <br /><span style="font-size:10px;font-weight:normal;">$instantiation_mode : ' . $instantiation_mode . '<br/>' . __FILE__ . '<br />line no: ' . __LINE__ . '</span></h4>';
-//	echo '<h4>$from_db : ' . $from_db . '  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span></h4>';
-//	echo '<h4>$cache : ' . $cache . '  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span></h4>';
-//	echo '<h4>$load_only : ' . $load_only . '  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span></h4>';
-//	EEH_Debug_Tools::printr( $arguments, '$arguments  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span>', 'auto' );
-//	EEH_Debug_Tools::printr( $class_obj, '$class_obj  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span>', 'auto' );
-
+		//if ( $class_name === 'EE_SPCO_Reg_Step_Attendee_Information' ) {
+		//	\EEH_Debug_Tools::printr( $class_name, '$class_name', __FILE__, __LINE__ );
+		//	\EEH_Debug_Tools::printr( $from_db, '$from_db', __FILE__, __LINE__ );
+		//	\EEH_Debug_Tools::printr( $cache, '$cache', __FILE__, __LINE__ );
+		//	\EEH_Debug_Tools::printr( $load_only, '$load_only', __FILE__, __LINE__ );
+		//	\EEH_Debug_Tools::printr( $arguments, '$arguments', __FILE__, __LINE__ );
+		//	\EEH_Debug_Tools::printr( $class_obj, '$class_obj', __FILE__, __LINE__ );
+		//	\EEH_Debug_Tools::printr( $instantiation_mode, '$instantiation_mode', __FILE__, __LINE__ );
+		//}
 
 		if ( isset( $class_obj )) {
 			// return newly instantiated class
