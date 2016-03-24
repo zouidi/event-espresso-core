@@ -150,7 +150,6 @@ final class EE_System {
 	 */
 	public function load_core_configuration(){
 		do_action( 'AHEE__EE_System__load_core_configuration__begin', $this );
-		$this->registry->load_core( 'EE_Load_Textdomain' );
 		//load textdomain
 		EE_Load_Textdomain::load_textdomain();
 		// load and setup EE_Config and EE_Network_Config
@@ -305,7 +304,6 @@ final class EE_System {
 				$this->registry->load_core( 'PUE' );
 				do_action( 'AHEE__EE_System__brew_espresso__after_pue_init' );
 			}
-			new EventEspresso\Core\Services\adminToolbarItems( $this->registry, \EE_Maintenance_Mode::instance() );
 			do_action( 'AHEE__EE_System__brew_espresso__complete', $this );
 		} else {
 			add_action( 'init', array( $this, 'load_controllers' ), 7 );
@@ -423,6 +421,7 @@ final class EE_System {
 		do_action( 'AHEE__EE_System__set_hooks_for_shortcodes_modules_and_addons' );
 //		add_action( 'wp_loaded', array( $this, 'set_hooks_for_shortcodes_modules_and_addons' ), 1 );
 		$this->registry->load_core( 'Session' );
+		new EventEspresso\Core\Services\adminToolbarItems( $this->registry, \EE_Maintenance_Mode::instance() );
 	}
 
 
@@ -641,7 +640,7 @@ final class EE_System {
 	 * @throws \EE_Error
 	 */
 	public function load_espresso_addons() {
-		\EE_Load_Espresso_Core::instance()->loadEspressoAddons();
+		\EE_Load_Espresso_Core::instance()->loadAddonsAndSetCaps();
 	}
 
 

@@ -58,7 +58,7 @@ class EE_Register_Data_Migration_Scripts implements EEI_Plugin_API {
 		}
 
 		//make sure this was called in the right place!
-		if ( ! did_action( 'AHEE__EE_System__load_espresso_addons' ) || did_action( 'AHEE__EE_System___detect_if_activation_or_upgrade__begin' )) {
+		if ( ! did_action( 'AHEE__EE_System__load_espresso_addons' ) || did_action( 'AHEE__EE_Activation_Manager__detect_activations_or_upgrades__end' )) {
 			EE_Error::doing_it_wrong(
 				__METHOD__,
 					__( 'An attempt to register Data Migration Scripts has failed because it was not registered at the correct time.  Please use the "AHEE__EE_System__load_espresso_addons" hook to register Data Migration Scripts.','event_espresso'),
