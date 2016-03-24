@@ -95,7 +95,6 @@ class EED_Single_Page_Checkout  extends EED_Module {
 		if ( defined( 'DOING_AJAX' )) {
 			// going to start an output buffer in case anything gets accidentally output that might disrupt our JSON response
 			ob_start();
-			EED_Single_Page_Checkout::load_request_handler();
 			EED_Single_Page_Checkout::load_reg_steps();
 		} else {
 			// hook into the top of pre_get_posts to set the reg step routing, which gives other modules or plugins a chance to modify the reg steps, but just before the routes get called
@@ -119,7 +118,7 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 * @throws EE_Error
 	 */
 	public static function process_ajax_request( $ajax_action ) {
-		EE_Registry::instance()->REQ->set( 'action', $ajax_action );
+		EE_Registry::instance()->request()->set( 'action', $ajax_action );
 		EED_Single_Page_Checkout::instance()->_initialize();
 	}
 
@@ -167,22 +166,6 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 */
 	public static function update_checkout() {
 		EED_Single_Page_Checkout::process_ajax_request( 'update_checkout' );
-	}
-
-
-
-	/**
-	 *    load_request_handler
-	 *
-	 * @access public
-	 * @return void
-	 * @throws EE_Error
-	 */
-	public static function load_request_handler() {
-		// load core Request_Handler class
-		if ( ! isset( EE_Registry::instance()->REQ )) {
-			EE_Registry::instance()->load_core( 'Request_Handler' );
-		}
 	}
 
 
@@ -306,9 +289,9 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 */
 	public static function registration_checkout_for_admin() {
 		EED_Single_Page_Checkout::load_reg_steps();
-		EE_Registry::instance()->REQ->set( 'step', 'attendee_information' );
-		EE_Registry::instance()->REQ->set( 'action', 'display_spco_reg_step' );
-		EE_Registry::instance()->REQ->set( 'process_form_submission', false );
+		EE_Registry::instance()->request()->set( 'step', 'attendee_information' );
+		EE_Registry::instance()->request()->set( 'action', 'display_spco_reg_step' );
+		EE_Registry::instance()->request()->set( 'process_form_submission', false );
 		EED_Single_Page_Checkout::instance()->_initialize();
 		EED_Single_Page_Checkout::instance()->_display_spco_reg_form();
 		return EE_Registry::instance()->REQ->get_output();
@@ -325,9 +308,9 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 */
 	public static function process_registration_from_admin() {
 		EED_Single_Page_Checkout::load_reg_steps();
-		EE_Registry::instance()->REQ->set( 'step', 'attendee_information' );
-		EE_Registry::instance()->REQ->set( 'action', 'process_reg_step' );
-		EE_Registry::instance()->REQ->set( 'process_form_submission', true );
+		EE_Registry::instance()->request()->set( 'step', 'attendee_information' );
+		EE_Registry::instance()->request()->set( 'action', 'process_reg_step' );
+		EE_Registry::instance()->request()->set( 'process_form_submission', true );
 		EED_Single_Page_Checkout::instance()->_initialize();
 		if ( EED_Single_Page_Checkout::instance()->checkout->current_step->completed() ) {
 			$final_reg_step = end( EED_Single_Page_Checkout::instance()->checkout->reg_steps );
@@ -503,27 +486,25 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 * @throws EE_Error
 	 */
 	private function _get_request_vars() {
-		// load classes
-		EED_Single_Page_Checkout::load_request_handler();
 		//make sure this request is marked as belonging to EE
 		EE_Registry::instance()->REQ->set_espresso_page( TRUE );
 		// which step is being requested ?
-		$this->checkout->step = EE_Registry::instance()->REQ->get( 'step', $this->_get_first_step() );
+		$this->checkout->step = EE_Registry::instance()->request()->get( 'step', $this->_get_first_step() );
 		// which step is being edited ?
-		$this->checkout->edit_step = EE_Registry::instance()->REQ->get( 'edit_step', '' );
+		$this->checkout->edit_step = EE_Registry::instance()->request()->get( 'edit_step', '' );
 		// and what we're doing on the current step
-		$this->checkout->action = EE_Registry::instance()->REQ->get( 'action', 'display_spco_reg_step' );
+		$this->checkout->action = EE_Registry::instance()->request()->get( 'action', 'display_spco_reg_step' );
 		// returning to edit ?
-		$this->checkout->reg_url_link = EE_Registry::instance()->REQ->get( 'e_reg_url_link', '' );
+		$this->checkout->reg_url_link = EE_Registry::instance()->request()->get( 'e_reg_url_link', '' );
 		// or some other kind of revisit ?
-		$this->checkout->revisit = EE_Registry::instance()->REQ->get( 'revisit', FALSE );
+		$this->checkout->revisit = EE_Registry::instance()->request()->get( 'revisit', FALSE );
 		// and whether or not to generate a reg form for this request
-		$this->checkout->generate_reg_form = EE_Registry::instance()->REQ->get( 'generate_reg_form', TRUE ); 		// TRUE 	FALSE
+		$this->checkout->generate_reg_form = EE_Registry::instance()->request()->get( 'generate_reg_form', TRUE ); 		// TRUE 	FALSE
 		// and whether or not to process a reg form submission for this request
-		$this->checkout->process_form_submission = EE_Registry::instance()->REQ->get( 'process_form_submission', FALSE ); 		// TRUE 	FALSE
+		$this->checkout->process_form_submission = EE_Registry::instance()->request()->get( 'process_form_submission', FALSE ); 		// TRUE 	FALSE
 		$this->checkout->process_form_submission = $this->checkout->action !== 'display_spco_reg_step'
 			? $this->checkout->process_form_submission
-			: FALSE; 		// TRUE 	FALSE
+			: false; 		// true 	false
 		//$this->_display_request_vars();
 	}
 
@@ -1000,7 +981,7 @@ class EED_Single_Page_Checkout  extends EED_Module {
 					$this->checkout->current_step->set_valid_data( array() );
 					// capture submitted form data
 					$this->checkout->current_step->reg_form->receive_form_submission(
-						apply_filters( 'FHEE__Single_Page_Checkout___check_form_submission__request_params', EE_Registry::instance()->REQ->params(), $this->checkout )
+						apply_filters( 'FHEE__Single_Page_Checkout___check_form_submission__request_params', EE_Registry::instance()->request()->params(), $this->checkout )
 					);
 					// validate submitted form data
 					if ( ! $this->checkout->continue_reg || ! $this->checkout->current_step->reg_form->is_valid() ) {
@@ -1042,16 +1023,19 @@ class EED_Single_Page_Checkout  extends EED_Module {
 		if( $this->checkout->action === 'display_spco_reg_step' ) {
 			// AJAX next step reg form
 			$this->checkout->redirect = false;
-			if ( EE_Registry::instance()->REQ->ajax ) {
+			if ( EE_Registry::instance()->request()->ajax ) {
 				$this->checkout->json_response->set_reg_step_html( $this->checkout->current_step->display_reg_form() );
 			}
 		} else {
 			// meh... do one of those other steps first
 			if ( ! empty( $this->checkout->action ) && is_callable( array( $this->checkout->current_step, $this->checkout->action ))) {
 				// dynamically creates hook point like: AHEE__Single_Page_Checkout__before_attendee_information__process_reg_step
-				do_action( "AHEE__Single_Page_Checkout__before_{$this->checkout->current_step->slug()}__{$this->checkout->action}", $this->checkout->current_step );
+				do_action(
+					"AHEE__Single_Page_Checkout__before_{$this->checkout->current_step->slug()}__{$this->checkout->action}",
+					$this->checkout->current_step
+				);
 				// call action on current step
-				if ( $this->checkout->current_step->{$this->checkout->action} ) {
+				if ( $this->checkout->current_step->{$this->checkout->action}() ) {
 					// good registrant, you get to proceed
 					if (
 						$this->checkout->current_step->success_message() !== ''
@@ -1352,7 +1336,7 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 * @throws EE_Error
 	 */
 	public function go_to_next_step() {
-		if ( EE_Registry::instance()->REQ->ajax ) {
+		if ( EE_Registry::instance()->request()->ajax ) {
 			// capture contents of output buffer we started earlier in the request, and insert into JSON response
 			$this->checkout->json_response->set_unexpected_errors( ob_get_clean() );
 		}
@@ -1383,7 +1367,7 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 */
 	protected function _handle_json_response() {
 		// if this is an ajax request
-		if ( EE_Registry::instance()->REQ->ajax ) {
+		if ( EE_Registry::instance()->request()->ajax ) {
 			// DEBUG LOG
 			//$this->checkout->log(
 			//	__CLASS__, __FUNCTION__, __LINE__,
