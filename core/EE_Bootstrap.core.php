@@ -42,6 +42,8 @@ class EE_Bootstrap {
 
 	/**
 	 * EE_Bootstrap constructor.
+	 *
+	 * @throws    EE_Error
 	 */
 	public function __construct() {
 		// construct request stack and run middleware apps as soon as all WP plugins are loaded
@@ -66,11 +68,7 @@ class EE_Bootstrap {
 		$this->set_autoloaders_for_required_files();
 		$this->_request_stack_builder = $this->build_request_stack();
 		try {
-			$espressoCore = EE_Load_Espresso_Core::instance(
-				EE_Activation_Manager::instance(
-					EE_Maintenance_Mode::instance()
-				)
-			);
+			$espressoCore = EE_Load_Espresso_Core::instance();
 		} catch ( Exception $e ) {
 			EE_Error::add_error( $e->getMessage(), __FILE__, __FUNCTION__, __LINE__ );
 			$espressoCore = null;
