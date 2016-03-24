@@ -15,31 +15,39 @@
  *
  * EEH_Base Helper
  *
- * @package			Event Espresso
+ * @package		Event Espresso
  * @subpackage	/helpers/
- * @author				Brent Christensen 
+ * @author		Brent Christensen
  *
  * ------------------------------------------------------------------------
  */
 class EEH_Base {
 
 	/**
-	 * 	@var 	array	$uri_segment_array 	URL segments
-	 *  @access 	private
+	 * @override magic methods
+	 * @param $a
+	 * @param $b
+	 * @return bool
 	 */
-//	final private function __construct() {}
-
-	/**
-	 *		@ override magic methods
-	 *		@ return void
-	 */	
 	public function __set($a,$b) { return FALSE; }
-	public function __get($a) { return FALSE; }
-	public function __isset($a) { return FALSE; }
-	public function __unset($a) { return FALSE; }
-	public function __clone() { return FALSE; }
-	public function __wakeup() { return FALSE; }	
-	public function __destruct() { return FALSE; }		
+	/**
+	 * @param $a
+	 * @return bool
+	 */
+	public function __get( $a) { return FALSE; }
+	/**
+	 * @param $a
+	 * @return bool
+	 */
+	public function __isset( $a) { return FALSE; }
+	/**
+	 * @param $a
+	 * @return bool
+	 */
+	public function __unset( $a) { return FALSE; }
+	public function __clone() {}
+	public function __wakeup() {}
+	public function __destruct() {}
 
 }
 // End of file EEH_Base.helper.php
