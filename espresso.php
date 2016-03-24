@@ -216,13 +216,19 @@ if ( function_exists( 'espresso_version' ) ) {
 		if ( is_readable( $full_path_to_file ) ) {
 			require_once( $full_path_to_file );
 		} else {
-			throw new EE_Error ( sprintf(
-				__( 'The %s class file could not be located or is not readable due to file permissions.', 'event_espresso' ),
-				$classname
-			) );
+			throw new EE_Error (
+				sprintf(
+					__(
+						'The %s class file could not be located or is not readable due to file permissions.',
+						'event_espresso'
+					),
+					$classname
+				)
+			);
 		}
 	}
 
+	espresso_load_required( 'EE_Base', EE_CORE . 'EE_Base.core.php' );
 	espresso_load_required( 'EEH_Base', EE_CORE . 'helpers' . DS . 'EEH_Base.helper.php' );
 	espresso_load_required( 'EEH_File', EE_CORE . 'helpers' . DS . 'EEH_File.helper.php' );
 	espresso_load_required( 'EE_Bootstrap', EE_CORE . 'EE_Bootstrap.core.php' );
