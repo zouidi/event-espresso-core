@@ -135,7 +135,7 @@ class EE_Request {
 	 * @param int $activation_type
 	 */
 	public function set_activation_type( $activation_type ) {
-		$this->activation_type = $activation_type;
+		$this->activation_type = absint( $activation_type );
 	}
 
 
