@@ -150,8 +150,6 @@ final class EE_System {
 	 */
 	public function load_core_configuration(){
 		do_action( 'AHEE__EE_System__load_core_configuration__begin', $this );
-		//load textdomain
-		EE_Load_Textdomain::load_textdomain();
 		// load and setup EE_Config and EE_Network_Config
 		$this->registry->load_core( 'Config' );
 		$this->registry->load_core( 'Network_Config' );
@@ -168,7 +166,6 @@ final class EE_System {
 		}
 		// get model names
 		$this->_parse_model_names();
-
 		//load caf stuff a chance to play during the activation process too.
 		$this->_maybe_brew_regular();
 		do_action( 'AHEE__EE_System__load_core_configuration__complete', $this );
@@ -211,7 +208,10 @@ final class EE_System {
 	 * @return void
 	 */
 	private function _maybe_brew_regular() {
-		if (( ! defined( 'EE_DECAF' ) ||  EE_DECAF !== TRUE ) && is_readable( EE_CAFF_PATH . 'brewing_regular.php' )) {
+		if (
+			( ! defined( 'EE_DECAF' ) ||  EE_DECAF !== true )
+			&& is_readable( EE_CAFF_PATH . 'brewing_regular.php' )
+		) {
 			require_once EE_CAFF_PATH . 'brewing_regular.php';
 			new EE_Brewing_Regular();
 		}
@@ -351,7 +351,7 @@ final class EE_System {
 			$active_plugins = get_option( 'active_plugins', array() );
 			foreach ( $active_plugins as $active_plugin ) {
 				foreach ( $incompatible_addons as $incompatible_addon ) {
-					if ( strpos( $active_plugin,  $incompatible_addon ) !== FALSE ) {
+					if ( strpos( $active_plugin,  $incompatible_addon ) !== false ) {
 						unset( $_GET['activate'] );
 						espresso_deactivate_plugin( $active_plugin );
 					}
@@ -494,7 +494,8 @@ final class EE_System {
 		add_action( 'send_headers' , array( 'EE_System', 'nocache_headers' ), 10 );
 		// plus a little extra for nginx and Google Chrome
 		add_filter( 'nocache_headers', array( 'EE_System', 'extra_nocache_headers' ), 10, 1 );
-		// prevent browsers from prefetching of the rel='next' link, because it may contain content that interferes with the registration process
+		// prevent browsers from prefetching of the rel='next' link,
+		// because it may contain content that interferes with the registration process
 		remove_action( 'wp_head', 'adjacent_posts_rel_link_wp_head' );
 	}
 
@@ -532,8 +533,8 @@ final class EE_System {
 
 
 	/**
-	 * simply hooks into "wp_list_pages_exclude" filter (for wp_list_pages method) and makes sure EE critical pages are never returned with the function.
-	 *
+	 * simply hooks into "wp_list_pages_exclude" filter (for wp_list_pages method)
+	 * and makes sure EE critical pages are never returned with the function.
 	 *
 	 * @param  array  $exclude_array any existing pages being excluded are in this array.
 	 * @return array
