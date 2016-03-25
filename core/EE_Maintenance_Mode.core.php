@@ -143,12 +143,12 @@ class EE_Maintenance_Mode {
 	public function set_maintenance_mode_if_db_old(){
 		EE_Registry::instance()->load_core( 'Data_Migration_Manager' );
 		if( EE_Data_Migration_Manager::instance()->check_for_applicable_data_migration_scripts()){
-			update_option(self::option_name_maintenance_mode, self::level_2_complete_maintenance);
+			update_option( EE_Maintenance_Mode::option_name_maintenance_mode, self::level_2_complete_maintenance);
 			return true;
-		}elseif( $this->level() === self::level_2_complete_maintenance ){
+		}elseif( $this->level() === EE_Maintenance_Mode::level_2_complete_maintenance ){
 			//we also want to handle the opposite: if the site is mm2, but there aren't any migrations to run
 			//then we shouldn't be in mm2. (Maybe an addon got deactivated?)
-			update_option( self::option_name_maintenance_mode, self::level_0_not_in_maintenance );
+			update_option( EE_Maintenance_Mode::option_name_maintenance_mode, self::level_0_not_in_maintenance );
 			return false;
 		}else{
 			return false;
@@ -162,7 +162,7 @@ class EE_Maintenance_Mode {
 	 */
 	public function set_maintenance_level($level){
 		do_action( 'AHEE__EE_Maintenance_Mode__set_maintenance_level', $level );
-		update_option(self::option_name_maintenance_mode, (int)$level );
+		update_option( EE_Maintenance_Mode::option_name_maintenance_mode, (int)$level );
 	}
 
 
