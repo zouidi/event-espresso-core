@@ -218,7 +218,10 @@ class EE_Activation_Manager {
 		$activation_indicator_option_name,
 		$version_to_upgrade_to
 	) {
-		$version_is_higher = self::_new_version_is_higher( $activation_history_for_addon, $version_to_upgrade_to );
+		$version_is_higher = EE_Activation_Manager::_new_version_is_higher(
+			$activation_history_for_addon,
+			$version_to_upgrade_to
+		);
 		if ( $activation_history_for_addon ) {
 			//it exists, so this isn't a completely new install
 			//check if this version already in that list of previously installed versions
@@ -238,7 +241,8 @@ class EE_Activation_Manager {
 					} elseif ( $version_is_higher === 0 ) {
 						//we've seen this version before, but it's an activation. must be a reactivation
 						$activation_type = EE_Activation_Manager::activation_type_reactivation;
-					} else {//$version_is_higher === 1
+					} else {
+						//$version_is_higher === 1
 						$activation_type = EE_Activation_Manager::activation_type_upgrade;
 					}
 					delete_option( $activation_indicator_option_name );
@@ -249,7 +253,8 @@ class EE_Activation_Manager {
 					} elseif ( $version_is_higher === 0 ) {
 						//we've seen this version before and it's not an activation. its normal request
 						$activation_type = EE_Activation_Manager::activation_type_none;
-					} else {//$version_is_higher === 1
+					} else {
+						//$version_is_higher === 1
 						$activation_type = EE_Activation_Manager::activation_type_upgrade;
 					}
 				}
@@ -291,13 +296,14 @@ class EE_Activation_Manager {
 					$times_activated = array( $times_activated );
 				}
 				foreach ( $times_activated as $an_activation ) {
-					if ( $an_activation !== 'unknown-date'
-					     && $an_activation
-					        > $most_recently_active_version_activation
+					if (
+						$an_activation !== 'unknown-date'
+					    && $an_activation > $most_recently_active_version_activation
 					) {
 						$most_recently_active_version = $version;
 						$most_recently_active_version_activation = $an_activation === 'unknown-date'
-							? '1970-01-01 00:00:00' : $an_activation;
+							? '1970-01-01 00:00:00'
+							: $an_activation;
 					}
 				}
 			}
