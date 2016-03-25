@@ -155,6 +155,7 @@ class Maintenance_Admin_Page extends EE_Admin_Page {
 		$show_migration_progress = false;
 		$script_names = array();
 		$addons_should_be_upgraded_first = false;
+		$mm = 0;
 
 		// in case an exception is thrown while trying to handle migrations
 		try{
@@ -179,9 +180,9 @@ class Maintenance_Admin_Page extends EE_Admin_Page {
 				$scripts_needing_to_run = EE_Data_Migration_Manager::instance()->check_for_applicable_data_migration_scripts();
 				$script_names = array();
 				$current_script = NULL;
-				foreach($scripts_needing_to_run as $script){
-					if($script instanceof EE_Data_Migration_Script_Base){
-						if( ! $current_script){
+				foreach( $scripts_needing_to_run as $script ){
+					if( $script instanceof EE_Data_Migration_Script_Base ){
+						if( ! $current_script ){
 							$current_script = $script;
 							$current_script->migration_page_hooks();
 						}
@@ -201,32 +202,39 @@ class Maintenance_Admin_Page extends EE_Admin_Page {
 			$exception_thrown = true;
 		}
 		$current_db_state = EE_Data_Migration_Manager::instance()->ensure_current_database_state_is_set();
-		if($exception_thrown ||
-				(	$most_recent_migration &&
-					$most_recent_migration instanceof EE_Data_Migration_Script_Base &&
-					$most_recent_migration->is_broken()
-				)){
+		if(
+			$exception_thrown
+			|| (
+				$most_recent_migration
+				&& $most_recent_migration instanceof EE_Data_Migration_Script_Base
+				&& $most_recent_migration->is_broken()
+			)
+		){
 			$this->_template_path = EE_MAINTENANCE_TEMPLATE_PATH . 'ee_migration_was_borked_page.template.php';
 			$this->_template_args[ 'support_url' ] = 'http://eventespresso.com/support/forums/';
-			$this->_template_args[ 'next_url' ] = EEH_URL::add_query_args_and_nonce(array( 'action' => 'confirm_migration_crash_report_sent', 'success' => '0' ), EE_MAINTENANCE_ADMIN_URL );
-		}elseif($addons_should_be_upgraded_first){
+			$this->_template_args['next_url'] = EEH_URL::add_query_args_and_nonce(
+				array( 'action' => 'confirm_migration_crash_report_sent', 'success' => '0' ),
+				EE_MAINTENANCE_ADMIN_URL
+			);
+		} else if ( $addons_should_be_upgraded_first ) {
 			$this->_template_path = EE_MAINTENANCE_TEMPLATE_PATH . 'ee_upgrade_addons_before_migrating.template.php';
-		}else{
-			if($most_recent_migration &&
-					$most_recent_migration instanceof EE_Data_Migration_Script_Base  &&
-					$most_recent_migration->can_continue()){
+		} else {
+			if ( $most_recent_migration
+			     && $most_recent_migration instanceof EE_Data_Migration_Script_Base
+			     && $most_recent_migration->can_continue()
+			) {
 				$show_backup_db_text = false;
 				$show_continue_current_migration_script = true;
 				$show_most_recent_migration = true;
-			}elseif(isset($this->_req_data['continue_migration'])){
+			} elseif ( isset( $this->_req_data['continue_migration'] )
+			) {
 				$show_most_recent_migration = true;
 				$show_continue_current_migration_script = false;
-			}else{
+			} else {
 				$show_most_recent_migration = false;
 				$show_continue_current_migration_script = false;
 			}
-
-			if(isset($current_script)){
+			if( isset( $current_script ) ) {
 				$migrates_to = $current_script->migrates_to_version();
 				$plugin_slug = $migrates_to[ 'slug' ];
 				$new_version = $migrates_to[ 'version' ];
