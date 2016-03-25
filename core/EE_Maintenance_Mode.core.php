@@ -94,7 +94,7 @@ class EE_Maintenance_Mode {
 	 * @return int
 	 */
 	public function real_level(){
-		return get_option( self::option_name_maintenance_mode, EE_Maintenance_Mode::level_0_not_in_maintenance );
+		return (int)get_option( self::option_name_maintenance_mode, EE_Maintenance_Mode::level_0_not_in_maintenance );
 	}
 
 	/**
@@ -121,11 +121,14 @@ class EE_Maintenance_Mode {
 		$maintenance_mode_level = $this->real_level();
 		//if this is an admin request, we'll be honest... except if it's ajax, because that might be from the frontend
 		if(
-			$maintenance_mode_level === EE_Maintenance_Mode::level_1_frontend_only_maintenance // we're in level 1
-			&& ( ! is_admin() || (defined('DOING_AJAX') && DOING_AJAX)) //only on frontend or ajax requests
-			&& current_user_can('administrator')  //when the user is an admin
-		){
 			// we're in level 1
+			$maintenance_mode_level === EE_Maintenance_Mode::level_1_frontend_only_maintenance
+			//only on frontend or ajax requests
+			&& ( ! is_admin() || (defined('DOING_AJAX') && DOING_AJAX ) )
+			//when the user is an admin
+			&& current_user_can('administrator')
+		){
+			// then drop level to 0 so admin can still view frontend
 			$maintenance_mode_level = EE_Maintenance_Mode::level_0_not_in_maintenance;
 		}
 		return $maintenance_mode_level;
