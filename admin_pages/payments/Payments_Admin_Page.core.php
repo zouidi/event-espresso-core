@@ -89,6 +89,10 @@ class Payments_Admin_Page extends EE_Admin_Page {
 				'func'=>'_payment_methods_list',
 				'capability' => 'ee_edit_payment_methods'
 			),
+			'payment_methods_admin_only' => array(
+				'func'=>'_payment_methods_list',
+				'capability' => 'ee_edit_payment_methods'
+			),
 			'payment_settings' => array(
 				'func' => '_payment_settings',
 				'capability' => 'ee_manage_gateways'
@@ -146,12 +150,31 @@ class Payments_Admin_Page extends EE_Admin_Page {
 			'require_nonce' => false
 		);
 
+		$payment_method_admin_only_list_config = array(
+			'nav'           => array(
+				'label' => __( 'Payment Methods (Admin Only)', 'event_espresso' ),
+				'order' => 20
+			),
+			'metaboxes'     => $this->_default_espresso_metaboxes,
+			'help_tabs'     => array_merge(
+				array(
+					'payment_methods_admin_only_overview_help_tab' => array(
+						'title'    => __( 'Payment Methods (Admin Only) Overview', 'event_espresso' ),
+						'filename' => 'payment_methods_overview'
+					)
+				),
+				$this->_add_payment_method_help_tabs() ),
+			'help_tour'     => array( 'Payment_Methods_Selection_Help_Tour' ),
+			'require_nonce' => false
+		);
+
 		$this->_page_config = array(
 			'default' => $payment_method_list_config,
+			'payment_methods_admin_only' => $payment_method_admin_only_list_config,
 			'payment_settings' => array(
 				'nav' => array(
 					'label' => __('Settings', 'event_espresso'),
-					'order' => 20
+					'order' => 30
 				),
 				'help_tabs' => array(
 					'payment_methods_settings_help_tab' => array(
@@ -166,7 +189,7 @@ class Payments_Admin_Page extends EE_Admin_Page {
 			'payment_log'=>array(
 				'nav'=> array(
 					'label' => __("Logs", 'event_espresso'),
-					'order'=>30,
+					'order'=>40,
 				),
 				'list_table'=>'Payment_Log_Admin_List_Table',
 				'metaboxes' => $this->_default_espresso_metaboxes,
