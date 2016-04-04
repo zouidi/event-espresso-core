@@ -61,7 +61,16 @@ class EEM_WP_User extends EEM_Base {
 			$this->_cap_restriction_generators[ $context ] = new EE_Restriction_Generator_WP_User();
 		}
 		//@todo: account for create_users controls whether they can create users at all
-
+		global $wpdb;
+		//add a default where condition so we only ever return users for the current blog (on multisite)
+		if( is_multisite() ) {
+			$this->_default_where_conditions_strategy = new EE_Default_Where_Conditions( 
+				array( 
+					'User_Meta.meta_key' => $wpdb->get_blog_prefix() . 'capabilities',
+					'User_Meta.meta_value' => array( 'IS_NOT_NULL' )
+				)
+			);
+		}
 		parent::__construct( $timezone );
 	}
 
