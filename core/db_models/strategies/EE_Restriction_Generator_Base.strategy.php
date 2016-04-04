@@ -166,6 +166,14 @@ abstract class EE_Restriction_Generator_Base {
 	public static function get_default_restrictions_cap() {
 		return apply_filters( 'FHEE__EE_Restriction_Generator_Base__default_restrictions_cap', 'manage_options' );
 	}
+	
+	/**
+	 * Returns a cap that nobody should have (exept super admins)
+	 * @return string
+	 */
+	public static function get_pretend_cap_for_network_admin() {
+		return apply_filters( 'FHEE__EE_Restriction_Generator_Base__cap_nobody_has', 'pretend_cap_for_network_admin' );
+	}
 }
 
 // End of file EE_Restriction_Generator_Base.strategy.php

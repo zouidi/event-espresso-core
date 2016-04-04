@@ -4456,7 +4456,10 @@ abstract class EEM_Base extends EE_Base{
 		$missing_caps = array();
 		$cap_restrictions = $this->cap_restrictions( $context );
 		foreach( $cap_restrictions as $cap => $restriction_if_no_cap ) {
-			if( ! EE_Capabilities::instance()->current_user_can( $cap, $this->get_this_model_name() . '_model_applying_caps') ) {
+			if( ! EE_Capabilities::instance()->current_user_can( $cap, $this->get_this_model_name() . '_model_applying_caps')
+				||  
+				( $cap == EE_Restriction_Generator_Base::get_pretend_cap_for_network_admin()
+				&& ! is_super_admin() ) ) {
 				$missing_caps[ $cap ] = $restriction_if_no_cap;
 			}
 		}

@@ -32,12 +32,12 @@ class EE_Restriction_Generator_WP_User extends EE_Restriction_Generator_Base{
 		if( is_multisite() ) {
 			global $wpdb;
 			//add a default where condition so we only ever return users for the current blog (on multisite)
-			$restrictions[ EE_Restriction_Generator_Base::get_default_restrictions_cap() ] = new EE_Default_Where_Conditions( 
+			$restrictions[ EE_Restriction_Generator_Base::get_pretend_cap_for_network_admin() ] = new EE_Default_Where_Conditions( 
 					array( 
 						'WP_User_Meta.meta_key' => $wpdb->get_blog_prefix() . 'capabilities',
 						'WP_User_Meta.meta_value' => array( 'IS_NOT_NULL' )
-					)
-				);
+				)
+			);
 		}
 		return $restrictions;
 	}
