@@ -52,6 +52,7 @@ class EEM_WP_User extends EEM_Base {
 			'Question_Group' => new EE_Has_Many_Relation(),
 			'Ticket' => new EE_Has_Many_Relation(),
 			'Venue' => new EE_Has_Many_Relation(),
+			'WP_User_Meta' => new EE_Has_Many_Relation( false ),
 		);
 		$this->_wp_core_model = true;
 		$this->_caps_slug = 'users';
@@ -66,8 +67,8 @@ class EEM_WP_User extends EEM_Base {
 		if( is_multisite() ) {
 			$this->_default_where_conditions_strategy = new EE_Default_Where_Conditions( 
 				array( 
-					'User_Meta.meta_key' => $wpdb->get_blog_prefix() . 'capabilities',
-					'User_Meta.meta_value' => array( 'IS_NOT_NULL' )
+					'WP_User_Meta.meta_key' => $wpdb->get_blog_prefix() . 'capabilities',
+					'WP_User_Meta.meta_value' => array( 'IS_NOT_NULL' )
 				)
 			);
 		}
