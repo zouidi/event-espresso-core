@@ -18,17 +18,17 @@
 
 
 /**
- * EE_User_Meta class
+ * EE_WP_User_Meta class
  *
  * @package 			Event Espresso
  * @subpackage 	includes/classes/EE_Answer.class.php
  * @author 				Mike Nelson
  */
-class EE_User_Meta extends EE_Base_Class {
+class EE_WP_User_Meta extends EE_Base_Class {
 
 	/**
 	 * @param array $props_n_values
-	 * @return EE_User_Meta|mixed
+	 * @return EE_WP_User_Meta|mixed
 	 */
 	public static function new_instance( $props_n_values = array() ) {
 		$has_object = parent::_check_for_object( $props_n_values, __CLASS__ );
@@ -39,7 +39,7 @@ class EE_User_Meta extends EE_Base_Class {
 
 	/**
 	 * @param array $props_n_values
-	 * @return EE_User_Meta
+	 * @return EE_WP_User_Meta
 	 */
 	public static function new_instance_from_db( $props_n_values = array() ) {
 		return new self( $props_n_values, TRUE );
@@ -109,5 +109,5 @@ class EE_User_Meta extends EE_Base_Class {
 
 
 }
-/* End of file EE_User_Meta.class.php */
+/* End of file EE_WP_User_Meta.class.php */
 /* Location: /includes/classes/EE_Answer.class.php */
