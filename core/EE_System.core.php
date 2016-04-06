@@ -574,6 +574,13 @@ final class EE_System {
 				'1.15.0',
 				true
 			);
+			wp_register_script(
+				'jquery-validate-extra-methods',
+				EE_GLOBAL_ASSETS_URL . 'scripts/jquery.validate.additional-methods.min.js',
+				array( 'jquery-validate' ),
+				'1.15.0',
+				true
+			);
 		}
 	}
 
