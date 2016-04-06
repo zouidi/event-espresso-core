@@ -144,6 +144,7 @@ class EE_Bootstrap {
 		$stack_apps = apply_filters(
 			'FHEE__EE_Bootstrap__build_request_stack__stack_apps',
 			array(
+				'EE_Detect_Login',
 				'EE_Recommended_Versions',
 				'EE_Alpha_Banner_Warning',
 				'EE_Request_Logger',

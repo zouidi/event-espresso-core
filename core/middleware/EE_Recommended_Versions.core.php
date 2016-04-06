@@ -33,6 +33,7 @@ class EE_Recommended_Versions extends EE_Middleware {
 			add_action( 'admin_notices', array( $this, 'minimum_wp_version_error' ), 1 );
 			//$this->response->add_output( "\n<br />" . 'minimum_wp_version_error' );
 			$this->response->terminate_request();
+			$this->response->deactivate_plugin();
 		}
 		// check required PHP version
 		if ( ! $this->_minimum_php_version_required() ) {
@@ -40,6 +41,7 @@ class EE_Recommended_Versions extends EE_Middleware {
 			add_action( 'admin_notices', array( $this, 'minimum_php_version_error' ), 1 );
 			//$this->response->add_output( "\n<br />" . 'minimum_php_version_error' );
 			$this->response->terminate_request();
+			$this->response->deactivate_plugin();
 		}
 		// check recommended WP version
 		if ( ! $this->_minimum_wp_version_recommended() ) {

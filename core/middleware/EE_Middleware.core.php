@@ -23,7 +23,7 @@ abstract class EE_Middleware implements EEI_Request_Decorator {
 	 * @access 	protected
 	 * @type    EEI_Request_Decorator $request_stack
 	 */
-	protected $request_stack = null;
+	protected $request_stack;
 
 	/**
 	 * @access 	protected
@@ -62,8 +62,6 @@ abstract class EE_Middleware implements EEI_Request_Decorator {
 		$this->response = $response;
 		if ( ! $this->response->request_terminated() ) {
 			$this->response = $this->request_stack->handle_request( $this->request, $this->response );
-		} else {
-			espresso_deactivate_plugin( EE_PLUGIN_BASENAME );
 		}
 		return $this->response;
 	}
