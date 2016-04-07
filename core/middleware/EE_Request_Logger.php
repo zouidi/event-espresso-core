@@ -75,7 +75,7 @@ class EE_Request_Logger extends EE_Middleware {
 		) {
 			return;
 		}
-		if ( ! file_exists( $path_to_log_file ) && ! touch( $path_to_log_file ) ) {
+		if ( ! file_exists( $path_to_log_file ) && ! touch( $path_to_log_file ) && WP_DEBUG ) {
 			throw new EE_Error(
 				sprintf(
 					__( 'The Espresso debug request log file %1$s can not be created', 'event_espresso' ),
@@ -83,7 +83,7 @@ class EE_Request_Logger extends EE_Middleware {
 				)
 			);
 		}
-		if ( ! is_writable( $path_to_log_file ) ) {
+		if ( ! is_writable( $path_to_log_file ) && WP_DEBUG ) {
 			throw new EE_Error(
 				sprintf(
 					__( 'The Espresso debug request log file %1$s is not writable', 'event_espresso' ),
