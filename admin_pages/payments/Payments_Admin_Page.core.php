@@ -91,7 +91,8 @@ class Payments_Admin_Page extends EE_Admin_Page {
 			),
 			'payment_methods_admin_only' => array(
 				'func'=>'_payment_methods_list',
-				'capability' => 'ee_edit_payment_methods'
+				'capability' => 'ee_payment_method_admin_only',
+				'args' => array('admin_only' => TRUE)
 			),
 			'payment_settings' => array(
 				'func' => '_payment_settings',
