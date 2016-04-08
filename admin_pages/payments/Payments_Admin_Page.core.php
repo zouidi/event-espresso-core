@@ -260,7 +260,7 @@ class Payments_Admin_Page extends EE_Admin_Page {
 
 
 
-	protected function _payment_methods_list() {
+	protected function _payment_methods_list( $admin_only = FALSE ) {
 		/**
 		 * first let's ensure payment methods have been setup. We do this here because when people activate a
 		 * payment method for the first time (as an addon), it may not setup its capabilities or get registered correctly due
@@ -274,28 +274,42 @@ class Payments_Admin_Page extends EE_Admin_Page {
 		//setup tabs, one for each payment method type
 		$tabs = array();
 		$payment_methods = array();
-		foreach( EE_Payment_Method_Manager::instance()->payment_method_types() as $pmt_obj ) {
-			// we don't want to show admin-only PMTs for now
-			if ( $pmt_obj instanceof EE_PMT_Admin_Only ) {
-				continue;
+
+		// Check if we only want admin only payment methods
+		if( $admin_only ) {
+
+			//Pull all 'Admin_Only' payment methods
+			$payment_methods = EEM_Payment_Method::instance()->get_all( array( array( 'PMD_type' => 'Admin_Only' ) ) ); 
+		
+		} else {
+
+			//Loop through and pull all other payment method types
+			foreach( EE_Payment_Method_Manager::instance()->payment_method_types() as $pmt_obj ) {
+			
+				// we don't want to show admin-only PMTs for now
+				if ( $pmt_obj instanceof EE_PMT_Admin_Only ) {
+					continue;
+				} 
+
+				//check access
+				if ( ! EE_Registry::instance()->CAP->current_user_can( $pmt_obj->cap_name(), 'specific_payment_method_type_access' ) ) {
+					continue;
+				}
+
+				//check for any active pms of that type
+				$payment_method = EEM_Payment_Method::instance()->get_one_of_type( $pmt_obj->system_name() );
+				if ( ! $payment_method instanceof EE_Payment_Method ) {
+					$payment_method = EE_Payment_Method::new_instance(
+						array(
+							'PMD_slug'					=>sanitize_key( $pmt_obj->system_name() ),
+							'PMD_type'					=>$pmt_obj->system_name(),
+							'PMD_name'				=>$pmt_obj->pretty_name(),
+							'PMD_admin_name'	=>$pmt_obj->pretty_name()
+						)
+					);
+				}
+				$payment_methods[ $payment_method->slug() ] = $payment_method;
 			}
-			//check access
-			if ( ! EE_Registry::instance()->CAP->current_user_can( $pmt_obj->cap_name(), 'specific_payment_method_type_access' ) ) {
-				continue;
-			}
-			//check for any active pms of that type
-			$payment_method = EEM_Payment_Method::instance()->get_one_of_type( $pmt_obj->system_name() );
-			if ( ! $payment_method instanceof EE_Payment_Method ) {
-				$payment_method = EE_Payment_Method::new_instance(
-					array(
-						'PMD_slug'					=>sanitize_key( $pmt_obj->system_name() ),
-						'PMD_type'					=>$pmt_obj->system_name(),
-						'PMD_name'				=>$pmt_obj->pretty_name(),
-						'PMD_admin_name'	=>$pmt_obj->pretty_name()
-					)
-				);
-			}
-			$payment_methods[ $payment_method->slug() ] = $payment_method;
 		}
 		$payment_methods = apply_filters( 'FHEE__Payments_Admin_Page___payment_methods_list__payment_methods', $payment_methods );
 		foreach( $payment_methods as $payment_method ) {
