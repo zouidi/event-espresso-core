@@ -243,22 +243,9 @@ class Payments_Admin_Page extends EE_Admin_Page {
 		wp_enqueue_script( 'ee_admin_js' );
 		wp_enqueue_script( 'ee-text-links' );
 		wp_enqueue_script( 'espresso_payments', EE_PAYMENTS_ASSETS_URL . 'espresso_payments_admin.js', array( 'espresso-ui-theme', 'ee-datepicker' ), EVENT_ESPRESSO_VERSION, TRUE );
-	}
-
-
-
-
-
-	public function load_scripts_styles_default() {
-		//styles
-		wp_register_style( 'espresso_payments', EE_PAYMENTS_ASSETS_URL . 'ee-payments.css', array(), EVENT_ESPRESSO_VERSION );
-		wp_enqueue_style( 'espresso_payments' );
+		wp_enqueue_style( 'espresso_payments', EE_PAYMENTS_ASSETS_URL . 'ee-payments.css', array(), EVENT_ESPRESSO_VERSION );
 		wp_enqueue_style( 'ee-text-links' );
-		//scripts
 	}
-
-
-
 
 	protected function _payment_methods_list( $admin_only = FALSE ) {
 		/**
