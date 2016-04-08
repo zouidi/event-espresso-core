@@ -338,13 +338,16 @@ class Payments_Admin_Page extends EE_Admin_Page {
 	 *   _get_active_payment_method_slug
 	 * 	@return string
 	 */
-	protected function _get_active_payment_method_slug(){
+	protected function _get_active_payment_method_slug( $admin_only = FALSE ){
 		$payment_method_slug = FALSE;
 		//decide which payment method tab to open first, as dictated by the request's 'payment_method'
 		if ( isset( $this->_req_data['payment_method'] )) {
 			// if they provided the current payment method, use it
 			$payment_method_slug = sanitize_key( $this->_req_data['payment_method'] );
+		} elseif ( $admin_only ) {
+			$payment_method_slug = 'cash';
 		}
+
 		$payment_method = EEM_Payment_Method::instance()->get_one( array( array( 'PMD_slug' => $payment_method_slug )));
 		// if that didn't work or wasn't provided, find another way to select the current pm
 		if ( ! $this->_verify_payment_method( $payment_method )) {
