@@ -8,14 +8,14 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 
 /**
  * Class EspressoCore
- *
- * Description
+ * Basically just a DTO (Data Transfer Object) for holding all of the critical main EE class objects.
+ * This is primarily done for the benefit of MultiSite installations of WordPres,
+ * so that each site gets it's own set of objects, if a super admin is switching between sites.
  *
  * @package       Event Espresso
  * @subpackage    core
  * @author        Brent Christensen
- * @since         $VID:$
- *
+ * @since         4.9.0
  */
 class EspressoCore {
 
