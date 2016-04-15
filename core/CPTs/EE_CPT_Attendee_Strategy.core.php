@@ -36,12 +36,17 @@ class EE_CPT_Attendee_Strategy {
 	 *    class constructor
 	 *
 	 * @access    public
-	 * @param 	array 	$arguments
-	 * @return \EE_CPT_Attendee_Strategy
+	 * @param    array $arguments
+	 * @param          $CPT
 	 */
-	public function __construct( $arguments = array() ) {
-		$this->CPT = isset( $arguments['CPT'] ) ? $arguments['CPT'] : NULL;
-		$WP_Query = isset( $arguments['WP_Query'] ) ? $arguments['WP_Query'] : NULL;
+	public function __construct( $arguments = array(), $CPT ) {
+		if ( $arguments instanceof WP_Query ) {
+			$this->CPT = $CPT;
+			$WP_Query = $arguments;
+		} else {
+			$this->CPT = isset( $arguments['CPT'] ) ? $arguments['CPT'] : null;
+			$WP_Query = isset( $arguments['WP_Query'] ) ? $arguments['WP_Query'] : null;
+		}
 //		add_filter( 'the_posts', array( $this, 'the_posts' ), 1, 2 );
 	}
 
@@ -53,7 +58,7 @@ class EE_CPT_Attendee_Strategy {
 	 * @access    public
 	 * @param          $posts
 	 * @param WP_Query $wp_query
-	 * @return    void
+	 * @return    array
 	 */
 	public function the_posts( $posts, WP_Query $wp_query) {
 		//$EVT = EE_Registry::instance()->load_model( 'Event' );

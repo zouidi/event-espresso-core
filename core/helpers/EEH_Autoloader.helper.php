@@ -1,7 +1,7 @@
 <?php
-if (!defined('EVENT_ESPRESSO_VERSION') )
+if (!defined('EVENT_ESPRESSO_VERSION') ) {
 	exit('NO direct script access allowed');
-
+}
 /**
  * EEH_Autoloader
  *
@@ -22,7 +22,7 @@ class EEH_Autoloader extends EEH_Base {
 	 * @var    $_instance
 	 * @access    private
 	 */
-	private static $_instance = null;
+	private static $_instance;
 
 	/**
 	* 	$_autoloaders
@@ -100,8 +100,7 @@ class EEH_Autoloader extends EEH_Base {
 	 * @throws \EE_Error
 	 */
 	public static function register_autoloader( $class_paths, $read_check = true, $debug = false ) {
-		$class_paths = is_array( $class_paths ) ? $class_paths : array( $class_paths );
-		foreach ( $class_paths as $class => $path ) {
+		foreach ( (array)$class_paths as $class => $path ) {
 			// don't give up! you gotta...
 			// get some class
 			if ( empty( $class )) {
@@ -148,10 +147,9 @@ class EEH_Autoloader extends EEH_Base {
 	 */
 	private function _register_custom_autoloaders() {
 		EEH_Autoloader::$debug = '';
-		\EEH_Autoloader::register_helpers_autoloaders();
-		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_CORE . 'interfaces' );
-		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_CORE );
+		EEH_Autoloader::register_helpers_autoloaders();
 		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_INTERFACES, true );
+		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_CORE );
 		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_MODELS, true );
 		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_CLASSES );
 		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_FORM_SECTIONS, true );

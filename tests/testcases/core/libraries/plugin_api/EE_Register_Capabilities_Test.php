@@ -33,7 +33,12 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 	 */
 	protected $_meta_caps_before_registering_new_ones = array();
 
-	function __construct() {
+
+
+	/**
+	 * EE_Register_Capabilities_Test constructor.
+	 */
+	public function __construct() {
 		$capabilities_array = array(
 			'administrator' => array( 'test_read', 'test_write', 'test_others_read', 'test_others_write', 'test_private_read', 'test_private_write' )
 		);
@@ -53,7 +58,7 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 			'capabilities' => $capabilities_array,
 			'capability_maps' => $numeric_cap_maps_array
 		);
-
+		parent::__construct();
 	}
 
 
@@ -72,7 +77,7 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 		$this->_user->add_role('administrator');
 
 		//verify administrator role set
-		$this->assertTrue( user_can( $this->_user, 'administrator' ) );
+		static::assertTrue( user_can( $this->_user, 'administrator' ) );
 	}
 
 
@@ -81,13 +86,13 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 	 * Utility function to just setup valid capabilities for tests in this suite.
 	 *
 	 * @since 1.0.0
-	 *
-	 * @return void
+	 * @param bool $non_numeric
+	 * @throws \EE_Error
 	 */
 	private function _pretend_capabilities_registered( $non_numeric = true ) {
 		//pretend correct hookpoint set.
 		global $wp_actions;
-		unset( $wp_actions['AHEE__EE_System___detect_if_activation_or_upgrade__begin'] );
+		unset( $wp_actions['AHEE__EE_Activation_Manager__detect_activations_or_upgrades__end'] );
 		//register capabilities
 		$capabilities_to_register = $non_numeric ? $this->_valid_capabilities : $this->_valid_capabilities_numeric_caps_map;
 		EE_Register_Capabilities::register( 'Test_Capabilities', $capabilities_to_register );
@@ -105,10 +110,10 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 
 		//verify new caps are in the role
 		$role = get_role( 'administrator' );
-		$this->assertContains( $this->_valid_capabilities['capabilities']['administrator'], $role->capabilities );
+		static::assertContains( $this->_valid_capabilities['capabilities']['administrator'], $role->capabilities );
 
 		//make sure we didn't erase the existing capabilities (@see https://events.codebasehq.com/projects/event-espresso/tickets/6700)
-		$this->assertContains( array( 'ee_read_ee', 'ee_read_event' ), $role->capabilities, 'Looks like registering capabilities is overwriting default capabilites, that will cause problems' );
+		static::assertContains( array( 'ee_read_ee', 'ee_read_event' ), $role->capabilities, 'Looks like registering capabilities is overwriting default capabilities, that will cause problems' );
 
 		//setup user
 		$this->setupUser();
@@ -147,7 +152,7 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 	 */
 	public function _verify_new_cap_map_ok( $incoming_cap_map ){
 		foreach( $this->_caps_before_registering_new_ones as $role => $caps ){
-			$this->assertArrayHasKey( $role, $incoming_cap_map );
+			static::assertArrayHasKey( $role, $incoming_cap_map );
 			foreach( $caps as $cap ){
 				$this->assertArrayContains( $cap, $incoming_cap_map[ $role ] );
 			}
@@ -168,14 +173,14 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 			$meta_cap_to_check = $meta_cap_info[0];
 			//loop through and make sure that this meta cap is set on an instantiated map
 			foreach ( $incoming_meta_caps as $meta_cap_class ) {
-				if ( $meta_cap_class->meta_cap == $meta_cap_to_check ) {
+				if ( $meta_cap_class->meta_cap === $meta_cap_to_check ) {
 					$has_meta_cap = true;
 					break;
 				}
 			}
 
 			if ( ! $has_meta_cap ) {
-				$this->fail( sprintf( 'Expecting the %s meta cap to be registered but it is not.', $meta_cap_to_check ) );
+				static::fail( sprintf( 'Expecting the %s meta cap to be registered but it is not.', $meta_cap_to_check ) );
 			}
 		}
 		return $incoming_meta_caps;
@@ -190,7 +195,7 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 	 * @return array
 	 */
 	public function _verify_new_cap_map_ok_after_deregister( $incoming_cap_map ){
-		$this->assertNotContains( $this->_valid_capabilities['capabilities']['administrator'], $incoming_cap_map['administrator'] );
+		static::assertNotContains( $this->_valid_capabilities['capabilities']['administrator'], $incoming_cap_map['administrator'] );
 		return $incoming_cap_map;
 	}
 
@@ -207,14 +212,14 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 			$meta_cap_to_check = $meta_cap_info[0];
 			//loop through and make sure that this meta cap is set on an instantiated map
 			foreach ( $incoming_meta_caps as $meta_cap_class ) {
-				if ( $meta_cap_class->meta_cap == $meta_cap_to_check ) {
+				if ( $meta_cap_class->meta_cap === $meta_cap_to_check ) {
 					$has_meta_cap = true;
 					break;
 				}
 			}
 
 			if ( $has_meta_cap ) {
-				$this->fail( sprintf( 'Expecting the %s meta cap to not be registered but it is.', $meta_cap_to_check ) );
+				static::fail( sprintf( 'Expecting the %s meta cap to not be registered but it is.', $meta_cap_to_check ) );
 			}
 		}
 		return $incoming_meta_caps;
@@ -226,7 +231,8 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 	/**
 	 * Gets all the caps BEFORE the registered caps get added to make sure none get
 	 * removed.
-	 * @param type $incoming_cap_map
+	 *
+	 * @param array $incoming_cap_map
 	 * @return array
 	 */
 	public function _remember_what_caps_were_beforehand( $incoming_cap_map ){
@@ -239,7 +245,8 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 	/**
 	 * Gets all the cap maps BEFORE the registered caps get added to make sure none get
 	 * removed.
-	 * @param type $incoming_cap_map
+	 *
+	 * @param array $incoming_cap_map
 	 * @return array
 	 */
 	public function _remember_what_meta_caps_were_beforehand( $incoming_cap_map ){
@@ -249,82 +256,88 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 
 
 
-	function test_registering_capabilities_too_early() {
+	public function test_registering_capabilities_too_early() {
 
 		//test activating in the wrong spot.
 		try{
 			EE_Register_Capabilities::register('Test_Capabilities', $this->_valid_capabilities);
-			$this->fail('We should have had a warning saying that we are registering capabilities at the wrong time');
+			static::fail('We should have had a warning saying that we are registering capabilities at the wrong time');
 		}catch(PHPUnit_Framework_Error_Notice $e){
-			$this->assertTrue(True);
+			static::assertTrue(True);
 		}
 	}
 
 
-	function test_registering_capabilities_and_they_are_assigned() {
+
+	public function test_registering_capabilities_and_they_are_assigned() {
 		$this->_pretend_capabilities_registered();
 
 		//now capabilities *SHOULD* be set on the user.  Let's verify.
-		$this->assertTrue( user_can( $this->_user, 'test_read' ) );
-		$this->assertTrue( user_can( $this->_user, 'test_write' ) );
-		$this->assertTrue( user_can( $this->_user, 'test_others_read' ) );
-		$this->assertTrue( user_can( $this->_user, 'test_others_write' ) );
-		$this->assertTrue( user_can( $this->_user, 'test_private_read' ) );
-		$this->assertTrue( user_can( $this->_user, 'test_private_write' ) );
+		static::assertTrue( user_can( $this->_user, 'test_read' ) );
+		static::assertTrue( user_can( $this->_user, 'test_write' ) );
+		static::assertTrue( user_can( $this->_user, 'test_others_read' ) );
+		static::assertTrue( user_can( $this->_user, 'test_others_write' ) );
+		static::assertTrue( user_can( $this->_user, 'test_private_read' ) );
+		static::assertTrue( user_can( $this->_user, 'test_private_write' ) );
 	}
 
 
 
-
-	function test_capability_maps_registered_non_numeric() {
+	public function test_capability_maps_registered_non_numeric() {
 		$this->_pretend_capabilities_registered();
 		//the best way to test this is to ensure the registered maps work.  So let's author an event by the user.
 
 		//main users event.
+		/** @var EE_Event $event */
 		$event = $this->factory->event->create( array( 'EVT_wp_user' => $this->_user->ID ) );
 
 		//other users event (checking others event caps).
 		$user_id = $this->factory->user->create();
 		$other_user = $this->factory->user->get_object_by_id( $user_id );
+		/** @var EE_Event $other_event */
 		$other_event = $this->factory->event->create( array( 'EVT_wp_user' => $other_user->ID) );
 
 		//make sure we have an event
-		$this->assertInstanceOf( 'EE_Event', $event );
-		$this->assertInstanceOf( 'EE_Event', $other_event );
+		static::assertInstanceOf( 'EE_Event', $event );
+		static::assertInstanceOf( 'EE_Event', $other_event );
 
 		//check map items for event.
-		$this->assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_read', 'testing_read', $event->ID() ) );
-		$this->assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_write', 'testing_edit', $event->ID() ) );
-		$this->assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_read', 'testing_read', $other_event->ID() ) );
-		$this->assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_write', 'testing_edit', $other_event->ID() ) );
+		static::assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_read', 'testing_read', $event->ID() ) );
+		static::assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_write', 'testing_edit', $event->ID() ) );
+		static::assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_read', 'testing_read', $other_event->ID() ) );
+		static::assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_write', 'testing_edit', $other_event->ID() ) );
 	}
 
 
-	function test_capability_maps_registered_numeric() {
+
+	public function test_capability_maps_registered_numeric() {
 		$this->_pretend_capabilities_registered( false );
 		//the best way to test this is to ensure the registered maps work.  So let's author an event by the user.
 
 		//main users event.
+		/** @var EE_Event $event */
 		$event = $this->factory->event->create( array( 'EVT_wp_user' => $this->_user->ID ) );
 
 		//other users event (checking others event caps).
 		$user_id = $this->factory->user->create();
 		$other_user = $this->factory->user->get_object_by_id( $user_id );
+		/** @var EE_Event $other_event */
 		$other_event = $this->factory->event->create( array( 'EVT_wp_user' => $other_user->ID) );
 
 		//make sure we have an event
-		$this->assertInstanceOf( 'EE_Event', $event );
-		$this->assertInstanceOf( 'EE_Event', $other_event );
+		static::assertInstanceOf( 'EE_Event', $event );
+		static::assertInstanceOf( 'EE_Event', $other_event );
 
 		//check map items for event.
-		$this->assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_read', 'testing_read', $event->ID() ) );
-		$this->assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_write', 'testing_edit', $event->ID() ) );
-		$this->assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_read', 'testing_read', $other_event->ID() ) );
-		$this->assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_write', 'testing_edit', $other_event->ID() ) );
+		static::assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_read', 'testing_read', $event->ID() ) );
+		static::assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_write', 'testing_edit', $event->ID() ) );
+		static::assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_read', 'testing_read', $other_event->ID() ) );
+		static::assertTrue( EE_Capabilities::instance()->user_can( $this->_user, 'test_write', 'testing_edit', $other_event->ID() ) );
 	}
 
 
-	function test_capability_maps_deregistered() {//setup registered caps first
+
+	public function test_capability_maps_deregistered() {//setup registered caps first
 		$this->_pretend_capabilities_registered();
 
 		//now let's add filter verify that new cap map doesn't have the mapped items after de-registering. The callback

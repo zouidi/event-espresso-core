@@ -1,4 +1,4 @@
-/* 
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -17,7 +17,7 @@ var BG = {
 		bar_size = jQuery('#progress-responsive figure').innerWidth();
 		new_bar_size = percent_complete * parseFloat( bar_size );
 		jQuery('#progress-responsive__bar').width( new_bar_size );
-		percent_complete = Math.floor( percent_complete * 100 ) + '% ('+items_complete+'/'+items_total+')';		
+		percent_complete = Math.floor( percent_complete * 100 ) + '% ('+items_complete+'/'+items_total+')';
 		jQuery('#progress-responsive__percent').text(percent_complete);
 	}
 }; // BAR GRAPH window object
@@ -42,10 +42,10 @@ var BG = {
 //	while(more_to_migrate){
 //		//do ajax request
 //	}
-	
+
 //	jQuery.post(ajaxurl,data, function(response){
 //		alert("response"+response);
-//		
+//
 //	});
 //};
 
@@ -70,7 +70,7 @@ var Maintenance_helper = {
 			page: 'espresso_maintenance_settings'
 		};
 		Maintenance_helper.do_ajax(data,{'where':'#migration-messages', 'what':'prepend','callback':Maintenance_helper.update_progress});
-		
+
 	},
 	/**
 	 * @param ajax_response shoudl eb an object with attributes error, success, notices,content, and data
@@ -90,7 +90,7 @@ var Maintenance_helper = {
 		}
 		//update the bar graph
 		BG.update_progress_to(migration_data.records_migrated, migration_data.records_to_migrate);
-		
+
 		//update the main title of what we're doing
 		Maintenance_helper.display_content(migration_data.script, '#main-message', 'clear');
 		//update the descriptive text
@@ -117,7 +117,10 @@ var Maintenance_helper = {
 		});
 		BG.update_progress_to( records_migrated, records_to_migrate );
 		jQuery( '#progress-responsive__percent' ).css({ 'color' : '#fff' });
-		alert(ee_maintenance.click_next_when_ready);
+		// let's move things along
+		if ( confirm( ee_maintenance.click_next_when_ready ) ) {
+			document.getElementById( 'start-migration' ).click();
+		}
 	},
 	//performs the ajax request, and if successful, calls setup.callback;
 	//on failure with HTML response, calls report_general_migration_error with the content and loads that content to the screen
@@ -211,17 +214,17 @@ jQuery(function() {
 		jQuery('#migration-monitor').toggle('slow');
 		jQuery('#db-backed-up').prop('checked', false);
 	});
-	
+
 	//start migration, update start-button to be "migrating..." and disable it
 	jQuery('#migration-risks').click(function(){
 		jQuery('#display-migration-details').trigger('click');
 	});
-	
+
 	//start migration, update start-button to be "migrating..." and disable it
 	jQuery('#start-migration').click(function(){
 		Maintenance_helper.begin_migration();
 	});
-	
+
 	//start migration, update start-button to be "migrating..." and disable it
 	jQuery('#do-not-migrate').click(function(){
 		if ( confirm( 'You have chosen to NOT migrate your existing data.\nAre you sure you want to continue?' )) {
@@ -230,7 +233,7 @@ jQuery(function() {
 			return false;
 		}
 	});
-	
+
 	//start migration, update start-button to be "migrating..." and disable it
 	jQuery('#delete-all-data-btn').click(function(){
 		if ( confirm( 'Are you sure you want to permanently delete ALL Event Espresso tables, records and options?\nThis action can NOT be undone.' )) {
@@ -239,5 +242,5 @@ jQuery(function() {
 			return false;
 		}
 	});
-	
+
 });

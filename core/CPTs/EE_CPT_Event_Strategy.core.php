@@ -33,13 +33,13 @@ class EE_CPT_Event_Strategy {
 
 
 	/**
-	 *    class constructor
+	 * class constructor
 	 *
-	 * @access    public
-	 * @param WP_Query $wp_query
-	 * @param array $CPT
+	 * @access public
+	 * @param  WP_Query|array   $wp_query
+	 * @param  \EE_CPT_Strategy $CPT
 	 */
-	public function __construct( $wp_query, $CPT = array() ) {
+	public function __construct( $wp_query, $CPT = null ) {
 		if ( $wp_query instanceof WP_Query ) {
 			$WP_Query = $wp_query;
 			$this->CPT = $CPT;
@@ -60,9 +60,14 @@ class EE_CPT_Event_Strategy {
 		// 'posts_join'
 		$this->_add_filters();
 		if ( $WP_Query instanceof WP_Query ) {
-			$WP_Query->is_espresso_event_single = is_singular() && isset( $WP_Query->query->post_type ) && $WP_Query->query->post_type == 'espresso_events' ? TRUE : FALSE;
-			$WP_Query->is_espresso_event_archive = is_post_type_archive('espresso_events') ? TRUE : FALSE;
-			$WP_Query->is_espresso_event_taxonomy = is_tax( 'espresso_event_categories' ) ? TRUE : FALSE;
+			$WP_Query->is_espresso_event_single =
+				is_singular()
+				&& isset( $WP_Query->query->post_type )
+				&& $WP_Query->query->post_type === 'espresso_events' 
+					? true
+					: false;
+			$WP_Query->is_espresso_event_archive = is_post_type_archive('espresso_events') ? true : false;
+			$WP_Query->is_espresso_event_taxonomy = is_tax( 'espresso_event_categories' ) ? true : false;
 		}
 
 	}
@@ -176,10 +181,15 @@ class EE_CPT_Event_Strategy {
 				$wp_query->is_espresso_event_archive
 				|| $wp_query->is_espresso_event_taxonomy
 			)
+			&& (
+				! isset(
+					EE_Registry::instance()->CFG->template_settings->EED_Events_Archive,
+					EE_Registry::instance()->CFG->template_settings->EED_Events_Archive->display_expired_events
+				)
+				|| ! EE_Registry::instance()->CFG->template_settings->EED_Events_Archive->display_expired_events
+			)
 		) {
-			if ( ! isset( EE_Registry::instance()->CFG->template_settings->EED_Events_Archive ) || ! isset( EE_Registry::instance()->CFG->template_settings->EED_Events_Archive->display_expired_events ) || ! EE_Registry::instance()->CFG->template_settings->EED_Events_Archive->display_expired_events ) {
-				$SQL .=  ' AND ' . EEM_Datetime::instance()->table() . '.DTT_EVT_end > "' . current_time( 'mysql', true ) . '" ';
-			}
+			$SQL .=  ' AND ' . EEM_Datetime::instance()->table() . '.DTT_EVT_end > "' . current_time( 'mysql', true ) . '" ';
 		}
 		return $SQL;
 	}

@@ -1,34 +1,17 @@
 <?php
-if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('NO direct script access allowed'); }
-
+if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
+	exit( 'NO direct script access allowed' );
+}
 /**
- * Event Espresso
- *
- * Event Registration and Management Plugin for Wordpress
- *
- * @package		Event Espresso
- * @author		Seth Shoultes
- * @copyright	(c)2009-2012 Event Espresso All Rights Reserved.
- * @license		http://eventespresso.com/support/terms-conditions/  ** see Plugin Licensing **
- * @link		http://www.eventespresso.com
- * @version		4.0
- *
- * ------------------------------------------------------------------------
- *
  * EEH_Sideloader
  *
- * This is a helper utility class that provides "sideloading" functionality.  Sideloading simply refers to retrieving files hosted elsehwere (usually github) that are downloaded into EE.
+ * This is a helper utility class that provides "sideloading" functionality.
+ * Sideloading simply refers to retrieving files hosted elsewhere (usually github) that are downloaded into EE.
  *
  * @package		Event Espresso
  * @subpackage	/helpers/EEH_Sideloader.helper.php
  * @author		Darren Ethier
- *
- * ------------------------------------------------------------------------
  */
-
-
-
-require_once( EE_HELPERS . 'EEH_Base.helper.php' );
 class EEH_Sideloader extends EEH_Base {
 
 	private $_upload_to;
@@ -37,36 +20,31 @@ class EEH_Sideloader extends EEH_Base {
 	private $_new_file_name;
 
 
+
 	/**
-	 * constructor allows the user to set the properties on the sideloader on construct.  However, there are also setters for doing so.
-	 *
-	 * @access public
-	 * @param array $init array fo initializing the sideloader if keys match the properties.
+	 * EEH_Sideloader constructor.
 	 */
-	public function __construct( $init = array() ) {
-		$this->_init( $init );
-	}
+	public function __construct() {}
 
 
 	/**
 	 * sets the properties for class either to defaults or using incoming initialization array
 	 *
-	 * @access private
 	 * @param  array  $init array on init (keys match properties others ignored)
 	 * @return void
 	 */
-	private function _init( $init ) {
+	public function init( $init ) {
 		$defaults = array(
 			'_upload_to' => $this->_get_wp_uploads_dir(),
 			'_upload_from' => '',
 			'_permissions' => 0644,
-			'_new_file_name' => 'EE_Sideloader_' . uniqid() . '.default'
-			);
+			'_new_file_name' => 'EE_Sideloader_' . uniqid( get_current_blog_id(), true ) . '.default'
+		);
 
 		$props = array_merge( $defaults, $init );
 
 		foreach ( $props as $key => $val ) {
-			if ( EEH_Class_Tools::has_property( $this, $key ) ) {
+			if ( property_exists( $this, $key ) ) {
 				$this->{$key} = $val;
 			}
 		}
@@ -80,35 +58,82 @@ class EEH_Sideloader extends EEH_Base {
 	private function _get_wp_uploads_dir() {}
 
 	//setters
+	/**
+	 * @param $upload_to_folder
+	 */
 	public function set_upload_to( $upload_to_folder ) {
 		$this->_upload_to = $upload_to_folder;
 	}
+
+
+
+	/**
+	 * @param $upload_from_folder
+	 */
 	public function set_upload_from( $upload_from_folder ) {
-		$this->_upload_from_folder = $upload_from_folder;
+		$this->_upload_from = $upload_from_folder;
 	}
+
+
+
+	/**
+	 * @param $permissions
+	 */
 	public function set_permissions( $permissions ) {
 		$this->_permissions = $permissions;
 	}
+
+
+
+	/**
+	 * @param $new_file_name
+	 */
 	public function set_new_file_name( $new_file_name ) {
 		$this->_new_file_name = $new_file_name;
 	}
 
 	//getters
+	/**
+	 * @return mixed
+	 */
 	public function get_upload_to() {
 		return $this->_upload_to;
 	}
+
+
+
+	/**
+	 * @return mixed
+	 */
 	public function get_upload_from() {
 		return $this->_upload_from;
 	}
+
+
+
+	/**
+	 * @return mixed
+	 */
 	public function get_permissions() {
 		return $this->_permissions;
 	}
+
+
+
+	/**
+	 * @return mixed
+	 */
 	public function get_new_file_name() {
 		return $this->_new_file_name;
 	}
 
 
-	//upload methods
+
+	/**
+	 * upload methods
+	 *
+	 * @return bool
+	 */
 	public function sideload() {
 		//setup temp dir
 		$temp_file = wp_tempnam( $this->_upload_from );
@@ -124,10 +149,21 @@ class EEH_Sideloader extends EEH_Base {
 
 		$response = wp_safe_remote_get( $this->_upload_from, $wp_remote_args );
 
-		if ( is_wp_error( $response ) || 200 != wp_remote_retrieve_response_code( $response ) ) {
+		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) !== 200 ) {
 			unlink( $temp_file );
 			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				EE_Error::add_error( sprintf( __('Unable to upload the file.  Either the path given to upload from is incorrect, or something else happened.  Here is the response returned:<br />%s<br />Here is the path given: %s', 'event_espresso'), var_export( $response, true ), $this->_upload_from ), __FILE__, __FUNCTION__, __LINE__ );
+				EE_Error::add_error(
+					sprintf(
+						__(
+							'Unable to upload the file.  Either the path given to upload from is incorrect, or something else happened.  Here is the response returned:%3$s%1$s%3$sHere is the path given: %2$s',
+							'event_espresso'
+						),
+						var_export( $response, true ),
+						$this->_upload_from,
+						'<br />'
+					),
+					__FILE__, __FUNCTION__, __LINE__
+				);
 			}
 			return false;
 		}
@@ -146,12 +182,26 @@ class EEH_Sideloader extends EEH_Base {
 		$file = $temp_file;
 
 		//now we have the file, let's get it in the right directory with the right name.
-		$path = apply_filters( 'FHEE__EEH_Sideloader__sideload__new_path', $this->_upload_to . $this->_new_file_name, $this );
-
+		$path = apply_filters(
+			'FHEE__EEH_Sideloader__sideload__new_path',
+			$this->_upload_to . $this->_new_file_name,
+			$this
+		);
 		//move file in
 		if ( false === @ rename( $file, $path ) ) {
 			unlink( $temp_file );
-			EE_Error::add_error(  sprintf( __('Unable to move the file to new location (possible permissions errors). This is the path the class attempted to move the file to: %s', 'event_espresso' ), $path ), __FILE__, __FUNCTION__, __LINE__ );
+			EE_Error::add_error(
+				sprintf(
+					__(
+						'Unable to move the file to new location (possible permissions errors). This is the path the class attempted to move the file to: %s',
+						'event_espresso'
+					),
+					$path
+				),
+				__FILE__,
+				__FUNCTION__,
+				__LINE__
+			);
 			return false;
 		}
 
@@ -162,7 +212,7 @@ class EEH_Sideloader extends EEH_Base {
 		//that's it.  let's allow for actions after file uploaded.
 		do_action( 'AHEE__EE_Sideloader__sideload_after', $this, $path );
 
-		//unlink tempfile
+		//unlink temp file
 		@unlink( $temp_file );
 		return true;
 	}

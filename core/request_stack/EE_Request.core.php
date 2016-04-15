@@ -1,4 +1,6 @@
-<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
+<?php if ( ! defined('EVENT_ESPRESSO_VERSION') ) {
+	exit('No direct script access allowed');
+}
 /**
  * class EE_Request
  *
@@ -51,6 +53,16 @@ class EE_Request {
 	public $front_ajax = false;
 
 
+	/**
+	 * Stores which type of request this is, and whether any type of activation is involved,
+	 * options being one of the above class constants starting with activation_type_*.
+	 * It can be a brand-new activation, a reactivation, an upgrade, a downgrade, or a normal request.
+	 *
+	 * @var int $activation_type
+	 */
+	private $activation_type;
+
+
 
 	/**
 	 *    class constructor
@@ -68,7 +80,7 @@ class EE_Request {
 		$this->_params = array_merge( $get, $post );
 		// AJAX ???
 		$this->ajax       = defined( 'DOING_AJAX' ) ? true : false;
-		$this->front_ajax = $this->is_set( 'ee_front_ajax' ) && $this->get( 'ee_front_ajax' ) == 1 ? true : false;
+		$this->front_ajax = $this->is_set( 'ee_front_ajax' ) && $this->get( 'ee_front_ajax' ) === 1 ? true : false;
 	}
 
 
@@ -111,6 +123,24 @@ class EE_Request {
 
 
 	/**
+	 * @return int
+	 */
+	public function activation_type() {
+		return $this->activation_type;
+	}
+
+
+
+	/**
+	 * @param int $activation_type
+	 */
+	public function set_activation_type( $activation_type ) {
+		$this->activation_type = absint( $activation_type );
+	}
+
+
+
+	/**
 	 *    setter
 	 *
 	 * @access    public
@@ -121,7 +151,11 @@ class EE_Request {
 	 */
 	public function set( $key, $value, $override_ee = FALSE ) {
 		// don't allow "ee" to be overwritten unless explicitly instructed to do so
-		if ( $key != 'ee' || ( $key == 'ee' && empty( $this->_params['ee'] )) || ( $key == 'ee' && ! empty( $this->_params['ee'] ) && $override_ee )) {
+		if (
+			$key !== 'ee'
+			|| ( $key === 'ee' && empty( $this->_params['ee'] ) )
+			|| ( $key === 'ee' && ! empty( $this->_params['ee'] ) && $override_ee )
+		) {
 			$this->_params[ $key ] = $value;
 		}
 	}

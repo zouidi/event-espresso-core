@@ -30,16 +30,21 @@ class EE_Bootstrap {
 	 * @access 	protected
 	 * @type 	EE_Request_Stack_Builder $_request_stack_builder
 	 */
-	protected $_request_stack_builder = null;
+	protected $_request_stack_builder;
 
 	/**
 	 * @access 	protected
 	 * @type 	EE_Request_Stack $_request_stack
 	 */
-	protected $_request_stack = null;
+	protected $_request_stack;
 
 
 
+	/**
+	 * EE_Bootstrap constructor.
+	 *
+	 * @throws    EE_Error
+	 */
 	public function __construct() {
 		// construct request stack and run middleware apps as soon as all WP plugins are loaded
 		add_action( 'plugins_loaded', array( $this, 'run_request_stack' ), 0 );
@@ -49,6 +54,7 @@ class EE_Bootstrap {
 		add_action( 'plugins_loaded', array( 'EE_Bootstrap', 'load_core_configuration' ), 5 );
 		add_action( 'plugins_loaded', array( 'EE_Bootstrap', 'register_shortcodes_modules_and_widgets' ), 7 );
 		add_action( 'plugins_loaded', array( 'EE_Bootstrap', 'brew_espresso' ), 9 );
+		add_action( 'plugins_loaded', array( 'EE_Bootstrap', 'after_brew_espresso' ), 999 );
 	}
 
 
@@ -61,14 +67,42 @@ class EE_Bootstrap {
 		$this->load_autoloader();
 		$this->set_autoloaders_for_required_files();
 		$this->_request_stack_builder = $this->build_request_stack();
-		$this->_request_stack = $this->_request_stack_builder->resolve(
-			new EE_Load_Espresso_Core()
-		);
-		$this->_request_stack->handle_request(
-			new EE_Request( $_GET, $_POST, $_COOKIE ),
-			new EE_Response()
-		);
-		$this->_request_stack->handle_response();
+		try {
+			$espressoCore = EE_Load_Espresso_Core::instance();
+		} catch ( Exception $e ) {
+			EE_Error::add_error( $e->getMessage(), __FILE__, __FUNCTION__, __LINE__ );
+			$espressoCore = null;
+		}
+		if ( $espressoCore instanceof EE_Load_Espresso_Core ) {
+			$this->_request_stack = $this->_request_stack_builder->resolve( $espressoCore );
+			$this->_request_stack->handle_request(
+				EE_Bootstrap::get_request(),
+				EE_Bootstrap::get_response()
+			);
+			$this->_request_stack->handle_response();
+		}
+	}
+
+
+
+	/**
+	 * get_request
+	 *
+	 * @return \EE_Request
+	 */
+	public static function get_request() {
+		return new \EE_Request( $_GET, $_POST, $_COOKIE );
+	}
+
+
+
+	/**
+	 * get_response
+	 *
+	 * @return \EE_Response
+	 */
+	public static function get_response() {
+		return new \EE_Response();
 	}
 
 
@@ -113,6 +147,7 @@ class EE_Bootstrap {
 				'EE_Detect_Login',
 				'EE_Recommended_Versions',
 				'EE_Alpha_Banner_Warning',
+				'EE_Request_Logger',
 			)
 		);
 		// load middleware onto stack : FILO (First In Last Out)
@@ -184,6 +219,18 @@ class EE_Bootstrap {
 	 */
 	public static function brew_espresso() {
 		do_action( 'AHEE__EE_Bootstrap__brew_espresso' );
+	}
+
+
+
+	/**
+	 * after_brew_espresso
+	 * runs at the end of the WP 'plugins_loaded' action at priority 999
+	 * core EE bootstrapping is already complete,
+	 * but this allows us to hook in and do things after other plugins are (hopefully) all loaded
+	 */
+	public static function after_brew_espresso() {
+		do_action( 'AHEE__EE_Bootstrap__after_brew_espresso' );
 	}
 
 

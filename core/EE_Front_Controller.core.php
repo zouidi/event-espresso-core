@@ -1,18 +1,5 @@
 <?php if ( ! defined('EVENT_ESPRESSO_VERSION')) {exit('No direct script access allowed');}
 /**
- * Event Espresso
- *
- * Event Registration and Management Plugin for WordPress
- *
- * @ package			Event Espresso
- * @ author			Seth Shoultes
- * @ copyright		(c) 2008-2011 Event Espresso  All Rights Reserved.
- * @ license			http://eventespresso.com/support/terms-conditions/   * see Plugin Licensing *
- * @ link					http://www.eventespresso.com
- * @ version		 	4.0
- *
- * ------------------------------------------------------------------------
- *
  * EE_Front_Controller
  *
  * @package			Event Espresso
@@ -22,6 +9,18 @@
  * ------------------------------------------------------------------------
  */
 final class EE_Front_Controller {
+
+	/**
+	 * @access    protected
+	 * @type    EE_Request $request
+	 */
+	protected $request;
+
+	/**
+	 * @access    protected
+	 * @type    EE_Response $response
+	 */
+	protected $response;
 
 	/**
 	 * 	$_template_path
@@ -58,10 +57,26 @@ final class EE_Front_Controller {
 
 
 	/**
-	 *    class constructor
-	 *    should fire after shortcode, module, addon, or other plugin's default priority init phases have run
+	 * @singleton method used to instantiate class object
+	 * @access public
+	 * @return EE_Front_Controller
+	 */
+	public static function instance() {
+		// check if class object is instantiated, and instantiated properly
+		if ( ! self::$_instance instanceof  EE_Front_Controller ) {
+			self::$_instance = new self();
+		}
+		return self::$_instance;
+	}
+
+
+
+	/**
+	 * class constructor
 	 *
-	 * @access    public
+	 * should fire after shortcode, module, addon, or other plugin's default priority init phases have run
+	 *
+	 * @access public
 	 * @param \EE_Registry $Registry
 	 * @param \EE_Request_Handler $Request_Handler
 	 * @param \EE_Module_Request_Router $Module_Request_Router
@@ -106,6 +121,8 @@ final class EE_Front_Controller {
 		// for checking that browser cookies are enabled
 		if ( apply_filters( 'FHEE__EE_Front_Controller____construct__set_test_cookie', true )) {
 			setcookie( 'ee_cookie_test', uniqid(), time() + 24 * HOUR_IN_SECONDS, '/' );
+			// add the following to your site's filters to turn off the test cookie:
+			// add_filter( 'FHEE__EE_Front_Controller____construct__set_test_cookie', '__return_false' );
 		}
 	}
 
@@ -408,19 +425,19 @@ final class EE_Front_Controller {
 			$this->Module_Request_Router instanceof EE_Module_Request_Router
 			&& $WP_Query->is_main_query()
 		) {
-				// cycle thru module routes
-				while ( $route = $this->Module_Request_Router->get_route( $WP_Query )) {
-					// determine module and method for route
-					$module = $this->Module_Request_Router->resolve_route( $route[0], $route[1] );
-					if( $module instanceof EED_Module ) {
-						// get registered view for route
-						$this->_template_path = $this->Module_Request_Router->get_view( $route );
-						// grab module name
-						$module_name = $module->module_name();
-						// map the module to the module objects
-						$this->Registry->modules->{$module_name} = $module;
-					}
+			// cycle thru module routes
+			while ( $route = $this->Module_Request_Router->get_route( $WP_Query )) {
+				// determine module and method for route
+				$module = $this->Module_Request_Router->resolve_route( $route[0], $route[1] );
+				if( $module instanceof EED_Module ) {
+					// get registered view for route
+					$this->_template_path = $this->Module_Request_Router->get_view( $route );
+					// grab module name
+					$module_name = $module->module_name();
+					// map the module to the module objects
+					$this->Registry->modules->{$module_name} = $module;
 				}
+			}
 		}
 	}
 

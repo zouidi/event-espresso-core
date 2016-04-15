@@ -37,6 +37,18 @@ final class EE_Module_Request_Router {
 	 */
 	public $WP_Query = NULL;
 
+	/**
+	 * @access    protected
+	 * @type    EE_Request $request
+	 */
+	protected $request;
+
+	/**
+	 * @access    protected
+	 * @type    EE_Response $response
+	 */
+	protected $response;
+
 
 
 	/**
@@ -46,6 +58,24 @@ final class EE_Module_Request_Router {
 	 * @return \EE_Module_Request_Router
 	 */
 	public function __construct() {
+	}
+
+
+
+	/**
+	 * @param \EE_Request $request
+	 */
+	public function set_request( \EE_Request $request ) {
+		$this->request = $request;
+	}
+
+
+
+	/**
+	 * @param \EE_Response $response
+	 */
+	public function set_response( \EE_Response$response ) {
+		$this->response = $response;
 	}
 
 
@@ -180,22 +210,22 @@ final class EE_Module_Request_Router {
 	 *
 	 * @access    public
 	 * @param   string  $module_name
+	 * @param    \EE_Request $request
+	 * @param    \EE_Response $response
 	 * @return    EED_Module | NULL
 	 */
-	public static function module_factory( $module_name ) {
+	public static function module_factory( $module_name, \EE_Request $request, \EE_Response $response  ) {
 		if ( $module_name == 'EED_Module' ) {
 			EE_Error::add_error( sprintf( __( 'EED_Module is an abstract parent class an can not be instantiated. Please provide a proper module name.', 'event_espresso' ), $module_name ), __FILE__, __FUNCTION__, __LINE__ );
 			return NULL;
 		}
-		// let's pause to reflect on this...
-		$mod_reflector = new ReflectionClass( $module_name );
 		// ensure that class is actually a module
-		if ( ! $mod_reflector->isSubclassOf( 'EED_Module' )) {
+		if ( ! is_subclass_of( $module_name, 'EED_Module' )) {
 			EE_Error::add_error( sprintf( __( 'The requested %s module is not of the class EED_Module.', 'event_espresso' ), $module_name ), __FILE__, __FUNCTION__, __LINE__ );
 			return NULL;
 		}
 		// instantiate and return module class
-		return $mod_reflector->newInstance();
+		return new $module_name( $request, $response );
 	}
 
 
@@ -211,7 +241,7 @@ final class EE_Module_Request_Router {
 	 */
 	private function _module_router( $module_name, $method ) {
 		// instantiate module class
-		$module = EE_Module_Request_Router::module_factory( $module_name );
+		$module = EE_Module_Request_Router::module_factory( $module_name, $this->request, $this->response );
 		if ( $module instanceof EED_Module ) {
 			// and call whatever action the route was for
 			try {

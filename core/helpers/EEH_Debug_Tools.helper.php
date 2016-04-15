@@ -458,7 +458,7 @@ class EEH_Debug_Tools{
 		$var_name = ucwords( str_replace( '$', '', $var_name ) );
 		$is_method = method_exists( $var_name, $var );
 		$var_name = ucwords( str_replace( '_', ' ', $var_name ) );
-		$margin = is_admin() ? ' 180px' : '0';
+		$margin = is_admin() && ! did_action( 'admin_head' ) ? ' 180px' : '0';
 		$result = '<' . $heading_tag . ' style="color:#2EA2CC; margin:25px 0 0' . $margin . ';"><b>' . $var_name . '</b>';
 		$result .= $is_method
 			? '<span style="color:#999">::</span><span style="color:#E76700">' . $var . '()</span><br />'
@@ -503,7 +503,7 @@ class EEH_Debug_Tools{
 		$heading_tag = 'h';
 		$heading_tag .= is_int( $header ) ? $header : 5;
 		$var_name = ucwords( str_replace( array( '$', '_' ), array( '', ' ' ), $var_name ) );
-		$margin = is_admin() ? ' 180px' : '0';
+		$margin = is_admin() && ! did_action( 'admin_head' ) ? ' 180px' : '0';
 		$result = '<' . $heading_tag . ' style="color:#2EA2CC; margin:25px 0 0'.$margin.';"><b>' . $var_name . '</b>';
 		$result .= '<span style="color:#999;"> : </span><span style="color:#E76700;">';
 		$result .= '<pre style="color:#999; padding:1em; background: #fff">';

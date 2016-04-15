@@ -69,10 +69,10 @@ abstract class EE_Addon extends EE_Configurable {
 	protected $_addon_name = '';
 
 	/**
-	 * one of the EE_System::req_type_* constants
+	 * one of the EE_Activation_Manager::req_type_* constants
 	 * @type int $_req_type
 	 */
-	protected $_req_type = NULL;
+	protected $_req_type;
 
 	/**
 	 * page slug to be used when generating the "Settings" link on the WP plugin page
@@ -92,7 +92,7 @@ abstract class EE_Addon extends EE_Configurable {
 
 
 	/**
-	 *    class constructor
+	 * EE_Addon constructor.
 	 */
 	public function __construct() {
 		add_action( 'AHEE__EE_System__load_controllers__load_admin_controllers', array( $this, 'admin_init' ) );
@@ -142,7 +142,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @param string $addon_name
 	 * @return boolean
 	 */
-	function set_name( $addon_name ) {
+	public function set_name( $addon_name ) {
 		return $this->_addon_name = $addon_name;
 	}
 
@@ -151,7 +151,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * Gets addon_name
 	 * @return string
 	 */
-	function name() {
+	public function name() {
 		return $this->_addon_name;
 	}
 
@@ -161,7 +161,6 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @return string
 	 */
 	public function plugin_basename() {
-
 		return $this->_plugin_basename;
 	}
 
@@ -171,7 +170,6 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @param string $plugin_basename
 	 */
 	public function set_plugin_basename( $plugin_basename ) {
-
 		$this->_plugin_basename = $plugin_basename;
 	}
 
@@ -181,7 +179,6 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @return string
 	 */
 	public function plugin_slug() {
-
 		return $this->_plugin_slug;
 	}
 
@@ -191,7 +188,6 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @param string $plugin_slug
 	 */
 	public function set_plugin_slug( $plugin_slug ) {
-
 		$this->_plugin_slug = $plugin_slug;
 	}
 
@@ -201,7 +197,6 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @return string
 	 */
 	public function plugin_action_slug() {
-
 		return $this->_plugin_action_slug;
 	}
 
@@ -211,7 +206,6 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @param string $plugin_action_slug
 	 */
 	public function set_plugin_action_slug( $plugin_action_slug ) {
-
 		$this->_plugin_action_slug = $plugin_action_slug;
 	}
 
@@ -221,7 +215,6 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @return array
 	 */
 	public function get_plugins_page_row() {
-
 		return $this->_plugins_page_row;
 	}
 
@@ -233,7 +226,7 @@ abstract class EE_Addon extends EE_Configurable {
 	public function set_plugins_page_row( $plugins_page_row = array() ) {
 		// sigh.... check for example content that I stupidly merged to master and remove it if found
 		if ( ! is_array( $plugins_page_row ) && strpos( $plugins_page_row, '<h3>Promotions Addon Upsell Info</h3>' ) !== false ) {
-			$plugins_page_row = '';
+			$plugins_page_row = array();
 		}
 		$this->_plugins_page_row = $plugins_page_row;
 	}
@@ -243,7 +236,9 @@ abstract class EE_Addon extends EE_Configurable {
 	/**
 	 * Called when EE core detects this addon has been activated for the first time.
 	 * If the site isn't in maintenance mode, should setup the addon's database
+	 *
 	 * @return mixed
+	 * @throws \EE_Error
 	 */
 	public function new_install() {
 
@@ -259,7 +254,9 @@ abstract class EE_Addon extends EE_Configurable {
 	/**
 	 * Called when EE core detects this addon has been reactivated. When this happens,
 	 * it's good to just check that your data is still intact
+	 *
 	 * @return void
+	 * @throws \EE_Error
 	 */
 	public function reactivation() {
 		$classname = get_class($this);
@@ -269,6 +266,13 @@ abstract class EE_Addon extends EE_Configurable {
 		add_action( 'AHEE__EE_System__perform_activations_upgrades_and_migrations', array( $this, 'initialize_db_if_no_migrations_required' ) );
 	}
 
+
+
+	/**
+	 * deactivation
+	 *
+	 * @throws \EE_Error
+	 */
 	public function deactivation(){
 		$classname = get_class($this);
 //		echo "Deactivating $classname";die;
@@ -285,9 +289,11 @@ abstract class EE_Addon extends EE_Configurable {
 	 * Takes care of double-checking that we're not in maintenance mode, and then
 	 * initializing this addon's necessary initial data. This is called by default on new activations
 	 * and reactivations
+	 *
 	 * @param boolean $verify_schema whether to verify the database's schema for this addon, or just its data.
-	 * This is a resource-intensive job so we prefer to only do it when necessary
+	 *                               This is a resource-intensive job so we prefer to only do it when necessary
 	 * @return void
+	 * @throws \EE_Error
 	 */
 	public function initialize_db_if_no_migrations_required( $verify_schema = true ) {
 		if( $verify_schema === '' ) {
@@ -297,7 +303,7 @@ abstract class EE_Addon extends EE_Configurable {
 			//so we need to treat the empty string as if nothing had been passed, and should instead use the default
 			$verify_schema = true;
 		}
-		if ( EE_Maintenance_Mode::instance()->level() != EE_Maintenance_Mode::level_2_complete_maintenance ) {
+		if ( EE_Maintenance_Mode::instance()->level() !== EE_Maintenance_Mode::level_2_complete_maintenance ) {
 			if( $verify_schema ) {
 				$this->initialize_db();
 			}
@@ -330,6 +336,8 @@ abstract class EE_Addon extends EE_Configurable {
 	 * data in them. The default is to actually use the most up-to-date data migration script
 	 * for this addon, and just use its schema_changes_before_migration() and schema_changes_after_migration()
 	 * methods to setup the db.
+	 *
+	 * @throws \EE_Error
 	 */
 	public function initialize_db() {
 		//find the migration script that sets the database to be compatible with the code
@@ -379,7 +387,9 @@ abstract class EE_Addon extends EE_Configurable {
 	 * EE Core detected that this addon has been upgraded. We should check if there
 	 * are any new migration scripts, and if so put the site into maintenance mode until
 	 * they're ran
+	 *
 	 * @return mixed
+	 * @throws \EE_Error
 	 */
 	public function upgrade() {
 		$classname = get_class($this);
@@ -458,17 +468,25 @@ abstract class EE_Addon extends EE_Configurable {
 	 * Used by EE_System to set the request type of this addon. Should not be used by addon developers
 	 * @param int $req_type
 	 */
-	function set_req_type( $req_type ) {
+	public function set_req_type( $req_type ) {
 		$this->_req_type = $req_type;
 	}
 
 
 
 	/**
-	 * Returns the request type of this addon (ie, EE_System::req_type_normal, EE_System::req_type_new_activation, EE_System::req_type_reactivation, EE_System::req_type_upgrade, or EE_System::req_type_downgrade). This is set by EE_System when it is checking for new install or upgrades
+	 * Returns the request type of this addon ie:
+	 *      EE_Activation_Manager::activation_type_none,
+	 *      EE_Activation_Manager::activation_type_new,
+	 *      EE_Activation_Manager::activation_type_reactivation,
+	 *      EE_Activation_Manager::activation_type_upgrade, or
+	 *      EE_Activation_Manager::activation_type_downgrade
+	 * This is set by EE_Activation_Manager when it is checking for new install or upgrades
 	 * of addons
+	 *
+	 * @throws \EE_Error
 	 */
-	function detect_req_type() {
+	public function detect_req_type() {
 		if( ! $this->_req_type ){
 			$this->detect_activation_or_upgrade();
 		}
@@ -480,47 +498,61 @@ abstract class EE_Addon extends EE_Configurable {
 	/**
 	 * Detects the request type for this addon (whether it was just activated, upgrades, a normal request, etc.)
 	 * Should only be called once per request
+	 *
 	 * @return void
+	 * @throws \EE_Error
 	 */
-	function detect_activation_or_upgrade(){
+	public function detect_activation_or_upgrade(){
+
 		$activation_history_for_addon = $this->get_activation_history();
-//		d($activation_history_for_addon);
-		$request_type = EE_System::detect_req_type_given_activation_history($activation_history_for_addon, $this->get_activation_indicator_option_name(), $this->version());
-		$this->set_req_type($request_type);
-		$classname = get_class($this);
-		switch($request_type){
-			case EE_System::req_type_new_activation:
+
+		$request_type = EE_Activation_Manager::detect_activation_type_given_activation_history(
+			$activation_history_for_addon,
+			$this->get_activation_indicator_option_name(),
+			$this->version()
+		);
+
+		$this->set_req_type( $request_type );
+		$classname = get_class ($this );
+		switch( $request_type ){
+
+			case EE_Activation_Manager::activation_type_new:
 				do_action( "AHEE__{$classname}__detect_activations_or_upgrades__new_activation" );
 				do_action( "AHEE__EE_Addon__detect_activations_or_upgrades__new_activation", $this );
 				$this->new_install();
 				$this->update_list_of_installed_versions( $activation_history_for_addon );
 				break;
-			case EE_System::req_type_reactivation:
+
+			case EE_Activation_Manager::activation_type_reactivation:
 				do_action( "AHEE__{$classname}__detect_activations_or_upgrades__reactivation" );
 				do_action( "AHEE__EE_Addon__detect_activations_or_upgrades__reactivation", $this );
 				$this->reactivation();
 				$this->update_list_of_installed_versions( $activation_history_for_addon );
 				break;
-			case EE_System::req_type_upgrade:
+
+			case EE_Activation_Manager::activation_type_upgrade:
 				do_action( "AHEE__{$classname}__detect_activations_or_upgrades__upgrade" );
 				do_action( "AHEE__EE_Addon__detect_activations_or_upgrades__upgrade", $this );
 				$this->upgrade();
 				$this->update_list_of_installed_versions($activation_history_for_addon );
 				break;
-			case EE_System::req_type_downgrade:
+
+			case EE_Activation_Manager::activation_type_downgrade:
 				do_action( "AHEE__{$classname}__detect_activations_or_upgrades__downgrade" );
 				do_action( "AHEE__EE_Addon__detect_activations_or_upgrades__downgrade", $this );
 				$this->downgrade();
 				$this->update_list_of_installed_versions($activation_history_for_addon );
 				break;
-			case EE_System::req_type_normal:
+
+			case EE_Activation_Manager::activation_type_none:
 			default:
-//				$this->_maybe_redirect_to_ee_about();
 				break;
 		}
 
 		do_action( "AHEE__{$classname}__detect_if_activation_or_upgrade__complete" );
 	}
+
+
 
 	/**
 	 * Updates the version history for this addon
@@ -528,11 +560,11 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @param string $current_version_to_add
 	 * @return boolean success
 	 */
-	public function update_list_of_installed_versions($version_history = NULL,$current_version_to_add = NULL) {
+	public function update_list_of_installed_versions($version_history = null,$current_version_to_add = null) {
 		if( ! $version_history ) {
 			$version_history = $this->get_activation_history();
 		}
-		if( $current_version_to_add == NULL){
+		if( $current_version_to_add === null){
 			$current_version_to_add = $this->version();
 		}
 		$version_history[ $current_version_to_add ][] = date( 'Y-m-d H:i:s',time() );
@@ -546,7 +578,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * of this addon
 	 * @return string
 	 */
-	function get_activation_history_option_name(){
+	public function get_activation_history_option_name(){
 		return self::ee_addon_version_history_option_prefix . $this->name();
 	}
 
@@ -556,7 +588,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * Gets the wp option which stores the activation history for this addon
 	 * @return array
 	 */
-	function get_activation_history(){
+	public function get_activation_history(){
 		return get_option($this->get_activation_history_option_name(), NULL);
 	}
 
@@ -611,7 +643,8 @@ abstract class EE_Addon extends EE_Configurable {
 	/**
 	 * sets hooks used in the admin
 	 *
-*@return string
+	 * @return string
+	 * @throws \EE_Error
 	 */
 	public function admin_init(){
 		// is admin and not in M-Mode ?
@@ -633,7 +666,7 @@ abstract class EE_Addon extends EE_Configurable {
 	 * @return array
 	 */
 	public function plugin_action_links( $links, $file ) {
-		if ( $file == $this->plugin_basename() && $this->plugin_action_slug() != '' ) {
+		if ( $file === $this->plugin_basename() && $this->plugin_action_slug() !== '' ) {
 			// before other links
 			array_unshift( $links, '<a href="admin.php?page=' . $this->plugin_action_slug() . '">' . __( 'Settings' ) . '</a>' );
 		}
@@ -656,7 +689,7 @@ abstract class EE_Addon extends EE_Configurable {
 	public function after_plugin_row( $plugin_file, $plugin_data, $status ) {
 
 		$after_plugin_row = '';
-		if ( $plugin_file == $this->plugin_basename() && $this->get_plugins_page_row() != '' ) {
+		if ( $plugin_file === $this->plugin_basename() && $this->get_plugins_page_row() !== '' ) {
 			$class = $status ? 'active' : 'inactive';
 			$plugins_page_row = $this->get_plugins_page_row();
 			$link_text = isset( $plugins_page_row[ 'link_text' ] ) ? $plugins_page_row[ 'link_text' ] : '';
@@ -666,46 +699,9 @@ abstract class EE_Addon extends EE_Configurable {
 				$after_plugin_row .= '<tr id="' . sanitize_title( $plugin_file ) . '-ee-addon" class="' . $class . '">';
 				$after_plugin_row .= '<th class="check-column" scope="row"></th>';
 				$after_plugin_row .= '<td class="ee-addon-upsell-info-title-td plugin-title column-primary">';
-				$after_plugin_row .= '<style>
-.ee-button,
-.ee-button:active,
-.ee-button:visited {
-	box-sizing: border-box;
-	display: inline-block;
-	position: relative;
-	top: -1px;
-	padding:.5em 1em;
-	margin: 0;
-	background: #00B1CA -webkit-linear-gradient( #4EBFDE, #00B1CA ); /* For Safari 5.1 to 6.0 */
-	background: #00B1CA -o-linear-gradient( #4EBFDE, #00B1CA ); /* For Opera 11.1 to 12.0 */
-	background: #00B1CA -moz-linear-gradient( #4EBFDE, #00B1CA ); /* For Firefox 3.6 to 15 */
-	background: #00B1CA linear-gradient( #4EBFDE, #00B1CA ); /* Standard syntax */
-	border: 1px solid rgba(0,0,0,0.1) !important;
-	border-top: 1px solid rgba(255,255,255,0.5) !important;
-	border-bottom: 2px solid rgba(0,0,0,0.25) !important;
-	font-weight: normal;
-	cursor: pointer;
-	color: #fff !important;
-	text-decoration: none !important;
-	text-align: center;
-	line-height: 1em;
-/*	line-height: 1;*/
-	-moz-border-radius: 3px;
-	-webkit-border-radius: 3px;
-	border-radius: 3px;
-	-moz-box-shadow: none;
-	-webkit-box-shadow: none;
-	box-shadow: none;
-}
-.ee-button:hover {
-	color: #fff !important;
-	background: #4EBFDE;
-}
-.ee-button:active { top:0; }
-</style>';
 				$after_plugin_row .= '
 <p class="ee-addon-upsell-info-dv">
-	<a class="ee-button" href="' . $link_url . '">' . $link_text . ' &nbsp;<span class="dashicons dashicons-arrow-right-alt2" style="margin:0;"></span></a>
+	<a class="ee-addon-button" href="' . $link_url . '">' . $link_text . ' &nbsp;<span class="dashicons dashicons-arrow-right-alt2" style="margin:0;"></span></a>
 </p>';
 				$after_plugin_row .= '</td>';
 				$after_plugin_row .= '<td class="ee-addon-upsell-info-desc-td column-description desc">';
@@ -719,7 +715,6 @@ abstract class EE_Addon extends EE_Configurable {
 
 		echo $after_plugin_row;
 	}
-
 
 
 

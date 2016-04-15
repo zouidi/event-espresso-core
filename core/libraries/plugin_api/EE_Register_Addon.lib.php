@@ -289,7 +289,7 @@ class EE_Register_Addon implements EEI_Plugin_API {
 			return;
 		}else{
 			// make sure this was called in the right place!
-			if ( ! did_action( 'AHEE__EE_System__load_espresso_addons' ) || did_action( 'AHEE__EE_System___detect_if_activation_or_upgrade__begin' )) {
+			if ( ! did_action( 'AHEE__EE_System__load_espresso_addons' ) || did_action( 'AHEE__EE_Activation_Manager__detect_activations_or_upgrades__end' )) {
 				EE_Error::doing_it_wrong(
 					__METHOD__,
 					sprintf(

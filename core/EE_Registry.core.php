@@ -10,19 +10,12 @@
  */
 class EE_Registry {
 
-	/**
-	 *    EE_Registry Object
-	 *
-	 * @var EE_Registry $_instance
-	 * @access    private
-	 */
-	private static $_instance = null;
 
 	/**
 	 * @var EE_Dependency_Map $_dependency_map
 	 * @access    protected
 	 */
-	protected $_dependency_map = null;
+	protected $_dependency_map;
 
 	/**
 	 * @var array $_class_abbreviations
@@ -35,21 +28,21 @@ class EE_Registry {
 	 * @access    public
 	 * @var    EE_Cart $CART
 	 */
-	public $CART = null;
+	public $CART;
 
 	/**
 	 *    EE_Config Object
 	 * @access    public
 	 * @var    EE_Config $CFG
 	 */
-	public $CFG = null;
+	public $CFG;
 
 	/**
 	 * EE_Network_Config Object
 	 * @access public
 	 * @var EE_Network_Config $NET_CFG
 	 */
-	public $NET_CFG = null;
+	public $NET_CFG;
 
 	/**
 	 *    StdClass object for storing library classes in
@@ -57,21 +50,21 @@ class EE_Registry {
 	 * @public LIB
 	 * @var StdClass $LIB
 	 */
-	public $LIB = null;
+	public $LIB;
 
 	/**
 	 *    EE_Request_Handler Object
 	 * @access    public
 	 * @var    EE_Request_Handler $REQ
 	 */
-	public $REQ = null;
+	public $REQ;
 
 	/**
-	 *    EE_Session Object
-	 * @access    public
-	 * @var    EE_Session $SSN
-	 */
-	public $SSN = null;
+	* 	EE_Session Object
+	* 	@access 	public
+	* 	@var 	EE_Session	 $SSN
+	*/
+	public $SSN;
 
 	/**
 	 * holds the ee capabilities object.
@@ -80,7 +73,7 @@ class EE_Registry {
 	 *
 	 * @var EE_Capabilities
 	 */
-	public $CAP = null;
+	public $CAP;
 
 	/**
 	 * holds the EE_Message_Resource_Manager object.
@@ -96,7 +89,7 @@ class EE_Registry {
 	 * @access    public
 	 * @var    EE_Addon[]
 	 */
-	public $addons = null;
+	public $addons;
 
 	/**
 	 *    $models
@@ -110,21 +103,21 @@ class EE_Registry {
 	 * @access    public
 	 * @var    EED_Module[] $modules
 	 */
-	public $modules = null;
+	public $modules;
 
 	/**
 	 *    $shortcodes
 	 * @access    public
 	 * @var    EES_Shortcode[] $shortcodes
 	 */
-	public $shortcodes = null;
+	public $shortcodes;
 
 	/**
 	 *    $widgets
 	 * @access    public
 	 * @var    WP_Widget[] $widgets
 	 */
-	public $widgets = null;
+	public $widgets;
 
 	/**
 	 * $non_abstract_db_models
@@ -170,20 +163,33 @@ class EE_Registry {
 	 */
 	protected $_cache_on = true;
 
+	/**
+	 * @access    protected
+	 * @type    \EE_Request $_request
+	 */
+	protected $request;
+
+	/**
+	 * @access    protected
+	 * @type    \EE_Response $_response
+	 */
+	protected $response;
+
+
 
 
 	/**
 	 * @singleton method used to instantiate class object
-	 * @access    public
-	 * @param  \EE_Dependency_Map $dependency_map
-	 * @return \EE_Registry instance
+	 * @access public
+	 * @return EE_Registry instance
+	 * @throws \EE_Error
 	 */
-	public static function instance( \EE_Dependency_Map $dependency_map = null ) {
+	public static function instance() {
 		// check if class object is instantiated
-		if ( ! self::$_instance instanceof EE_Registry ) {
-			self::$_instance = new EE_Registry( $dependency_map );
+		if ( ! \EE_Load_Espresso_Core::getRegistryForBlog() instanceof EE_Registry ) {
+			\EE_Load_Espresso_Core::setRegistryForBlog( new self() );
 		}
-		return self::$_instance;
+		return \EE_Load_Espresso_Core::getRegistryForBlog();
 	}
 
 
@@ -243,7 +249,43 @@ class EE_Registry {
 
 
 	/**
-	 *    init
+	 * @return EE_Request
+	 */
+	public function request() {
+		return $this->request;
+	}
+
+
+
+	/**
+	 * @return EE_Response
+	 */
+	public function response() {
+		return $this->response;
+	}
+
+
+
+	/**
+	 * @param \EE_Request $request
+	 */
+	public function set_request( \EE_Request $request ) {
+		$this->request = $request;
+	}
+
+
+
+	/**
+	 * @param \EE_Response $response
+	 */
+	public function set_response( \EE_Response $response ) {
+		$this->response = $response;
+	}
+
+
+
+	/**
+	 * 	init
 	 *
 	 * @access    public
 	 * @return    void
@@ -287,7 +329,11 @@ class EE_Registry {
 			if ( ! class_exists( 'EE_Module_Request_Router' ) ) {
 				$this->load_core( 'Module_Request_Router' );
 			}
-			$this->modules->{$module} = EE_Module_Request_Router::module_factory( $module );
+			$this->modules->{$module} = EE_Module_Request_Router::module_factory(
+				$module,
+				$this->request,
+				$this->response
+			);
 		}
 	}
 
@@ -308,8 +354,8 @@ class EE_Registry {
 	 *
 	 * @access    public
 	 * @param string $class_name - simple class name ie: session
-	 * @param mixed $arguments
-	 * @param bool $load_only
+	 * @param array  $arguments
+	 * @param bool   $load_only
 	 * @return mixed
 	 */
 	public function load_core( $class_name, $arguments = array(), $load_only = false ) {
@@ -357,7 +403,7 @@ class EE_Registry {
 	 *
 	 * @access    public
 	 * @param string $class_name - class name for the DMS ie: EE_DMS_Core_4_2_0
-	 * @param mixed $arguments
+	 * @param array  $arguments
 	 * @return EE_Data_Migration_Script_Base
 	 */
 	public function load_dms( $class_name, $arguments = array() ) {
@@ -370,12 +416,12 @@ class EE_Registry {
 	/**
 	 *    loads object creating classes - must be singletons
 	 *
-	 * @param string $class_name - simple class name ie: attendee
-	 * @param mixed $arguments - an array of arguments to pass to the class
-	 * @param bool $from_db - some classes are instantiated from the db and thus call a different method to instantiate
-	 * @param bool $cache if you don't want the class to be stored in the internal cache (non-persistent) then set this to FALSE (ie. when instantiating model objects from client in a loop)
-	 * @param bool $load_only whether or not to just load the file and NOT instantiate, or load AND instantiate (default)
-	 * @return EE_Base_Class | bool
+	 *	@param string $class_name - simple class name ie: attendee
+	 *	@param array  $arguments - an array of arguments to pass to the class
+	 *	@param bool   $from_db    - some classes are instantiated from the db and thus call a different method to instantiate
+	 *	@param bool   $cache      if you don't want the class to be stored in the internal cache (non-persistent) then set this to FALSE (ie. when instantiating model objects from client in a loop)
+	 *	@param bool   $load_only      whether or not to just load the file and NOT instantiate, or load AND instantiate (default)
+	 *	@return EE_Base_Class
 	 */
 	public function load_class( $class_name, $arguments = array(), $from_db = false, $cache = true, $load_only = false ) {
 		$paths = apply_filters( 'FHEE__EE_Registry__load_class__paths', array(
@@ -393,9 +439,9 @@ class EE_Registry {
 	 *    loads helper classes - must be singletons
 	 *
 	 * @param string $class_name - simple class name ie: price
-	 * @param mixed $arguments
-	 * @param bool $load_only
-	 * @return EEH_Base | bool
+	 * @param array  $arguments
+	 * @param bool   $load_only
+	 * @return EEH_Base
 	 */
 	public function load_helper( $class_name, $arguments = array(), $load_only = true ) {
 		// todo: add doing_it_wrong() in a few versions after all addons have had calls to this method removed
@@ -411,9 +457,8 @@ class EE_Registry {
 	 *
 	 * @access    public
 	 * @param string $class_name - simple class name ie: session
-	 * @param mixed $arguments
-	 * @param bool $load_only
-	 * @param bool $cache  whether to cache the object or not.
+	 * @param array  $arguments
+	 * @param bool   $load_only
 	 * @return mixed
 	 */
 	public function load_lib( $class_name, $arguments = array(), $load_only = false, $cache = true ) {
@@ -434,9 +479,9 @@ class EE_Registry {
 	 *    loads model classes - must be singletons
 	 *
 	 * @param string $class_name - simple class name ie: price
-	 * @param mixed $arguments
-	 * @param bool $load_only
-	 * @return EEM_Base | bool
+	 * @param array  $arguments
+	 * @param bool   $load_only
+	 * @return EEM_Base
 	 */
 	public function load_model( $class_name, $arguments = array(), $load_only = false ) {
 		$paths = apply_filters( 'FHEE__EE_Registry__load_model__paths', array(
@@ -453,9 +498,9 @@ class EE_Registry {
 	 *    loads model classes - must be singletons
 	 *
 	 * @param string $class_name - simple class name ie: price
-	 * @param mixed $arguments
-	 * @param bool $load_only
-	 * @return mixed | bool
+	 * @param array  $arguments
+	 * @param bool   $load_only
+	 * @return mixed
 	 */
 	public function load_model_class( $class_name, $arguments = array(), $load_only = true ) {
 		$paths = array(
@@ -485,10 +530,10 @@ class EE_Registry {
 	 *    generic class loader
 	 *
 	 * @param string $path_to_file - directory path to file location, not including filename
-	 * @param string $file_name - file name  ie:  my_file.php, including extension
-	 * @param string $type - file type - core? class? helper? model?
-	 * @param mixed $arguments
-	 * @param bool $load_only
+	 * @param string $file_name   - file name  ie:  my_file.php, including extension
+	 * @param string $type         - file type - core? class? helper? model?
+	 * @param array  $arguments
+	 * @param bool   $load_only
 	 * @return mixed
 	 */
 	public function load_file( $path_to_file, $file_name, $type = '', $arguments = array(), $load_only = true ) {
@@ -502,10 +547,10 @@ class EE_Registry {
 	 *    load_addon
 	 *
 	 * @param string $path_to_file - directory path to file location, not including filename
-	 * @param string $class_name - full class name  ie:  My_Class
-	 * @param string $type - file type - core? class? helper? model?
-	 * @param mixed $arguments
-	 * @param bool $load_only
+	 * @param string $class_name   - full class name  ie:  My_Class
+	 * @param string $type         - file type - core? class? helper? model?
+	 * @param array  $arguments
+	 * @param bool   $load_only
 	 * @return EE_Addon
 	 */
 	public function load_addon( $path_to_file, $class_name, $type = 'class', $arguments = array(), $load_only = false ) {
@@ -518,19 +563,20 @@ class EE_Registry {
 	/**
 	 *    loads and tracks classes
 	 *
-	 * @param array $file_paths
-	 * @param string $class_prefix - EE  or EEM or... ???
-	 * @param bool|string $class_name - $class name
-	 * @param string $type - file type - core? class? helper? model?
-	 * @param mixed $arguments - an argument or array of arguments to pass to the class upon instantiation
-	 * @param bool $from_db - some classes are instantiated from the db and thus call a different method to instantiate
-	 * @param bool $cache
-	 * @param bool $load_only
+	 * @param array       $file_paths
+	 * @param string      $class_prefix - EE  or EEM or... ???
+	 * @param bool|string $class_name   - $class name
+	 * @param string      $type         - file type - core? class? helper? model?
+	 * @param array       $arguments    - an argument or array of arguments to pass to the class upon instantiation
+	 * @param bool        $from_db      - some classes are instantiated from the db and thus call a different method to instantiate
+	 * @param bool        $cache
+	 * @param bool        $load_only
 	 * @return null|object|bool  	null = failure to load or instantiate class object.
 	 *                              object = class loaded and instantiated successfully.
 	 *                              bool = fail or success when $load_only is true
+
 	 */
-	protected function _load(
+	private function _load(
 		$file_paths = array(),
 		$class_prefix = 'EE_',
 		$class_name = false,
@@ -543,7 +589,7 @@ class EE_Registry {
 		// strip php file extension
 		$class_name = str_replace( '.php', '', trim( $class_name ) );
 		// does the class have a prefix ?
-		if ( ! empty( $class_prefix ) && $class_prefix != 'addon' ) {
+		if ( ! empty( $class_prefix ) && $class_prefix !== 'addon' ) {
 			// make sure $class_prefix is uppercase
 			$class_prefix = strtoupper( trim( $class_prefix ) );
 			// add class prefix ONCE!!!
@@ -617,7 +663,7 @@ class EE_Registry {
 			return $this->{$class_name};
 		} else if ( isset ( $this->LIB->{$class_name} ) ) {
 			return $this->LIB->{$class_name};
-		} else if ( $class_prefix == 'addon' && isset ( $this->addons->{$class_name} ) ) {
+		} else if ( $class_prefix === 'addon' && isset ( $this->addons->{$class_name} ) ) {
 			return $this->addons->{$class_name};
 		}
 		return null;
@@ -640,7 +686,7 @@ class EE_Registry {
 	 */
 	protected function _resolve_path( $class_name, $type = '', $file_paths = array() ) {
 		// make sure $file_paths is an array
-		$file_paths = is_array( $file_paths ) ? $file_paths : array( $file_paths );
+		$file_paths = (array)$file_paths;
 		// cycle thru paths
 		foreach ( $file_paths as $key => $file_path ) {
 			// convert all separators to proper DS, if no filepath, then use EE_CLASSES
@@ -985,14 +1031,6 @@ class EE_Registry {
 	 * @return object
 	 */
 	public static function factory( $classname, $arguments = array() ) {
-		$loader = self::instance()->_dependency_map->class_loader( $classname );
-		if ( $loader instanceof Closure ) {
-			return $loader( $arguments );
-		} else if ( method_exists( EE_Registry::instance(), $loader ) ) {
-			return EE_Registry::instance()->{$loader}( $classname, $arguments );
-		}
-		return null;
-	}
 
 
 
@@ -1054,12 +1092,15 @@ class EE_Registry {
 	 * Resets the registry and everything in it (eventually, getting it to properly
 	 * reset absolutely everything will probably be tricky. right now it just resets
 	 * the config, data migration manager, and the models)
-	 * @param boolean $hard whether to reset data in the database too, or just refresh
-	 * the Registry to its state at the beginning of the request
+	 *
+	 * @param boolean $hard          whether to reset data in the database too, or just refresh
+	 *                               the Registry to its state at the beginning of the request
 	 * @param boolean $reinstantiate whether to create new instances of EE_Registry's singletons too,
-	 * or just reset without re-instantiating (handy to set to FALSE if you're not sure if you CAN
-	 * currently reinstantiate the singletons at the moment)
-	 * @return EE_Registry
+	 *                               or just reset without re-instantiating (handy to set to FALSE if you're not sure if you CAN
+	 *                               currently reinstantiate the singletons at the moment)
+	 *
+	 * @return \EE_Registry
+	 * @throws \EE_Error
 	 */
 	public static function reset( $hard = false, $reinstantiate = true ) {
 		$instance = self::instance();
@@ -1068,7 +1109,7 @@ class EE_Registry {
 		$instance->CFG = EE_Config::reset( $hard, $reinstantiate );
 		$instance->LIB->EE_Data_Migration_Manager = EE_Data_Migration_Manager::reset();
 		$instance->LIB = new stdClass();
-		foreach ( array_keys( $instance->non_abstract_db_models ) as $model_name ) {
+		foreach ( $instance->non_abstract_db_models as $model_name => $model ) {
 			$instance->reset_model( $model_name );
 		}
 		return $instance;
@@ -1179,7 +1220,7 @@ class EE_Registry {
 	public function cpt_models() {
 		$cpt_models = array();
 		foreach( $this->non_abstract_db_models as $short_name => $classname ) {
-			if( is_subclass_of(  $classname, 'EEM_CPT_Base' ) ) {
+			if( is_subclass_of( $classname, 'EEM_CPT_Base' ) ) {
 				$cpt_models[ $short_name ] = $classname;
 			}
 		}
