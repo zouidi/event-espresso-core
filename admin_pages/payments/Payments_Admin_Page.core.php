@@ -271,7 +271,7 @@ class Payments_Admin_Page extends EE_Admin_Page {
 		$payment_methods = array();
 
 		// Check if we only want admin only payment methods
-		if( $admin_only ) {
+		if( $this->_admin_only ) {
 
 			//Pull all 'Admin_Only' payment methods
 			$payment_methods = EEM_Payment_Method::instance()->get_all( array( array( 'PMD_type' => 'Admin_Only' ) ) ); 
@@ -335,7 +335,7 @@ class Payments_Admin_Page extends EE_Admin_Page {
 				);
 			}
 		}
-		$this->_template_args['admin_page_header'] = EEH_Tabbed_Content::tab_text_links( $tabs, 'payment_method_links', '|', $this->_get_active_payment_method_slug( $admin_only ) );
+		$this->_template_args['admin_page_header'] = EEH_Tabbed_Content::tab_text_links( $tabs, 'payment_method_links', '|', $this->_get_active_payment_method_slug() );
 		$this->display_admin_page_with_sidebar();
 
 	}
@@ -346,13 +346,13 @@ class Payments_Admin_Page extends EE_Admin_Page {
 	 *   _get_active_payment_method_slug
 	 * 	@return string
 	 */
-	protected function _get_active_payment_method_slug( $admin_only = FALSE ){
+	protected function _get_active_payment_method_slug(){
 		$payment_method_slug = FALSE;
 		//decide which payment method tab to open first, as dictated by the request's 'payment_method'
 		if ( isset( $this->_req_data['payment_method'] )) {
 			// if they provided the current payment method, use it
 			$payment_method_slug = sanitize_key( $this->_req_data['payment_method'] );
-		} elseif ( $admin_only ) {
+		} elseif ( $this->_admin_only ) {
 			$payment_method_slug = 'cash';
 		}
 
@@ -556,6 +556,18 @@ class Payments_Admin_Page extends EE_Admin_Page {
 					'Currency' //or the currency, until the rest of EE supports simultaneous currencies
 				)
 			);
+			
+			if ( $this->_admin_only ) {
+				// When using admin only payment methods there is no need for some of the options available
+				$form_section->exclude(
+					array(
+						'PMD_debug_mode',
+						'PMD_open_by_default',
+						'PMD_button_url',
+						'PMD_scope'
+					)
+				);
+			}
 			return $form_section;
 		} else {
 			throw new EE_Error( sprintf( __( 'The EE_Payment_Method_Form for the "%1$s" payment method is missing or invalid.', 'event_espresso' ), $payment_method_name ));
