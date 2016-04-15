@@ -7,14 +7,13 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 
 /**
  * Class EE_Activation_Manager
- *
- * Description
+ * Detects and handles activations, reactivations, upgrades, and downgrades.
+ * Maintains an activation history so that data migrations can be performed accurately
  *
  * @package       Event Espresso
  * @subpackage    core
  * @author        Michael Nelson, Brent Christensen
  * @since         4.8.36.rc.024
- *
  */
 class EE_Activation_Manager {
 
@@ -336,7 +335,7 @@ class EE_Activation_Manager {
 	 * information about what versions of EE have been installed and activated,
 	 * NOT necessarily the state of the database
 	 *
-	 * @param array() $db_version_history
+	 * @param mixed $db_version_history
 	 * @internal param array $espresso_db_update_value the value of the WordPress option. If not supplied, fetches it from the options table
 	 * @return array the correct value of 'espresso_db_upgrade', after saving it, if it needed correction
 	 */
@@ -534,6 +533,8 @@ class EE_Activation_Manager {
 
 	/**
 	 * Initializes the db for all registered addons
+	 *
+	 * @throws \EE_Error
 	 */
 	public function initialize_addons() {
 		//foreach registered addon, make sure its db is up-to-date too
