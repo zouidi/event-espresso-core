@@ -421,7 +421,7 @@ final class EE_System {
 		do_action( 'AHEE__EE_System__set_hooks_for_shortcodes_modules_and_addons' );
 //		add_action( 'wp_loaded', array( $this, 'set_hooks_for_shortcodes_modules_and_addons' ), 1 );
 		$this->registry->load_core( 'Session' );
-		new EventEspresso\Core\Services\adminToolbarItems( $this->registry, \EE_Maintenance_Mode::instance() );
+		new EventEspresso\Core\Services\AdminToolbarItems( $this->registry, \EE_Maintenance_Mode::instance() );
 	}
 
 
@@ -676,6 +676,23 @@ final class EE_System {
 	}
 
 
+
+	/**
+	 * @deprecated
+	 * @access    public
+	 * @param $admin_bar
+	 * @return    void
+	 */
+	public function espresso_toolbar_items( $admin_bar ) {
+		EE_Error::doing_it_wrong(
+			__METHOD__ . "()",
+			__(
+				'Event Espresso admin toolbar items have already been added. But if it\'s really necessary, you can find the new method here: \EventEspresso\Core\Services\AdminToolbarItems::addToolbarItems().',
+				'event_espresso'
+			),
+			'4.9.0'
+		);
+	}
 
 }
 // End of file EE_System.core.php
