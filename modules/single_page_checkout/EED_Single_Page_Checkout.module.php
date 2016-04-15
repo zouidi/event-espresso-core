@@ -1429,6 +1429,16 @@ class EED_Single_Page_Checkout  extends EED_Module {
 
 
 
+	/**
+	 * @deprecated
+	 * @since 4.9.0
+	 * @access public
+	 * @return    void
+	 */
+	public static function load_request_handler() {}
+
+
+
 }
 // End of file EED_Single_Page_Checkout.module.php
 // Location: /modules/single_page_checkout/EED_Single_Page_Checkout.module.php
