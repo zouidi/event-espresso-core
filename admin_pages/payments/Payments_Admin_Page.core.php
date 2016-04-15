@@ -253,6 +253,9 @@ class Payments_Admin_Page extends EE_Admin_Page {
 	}
 
 	protected function _payment_methods_list( $admin_only = FALSE ) {
+		
+		$this->_admin_only = $admin_only;
+
 		/**
 		 * first let's ensure payment methods have been setup. We do this here because when people activate a
 		 * payment method for the first time (as an addon), it may not setup its capabilities or get registered correctly due
