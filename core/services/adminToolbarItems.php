@@ -8,17 +8,15 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 
 
 /**
- * Class adminToolbarItems
- *
- * Description
+ * Class AdminToolbarItems
+ * injects Event Espresso related links into the WordPress admin toolbar
  *
  * @package       Event Espresso
  * @subpackage    core
  * @author        Brent Christensen
- * @since         $VID:$
- *
+ * @since         4.9.0
  */
-class adminToolbarItems {
+class AdminToolbarItems {
 
 	/**
 	 * @access protected
@@ -35,7 +33,7 @@ class adminToolbarItems {
 
 
 	/**
-	 * adminToolbarItems constructor.
+	 * AdminToolbarItems constructor.
 	 *
 	 * @param \EE_Registry         $registry
 	 * @param \EE_Maintenance_Mode $maintenanceMode
@@ -550,5 +548,5 @@ class adminToolbarItems {
 
 
 }
-// End of file adminToolbarItems.php
-// Location: /adminToolbarItems.php
+// End of file AdminToolbarItems.php
+// Location: /core/services/AdminToolbarItems.php
