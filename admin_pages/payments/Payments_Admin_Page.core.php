@@ -35,6 +35,11 @@ class Payments_Admin_Page extends EE_Admin_Page {
 	 */
 	private $_sort_logs_again_direction;
 
+	/**
+	 * Variables used when we are viewing admin only payment methods.
+	 * @var string
+	 */
+	private $_admin_only;
 
 
 	/**
