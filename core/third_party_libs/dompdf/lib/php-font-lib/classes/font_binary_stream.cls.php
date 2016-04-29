@@ -1,21 +1,9 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_binary_stream.cls.php 42 2012-02-05 10:49:20Z fabien.menager $
- */
 
-/**
- * Generic font file binary stream.
- * 
- * @package php-font-lib
- */
+
+
 class Font_Binary_Stream {
-  /**
-   * @var resource The file pointer
-   */
+  
   protected $f;
   
   const uint8     = 1;
@@ -52,21 +40,12 @@ class Font_Binary_Stream {
   const modeWrite     = "wb";
   const modeReadWrite = "rb+";
 
-  /**
-   * Open a font file in read mode
-   * 
-   * @param string $filename The file name of the font to open
-   */
+  
   public function load($filename) {
     return $this->open($filename, self::modeRead);
   }
   
-  /**
-   * Open a font file in a chosen mode
-   * 
-   * @param string $filename The file name of the font to open
-   * @param string $mode The opening mode 
-   */
+  
   public function open($filename, $mode = self::modeRead) {
     if (!in_array($mode, array(self::modeRead, self::modeWrite, self::modeReadWrite))) {
       throw new Exception("Unkown file open mode");
@@ -76,18 +55,12 @@ class Font_Binary_Stream {
     return $this->f != false;
   }
   
-  /**
-   * Close the internal file pointer
-   */
+  
   public function close() {
     return fclose($this->f) != false;
   }
   
-  /**
-   * Change the internal file pointer
-   * 
-   * @param resource $fp
-   */
+  
   public function setFile($fp) {
     if (!is_resource($fp)) {
       throw new Exception('$fp is not a valid resource');
@@ -96,17 +69,12 @@ class Font_Binary_Stream {
     $this->f = $fp;
   }
   
-  /**
-   * Create a temporary file in write mode
-   * 
-   * @return resource the temporary file pointer resource
-   */
+  
   public static function getTempFile($allow_memory = true) {
     $f = null;
     
     if ($allow_memory) {
-      // PHP 5.1+
-      @fopen("php://temp", "rb+");
+            @fopen("php://temp", "rb+");
     }
     
     if (!$f) {
@@ -116,21 +84,12 @@ class Font_Binary_Stream {
     return $f;
   }
   
-  /**
-   * Move the internal file pinter to $offset bytes
-   * 
-   * @param int $offset
-   * @return bool True if the $offset position exists in the file
-   */
+  
   public function seek($offset) {
     return fseek($this->f, $offset, SEEK_SET) == 0;
   }
   
-  /**
-   * Gives the current position in the file
-   * 
-   * @return int The current position
-   */
+  
   public function pos() {
     return ftell($this->f);
   }
@@ -177,8 +136,7 @@ class Font_Binary_Stream {
 
   public function readUInt16() {
     $a = unpack("nn", $this->read(2));
-    //if ($a == null) var_dump(debug_backtrace(false));
-    return $a["n"];
+        return $a["n"];
   }
 
   public function writeUInt16($data) {
@@ -225,8 +183,7 @@ class Font_Binary_Stream {
   }
   
   public function readLongDateTime() {
-    $this->readUInt32(); // ignored 
-    $date = $this->readUInt32() - 2082844800;
+    $this->readUInt32();     $date = $this->readUInt32() - 2082844800;
     
     return strftime("%Y-%m-%d %H:%M:%S", $date);
   }
@@ -254,12 +211,7 @@ class Font_Binary_Stream {
     return $bytes;
   }
   
-  /**
-   * Read a data of type $type in the file from the current position
-   * 
-   * @param mixed $type The data type to read
-   * @return mixed The data that was read
-   */
+  
   public function r($type) {
     switch($type) {
       case self::uint8:     return $this->readUInt8();
@@ -290,13 +242,7 @@ class Font_Binary_Stream {
     }
   }
   
-  /**
-   * Write $data of type $type in the file from the current position
-   * 
-   * @param mixed $type The data type to write
-   * @param mixed $data The data to write
-   * @return int The number of bytes read
-   */
+  
   public function w($type, $data) {
     switch($type) {
       case self::uint8:     return $this->writeUInt8($data);
@@ -327,12 +273,7 @@ class Font_Binary_Stream {
     }
   }
   
-  /**
-   * Converts a Uint32 value to string
-   * 
-   * @param int $uint32
-   * @param string The string
-   */
+  
   public function convertUInt32ToStr($uint32) {
     return chr(($uint32 >> 24) & 0xFF).chr(($uint32 >> 16) & 0xFF).chr(($uint32 >> 8) & 0xFF).chr($uint32 & 0xFF);
   }

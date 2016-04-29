@@ -1,26 +1,12 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_table_directory_entry.cls.php 38 2011-11-07 17:09:59Z fabien.menager $
- */
 
-/**
- * Generic Font table directory entry.
- * 
- * @package php-font-lib
- */
+
+
 class Font_Table_Directory_Entry extends Font_Binary_Stream {
-  /**
-   * @var Font_TrueType
-   */
+  
   protected $font;
   
-  /**
-   * @var Font_Table
-   */
+  
   protected $font_table;
   
   public $entryLength = 4;
@@ -63,8 +49,7 @@ class Font_Table_Directory_Entry extends Font_Binary_Stream {
   }
   
   function open($filename, $mode = self::modeRead) {
-    // void
-  }
+      }
   
   function setTable(Font_Table $font_table) {
     $this->font_table = $font_table;
@@ -72,8 +57,7 @@ class Font_Table_Directory_Entry extends Font_Binary_Stream {
   
   function encode($entry_offset){
     Font::d("\n==== $this->tag ====");
-    //Font::d("Entry offset  = $entry_offset");
-    
+        
     $data = $this->font_table;
     $font = $this->font;
     
@@ -95,9 +79,7 @@ class Font_Table_Directory_Entry extends Font_Binary_Stream {
     $font->seek($table_offset + $table_length);
   }
   
-  /**
-   * @return Font_TrueType
-   */
+  
   function getFont() {
     return $this->font;
   }
@@ -107,15 +89,13 @@ class Font_Table_Directory_Entry extends Font_Binary_Stream {
   }
   
   function endRead() {
-    //
-  }
+      }
   
   function startWrite() {
     $this->seek($this->offset);
   }
   
   function endWrite() {
-    //
-  }
+      }
 }
 

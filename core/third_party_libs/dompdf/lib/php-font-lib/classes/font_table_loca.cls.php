@@ -1,17 +1,7 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_table_loca.cls.php 43 2012-02-05 22:26:53Z fabien.menager $
- */
 
-/**
- * `loca` font table.
- * 
- * @package php-font-lib
- */
+
+
 class Font_Table_loca extends Font_Table {
   protected function _parse(){
     $font = $this->getFont();
@@ -24,8 +14,7 @@ class Font_Table_loca extends Font_Table {
     
     $data = array();
     
-    // 2 bytes
-    if ($indexToLocFormat == 0) {
+        if ($indexToLocFormat == 0) {
       $d = $font->read(($numGlyphs + 1) * 2);
       $loc = unpack("n*", $d);
       
@@ -34,8 +23,7 @@ class Font_Table_loca extends Font_Table {
       }
     }
     
-    // 4 bytes
-    else if ($indexToLocFormat == 1) {
+        else if ($indexToLocFormat == 1) {
       $d = $font->read(($numGlyphs + 1) * 4);
       $loc = unpack("N*", $d);
       
@@ -55,15 +43,13 @@ class Font_Table_loca extends Font_Table {
     $numGlyphs = $font->getData("maxp", "numGlyphs");
     $length = 0;
     
-    // 2 bytes
-    if ($indexToLocFormat == 0) {
+        if ($indexToLocFormat == 0) {
       for ($i = 0; $i <= $numGlyphs; $i++) {
         $length += $font->writeUInt16($data[$i] / 2);
       }
     }
     
-    // 4 bytes
-    else if ($indexToLocFormat == 1) {
+        else if ($indexToLocFormat == 1) {
       for ($i = 0; $i <= $numGlyphs; $i++) {
         $length += $font->writeUInt32($data[$i]);
       }

@@ -1,22 +1,10 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: table_cell_renderer.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Renders table cells
- *
- * @access private
- * @package dompdf
- */
+
+
 class Table_Cell_Renderer extends Block_Renderer {
 
-  //........................................................................
-
+  
   function render(Frame $frame) {
     $style = $frame->get_style();
     
@@ -27,8 +15,7 @@ class Table_Cell_Renderer extends Block_Renderer {
     $this->_set_opacity( $frame->get_opacity( $style->opacity ) );
     list($x, $y, $w, $h) = $frame->get_border_box();
     
-    // Draw our background, border and content
-    if ( ($bg = $style->background_color) !== "transparent" ) {
+        if ( ($bg = $style->background_color) !== "transparent" ) {
       $this->_canvas->filled_rectangle($x, $y, $w, $h, $bg);
     }
 
@@ -44,30 +31,23 @@ class Table_Cell_Renderer extends Block_Renderer {
       return;
     }
 
-    // The collapsed case is slightly complicated...
-    // @todo Add support for outlines here
-
+        
     $cellmap  = $table->get_cellmap();
     $cells    = $cellmap->get_spanned_cells($frame);
     $num_rows = $cellmap->get_num_rows();
     $num_cols = $cellmap->get_num_cols();
 
-    // Determine the top row spanned by this cell
-    $i = $cells["rows"][0];
+        $i = $cells["rows"][0];
     $top_row = $cellmap->get_row($i);
 
-    // Determine if this cell borders on the bottom of the table.  If so,
-    // then we draw its bottom border.  Otherwise the next row down will
-    // draw its top border instead.
-    if (in_array( $num_rows - 1, $cells["rows"])) {
+                if (in_array( $num_rows - 1, $cells["rows"])) {
       $draw_bottom = true;
       $bottom_row = $cellmap->get_row($num_rows - 1);
     } else
       $draw_bottom = false;
 
 
-    // Draw the horizontal borders
-    foreach ( $cells["columns"] as $j ) {
+        foreach ( $cells["columns"] as $j ) {
       $bp = $cellmap->get_border_properties($i, $j);
 
       $y = $top_row["y"] - $bp["top"]["width"] / 2;
@@ -112,8 +92,7 @@ class Table_Cell_Renderer extends Block_Renderer {
     } else
       $draw_right = false;
 
-    // Draw the vertical borders
-    foreach ( $cells["rows"] as $i ) {
+        foreach ( $cells["rows"] as $i ) {
       $bp = $cellmap->get_border_properties($i, $j);
 
       $x = $left_col["x"] - $bp["left"]["width"] / 2;

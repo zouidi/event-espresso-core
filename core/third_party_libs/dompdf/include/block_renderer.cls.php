@@ -1,22 +1,10 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: block_renderer.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Renders block frames
- *
- * @access private
- * @package dompdf
- */
+
+
 class Block_Renderer extends Abstract_Renderer {
 
-  //........................................................................
-
+  
   function render(Frame $frame) {
     $style = $frame->get_style(); 
     list($x, $y, $w, $h) = $frame->get_border_box();
@@ -34,8 +22,7 @@ class Block_Renderer extends Abstract_Renderer {
       $style->width);
     }
     
-    // Draw our background, border and content
-    if ( ($bg = $style->background_color) !== "transparent" ) {
+        if ( ($bg = $style->background_color) !== "transparent" ) {
       $this->_canvas->filled_rectangle( $x, $y, $w, $h, $bg );
     }
 
@@ -64,8 +51,7 @@ class Block_Renderer extends Abstract_Renderer {
     $bbox = $frame->get_border_box();
     $bp = $style->get_border_properties();
 
-    // If all the borders are "solid" with the same color and style, we'd better draw a rectangle
-    if (
+        if (
       in_array($bp["top"]["style"], array("solid", "dashed", "dotted")) && 
       $bp["top"]    == $bp["right"] &&
       $bp["right"]  == $bp["bottom"] &&
@@ -138,8 +124,7 @@ class Block_Renderer extends Abstract_Renderer {
     $offset = $style->length_in_pt($props["width"]);
     $pattern = $this->_get_dash_pattern($props["style"], $offset);
 
-    // If the outline style is "solid" we'd better draw a rectangle
-    if ( in_array($props["style"], array("solid", "dashed", "dotted")) ) {
+        if ( in_array($props["style"], array("solid", "dashed", "dotted")) ) {
       $bbox[0] -= $offset / 2;
       $bbox[1] -= $offset / 2;
       $bbox[2] += $offset;

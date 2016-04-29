@@ -1,16 +1,7 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: fixed_positioner.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Positions fixely positioned frames
- */
+
+
 class Fixed_Positioner extends Positioner {
 
   function __construct(Frame_Decorator $frame) { parent::__construct($frame); }
@@ -28,14 +19,12 @@ class Fixed_Positioner extends Positioner {
       $p->add_line();
     }
 
-    // Compute the margins of the @page style
-    $margin_top    = $initialcb_style->length_in_pt($initialcb_style->margin_top,    $initialcb["h"]);
+        $margin_top    = $initialcb_style->length_in_pt($initialcb_style->margin_top,    $initialcb["h"]);
     $margin_right  = $initialcb_style->length_in_pt($initialcb_style->margin_right,  $initialcb["w"]);
     $margin_bottom = $initialcb_style->length_in_pt($initialcb_style->margin_bottom, $initialcb["h"]);
     $margin_left   = $initialcb_style->length_in_pt($initialcb_style->margin_left,   $initialcb["w"]);
     
-    // The needed computed style of the element
-    $height = $style->length_in_pt($style->height, $initialcb["h"]);
+        $height = $style->length_in_pt($style->height, $initialcb["h"]);
     $width  = $style->length_in_pt($style->width,  $initialcb["w"]);
     
     $top    = $style->length_in_pt($style->top,    $initialcb["h"]);

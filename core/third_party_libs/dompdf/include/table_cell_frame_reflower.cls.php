@@ -1,28 +1,15 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: table_cell_frame_reflower.cls.php 457 2012-01-22 11:48:20Z fabien.menager $
- */
 
-/**
- * Reflows table cells
- *
- * @access private
- * @package dompdf
- */
+
+
 class Table_Cell_Frame_Reflower extends Block_Frame_Reflower {
 
-  //........................................................................
-
+  
   function __construct(Frame $frame) {
     parent::__construct($frame);
   }
 
-  //........................................................................
-
+  
   function reflow(Frame_Decorator $block = null) {
 
     $style = $this->_frame->get_style();
@@ -41,8 +28,7 @@ class Table_Cell_Frame_Reflower extends Block_Frame_Reflower {
       $w += $col["used-width"];
     }
 
-    //FIXME?
-    $h = $this->_frame->get_containing_block("h");
+        $h = $this->_frame->get_containing_block("h");
 
     $left_space = $style->length_in_pt(array($style->margin_left,
                                              $style->padding_left,
@@ -68,16 +54,13 @@ class Table_Cell_Frame_Reflower extends Block_Frame_Reflower {
     $content_x = $x + $left_space;
     $content_y = $line_y = $y + $top_space;
 
-    // Adjust the first line based on the text-indent property
-    $indent = $style->length_in_pt($style->text_indent, $w);
+        $indent = $style->length_in_pt($style->text_indent, $w);
     $this->_frame->increase_line_width($indent);
 
-    // Set the y position of the first line in the cell
-    $page = $this->_frame->get_root();
+        $page = $this->_frame->get_root();
     $this->_frame->set_current_line($line_y);
     
-    // Set the containing blocks and reflow each child
-    foreach ( $this->_frame->get_children() as $child ) {
+        foreach ( $this->_frame->get_children() as $child ) {
       
       if ( $page->is_full() )
         break;
@@ -88,15 +71,13 @@ class Table_Cell_Frame_Reflower extends Block_Frame_Reflower {
       $this->process_float($child, $x + $left_space, $w - $right_space - $left_space);
     }
 
-    // Determine our height
-    $style_height = $style->length_in_pt($style->height, $h);
+        $style_height = $style->length_in_pt($style->height, $h);
 
     $this->_frame->set_content_height($this->_calculate_content_height());
 
     $height = max($style_height, $this->_frame->get_content_height());
 
-    // Let the cellmap know our height
-    $cell_height = $height / count($cells["rows"]);
+        $cell_height = $height / count($cells["rows"]);
 
     if ($style_height <= $height)
       $cell_height += $top_space + $bottom_space;

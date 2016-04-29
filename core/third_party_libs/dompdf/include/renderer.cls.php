@@ -1,62 +1,29 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: renderer.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Concrete renderer
- *
- * Instantiates several specific renderers in order to render any given
- * frame.
- *
- * @access private
- * @package dompdf
- */
+
+
 class Renderer extends Abstract_Renderer {
 
-  /**
-   * Array of renderers for specific frame types
-   *
-   * @var array
-   */
+  
   protected $_renderers;
     
-  /**
-   * Cache of the callbacks array
-   * 
-   * @var array
-   */
+  
   private $_callbacks;
   
-  /**
-   * true when a stacking context is currently built
-   * @var bool
-   */
+  
   public static $stacking_first_pass = true;
   
-  /**
-   * Class destructor
-   */
+  
   function __destruct() {
     clear_object($this);
   }
   
-  /**
-   * Advance the canvas to the next page
-   */  
+    
   function new_page() {
     $this->_canvas->new_page();
   }
 
-  /**
-   * Render frames recursively
-   *
-   * @param Frame $frame the frame to render
-   */
+  
   function render(Frame $frame, $stacking = false) {
     global $_dompdf_debug;
 
@@ -76,8 +43,7 @@ class Renderer extends Abstract_Renderer {
     if ( $render_self ) {
       $display = $style->display;
       
-      // Starts the CSS transformation
-      if ( $style->transform && is_array($style->transform) ) {
+            if ( $style->transform && is_array($style->transform) ) {
         $this->_canvas->save();
         list($x, $y, $w, $h) = $frame->get_padding_box();
         $origin = $style->transform_origin;
@@ -137,30 +103,25 @@ class Renderer extends Abstract_Renderer {
         if ( $node->nodeName === "script" ) {
           if ( $node->getAttribute("type") === "text/php" ||
                $node->getAttribute("language") === "php" ) {
-            // Evaluate embedded php scripts
-            $this->_render_frame("php", $frame);
+                        $this->_render_frame("php", $frame);
           }
           
           elseif ( $node->getAttribute("type") === "text/javascript" ||
                $node->getAttribute("language") === "javascript" ) {
-            // Insert JavaScript
-            $this->_render_frame("javascript", $frame);
+                        $this->_render_frame("javascript", $frame);
           }
         }
   
-        // Don't render children, so skip to next iter
-        return;
+                return;
         
       default:
         break;
   
       }
   
-      // Check for begin frame callback
-      $this->_check_callbacks("begin_frame", $frame);
+            $this->_check_callbacks("begin_frame", $frame);
       
-      // Starts the overflow: hidden box
-      if ( $style->overflow === "hidden" ) {
+            if ( $style->overflow === "hidden" ) {
         list($x, $y, $w, $h) = $frame->get_padding_box();
         $this->_canvas->clipping_rectangle($x, $y, $w, $h);
       }
@@ -172,8 +133,7 @@ class Renderer extends Abstract_Renderer {
       $child_style = $child->get_style();
       $_stacking = $stacking;
       
-      // Stacking context
-      if ( self::$stacking_first_pass && (
+            if ( self::$stacking_first_pass && (
            $child_style->z_index !== "auto" || 
            $child_style->float !== "none" || 
            $child->is_positionned()) ) {
@@ -186,8 +146,7 @@ class Renderer extends Abstract_Renderer {
     }
      
     if ( $render_self ) {
-      // Ends the overflow: hidden box
-      if ( $style->overflow === "hidden" ) {
+            if ( $style->overflow === "hidden" ) {
         $this->_canvas->clipping_end();
       }
   
@@ -195,18 +154,11 @@ class Renderer extends Abstract_Renderer {
         $this->_canvas->restore();
       }
   
-      // Check for end frame callback
-      $this->_check_callbacks("end_frame", $frame);
+            $this->_check_callbacks("end_frame", $frame);
     }
   }
   
-  /**
-   * Check for callbacks that need to be performed when a given event
-   * gets triggered on a frame
-   *
-   * @param string $event the type of event
-   * @param Frame $frame the frame that event is triggered on
-   */
+  
   protected function _check_callbacks($event, $frame) {
     if (!isset($this->_callbacks)) {
       $this->_callbacks = $this->_dompdf->get_callbacks();
@@ -228,14 +180,7 @@ class Renderer extends Abstract_Renderer {
     }
   }
 
-  /**
-   * Render a single frame
-   *
-   * Creates Renderer objects on demand
-   *
-   * @param string $type type of renderer to use
-   * @param Frame $frame the frame to render
-   */
+  
   protected function _render_frame($type, $frame) {
 
     if ( !isset($this->_renderers[$type]) ) {

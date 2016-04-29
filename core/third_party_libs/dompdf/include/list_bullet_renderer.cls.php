@@ -1,19 +1,7 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @author  Helmut Tischer <htischer@weihenstephan.org>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: list_bullet_renderer.cls.php 468 2012-02-05 10:51:40Z fabien.menager $
- */
 
-/**
- * Renders list bullets
- *
- * @access private
- * @package dompdf
- */
+
+
 class List_Bullet_Renderer extends Abstract_Renderer {
   static function get_counter_chars($type) {
     static $cache = array();
@@ -63,8 +51,7 @@ class List_Bullet_Renderer extends Abstract_Renderer {
     return $cache[$type] = "$text.";
   }
 
-  //........................................................................
-  private function make_counter($n, $type, $pad = null){
+    private function make_counter($n, $type, $pad = null){
     $n = intval($n);
     $text = "";
     $uppercase = false;
@@ -116,26 +103,17 @@ class List_Bullet_Renderer extends Abstract_Renderer {
 
     $this->_set_opacity( $frame->get_opacity( $style->opacity ) );
     
-    // Handle list-style-image
-    // If list style image is requested but missing, fall back to predefined types
-    if ( $style->list_style_image !== "none" &&
+            if ( $style->list_style_image !== "none" &&
          !Image_Cache::is_broken($img = $frame->get_image_url())) {
 
       list($x,$y) = $frame->get_position();
       
-      //For expected size and aspect, instead of box size, use image natural size scaled to DPI.
-      // Resample the bullet image to be consistent with 'auto' sized images
-      // See also Image_Frame_Reflower::get_min_max_width
-      // Tested php ver: value measured in px, suffix "px" not in value: rtrim unnecessary.
-      //$w = $frame->get_width();
-      //$h = $frame->get_height();
-      list($width, $height) = dompdf_getimagesize($img);
+                                          list($width, $height) = dompdf_getimagesize($img);
       $w = (((float)rtrim($width, "px")) * 72) / DOMPDF_DPI;
       $h = (((float)rtrim($height, "px")) * 72) / DOMPDF_DPI;
       
       $x -= $w;
-      $y -= ($line_height - $font_size)/2; //Reverse hinting of list_bullet_positioner
-
+      $y -= ($line_height - $font_size)/2; 
       $this->_canvas->image( $img, $x, $y, $w, $h);
 
     } else {
@@ -152,7 +130,7 @@ class List_Bullet_Renderer extends Abstract_Renderer {
 
       case "circle":
         list($x,$y) = $frame->get_position();
-        $r = ($font_size*(List_Bullet_Frame_Decorator::BULLET_SIZE /*-List_Bullet_Frame_Decorator::BULLET_THICKNESS*/ ))/2;
+        $r = ($font_size*(List_Bullet_Frame_Decorator::BULLET_SIZE  ))/2;
         $x -= $font_size*(List_Bullet_Frame_Decorator::BULLET_SIZE/2);
         $y += ($font_size*(1-List_Bullet_Frame_Decorator::BULLET_DESCENT))/2;
         $o = $font_size*List_Bullet_Frame_Decorator::BULLET_THICKNESS;
@@ -176,8 +154,7 @@ class List_Bullet_Renderer extends Abstract_Renderer {
       case "upper-alpha":
       case "upper-latin":
       case "upper-roman":
-      case "1": // HTML 4.0 compatibility
-      case "a":
+      case "1":       case "a":
       case "i":
       case "A":
       case "I":
@@ -203,10 +180,8 @@ class List_Bullet_Renderer extends Abstract_Renderer {
 
         $x -= Font_Metrics::get_text_width($text, $font_family, $font_size, $spacing);
         
-        // Take line-height into account
-        $line_height = $style->line_height;
-        $y += ($line_height - $font_size) / 4; // FIXME I thought it should be 2, but 4 gives better results
-        
+                $line_height = $style->line_height;
+        $y += ($line_height - $font_size) / 4;         
         $this->_canvas->text($x, $y, $text,
                              $font_family, $font_size,
                              $style->color, $spacing);

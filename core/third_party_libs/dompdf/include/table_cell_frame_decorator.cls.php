@@ -1,33 +1,20 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: table_cell_frame_decorator.cls.php 451 2012-01-14 14:54:23Z fabien.menager $
- */
 
-/**
- * Decorates table cells for layout
- *
- * @access private
- * @package dompdf
- */
+
+
 class Table_Cell_Frame_Decorator extends Block_Frame_Decorator {
   
   protected $_resolved_borders;
   protected $_content_height;
   
-  //........................................................................
-
+  
   function __construct(Frame $frame, DOMPDF $dompdf) {
     parent::__construct($frame, $dompdf);
     $this->_resolved_borders = array();
     $this->_content_height = 0;    
   }
 
-  //........................................................................
-
+  
   function reset() {
     parent::reset();
     $this->_resolved_borders = array();
@@ -59,15 +46,12 @@ class Table_Cell_Frame_Decorator extends Block_Frame_Decorator {
     if ( $new_height > $this->_content_height ) {
       $y_offset = 0;
       
-      // Adjust our vertical alignment
-      switch ($style->vertical_align) {
+            switch ($style->vertical_align) {
         default:
         case "baseline":
-          // FIXME: this isn't right
-          
+                    
         case "top":
-          // Don't need to do anything
-          return;
+                    return;
   
         case "middle":
           $y_offset = ($new_height - $this->_content_height) / 2;
@@ -79,8 +63,7 @@ class Table_Cell_Frame_Decorator extends Block_Frame_Decorator {
       }
    
       if ( $y_offset ) {
-        // Move our children
-        foreach ( $this->get_line_boxes() as $i => $line ) {
+                foreach ( $this->get_line_boxes() as $i => $line ) {
           foreach ( $line->get_frames() as $frame )
             $frame->move( 0, $y_offset );
         }
@@ -93,8 +76,7 @@ class Table_Cell_Frame_Decorator extends Block_Frame_Decorator {
     $this->_resolved_borders[$side] = $border_spec;
   }
 
-  //........................................................................
-
+  
   function get_resolved_border($side) {
     return $this->_resolved_borders[$side];
   }

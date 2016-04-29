@@ -1,17 +1,7 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_table_maxp.cls.php 37 2011-11-07 07:38:44Z fabien.menager $
- */
 
-/**
- * `maxp` font table.
- * 
- * @package php-font-lib
- */
+
+
 class Font_Table_maxp extends Font_Table {
   protected $def = array(
     "version"               => self::Fixed,

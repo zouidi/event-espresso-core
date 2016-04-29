@@ -1,15 +1,7 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: absolute_positioner.cls.php 460 2012-01-26 07:17:46Z fabien.menager $
- */
 
-/**
- * Positions absolutely positioned frames
- */
+
+
 class Absolute_Positioner extends Positioner {
 
   function __construct(Frame_Decorator $frame) { parent::__construct($frame); }
@@ -29,8 +21,7 @@ class Absolute_Positioner extends Positioner {
     $left   = $style->length_in_pt($style->left,   $w);
     
     if ( $p && !($left === "auto" && $right === "auto") ) {
-      // Get the parent's padding box (see http://www.w3.org/TR/CSS21/visuren.html#propdef-top)
-      list($x, $y, $w, $h) = $p->get_padding_box();
+            list($x, $y, $w, $h) = $p->get_padding_box();
     }
     
     list($width, $height) = array($frame->get_margin_width(), $frame->get_margin_height());
@@ -39,82 +30,57 @@ class Absolute_Positioner extends Positioner {
     $orig_width = $orig_style->width;
     $orig_height = $orig_style->height;
     
-    /****************************
     
-    Width auto: 
-    ____________| left=auto | left=fixed |
-    right=auto  |     A     |     B      |
-    right=fixed |     C     |     D      |
-    
-    Width fixed: 
-    ____________| left=auto | left=fixed |
-    right=auto  |     E     |     F      |
-    right=fixed |     G     |     H      |
-    
-    *****************************/
     
     if ( $left === "auto" ) {
       if ( $right === "auto" ) {
-        // A or E - Keep the frame at the same position
-      }
+              }
       else {
         if ( $orig_width === "auto" ) {
-          // C
-          $x += $w - $width - $right;
+                    $x += $w - $width - $right;
         }
         else {
-          // G
-          $x += $w - $width - $right;
+                    $x += $w - $width - $right;
         }
       }
     }
     else {
       if ( $right === "auto" ) {
-        // B or F
-        $x += $left;
+                $x += $left;
       }
       else {
         if ( $orig_width === "auto" ) {
-          // D - TODO change width
-          $x += $left;
+                    $x += $left;
         }
         else {
-          // H - Everything is fixed: left + width win
-          $x += $left;
+                    $x += $left;
         }
       }
     }
     
-    // The same vertically
-    if ( $top === "auto" ) {
+        if ( $top === "auto" ) {
       if ( $bottom === "auto" ) {
-        // A or E - Keep the frame at the same position
-        $y = $frame->get_parent()->get_current_line_box()->y;
+                $y = $frame->get_parent()->get_current_line_box()->y;
       }
       else {
         if ( $orig_height === "auto" ) {
-          // C
-          $y += $h - $height - $bottom;
+                    $y += $h - $height - $bottom;
         }
         else {
-          // G
-          $y += $h - $height - $bottom;
+                    $y += $h - $height - $bottom;
         }
       }
     }
     else {
       if ( $bottom === "auto" ) {
-        // B or F
-        $y += $top;
+                $y += $top;
       }
       else {
         if ( $orig_height === "auto" ) {
-          // D - TODO change height
-          $y += $top;
+                    $y += $top;
         }
         else {
-          // H - Everything is fixed: top + height win
-          $y += $top;
+                    $y += $top;
         }
       }
     }

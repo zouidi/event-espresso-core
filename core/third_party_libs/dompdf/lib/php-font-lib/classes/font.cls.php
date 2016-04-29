@@ -1,24 +1,11 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font.cls.php 41 2012-02-04 18:01:38Z fabien.menager $
- */
 
-/**
- * Generic font file.
- * 
- * @package php-font-lib
- */
+
+
 class Font {
   static $debug = false;
   
-  /**
-   * @param string $file The font file
-   * @return Font_TrueType $file
-   */
+  
   public static function load($file) {
     $header = file_get_contents($file, false, null, null, 4);
     $class = null;
@@ -38,8 +25,7 @@ class Font {
       case "ttcf":
         $class = "Font_TrueType_Collection"; break;
         
-      // Unknown type or EOT
-      default: 
+            default: 
         $magicNumber = file_get_contents($file, false, null, 34, 2);
         
         if ($magicNumber === "LP") {

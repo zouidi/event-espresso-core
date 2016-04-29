@@ -1,28 +1,10 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: cellmap.cls.php 464 2012-01-30 20:44:53Z fabien.menager $
- */
 
-/**
- * Maps table cells to the table grid.
- *
- * This class resolves borders in tables with collapsed borders and helps
- * place row & column spanned table cells.
- *
- * @access private
- * @package dompdf
- */
+
+
 class Cellmap {
 
-  /**
-   * Border style weight lookup for collapsed border resolution.
-   *
-   * @var array
-   */
+  
   static protected $_BORDER_STYLE_SCORE = array("inset"  => 1,
                                                 "groove" => 2,
                                                 "outset" => 3,
@@ -34,80 +16,40 @@ class Cellmap {
                                                 "hidden" => 9,
                                                 "none"   => 0);
 
-  /**
-   * The table object this cellmap is attached to.
-   *
-   * @var Table_Frame_Decorator
-   */
+  
   protected $_table;
 
-  /**
-   * The total number of rows in the table
-   *
-   * @var int
-   */
+  
   protected $_num_rows;
 
-  /**
-   * The total number of columns in the table
-   *
-   * @var int
-   */
+  
   protected $_num_cols;
 
-  /**
-   * 2D array mapping <row,column> to frames
-   *
-   * @var array
-   */
+  
   protected $_cells;
 
-  /**
-   * 1D array of column dimensions
-   *
-   * @var array
-   */
+  
   protected $_columns;
 
-  /**
-   * 1D array of row dimensions
-   *
-   * @var array
-   */
+  
   protected $_rows;
 
-  /**
-   * 2D array of border specs
-   *
-   * @var array
-   */
+  
   protected $_borders;
 
-  /**
-   * 1D Array mapping frames to (multiple) <row, col> pairs, keyed on
-   * frame_id.
-   *
-   * @var array
-   */
+  
   protected $_frames;
 
-  /**
-   * @var int Current column when adding cells, 0-based
-   */
+  
   private $__col;
 
-  /**
-   * @var int Current row when adding cells, 0-based
-   */
+  
   private $__row;
   
-  /**
-   * @var bool Tells wether the columns' width can be modified
-   */
+  
   private $_columns_locked = false;
 
-  //........................................................................
-
+  
   function __construct(Table_Frame_Decorator $table) {
     $this->_table = $table;
     $this->reset();
@@ -116,8 +58,7 @@ class Cellmap {
   function __destruct() {
     clear_object($this);
   }
-  //........................................................................
-
+  
   function reset() {
     $this->_num_rows = 0;
     $this->_num_cols = 0;
@@ -136,8 +77,7 @@ class Cellmap {
     $this->__col = $this->__row = 0;
   }
 
-  //........................................................................
-
+  
   function lock_columns() { 
     $this->_columns_locked = true; 
   }
@@ -203,8 +143,7 @@ class Cellmap {
     return compact("top", "bottom", "left", "right");
   }
 
-  //........................................................................
-
+  
   function get_spanned_cells($frame) {
     $key = $frame->get_id();
 
@@ -284,8 +223,7 @@ class Cellmap {
   }
 
 
-  //........................................................................
-
+  
   function set_column_width($j, $width) {
     if ( $this->_columns_locked ) {
       return;
@@ -310,8 +248,7 @@ class Cellmap {
 
   }
 
-  //........................................................................
-
+  
 
   protected function _resolve_border($i, $j, $h_v, $border_spec) {
     $n_width = $border_spec["width"];
@@ -343,8 +280,7 @@ class Cellmap {
     return $border["width"];
   }
 
-  //........................................................................
-
+  
   function add_frame(Frame $frame) {
     
     $style = $frame->get_style();
@@ -352,8 +288,7 @@ class Cellmap {
 
     $collapse = $this->_table->get_style()->border_collapse == "collapse";
 
-    // Recursively add the frames within tables, table-row-groups and table-rows
-    if ( $display === "table-row" ||
+        if ( $display === "table-row" ||
          $display === "table" ||
          $display === "inline-table" ||
          in_array($display, Table_Frame_Decorator::$ROW_GROUPS) ) {
@@ -368,8 +303,7 @@ class Cellmap {
       $num_rows = $this->__row - $start_row - 1;
       $key = $frame->get_id();
 
-      // Row groups always span across the entire table
-      $this->_frames[$key]["columns"] = range(0,max(0,$this->_num_cols-1));
+            $this->_frames[$key]["columns"] = range(0,max(0,$this->_num_cols-1));
       $this->_frames[$key]["rows"] = range($start_row, max(0, $this->__row - 1));
       $this->_frames[$key]["frame"] = $frame;
 
@@ -377,8 +311,7 @@ class Cellmap {
 
         $bp = $style->get_border_properties();
 
-        // Resolve the borders
-        for ( $i = 0; $i < $num_rows+1; $i++) {
+                for ( $i = 0; $i < $num_rows+1; $i++) {
           $this->_resolve_border($start_row + $i, 0, "vertical", $bp["left"]);
           $this->_resolve_border($start_row + $i, $this->_num_cols, "vertical", $bp["right"]);
         }
@@ -395,8 +328,7 @@ class Cellmap {
     
     $node = $frame->get_node();
     
-    // Determine where this cell is going
-    $colspan = $node->getAttribute("colspan");
+        $colspan = $node->getAttribute("colspan");
     $rowspan = $node->getAttribute("rowspan");
 
     if ( !$colspan ) {
@@ -413,17 +345,14 @@ class Cellmap {
     $bp = $style->get_border_properties();
 
 
-    // Add the frame to the cellmap
-    $max_left = $max_right = 0;
+        $max_left = $max_right = 0;
 
-    // Find the next available column (fix by Ciro Mondueri)
-    $ac = $this->__col;
+        $ac = $this->__col;
     while ( isset($this->_cells[$this->__row][$ac]) )
        $ac++;
     $this->__col = $ac;
 
-    // Rows:
-    for ( $i = 0; $i < $rowspan; $i++ ) {
+        for ( $i = 0; $i < $rowspan; $i++ ) {
       $row = $this->__row + $i;
 
       $this->_frames[$key]["rows"][] = $row;
@@ -432,51 +361,43 @@ class Cellmap {
         $this->_cells[$row][$this->__col + $j] = $frame;
 
       if ( $collapse ) {
-        // Resolve vertical borders
-        $max_left = max($max_left, $this->_resolve_border($row, $this->__col, "vertical", $bp["left"]));
+                $max_left = max($max_left, $this->_resolve_border($row, $this->__col, "vertical", $bp["left"]));
         $max_right = max($max_right, $this->_resolve_border($row, $this->__col + $colspan, "vertical", $bp["right"]));
       }
     }
 
     $max_top = $max_bottom = 0;
 
-    // Columns:
-    for ( $j = 0; $j < $colspan; $j++ ) {
+        for ( $j = 0; $j < $colspan; $j++ ) {
       $col = $this->__col + $j;
       $this->_frames[$key]["columns"][] = $col;
 
       if ( $collapse ) {
-        // Resolve horizontal borders
-        $max_top = max($max_top, $this->_resolve_border($this->__row, $col, "horizontal", $bp["top"]));
+                $max_top = max($max_top, $this->_resolve_border($this->__row, $col, "horizontal", $bp["top"]));
         $max_bottom = max($max_bottom, $this->_resolve_border($this->__row + $rowspan, $col, "horizontal", $bp["bottom"]));
       }
     }
 
     $this->_frames[$key]["frame"] = $frame;
 
-    // Handle seperated border model
-    if ( !$collapse ) {
+        if ( !$collapse ) {
       list($h, $v) = $this->_table->get_style()->border_spacing;
 
-      // Border spacing is effectively a margin between cells
-      $v = $style->length_in_pt($v) / 2;
+            $v = $style->length_in_pt($v) / 2;
       $h = $style->length_in_pt($h) / 2;
       $style->margin = "$v $h";
 
-      // The additional 1/2 width gets added to the table proper
-
+      
     } else {
 
-      // Drop the frame's actual border
-      $style->border_left_width = $max_left / 2;
+            $style->border_left_width = $max_left / 2;
       $style->border_right_width = $max_right / 2;
       $style->border_top_width = $max_top / 2;
       $style->border_bottom_width = $max_bottom / 2;
       $style->margin = "none";
     }
 
-    // Resolve the frame's width
-    list($frame_min, $frame_max) = $frame->get_min_max_width();
+        list($frame_min, $frame_max) = $frame->get_min_max_width();
 
     $width = $style->width;
 
@@ -494,13 +415,9 @@ class Cellmap {
       $max = 0;
       for ( $cs = 0; $cs < $colspan; $cs++ ) {
   
-        // Resolve the frame's width(s) with other cells
-        $col =& $this->get_column( $this->__col + $cs );
+                $col =& $this->get_column( $this->__col + $cs );
   
-        // Note: $var is either 'percent' or 'absolute'.  We compare the
-        // requested percentage or absolute values with the existing widths
-        // and adjust accordingly.
-        if ( isset($var) && $val > $col[$var] ) {
+                                if ( isset($var) && $val > $col[$var] ) {
           $col[$var] = $val;
           $col["auto"] = false;
         }
@@ -511,8 +428,7 @@ class Cellmap {
   
   
       if ( $frame_min > $min ) {
-        // The frame needs more space.  Expand each sub-column
-        $inc = ($frame_min - $min) / $colspan;
+                $inc = ($frame_min - $min) / $colspan;
         for ($c = 0; $c < $colspan; $c++) {
           $col =& $this->get_column($this->__col + $c);
           $col["min-width"] += $inc;
@@ -534,15 +450,13 @@ class Cellmap {
 
   }
 
-  //........................................................................
-
+  
   function add_row() {
 
     $this->__row++;
     $this->_num_rows++;
 
-    // Find the next available column
-    $i = 0;
+        $i = 0;
     while ( isset($this->_cells[$this->__row][$i]) )
       $i++;
 
@@ -550,26 +464,19 @@ class Cellmap {
 
   }
 
-  //........................................................................
-
-  /**
-   * Remove a row from the cellmap.
-   *
-   * @param Frame
-   */
+  
+  
   function remove_row(Frame $row) {
 
     $key = $row->get_id();
     if ( !isset($this->_frames[$key]) )
-      return;  // Presumably this row has alredy been removed
-
+      return;  
     $this->_row = $this->_num_rows--;
 
     $rows = $this->_frames[$key]["rows"];
     $columns = $this->_frames[$key]["columns"];
 
-    // Remove all frames from this row
-    foreach ( $rows as $r ) {
+        foreach ( $rows as $r ) {
       foreach ( $columns as $c ) {
         if ( isset($this->_cells[$r][$c]) ) {
           $id = $this->_cells[$r][$c]->get_id();
@@ -590,17 +497,12 @@ class Cellmap {
 
   }
 
-  /**
-   * Remove a row group from the cellmap.
-   *
-   * @param Frame $group  The group to remove
-   */
+  
   function remove_row_group(Frame $group) {
 
     $key = $group->get_id();
     if ( !isset($this->_frames[$key]) )
-      return;  // Presumably this row has alredy been removed
-
+      return;  
     $iter = $group->get_first_child();
     while ($iter) {
       $this->remove_row($iter);
@@ -611,12 +513,7 @@ class Cellmap {
     unset($this->_frames[$key]);
   }
 
-  /**
-   * Update a row group after rows have been removed
-   *
-   * @param Frame $group    The group to update
-   * @param Frame $last_row The last row in the row group
-   */
+  
   function update_row_group(Frame $group, Frame $last_row) {
 
     $g_key = $group->get_id();
@@ -627,12 +524,9 @@ class Cellmap {
 
   }
 
-  //........................................................................
-
+  
   function assign_x_positions() {
-    // Pre-condition: widths must be resolved and assigned to columns and
-    // column[0]["x"] must be set.
-
+        
     if ( $this->_columns_locked ) {
       return;
     }
@@ -647,17 +541,14 @@ class Cellmap {
   }
 
   function assign_frame_heights() {
-    // Pre-condition: widths and heights of each column & row must be
-    // calcluated
-
+        
     foreach ( $this->_frames as $arr ) {
       $frame = $arr["frame"];
 
       $h = 0;
       foreach( $arr["rows"] as $row ) {
         if ( !isset($this->_rows[$row]) )
-          // The row has been removed because of a page split, so skip it.
-          continue;
+                    continue;
         $h += $this->_rows[$row]["height"];
       }
 
@@ -669,16 +560,12 @@ class Cellmap {
 
   }
 
-  //........................................................................
-
-  /**
-   * Re-adjust frame height if the table height is larger than its content
-   */
+  
+  
   function set_frame_heights($table_height, $content_height) {
 
 
-    // Distribute the increased height proportionally amongst each row
-    foreach ( $this->_frames as $arr ) {
+        foreach ( $this->_frames as $arr ) {
       $frame = $arr["frame"];
 
       $h = 0;
@@ -702,10 +589,8 @@ class Cellmap {
 
   }
 
-  //........................................................................
-
-  // Used for debugging:
-  function __toString() {
+  
+    function __toString() {
     $str = "";
     $str .= "Columns:<br/>";
     $str .= pre_r($this->_columns, true);

@@ -1,17 +1,7 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: encoding_map.cls.php 34 2011-10-23 13:53:25Z fabien.menager $
- */
 
-/**
- * Encoding map used to map a code point to a Unicode char.
- * 
- * @package php-font-lib
- */
+
+
 class Encoding_Map {
   private $f;
   

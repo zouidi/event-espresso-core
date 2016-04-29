@@ -1,17 +1,7 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_table_os2.cls.php 34 2011-10-23 13:53:25Z fabien.menager $
- */
 
-/**
- * `OS/2` font table.
- * 
- * @package php-font-lib
- */
+
+
 class Font_Table_os2 extends Font_Table {
   protected $def = array(
     "version"             => self::uint16,

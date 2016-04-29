@@ -1,12 +1,5 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: css_color.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
+
 
 class CSS_Color {
   static $cssColorNames = array(
@@ -161,9 +154,7 @@ class CSS_Color {
 
   static function parse($colour) {
     if ( is_array($colour) )
-      // Assume the array has the right format...
-      // FIXME: should/could verify this.
-      return $colour;
+                  return $colour;
     
     $colour = strtolower($colour);
       
@@ -175,21 +166,17 @@ class CSS_Color {
       
     $length = mb_strlen($colour);
     
-    // #rgb format
-    if ( $length == 4 && $colour[0] === "#" ) {
+        if ( $length == 4 && $colour[0] === "#" ) {
       return self::getArray($colour[1].$colour[1].$colour[2].$colour[2].$colour[3].$colour[3]);
 
-    // #rrggbb format
-    } else if ( $length == 7 && $colour[0] === "#" ) {
+        } else if ( $length == 7 && $colour[0] === "#" ) {
       return self::getArray(mb_substr($colour, 1, 6));
 
-    // rgb( r,g,b ) format
-    } else if ( mb_strpos($colour, "rgb") !== false ) {
+        } else if ( mb_strpos($colour, "rgb") !== false ) {
       $i = mb_strpos($colour, "(");
       $j = mb_strpos($colour, ")");
       
-      // Bad colour value
-      if ($i === false || $j === false)
+            if ($i === false || $j === false)
         return null;
 
       $triplet = explode(",", mb_substr($colour, $i+1, $j-$i-1));
@@ -206,14 +193,11 @@ class CSS_Color {
       
       return self::getArray(vsprintf("%02X%02X%02X", $triplet));
     
-    // cmyk( c,m,y,k ) format
-    // http://www.w3.org/TR/css3-gcpm/#cmyk-colors
-    } else if ( mb_strpos($colour, "cmyk") !== false ) {
+            } else if ( mb_strpos($colour, "cmyk") !== false ) {
       $i = mb_strpos($colour, "(");
       $j = mb_strpos($colour, ")");
       
-      // Bad colour value
-      if ($i === false || $j === false)
+            if ($i === false || $j === false)
         return null;
 
       $values = explode(",", mb_substr($colour, $i+1, $j-$i-1));

@@ -1,35 +1,13 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: frame_reflower.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Base reflower class
- *
- * Reflower objects are responsible for determining the width and height of
- * individual frames.  They also create line and page breaks as necessary.
- *
- * @access private
- * @package dompdf
- */
+
+
 abstract class Frame_Reflower {
 
-  /**
-   * Frame for this reflower
-   *
-   * @var Frame
-   */
+  
   protected $_frame;
 
-  /**
-   * Cached min/max size
-   *
-   * @var array
-   */
+  
   protected $_min_max_cache;
   
   function __construct(Frame $frame) {
@@ -41,10 +19,7 @@ abstract class Frame_Reflower {
     clear_object($this);
   }
 
-  /**
-   * Collapse frames margins
-   * http://www.w3.org/TR/CSS2/box.html#collapsing-margins
-   */
+  
   protected function _collapse_margins() {
     $frame = $this->_frame;
     $cb = $frame->get_containing_block();
@@ -57,8 +32,7 @@ abstract class Frame_Reflower {
     $t = $style->length_in_pt($style->margin_top, $cb["h"]);
     $b = $style->length_in_pt($style->margin_bottom, $cb["h"]);
 
-    // Handle 'auto' values
-    if ( $t === "auto" ) {
+        if ( $t === "auto" ) {
       $style->margin_top = "0pt";
       $t = 0;
     }
@@ -68,8 +42,7 @@ abstract class Frame_Reflower {
       $b = 0;
     }
 
-    // Collapse vertical margins:
-    $n = $frame->get_next_sibling();
+        $n = $frame->get_next_sibling();
     if ( $n && !$n->is_block() ) {
       while ( $n = $n->get_next_sibling() ) {
         if ( $n->is_block() ) {
@@ -90,49 +63,21 @@ abstract class Frame_Reflower {
       $style->margin_bottom = $b."pt";
     }
 
-    // Collapse our first child's margin
-    /*$f = $this->_frame->get_first_child();
-    if ( $f && !$f->is_block() ) {
-      while ( $f = $f->get_next_sibling() ) {
-        if ( $f->is_block() ) {
-          break;
-        }
         
-        if ( !$f->get_first_child() ) {
-          $f = null;
-          break;
-        }
-      }
-    }
-
-    // Margin are collapsed only between block elements
-    if ( $f ) {
-      $f_style = $f->get_style();
-      $t = max($t, $f_style->length_in_pt($f_style->margin_top, $cb["h"]));
-      $style->margin_top = $t."pt";
-      $f_style->margin_bottom = "0pt";
-    }*/
   }
 
-  //........................................................................
-
+  
   abstract function reflow(Frame_Decorator $block = null);
 
-  //........................................................................
-
-  // Required for table layout: Returns an array(0 => min, 1 => max, "min"
-  // => min, "max" => max) of the minimum and maximum widths of this frame.
-  // This provides a basic implementation.  Child classes should override
-  // this if necessary.
-  function get_min_max_width() {
+  
+          function get_min_max_width() {
     if ( !is_null($this->_min_max_cache) ) {
       return $this->_min_max_cache;
     }
     
     $style = $this->_frame->get_style();
 
-    // Account for margins & padding
-    $dims = array($style->padding_left,
+        $dims = array($style->padding_left,
                   $style->padding_right,
                   $style->border_left_width,
                   $style->border_right_width,
@@ -142,8 +87,7 @@ abstract class Frame_Reflower {
     $cb_w = $this->_frame->get_containing_block("w");
     $delta = $style->length_in_pt($dims, $cb_w);
 
-    // Handle degenerate case
-    if ( !$this->_frame->get_first_child() )
+        if ( !$this->_frame->get_first_child() )
       return $this->_min_max_cache = array($delta, $delta,"min" => $delta, "max" => $delta);
 
     $low = array();
@@ -156,8 +100,7 @@ abstract class Frame_Reflower {
       $inline_min = 0;
       $inline_max = 0;
 
-      // Add all adjacent inline widths together to calculate max width
-      while ( $iter->valid() && in_array( $iter->current()->get_style()->display, Style::$INLINE_TYPES ) ) {
+            while ( $iter->valid() && in_array( $iter->current()->get_style()->display, Style::$INLINE_TYPES ) ) {
 
         $child = $iter->current();
 
@@ -188,9 +131,7 @@ abstract class Frame_Reflower {
     $min = count($low) ? max($low) : 0;
     $max = count($high) ? max($high) : 0;
 
-    // Use specified width if it is greater than the minimum defined by the
-    // content.  If the width is a percentage ignore it for now.
-    $width = $style->width;
+            $width = $style->width;
     if ( $width !== "auto" && !is_percent($width) ) {
       $width = $style->length_in_pt($width, $cb_w);
       if ( $min < $width )
@@ -204,13 +145,7 @@ abstract class Frame_Reflower {
     return $this->_min_max_cache = array($min, $max, "min"=>$min, "max"=>$max);
   }
 
-  /**
-   * Parses a CSS string containing quotes and escaped hex characters
-   * 
-   * @param $string string The CSS string to parse
-   * @param $single_trim
-   * @return string
-   */
+  
   protected function _parse_string($string, $single_trim = false) {
     if ($single_trim) {
       $string = preg_replace("/^[\"\']/", "", $string);
@@ -223,28 +158,21 @@ abstract class Frame_Reflower {
     $string = str_replace(array("\\\n",'\\"',"\\'"),
                           array("",'"',"'"), $string);
 
-    // Convert escaped hex characters into ascii characters (e.g. \A => newline)
-    $string = preg_replace_callback("/\\\\([0-9a-fA-F]{0,6})(\s)?(?(2)|(?=[^0-9a-fA-F]))/",
+        $string = preg_replace_callback("/\\\\([0-9a-fA-F]{0,6})(\s)?(?(2)|(?=[^0-9a-fA-F]))/",
                                     create_function('$matches',
                                                     'return chr(hexdec($matches[1]));'),
                                     $string);
     return $string;
   }
   
-  /**
-   * Parses a CSS "quotes" property
-   * 
-   * @return array An array of pairs of quotes
-   */
+  
   protected function _parse_quotes() {
     
-    // Matches quote types
-    $re = "/(\'[^\']*\')|(\"[^\"]*\")/";
+        $re = "/(\'[^\']*\')|(\"[^\"]*\")/";
     
     $quotes = $this->_frame->get_style()->quotes;
       
-    // split on spaces, except within quotes
-    if (!preg_match_all($re, "$quotes", $matches, PREG_SET_ORDER))
+        if (!preg_match_all($re, "$quotes", $matches, PREG_SET_ORDER))
       return;
       
     $quotes_array = array();
@@ -259,15 +187,10 @@ abstract class Frame_Reflower {
     return array_chunk($quotes_array, 2);
   }
 
-  /**
-   * Parses the CSS "content" property
-   * 
-   * @return string The resulting string
-   */
+  
   protected function _parse_content() {
 
-    // Matches generated content
-    $re = "/\n".
+        $re = "/\n".
       "\s(counters?\\([^)]*\\))|\n".
       "\A(counters?\\([^)]*\\))|\n".
       "\s([\"']) ( (?:[^\"']|\\\\[\"'])+ )(?<!\\\\)\\3|\n".
@@ -280,8 +203,7 @@ abstract class Frame_Reflower {
 
     $quotes = $this->_parse_quotes();
     
-    // split on spaces, except within quotes
-    if (!preg_match_all($re, $content, $matches, PREG_SET_ORDER))
+        if (!preg_match_all($re, $content, $matches, PREG_SET_ORDER))
       return;
       
     $text = "";
@@ -299,12 +221,9 @@ abstract class Frame_Reflower {
 
       if ( isset($match[1]) && $match[1] !== "" ) {
         
-        // counters?(...)
-        $match[1] = mb_strtolower(trim($match[1]));
+                $match[1] = mb_strtolower(trim($match[1]));
 
-        // Handle counter() references:
-        // http://www.w3.org/TR/CSS21/generate.html#content
-
+                
         $i = mb_strpos($match[1], ")");
         if ( $i === false )
           continue;
@@ -313,8 +232,7 @@ abstract class Frame_Reflower {
         $counter_id = $args[0];
 
         if ( $match[1][7] === "(" ) {
-          // counter(name [,style])
-
+          
           if ( isset($args[1]) )
             $type = trim($args[1]);
           else
@@ -325,8 +243,7 @@ abstract class Frame_Reflower {
           $text .= $p->counter_value($counter_id, $type);
 
         } else if ( $match[1][7] === "s" ) {
-          // counters(name, string [,style])
-          if ( isset($args[1]) )
+                    if ( isset($args[1]) )
             $string = $this->_parse_string(trim($args[1]));
           else
             $string = "";
@@ -345,27 +262,20 @@ abstract class Frame_Reflower {
           $text .= $tmp;
 
         } else
-          // countertops?
-          continue;
+                    continue;
 
       } else if ( isset($match[4]) && $match[4] !== "" ) {
-        // String match
-        $text .= $this->_parse_string($match[4]);
+                $text .= $this->_parse_string($match[4]);
 
       } else if ( isset($match[7]) && $match[7] !== "" ) {
-        // Directive match
-
+        
         if ( $match[7] === "open-quote" ) {
-          // FIXME: do something here
-          $text .= $quotes[0][0];
+                    $text .= $quotes[0][0];
         } else if ( $match[7] === "close-quote" ) {
-          // FIXME: do something else here
-          $text .= $quotes[0][1];
+                    $text .= $quotes[0][1];
         } else if ( $match[7] === "no-open-quote" ) {
-          // FIXME:
-        } else if ( $match[7] === "no-close-quote" ) {
-          // FIXME:
-        } else if ( mb_strpos($match[7],"attr(") === 0 ) {
+                  } else if ( $match[7] === "no-close-quote" ) {
+                  } else if ( mb_strpos($match[7],"attr(") === 0 ) {
 
           $i = mb_strpos($match[7],")");
           if ( $i === false )
@@ -384,9 +294,7 @@ abstract class Frame_Reflower {
     return $text;
   }
   
-  /**
-   * Sets the generated content of a generated frame
-   */
+  
   protected function _set_content(){
     $frame = $this->_frame;
     $style = $frame->get_style();

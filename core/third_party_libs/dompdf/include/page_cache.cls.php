@@ -1,21 +1,7 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: page_cache.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Caches individual rendered PDF pages
- *
- * Not totally implemented yet.  Use at your own risk ;)
- * 
- * @access private
- * @package dompdf
- * @static
- */
+
+
 class Page_Cache {
 
   const DB_USER = "dompdf_page_cache";
@@ -63,8 +49,7 @@ class Page_Cache {
 
   static function store_fonts($id, $fonts) {
     self::__query("BEGIN");
-    // Update the font information
-    self::__query("DELETE FROM page_fonts WHERE id='" . pg_escape_string($id) . "'");
+        self::__query("DELETE FROM page_fonts WHERE id='" . pg_escape_string($id) . "'");
 
     foreach (array_keys($fonts) as $font)
       self::__query("INSERT INTO page_fonts (id, font_name) VALUES ('" .
@@ -72,16 +57,10 @@ class Page_Cache {
     self::__query("COMMIT");
   }
   
-//   static function retrieve_page($id, $page_num) {
 
-//     $res = self::__query("SELECT data FROM page_cache WHERE id='" . pg_escape_string($id) . "' AND ".
-//                           "page_num=". pg_escape_string($page_num));
 
-//     $row = pg_fetch_assoc($res);
 
-//     return pg_unescape_bytea($row["data"]);
     
-//   }
 
   static function get_page_timestamp($id, $page_num) {
     $res = self::__query("SELECT timestamp FROM page_cache WHERE id='" . pg_escape_string($id) . "' AND ".
@@ -93,13 +72,10 @@ class Page_Cache {
     
   }
 
-  // Adds the cached document referenced by $id to the provided pdf
-  static function insert_cached_document(CPDF_Adapter $pdf, $id, $new_page = true) {
+    static function insert_cached_document(CPDF_Adapter $pdf, $id, $new_page = true) {
     $res = self::__query("SELECT font_name FROM page_fonts WHERE id='" . pg_escape_string($id) . "'");
 
-    // Ensure that the fonts needed by the cached document are loaded into
-    // the pdf
-    while ($row = pg_fetch_assoc($res)) 
+            while ($row = pg_fetch_assoc($res)) 
       $pdf->get_cpdf()->selectFont($row["font_name"]);
     
     $res = self::__query("SELECT data FROM page_cache WHERE id='" . pg_escape_string($id) . "'");
@@ -116,8 +92,7 @@ class Page_Cache {
         $first = false;        
       
       $page = $pdf->reopen_serialized_object($row["data"]);
-      //$pdf->close_object();
-      $pdf->add_object($page, "add");
+            $pdf->add_object($page, "add");
 
     }
       

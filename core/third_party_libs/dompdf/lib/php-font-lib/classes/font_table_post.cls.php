@@ -1,17 +1,7 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_table_post.cls.php 40 2012-01-22 21:48:41Z fabien.menager $
- */
 
-/**
- * `post` font table.
- * 
- * @package php-font-lib
- */
+
+
 class Font_Table_post extends Font_Table {
   protected $def = array(
     "format"             => self::Fixed,
@@ -64,16 +54,13 @@ class Font_Table_post extends Font_Table {
       break;
       
       case 2.5:
-        // TODO
-      break;
+              break;
       
       case 3:
-        // nothing
-      break;
+              break;
       
       case 4:
-        // TODO
-      break;
+              break;
     }
     
     $data["names"] = $names;
@@ -94,8 +81,7 @@ class Font_Table_post extends Font_Table {
     
     switch($data["format"]) {
       case 1:
-        // nothing to do
-      break;
+              break;
       
       case 2:
         $old_names = $data["names"];
@@ -114,8 +100,7 @@ class Font_Table_post extends Font_Table {
           $length += $font->writeUInt16($gni);
         }
         
-        //$names = array_slice($names, 257);
-        foreach($names as $name) {
+                foreach($names as $name) {
           var_dump($name);
           $len = strlen($name);
           $length += $font->writeUInt8($len);
@@ -125,16 +110,13 @@ class Font_Table_post extends Font_Table {
       break;
       
       case 2.5:
-        // TODO
-      break;
+              break;
       
       case 3:
-        // nothing
-      break;
+              break;
       
       case 4:
-        // TODO
-      break;
+              break;
     }
     
     return $length;

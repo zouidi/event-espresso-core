@@ -1,17 +1,7 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_table_glyf.cls.php 40 2012-01-22 21:48:41Z fabien.menager $
- */
 
-/**
- * `glyf` font table.
- * 
- * @package php-font-lib
- */
+
+
 class Font_Table_glyf extends Font_Table {
   const ARG_1_AND_2_ARE_WORDS    = 1;
   const ARGS_ARE_XY_VALUES       = 2;
@@ -27,19 +17,7 @@ class Font_Table_glyf extends Font_Table {
   protected function getGlyphData($offset, $loca, $gid){
     $font = $this->getFont();
     
-    /*$entryStart = $this->entry->offset;
-    $start = $entryStart + $loca[$gid];
-    $font->seek($start);
     
-    $data = $font->unpack(array(
-      "numberOfContours" => self::int16,
-      "xMin" => self::FWord,
-      "yMin" => self::FWord,
-      "xMax" => self::FWord,
-      "yMax" => self::FWord,
-    ));
-    
-    $data["outline"] = $font->read($loca[$gid+1] - $font->pos() - $entryStart);*/
     
     $font->seek($offset + $loca[$gid]);
     return $font->read($loca[$gid+1] - $loca[$gid]);
@@ -50,8 +28,7 @@ class Font_Table_glyf extends Font_Table {
     $offset = $font->pos();
     
     $loca = $font->getData("loca");
-    $real_loca = array_slice($loca, 0, -1); // Not the last dummy loca entry
-    
+    $real_loca = array_slice($loca, 0, -1);     
     $data = array();
     
     foreach($real_loca as $gid => $location) {
@@ -85,8 +62,7 @@ class Font_Table_glyf extends Font_Table {
       $length += $font->write($raw, strlen($raw));
     }
     
-    $loca[] = $length; // dummy loca
-    $font->getTableObject("loca")->data = $loca;
+    $loca[] = $length;     $font->getTableObject("loca")->data = $loca;
     
     return $length;
   }

@@ -1,28 +1,12 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: attribute_translator.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Translates HTML 4.0 attributes into CSS rules
- *
- * @access private
- * @package dompdf
- */
+
+
 class Attribute_Translator {
   static $_style_attr = "_html_style_attribute";
   
-  // Munged data originally from
-  // http://www.w3.org/TR/REC-html40/index/attributes.html
-  // http://www.cs.tut.fi/~jkorpela/html2css.html
-  static private $__ATTRIBUTE_LOOKUP = array(
-    //'caption' => array ( 'align' => '', ),
-    'img' => array(
+        static private $__ATTRIBUTE_LOOKUP = array(
+        'img' => array(
       'align' => array(
         'bottom' => 'vertical-align: baseline;',
         'middle' => 'vertical-align: middle;',
@@ -44,8 +28,7 @@ class Attribute_Translator {
       ),
       'bgcolor' => 'background-color: %s;',
       'border' => '!set_table_border',
-      'cellpadding' => '!set_table_cellpadding',//'border-spacing: %0.2F; border-collapse: separate;',
-      'cellspacing' => '!set_table_cellspacing',
+      'cellpadding' => '!set_table_cellpadding',      'cellspacing' => '!set_table_cellspacing',
       'frame' => array(
         'void'   => 'border-style: none;',
         'above'  => 'border-top-style: solid;',
@@ -61,10 +44,8 @@ class Attribute_Translator {
       'width' => 'width: %s;',
     ),
     'hr' => array(
-      'align'   => '!set_hr_align', // Need to grab width to set 'left' & 'right' correctly
-      'noshade' => 'border-style: solid;',
-      'size'    => '!set_hr_size', //'border-width: %0.2F px;',
-      'width'   => 'width: %s;',
+      'align'   => '!set_hr_align',       'noshade' => 'border-style: solid;',
+      'size'    => '!set_hr_size',       'width'   => 'width: %s;',
     ),
     'div' => array(
       'align' => 'text-align: %s;',
@@ -90,14 +71,6 @@ class Attribute_Translator {
     'p' => array(
       'align' => 'text-align: %s;',
     ),
-//    'col' => array(
-//      'align'  => '',
-//      'valign' => '',
-//    ),
-//    'colgroup' => array(
-//      'align'  => '',
-//      'valign' => '',
-//    ),
     'tbody' => array(
       'align'  => '!set_table_row_align',
       'valign' => '!set_table_row_valign',
@@ -179,8 +152,7 @@ class Attribute_Translator {
   
   static protected $_last_basefont_size = 3;
   static protected $_font_size_lookup = array(
-    // For basefont support
-    -3 => "4pt", 
+        -3 => "4pt", 
     -2 => "5pt", 
     -1 => "6pt", 
      0 => "7pt", 
@@ -193,8 +165,7 @@ class Attribute_Translator {
      6 => "24pt",
      7 => "34pt",
      
-    // For basefont support
-     8 => "48pt", 
+         8 => "48pt", 
      9 => "44pt", 
     10 => "52pt", 
     11 => "60pt", 
@@ -222,15 +193,13 @@ class Attribute_Translator {
 
       $target = $valid_attrs[$attr];
       
-      // Look up $value in $target, if $target is an array:
-      if ( is_array($target) ) {
+            if ( is_array($target) ) {
 
         if ( isset($target[$value]) )
           $style .= " " . self::_resolve_target($node, $target[$value], $value);
 
       } else {
-        // otherwise use target directly
-        $style .= " " . self::_resolve_target($node, $target, $value);
+                $style .= " " . self::_resolve_target($node, $target, $value);
       }
     }
     
@@ -243,8 +212,7 @@ class Attribute_Translator {
 
   static protected function _resolve_target($node, $target, $value) {
     if ( $target[0] === "!" ) {
-      // Function call
-      $func = "_" . mb_substr($target, 1);
+            $func = "_" . mb_substr($target, 1);
       return self::$func($node, $value);
     }
     
@@ -280,8 +248,7 @@ class Attribute_Translator {
     return $xpath->query($query, $node);
   } 
 
-  //.....................................................................
-  
+    
   static protected function _get_valid_color($value) {
     if ( preg_match('/^#?([0-9A-F]{6})$/i', $value, $matches) ) {
       $value = "#$matches[1]";
@@ -345,8 +312,7 @@ class Attribute_Translator {
       break;
 
     case "groups":
-      // FIXME: unsupported
-      return;
+            return;
 
     case "rows":
       $new_style .= "border-style: solid none solid none; border-width: 1px; ";
@@ -361,8 +327,7 @@ class Attribute_Translator {
       break;
       
     default:
-      // Invalid value
-      return null;
+            return null;
     }
 
     $cell_list = self::get_cell_list($node);
@@ -455,9 +420,7 @@ class Attribute_Translator {
   }
 
   static protected function _set_basefont_size($node, $value) {
-    // FIXME: ? we don't actually set the font size of anything here, just
-    // the base size for later modification by <font> tags.
-    self::$_last_basefont_size = $value;
+            self::$_last_basefont_size = $value;
     return null;
   }
   

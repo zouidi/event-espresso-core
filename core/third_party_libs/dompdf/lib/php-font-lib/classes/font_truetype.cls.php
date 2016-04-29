@@ -1,11 +1,5 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_truetype.cls.php 41 2012-02-04 18:01:38Z fabien.menager $
- */
+
 
 $dir = dirname(__FILE__);
 require_once "$dir/font_binary_stream.cls.php";
@@ -14,19 +8,12 @@ require_once "$dir/font_truetype_header.cls.php";
 require_once "$dir/font_table.cls.php";
 require_once "$dir/adobe_font_metrics.cls.php";
 
-/**
- * TrueType font file.
- * 
- * @package php-font-lib
- */
+
 class Font_TrueType extends Font_Binary_Stream {
-  /**
-   * @var Font_TrueType_Header
-   */
+  
   public $header = array();
   
-  private $tableOffset = 0; // Used for TTC
-  
+  private $tableOffset = 0;   
   private static $raw = false;
   
   protected $directory = array();
@@ -52,8 +39,7 @@ class Font_TrueType extends Font_Binary_Stream {
     12 => "FontDesignerURL",
     13 => "LicenseDescription",
     14 => "LicenseURL",
- // 15
-    16 => "PreferredFamily",
+     16 => "PreferredFamily",
     17 => "PreferredSubfamily",
     18 => "CompatibleFullName",
     19 => "SampleText",
@@ -62,21 +48,18 @@ class Font_TrueType extends Font_Binary_Stream {
   static $platforms = array(
     0 => "Unicode",
     1 => "Macintosh",
- // 2 =>  Reserved
-    3 => "Microsoft",
+     3 => "Microsoft",
   );
   
   static $plaformSpecific = array(
-    // Unicode
-    0 => array(
+        0 => array(
       0 => "Default semantics",
       1 => "Version 1.1 semantics",
       2 => "ISO 10646 1993 semantics (deprecated)",
       3 => "Unicode 2.0 or later semantics",
     ),
     
-    // Macintosh
-    1 => array(
+        1 => array(
       0 => "Roman",
       1 => "Japanese",
       2 => "Traditional Chinese",
@@ -111,8 +94,7 @@ class Font_TrueType extends Font_Binary_Stream {
       31 => "Sindhi",
     ),
     
-    // Microsoft
-    3 => array(
+        3 => array(
       0 => "Symbol",
       1 => "Unicode BMP (UCS-2)",
       2 => "ShiftJIS",
@@ -120,10 +102,7 @@ class Font_TrueType extends Font_Binary_Stream {
       4 => "Big5",
       5 => "Wansung",
       6 => "Johab",
-  //  7 => Reserved
-  //  8 => Reserved
-  //  9 => Reserved
-      10 => "Unicode UCS-4",
+            10 => "Unicode UCS-4",
     ),
   );
   
@@ -245,8 +224,7 @@ class Font_TrueType extends Font_Binary_Stream {
     
     if ($numberOfContours < 0) {
       $this->skip(8);
-      $compoundOffset = 10; // 2 + 8
-      
+      $compoundOffset = 10;       
       do {
         $flags      = $this->readUInt16();
         $compoundOffset += 2;
@@ -267,8 +245,7 @@ class Font_TrueType extends Font_Binary_Stream {
         
         $offset = 0;
         
-        // skip some bytes by case
-        if ($flags & Font_Table_glyf::ARG_1_AND_2_ARE_WORDS) {
+                if ($flags & Font_Table_glyf::ARG_1_AND_2_ARE_WORDS) {
           $offset += 4;
         }
         else {
@@ -316,8 +293,7 @@ class Font_TrueType extends Font_Binary_Stream {
       $gids[$code] = $subtable["glyphIndexArray"][$code];
     }
     
-    // add compound glyphs
-    $indexToLoc = $this->getData("loca");
+        $indexToLoc = $this->getData("loca");
     $glyfOffset = $this->directory["glyf"]->offset;
     $cidToGid   = $subtable["glyphIndexArray"];
     $gidToCid   = array_flip($cidToGid);
@@ -367,8 +343,7 @@ class Font_TrueType extends Font_Binary_Stream {
     }
     
     $num_tables = count($tags);
-    $n = 16;// @todo
-    
+    $n = 16;    
     Font::d("Tables : ".implode(", ", $tags));
     
     $entries = array();

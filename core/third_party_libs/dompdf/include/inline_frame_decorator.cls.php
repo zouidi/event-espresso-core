@@ -1,19 +1,7 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @author  Helmut Tischer <htischer@weihenstephan.org>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: inline_frame_decorator.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Decorates frames for inline layout
- *
- * @access private
- * @package dompdf
- */
+
+
 class Inline_Frame_Decorator extends Frame_Decorator {
   
   function __construct(Frame $frame, DOMPDF $dompdf) { parent::__construct($frame, $dompdf); }
@@ -31,30 +19,23 @@ class Inline_Frame_Decorator extends Frame_Decorator {
     $split = $this->copy( $this->_frame->get_node()->cloneNode() ); 
     $this->get_parent()->insert_child_after($split, $this);
 
-    // Unset the current node's right style properties
-    $style = $this->_frame->get_style();
+        $style = $this->_frame->get_style();
     $style->margin_right = 0;
     $style->padding_right = 0;
     $style->border_right_width = 0;
 
-    // Unset the split node's left style properties since we don't want them
-    // to propagate
-    $style = $split->get_style();
+            $style = $split->get_style();
     $style->margin_left = 0;
     $style->padding_left = 0;
     $style->border_left_width = 0;
 
-    //On continuation of inline element on next line,
-    //don't repeat non-vertically repeatble background images
-    //See e.g. in testcase image_variants, long desriptions
-    if ( ($url = $style->background_image) && $url !== "none"
+                if ( ($url = $style->background_image) && $url !== "none"
          && ($repeat = $style->background_repeat) && $repeat !== "repeat" &&  $repeat !== "repeat-y"
        ) {
       $style->background_image = "none";
     }           
 
-    // Add $frame and all following siblings to the new split node
-    $iter = $frame;
+        $iter = $frame;
     while ($iter) {
       $frame = $iter;      
       $iter = $iter->get_next_sibling();

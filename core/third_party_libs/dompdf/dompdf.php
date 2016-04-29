@@ -1,18 +1,7 @@
 <?php
-/**
- * Command line utility to use dompdf.
- * Can also be used with HTTP GET parameters
- * 
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: dompdf.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Display command line usage
- */
+
+
 function dompdf_usage() {
   $default_paper_size = DOMPDF_DEFAULT_PAPER_SIZE;
   
@@ -41,11 +30,7 @@ EOD;
 exit;
 }
 
-/**
- * Parses command line options
- * 
- * @return array The command line options
- */
+
 function getoptions() {
 
   $opts = array();
@@ -211,8 +196,7 @@ switch ( $sapi ) {
   
   if ( isset($_GET["base_path"]) ) {
     $base_path = rawurldecode($_GET["base_path"]);
-    $file = $base_path . $file; # Set the input file
-  }  
+    $file = $base_path . $file;   }  
   
   if ( isset($_GET["options"]) ) {
     $options = $_GET["options"];
@@ -220,7 +204,7 @@ switch ( $sapi ) {
   
   $file_parts = explode_url($file);
   
-  /* Check to see if the input file is local and, if so, that the base path falls within that specified by DOMDPF_CHROOT */
+  
   if(($file_parts['protocol'] == '' || $file_parts['protocol'] === 'file://')) {
     $file = realpath($file);
     if ( strpos($file, DOMPDF_CHROOT) !== 0 ) {
@@ -228,9 +212,7 @@ switch ( $sapi ) {
     }
   }
   
-  $outfile = "dompdf_out.pdf"; # Don't allow them to set the output file
-  $save_file = false; # Don't save the file
-  
+  $outfile = "dompdf_out.pdf";   $save_file = false;   
   break;
 }
 
@@ -263,15 +245,11 @@ if ( $_dompdf_show_warnings ) {
 }
 
 if ( $save_file ) {
-//   if ( !is_writable($outfile) )
-//     throw new DOMPDF_Exception("'$outfile' is not writable.");
   if ( strtolower(DOMPDF_PDF_BACKEND) === "gd" )
     $outfile = str_replace(".pdf", ".png", $outfile);
 
   list($proto, $host, $path, $file) = explode_url($outfile);
-  if ( $proto != "" ) // i.e. not file://
-    $outfile = $file; // just save it locally, FIXME? could save it like wget: ./host/basepath/file
-
+  if ( $proto != "" )     $outfile = $file; 
   $outfile = realpath(dirname($outfile)) . DIRECTORY_SEPARATOR . basename($outfile);
 
   if ( strpos($outfile, DOMPDF_CHROOT) !== 0 )

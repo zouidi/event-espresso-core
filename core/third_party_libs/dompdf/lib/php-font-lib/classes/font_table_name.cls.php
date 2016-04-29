@@ -1,19 +1,9 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_table_name.cls.php 36 2011-11-03 23:02:06Z fabien.menager $
- */
+
 
 require_once dirname(__FILE__)."/font_table_name_record.cls.php";
 
-/**
- * `name` font table.
- * 
- * @package php-font-lib
- */
+
 class Font_Table_name extends Font_Table {
   private static $header_format = array(
     "format"       => self::uint16,
@@ -58,8 +48,7 @@ class Font_Table_name extends Font_Table {
     $count_records = count($records);
     
     $this->data["count"] = $count_records;
-    $this->data["stringOffset"] = 6 + $count_records * 12; // 6 => uint16 * 3, 12 => sizeof self::$record_format
-    
+    $this->data["stringOffset"] = 6 + $count_records * 12;     
     $tableOffset = $font->pos();
     
     $length = $font->pack(self::$header_format, $this->data);

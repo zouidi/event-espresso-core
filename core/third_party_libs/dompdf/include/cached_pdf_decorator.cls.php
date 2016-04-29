@@ -1,31 +1,12 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: cached_pdf_decorator.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Caching canvas implementation
- *
- * Each rendered page is serialized and stored in the {@link Page_Cache}.
- * This is useful for static forms/pages that do not need to be re-rendered
- * all the time.
- *
- * This class decorates normal CPDF_Adapters.  It is currently completely
- * experimental.
- *
- * @access private
- * @package dompdf
- */
+
+
 class Cached_PDF_Decorator extends CPDF_Adapter implements Canvas {
   protected $_pdf;
   protected $_cache_id;
   protected $_current_page_id;
-  protected $_fonts;  // fonts used in this document
-  
+  protected $_fonts;    
   function __construct($cache_id, CPDF_Adapter $pdf) {
     $this->_pdf = $pdf;
     $this->_cache_id = $cache_id;
@@ -34,8 +15,7 @@ class Cached_PDF_Decorator extends CPDF_Adapter implements Canvas {
     $this->_current_page_id = $this->_pdf->open_object();
   }
 
-  //........................................................................
-
+  
   function get_cpdf() { return $this->_pdf->get_cpdf(); }
 
   function open_object() { $this->_pdf->open_object(); }
@@ -49,8 +29,7 @@ class Cached_PDF_Decorator extends CPDF_Adapter implements Canvas {
 
   function reopen_serialized_object($obj) { $this->_pdf->reopen_serialized_object($obj); }
     
-  //........................................................................
-
+  
   function get_width() { return $this->_pdf->get_width(); }
   function get_height() {  return $this->_pdf->get_height(); }
   function get_page_number() { return $this->_pdf->get_page_number(); }
@@ -90,16 +69,14 @@ class Cached_PDF_Decorator extends CPDF_Adapter implements Canvas {
 
   function page_text($x, $y, $text, $font, $size, $color = array(0,0,0), $adjust = 0, $angle = 0) {
     
-    // We want to remove this from cached pages since it may not be correct
-    $this->_pdf->close_object();
+        $this->_pdf->close_object();
     $this->_pdf->page_text($x, $y, $text, $font, $size, $color, $adjust, $angle);
     $this->_pdf->reopen_object($this->_current_page_id);
   }
   
   function page_script($script, $type = 'text/php') {
     
-    // We want to remove this from cached pages since it may not be correct
-    $this->_pdf->close_object();
+        $this->_pdf->close_object();
     $this->_pdf->page_script($script, $type);
     $this->_pdf->reopen_object($this->_current_page_id);
   }
@@ -107,8 +84,7 @@ class Cached_PDF_Decorator extends CPDF_Adapter implements Canvas {
   function new_page() {
     $this->_pdf->close_object();
 
-    // Add the object to the current page
-    $this->_pdf->add_object($this->_current_page_id, "add");
+        $this->_pdf->add_object($this->_current_page_id, "add");
     $this->_pdf->new_page();    
 
     Page_Cache::store_page($this->_cache_id,
@@ -120,8 +96,7 @@ class Cached_PDF_Decorator extends CPDF_Adapter implements Canvas {
   }
   
   function stream($filename) {
-    // Store the last page in the page cache
-    if ( !is_null($this->_current_page_id) ) {
+        if ( !is_null($this->_current_page_id) ) {
       $this->_pdf->close_object();
       $this->_pdf->add_object($this->_current_page_id, "add");
       Page_Cache::store_page($this->_cache_id,
@@ -136,8 +111,7 @@ class Cached_PDF_Decorator extends CPDF_Adapter implements Canvas {
   }
   
   function &output() {
-    // Store the last page in the page cache
-    if ( !is_null($this->_current_page_id) ) {
+        if ( !is_null($this->_current_page_id) ) {
       $this->_pdf->close_object();
       $this->_pdf->add_object($this->_current_page_id, "add");
       Page_Cache::store_page($this->_cache_id,

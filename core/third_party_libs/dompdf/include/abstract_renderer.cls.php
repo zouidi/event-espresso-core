@@ -1,95 +1,46 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @author  Helmut Tischer <htischer@weihenstephan.org>
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: abstract_renderer.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Base renderer class
- *
- * @access private
- * @package dompdf
- */
+
+
 abstract class Abstract_Renderer {
 
-  /**
-   * Rendering backend
-   *
-   * @var Canvas
-   */
+  
   protected $_canvas;
 
-  /**
-   * Current dompdf instance
-   *
-   * @var DOMPDF
-   */
+  
   protected $_dompdf;
   
-  /**
-   * Class constructor
-   *
-   * @param DOMPDF $dompdf The current dompdf instance
-   */
+  
   function __construct(DOMPDF $dompdf) {
     $this->_dompdf = $dompdf;
     $this->_canvas = $dompdf->get_canvas();
   }
   
-  /**
-   * Render a frame.
-   *
-   * Specialized in child classes
-   *
-   * @param Frame $frame The frame to render
-   */
+  
   abstract function render(Frame $frame);
 
-  //........................................................................
-
-  /**
-   * Render a background image over a rectangular area
-   *
-   * @param string $img      The background image to load
-   * @param float  $x        The left edge of the rectangular area
-   * @param float  $y        The top edge of the rectangular area
-   * @param float  $width    The width of the rectangular area
-   * @param float  $height   The height of the rectangular area
-   * @param Style  $style    The associated Style object
-   */
+  
+  
   protected function _background_image($url, $x, $y, $width, $height, $style) {
     $sheet = $style->get_stylesheet();
 
-    // Skip degenerate cases
-    if ( $width == 0 || $height == 0 )
+        if ( $width == 0 || $height == 0 )
       return;
     
     $box_width = $width;
     $box_height = $height;
 
-    //debugpng
-    if (DEBUGPNG) print '[_background_image '.$url.']';
+        if (DEBUGPNG) print '[_background_image '.$url.']';
 
     list($img, $type, $msg) = Image_Cache::resolve_url($url,
                                                 $sheet->get_protocol(),
                                                 $sheet->get_host(),
                                                 $sheet->get_base_path());
 
-    // Bail if the image is no good
-    if ( Image_Cache::is_broken($img) )
+        if ( Image_Cache::is_broken($img) )
       return;
 
-    //Try to optimize away reading and composing of same background multiple times
-    //Postponing read with imagecreatefrom   ...()
-    //final composition paramters and name not known yet
-    //Therefore read dimension directly from file, instead of creating gd object first.
-    //$img_w = imagesx($src); $img_h = imagesy($src);
-
+                    
     list($img_w, $img_h) = dompdf_getimagesize($img);
     if (!isset($img_w) || $img_w == 0 || !isset($img_h) || $img_h == 0) {
       return;
@@ -98,19 +49,14 @@ abstract class Abstract_Renderer {
     $repeat = $style->background_repeat;
     $bg_color = $style->background_color;
 
-    //Increase background resolution and dependent box size according to image resolution to be placed in
-    //Then image can be copied in without resize
-    $bg_width = round((float)($width * DOMPDF_DPI) / 72);
+            $bg_width = round((float)($width * DOMPDF_DPI) / 72);
     $bg_height = round((float)($height * DOMPDF_DPI) / 72);
 
-    //Need %bg_x, $bg_y as background pos, where img starts, converted to pixel
-
+    
     list($bg_x, $bg_y) = $style->background_position;
 
     if ( is_percent($bg_x) ) {
-      // The point $bg_x % from the left edge of the image is placed
-      // $bg_x % from the left edge of the background rectangle
-      $p = ((float)$bg_x)/100.0;
+                  $p = ((float)$bg_x)/100.0;
       $x1 = $p * $img_w;
       $x2 = $p * $bg_width;
 
@@ -122,9 +68,7 @@ abstract class Abstract_Renderer {
     $bg_x = round($bg_x + $style->length_in_pt($style->border_left_width)*DOMPDF_DPI / 72);
 
     if ( is_percent($bg_y) ) {
-      // The point $bg_y % from the left edge of the image is placed
-      // $bg_y % from the left edge of the background rectangle
-      $p = ((float)$bg_y)/100.0;
+                  $p = ((float)$bg_y)/100.0;
       $y1 = $p * $img_h;
       $y2 = $p * $bg_height;
 
@@ -135,14 +79,9 @@ abstract class Abstract_Renderer {
     
     $bg_y = round($bg_y + $style->length_in_pt($style->border_top_width)*DOMPDF_DPI / 72);
 
-    //clip background to the image area on partial repeat. Nothing to do if img off area
-    //On repeat, normalize start position to the tile at immediate left/top or 0/0 of area
-    //On no repeat with positive offset: move size/start to have offset==0
-    //Handle x/y Dimensions separately
-
+                
     if ( $repeat !== "repeat" && $repeat !== "repeat-x" ) {
-      //No repeat x
-      if ($bg_x < 0) {
+            if ($bg_x < 0) {
         $bg_width = $img_w + $bg_x;
       } else {
         $x += ($bg_x * 72)/DOMPDF_DPI;
@@ -157,8 +96,7 @@ abstract class Abstract_Renderer {
       }
       $width = (float)($bg_width * 72)/DOMPDF_DPI;
     } else {
-      //repeat x
-      if ($bg_x < 0) {
+            if ($bg_x < 0) {
         $bg_x = - ((-$bg_x) % $img_w);
       } else {
         $bg_x = $bg_x % $img_w;
@@ -169,8 +107,7 @@ abstract class Abstract_Renderer {
     }
 
     if ( $repeat !== "repeat" && $repeat !== "repeat-y" ) {
-      //no repeat y
-      if ($bg_y < 0) {
+            if ($bg_y < 0) {
         $bg_height = $img_h + $bg_y;
       } else {
         $y += ($bg_y * 72)/DOMPDF_DPI;
@@ -185,8 +122,7 @@ abstract class Abstract_Renderer {
       }
       $height = (float)($bg_height * 72)/DOMPDF_DPI;
     } else {
-      //repeat y
-      if ($bg_y < 0) {
+            if ($bg_y < 0) {
         $bg_y = - ((-$bg_y) % $img_h);
       } else {
         $bg_y = $bg_y % $img_h;
@@ -196,8 +132,7 @@ abstract class Abstract_Renderer {
       }
     }
 
-    //Optimization, if repeat has no effect
-    if ( $repeat === "repeat" && $bg_y <= 0 && $img_h+$bg_y >= $bg_height ) {
+        if ( $repeat === "repeat" && $bg_y <= 0 && $img_h+$bg_y >= $bg_height ) {
       $repeat = "repeat-x";
     }
     if ( $repeat === "repeat" && $bg_x <= 0 && $img_w+$bg_x >= $bg_width ) {
@@ -208,58 +143,25 @@ abstract class Abstract_Renderer {
       $repeat = "no-repeat";
     }
 
-    //Use filename as indicator only
-    //different names for different variants to have different copies in the pdf
-    //This is not dependent of background color of box! .'_'.(is_array($bg_color) ? $bg_color["hex"] : $bg_color)
-    //Note: Here, bg_* are the start values, not end values after going through the tile loops!
-
+                
     $filedummy = $img;
 
-    /* 
-    //Make shorter strings with limited characters for cache associative array index - needed?    
-    //Strip common base path - server root, explicite temp, default temp; remove unwanted characters;
-    $filedummy = strtr($filedummy,"\\:","//");
-    $p = strtr($_SERVER["DOCUMENT_ROOT"],"\\:","//");
-    $l = strlen($p);
-    if ( substr($filedummy,0,$l) == $p) {
-      $filedummy = substr($filedummy,$l);
-    } else {
-      $p = strtr(DOMPDF_TEMP_DIR,"\\:","//");
-      $l = strlen($p);
-      if ( substr($filedummy,0,$l) == $p) {
-        $filedummy = substr($filedummy,$l);
-      } else {
-        $p = strtr(sys_get_temp_dir(),"\\:","//");
-        $l = strlen($p);
-        if ( substr($filedummy,0,$l) == $p) {
-          $filedummy = substr($filedummy,$l);
-        }
-      }
-    }
-    */
+    
     
     $is_png = false;
     $filedummy .= '_'.$bg_width.'_'.$bg_height.'_'.$bg_x.'_'.$bg_y.'_'.$repeat;
-    //debugpng
-    //if (DEBUGPNG) print '<pre>[_background_image name '.$filedummy.']</pre>';
-
-    //Optimization to avoid multiple times rendering the same image.
-    //If check functions are existing and identical image already cached,
-    //then skip creation of duplicate, because it is not needed by addImagePng
-    if ( method_exists( $this->_canvas, "get_cpdf" ) &&
+        
+                if ( method_exists( $this->_canvas, "get_cpdf" ) &&
          method_exists( $this->_canvas->get_cpdf(), "addImagePng" ) &&
          method_exists( $this->_canvas->get_cpdf(), "image_iscached" ) &&
          $this->_canvas->get_cpdf()->image_iscached($filedummy) ) {
        $bg = null;
 
-      //debugpng
-      //if (DEBUGPNG) print '[_background_image skip]';
-    } 
+                } 
     
     else {
 
-    // Create a new image to fit over the background rectangle
-    $bg = imagecreatetruecolor($bg_width, $bg_height);
+        $bg = imagecreatetruecolor($bg_width, $bg_height);
     
     switch (strtolower($type)) {
       case IMAGETYPE_PNG:
@@ -281,19 +183,13 @@ abstract class Abstract_Renderer {
         $src = imagecreatefrombmp($img);
         break;
   
-      default: return; // Unsupported image type
-    }
+      default: return;     }
 
     if ($src == null) {
       return;
     }
 
-    //Background color if box is not relevant here
-    //Non transparent image: box clipped to real size. Background non relevant.
-    //Transparent image: The image controls the transparency and lets shine through whatever background.
-    //However on transparent imaage preset the composed image with the transparency color,
-    //to keep the transparency when copying over the non transparent parts of the tiles.
-    $ti = imagecolortransparent($src);
+                        $ti = imagecolortransparent($src);
     
     if ($ti >= 0) {
       $tc = imagecolorsforindex($src,$ti);
@@ -302,9 +198,7 @@ abstract class Abstract_Renderer {
       imagecolortransparent($bg, $ti);
     }
 
-    //This has only an effect for the non repeatable dimension.
-    //compute start of src and dest coordinates of the single copy
-    if ( $bg_x < 0 ) {
+            if ( $bg_x < 0 ) {
       $dst_x = 0;
       $src_x = -$bg_x;
     } else {
@@ -320,16 +214,12 @@ abstract class Abstract_Renderer {
       $dst_y = $bg_y;
     }
 
-    //For historical reasons exchange meanings of variables:
-    //start_* will be the start values, while bg_* will be the temporary start values in the loops
-    $start_x = $bg_x;
+            $start_x = $bg_x;
     $start_y = $bg_y;
 
-    // Copy regions from the source image to the background
-    if ( $repeat === "no-repeat" ) {
+        if ( $repeat === "no-repeat" ) {
 
-      // Simply place the image on the background
-      imagecopy($bg, $src, $dst_x, $dst_y, $src_x, $src_y, $img_w, $img_h);
+            imagecopy($bg, $src, $dst_x, $dst_y, $src_x, $src_y, $img_w, $img_h);
 
     } else if ( $repeat === "repeat-x" ) {
 
@@ -397,25 +287,13 @@ abstract class Abstract_Renderer {
     
     imagedestroy($src);
 
-    } /* End optimize away creation of duplicates */
+    } 
 
     $this->_canvas->clipping_rectangle($x, $y, $box_width, $box_height);
     
-    //img: image url string
-    //img_w, img_h: original image size in px
-    //width, height: box size in pt
-    //bg_width, bg_height: box size in px
-    //x, y: left/top edge of box on page in pt
-    //start_x, start_y: placement of image relativ to pattern
-    //$repeat: repeat mode
-    //$bg: GD object of result image
-    //$src: GD object of original image
-    //When using cpdf and optimization to direct png creation from gd object is available,
-    //don't create temp file, but place gd object directly into the pdf
-    if ( !$is_png && method_exists( $this->_canvas, "get_cpdf" ) && 
+                                                if ( !$is_png && method_exists( $this->_canvas, "get_cpdf" ) && 
          method_exists( $this->_canvas->get_cpdf(), "addImagePng" ) ) {
-      // Note: CPDF_Adapter image converts y position
-      $this->_canvas->get_cpdf()->addImagePng($filedummy, $x, $this->_canvas->get_height() - $y - $height, $width, $height, $bg);
+            $this->_canvas->get_cpdf()->addImagePng($filedummy, $x, $this->_canvas->get_height() - $y - $height, $width, $height, $bg);
     } 
     
     else {
@@ -423,15 +301,13 @@ abstract class Abstract_Renderer {
       @unlink($tmp_name);
       $tmp_file = "$tmp_name.png";
       
-      //debugpng
-      if (DEBUGPNG) print '[_background_image '.$tmp_file.']';
+            if (DEBUGPNG) print '[_background_image '.$tmp_file.']';
 
       imagepng($bg, $tmp_file);
       $this->_canvas->image($tmp_file, $x, $y, $width, $height);
       imagedestroy($bg);
 
-      //debugpng
-      if (DEBUGPNG) print '[_background_image unlink '.$tmp_file.']';
+            if (DEBUGPNG) print '[_background_image unlink '.$tmp_file.']';
 
       if (!DEBUGKEEPTEMP)
         unlink($tmp_file);
@@ -445,12 +321,7 @@ abstract class Abstract_Renderer {
     
     switch ($style) {
       default:
-      /*case "solid":
-      case "double":
-      case "groove":
-      case "inset":
-      case "outset":
-      case "ridge":*/
+      
       case "none": break;
       
       case "dotted": 
@@ -476,8 +347,7 @@ abstract class Abstract_Renderer {
     return;
   }
   
-  // Border rendering functions
-  protected function _border_dotted($x, $y, $length, $color, $widths, $side, $corner_style = "bevel") {
+    protected function _border_dotted($x, $y, $length, $color, $widths, $side, $corner_style = "bevel") {
     list($top, $right, $bottom, $left) = $widths;
 
     $pattern = $this->_get_dash_pattern("dotted", $$side);
@@ -536,8 +406,7 @@ abstract class Abstract_Renderer {
   protected function _border_solid($x, $y, $length, $color, $widths, $side, $corner_style = "bevel") {
     list($top, $right, $bottom, $left) = $widths;
 
-    // All this polygon business is for beveled corners...
-    switch ($side) {
+        switch ($side) {
 
     case "top":
       if ( $corner_style === "bevel" ) {
@@ -601,10 +470,7 @@ abstract class Abstract_Renderer {
     
     $line_width = $$side / 3;
     
-    // We draw the outermost edge first. Points are ordered: outer left,
-    // outer right, inner right, inner left, or outer top, outer bottom,
-    // inner bottom, inner top.
-    switch ($side) {
+                switch ($side) {
 
     case "top":
       if ( $corner_style === "bevel" ) {
@@ -861,5 +727,4 @@ abstract class Abstract_Renderer {
   protected function _debug_layout($box, $color = "red", $style = array()) {
     $this->_canvas->rectangle($box[0], $box[1], $box[2], $box[3], CSS_Color::parse($color), 0.1, $style);
   }
-  //........................................................................
-}
+  }

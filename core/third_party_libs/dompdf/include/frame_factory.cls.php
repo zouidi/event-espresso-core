@@ -1,32 +1,10 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: frame_factory.cls.php 470 2012-02-06 19:36:13Z fabien.menager $
- */
 
-/**
- * Contains frame decorating logic
- *
- * This class is responsible for assigning the correct {@link Frame_Decorator},
- * {@link Positioner}, and {@link Frame_Reflower} objects to {@link Frame}
- * objects.  This is determined primarily by the Frame's display type, but
- * also by the Frame's node's type (e.g. DomElement vs. #text)
- *
- * @access private
- * @package dompdf
- */
+
+
 class Frame_Factory {
 
-  /**
-   * Decorate the root Frame
-   * 
-   * @param $root Frame The frame to decorate
-   * @param $dompdf DOMPDF The dompdf instance
-   * @return Page_Frame_Decorator
-   */
+  
   static function decorate_root(Frame $root, DOMPDF $dompdf) {
     $frame = new Page_Frame_Decorator($root, $dompdf);
     $frame->set_reflower( new Page_Frame_Reflower($frame) );
@@ -34,14 +12,7 @@ class Frame_Factory {
     return $frame;
   }
 
-  /**
-   * Decorate a Frame 
-   * 
-   * @param $root Frame The frame to decorate
-   * @param $dompdf DOMPDF The dompdf instance
-   * @return Frame_Decorator
-   * FIXME: this is admittedly a little smelly...
-   */ 
+   
   static function decorate_frame(Frame $frame, DOMPDF $dompdf) {
     if ( is_null($dompdf) )
       throw new Exception("foo");
@@ -145,16 +116,14 @@ class Frame_Factory {
       break;
 
     default:
-      // FIXME: should throw some sort of warning or something?
-    case "none":
+          case "none":
       $positioner = "Null";
       $decorator = "Null";
       $reflower = "Null";
       break;
     }
 
-    // Handle CSS position
-    $position = $style->position;
+        $position = $style->position;
     
     if ( $position === "absolute" )
       $positioner = "Absolute";
@@ -162,8 +131,7 @@ class Frame_Factory {
     else if ( $position === "fixed" )
       $positioner = "Fixed";
       
-    // Handle nodeName
-    $node_name = $frame->get_node()->nodeName;
+        $node_name = $frame->get_node()->nodeName;
     
     if ( $node_name === "img" ) {
       $style->display = "-dompdf-image";

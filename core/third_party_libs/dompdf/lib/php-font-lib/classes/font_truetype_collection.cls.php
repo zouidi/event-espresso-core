@@ -1,26 +1,12 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_truetype_collection.cls.php 34 2011-10-23 13:53:25Z fabien.menager $
- */
+
 
 require_once dirname(__FILE__)."/font_binary_stream.cls.php";
 require_once dirname(__FILE__)."/font_truetype.cls.php";
 
-/**
- * TrueType collection font file.
- * 
- * @package php-font-lib
- */
+
 class Font_TrueType_Collection extends Font_Binary_Stream implements Iterator, Countable {
-  /**
-   * Current iterator position.
-   * 
-   * @var integer
-   */
+  
   private $position = 0;
   
   protected $collectionOffsets = array();
@@ -43,10 +29,7 @@ class Font_TrueType_Collection extends Font_Binary_Stream implements Iterator, C
     }
   }
   
-  /**
-   * @param int $fontId
-   * @return Font_TrueType
-   */
+  
   function getFont($fontId) {
     $this->parse();
     

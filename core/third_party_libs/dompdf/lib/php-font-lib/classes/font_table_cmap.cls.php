@@ -1,17 +1,7 @@
 <?php
-/**
- * @package php-font-lib
- * @link    http://php-font-lib.googlecode.com/
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_table_cmap.cls.php 40 2012-01-22 21:48:41Z fabien.menager $
- */
 
-/**
- * `cmap` font table.
- * 
- * @package php-font-lib
- */
+
+
 class Font_Table_cmap extends Font_Table {
   private static $header_format = array(
     "version"         => self::uint16,
@@ -51,8 +41,7 @@ class Font_Table_cmap extends Font_Table {
       
       $subtable["format"] = $font->readUInt16();
       
-      // @todo Only CMAP version 4
-      if($subtable["format"] != 4) {
+            if($subtable["format"] != 4) {
         unset($data["subtables"][$i]);
         $data["numberSubtables"]--;
         continue;
@@ -64,8 +53,7 @@ class Font_Table_cmap extends Font_Table {
       
       $endCode       = $font->r(array(self::uint16, $segCount));
       
-      $font->readUInt16(); // reservedPad
-      
+      $font->readUInt16();       
       $startCode     = $font->r(array(self::uint16, $segCount));
       $idDelta       = $font->r(array(self::int16, $segCount));
       
@@ -167,13 +155,10 @@ class Font_Table_cmap extends Font_Table {
     
     $subtables = array(
       array(
-        // header
-        "platformID"         => 3, // Unicode
-        "platformSpecificID" => 1,
+                "platformID"         => 3,         "platformSpecificID" => 1,
         "offset"        => null,
       
-        // subtable
-        "format"        => 4, 
+                "format"        => 4, 
         "length"        => null, 
         "language"      => 0, 
         "segCount"      => $segCount, 
@@ -197,13 +182,11 @@ class Font_Table_cmap extends Font_Table {
     
     $length = $font->pack(self::$header_format, $data);
     
-    $subtable_headers_size = $data["numberSubtables"] * 8; // size of self::$subtable_header_format
-    $subtable_headers_offset = $font->pos();
+    $subtable_headers_size = $data["numberSubtables"] * 8;     $subtable_headers_offset = $font->pos();
     
     $length += $font->write(str_repeat("\0", $subtable_headers_size), $subtable_headers_size);
     
-    // write subtables data
-    foreach($data["subtables"] as $i => $subtable) {
+        foreach($data["subtables"] as $i => $subtable) {
       $length_before = $length;
       $data["subtables"][$i]["offset"] = $length;
       
@@ -214,8 +197,7 @@ class Font_Table_cmap extends Font_Table {
       
       $segCount = $subtable["segCount"];
       $length += $font->w(array(self::uint16, $segCount), $subtable["endCode"]);
-      $length += $font->writeUInt16(0); // reservedPad
-      $length += $font->w(array(self::uint16, $segCount), $subtable["startCode"]);
+      $length += $font->writeUInt16(0);       $length += $font->w(array(self::uint16, $segCount), $subtable["startCode"]);
       $length += $font->w(array(self::int16, $segCount), $subtable["idDelta"]);
       $length += $font->w(array(self::uint16, $segCount), $subtable["idRangeOffset"]);
       $length += $font->w(array(self::uint16, $segCount), $subtable["glyphIndexArray"]);
@@ -229,8 +211,7 @@ class Font_Table_cmap extends Font_Table {
       $font->seek($after_subtable);
     }
     
-    // write subtables headers
-    $font->seek($subtable_headers_offset);
+        $font->seek($subtable_headers_offset);
     foreach($data["subtables"] as $subtable) {
       $font->pack(self::$subtable_header_format, $subtable);
     }

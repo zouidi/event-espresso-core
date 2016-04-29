@@ -1,28 +1,10 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @author  Helmut Tischer <htischer@weihenstephan.org>
- * @author  Fabien Ménager <fabien.menager@gmail.com>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: font_metrics.cls.php 469 2012-02-05 22:25:30Z fabien.menager $
- */
+
 
 require_once DOMPDF_LIB_DIR . "/class.pdf.php";
 require_once DOMPDF_LIB_DIR . "/php-font-lib/classes/font.cls.php";
 
-/**
- * Name of the font cache file
- *
- * This file must be writable by the webserver process only to update it
- * with save_font_families() after adding the .afm file references of a new font family
- * with Font_Metrics::save_font_families().
- * This is typically done only from command line with load_font.php on converting
- * ttf fonts to ufm with php-font-lib.
- *
- * Declared here because PHP5 prevents constants from being declared with expressions
- */
+
 if (!defined("__DOMPDF_FONT_CACHE_FILE")) {
   if (file_exists(DOMPDF_FONT_DIR . "dompdf_font_family_cache")) {
     define('__DOMPDF_FONT_CACHE_FILE', DOMPDF_FONT_DIR . "dompdf_font_family_cache");
@@ -31,44 +13,20 @@ if (!defined("__DOMPDF_FONT_CACHE_FILE")) {
   }
 }
 
-/**
- * The font metrics class
- *
- * This class provides information about fonts and text.  It can resolve
- * font names into actual installed font files, as well as determine the
- * size of text in a particular font and size.
- *
- * @static
- * @package dompdf
- */
+
 class Font_Metrics {
 
-  /**
-   * @see __DOMPDF_FONT_CACHE_FILE
-   */
+  
   const CACHE_FILE = __DOMPDF_FONT_CACHE_FILE;
   
-  /**
-   * Underlying {@link Canvas} object to perform text size calculations
-   *
-   * @var Canvas
-   */
+  
   static protected $_pdf = null;
 
-  /**
-   * Array of font family names to font files
-   *
-   * Usually cached by the {@link load_font.php} script
-   *
-   * @var array
-   */
+  
   static protected $_font_lookup = array();
   
   
-  /**
-   * Class initialization
-   *
-   */
+  
   static function init(Canvas $canvas = null) {
     if (!self::$_pdf) {
       if (!$canvas) {
@@ -79,28 +37,16 @@ class Font_Metrics {
     }
   }
 
-  /**
-   * Calculates text size, in points
-   *
-   * @param string $text the text to be sized
-   * @param string $font the desired font
-   * @param float  $size the desired font size
-   * @param float  $spacing word spacing, if any
-   * @return float
-   */
+  
   static function get_text_width($text, $font, $size, $word_spacing = 0, $char_spacing = 0) {
-    //return self::$_pdf->get_text_width($text, $font, $size, $word_spacing, $char_spacing);
-    
-    // @todo Make sure this cache is efficient before enabling it
-    static $cache = array();
+        
+        static $cache = array();
     
     if ( $text === "" ) {
       return 0;
     }
     
-    // Don't cache long strings
-    $use_cache = !isset($text[50]); // Faster than strlen
-    
+        $use_cache = !isset($text[50]);     
     $key = "$font/$size/$word_spacing/$char_spacing";
     
     if ( $use_cache && isset($cache[$key][$text]) ) {
@@ -116,38 +62,15 @@ class Font_Metrics {
     return $width;
   }
 
-  /**
-   * Calculates font height
-   *
-   * @param string $font
-   * @param float $size
-   * @return float
-   */
+  
   static function get_font_height($font, $size) {
     return self::$_pdf->get_font_height($font, $size);
   }
 
-  /**
-   * Resolves a font family & subtype into an actual font file
-   *
-   * Subtype can be one of 'normal', 'bold', 'italic' or 'bold_italic'.  If
-   * the particular font family has no suitable font file, the default font
-   * ({@link DOMPDF_DEFAULT_FONT}) is used.  The font file returned
-   * is the absolute pathname to the font file on the system.
-   *
-   * @param string $family
-   * @param string $subtype
-   * @return string
-   */
+  
   static function get_font($family, $subtype = "normal") {
 
-    /* Allow calling for various fonts in search path. Therefore not immediately
-     * return replacement on non match.
-     * Only when called with NULL try replacement.
-     * When this is also missing there is really trouble.
-     * If only the subtype fails, nevertheless return failure.
-     * Only on checking the fallback font, check various subtypes on same font.
-     */
+    
 
     if ( $family ) {
       $family = str_replace( array("'", '"'), "", mb_strtolower($family));
@@ -197,36 +120,22 @@ class Font_Metrics {
     return null;
   }
 
-  /**
-   * Saves the stored font family cache
-   *
-   * The name and location of the cache file are determined by {@link
-   * Font_Metrics::CACHE_FILE}.  This file should be writable by the
-   * webserver process.
-   *
-   * @see Font_Metrics::load_font_families()
-   */
+  
   static function save_font_families() {
-    // replace the path to the DOMPDF font directory with "DOMPDF_FONT_DIR" (allows for more portability)
-    $cache_data = var_export(self::$_font_lookup, true);
+        $cache_data = var_export(self::$_font_lookup, true);
     $cache_data = str_replace('\''.DOMPDF_FONT_DIR , 'DOMPDF_FONT_DIR . \'' , $cache_data);
     $cache_data = "<"."?php return $cache_data ?".">";
     file_put_contents(self::CACHE_FILE, $cache_data);
   }
 
-  /**
-   * Loads the stored font family cache
-   *
-   * @see save_font_families()
-   */
+  
   static function load_font_families() {
     if ( !is_readable(self::CACHE_FILE) )
       return;
 
     self::$_font_lookup = require_once(self::CACHE_FILE);
     
-    // If the font family cache is still in the old format
-    if ( self::$_font_lookup === 1 ) {
+        if ( self::$_font_lookup === 1 ) {
       $cache_data = file_get_contents(self::CACHE_FILE);
       file_put_contents(self::CACHE_FILE, "<"."?php return $cache_data ?".">");
       self::$_font_lookup = require_once(self::CACHE_FILE);
@@ -276,11 +185,7 @@ class Font_Metrics {
     return self::install_fonts($files);
   }
 
-  /**
-   * Returns the current font lookup table
-   *
-   * @return array
-   */
+  
   static function get_font_families() {
     return self::$_font_lookup;
   }
@@ -310,8 +215,7 @@ class Font_Metrics {
       
       Font_Metrics::set_font_family($fontname, $entry);
       
-      // Download the remote file
-      if ( !is_file($local_file) ) {
+            if ( !is_file($local_file) ) {
         file_put_contents($local_file, file_get_contents($remote_file));
       }
       
@@ -324,8 +228,7 @@ class Font_Metrics {
       $font->parse();
       $font->saveAdobeFontMetrics("$cache_entry.ufm");
       
-      // Save the changes
-      Font_Metrics::save_font_families();
+            Font_Metrics::save_font_families();
     }
     
     return true;

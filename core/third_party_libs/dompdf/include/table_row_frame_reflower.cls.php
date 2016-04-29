@@ -1,18 +1,7 @@
 <?php
-/**
- * @package dompdf
- * @link    http://www.dompdf.com/
- * @author  Benj Carson <benjcarson@digitaljunkies.ca>
- * @license http://www.gnu.org/copyleft/lesser.html GNU Lesser General Public License
- * @version $Id: table_row_frame_reflower.cls.php 448 2011-11-13 13:00:03Z fabien.menager $
- */
 
-/**
- * Reflows table rows
- *
- * @access private
- * @package dompdf
- */
+
+
 class Table_Row_Frame_Reflower extends Frame_Reflower {
 
 
@@ -20,8 +9,7 @@ class Table_Row_Frame_Reflower extends Frame_Reflower {
     parent::__construct($frame);
   }
 
-  //........................................................................
-
+  
   function reflow(Frame_Decorator $block = null) {
     $page = $this->_frame->get_root();
 
@@ -54,8 +42,7 @@ class Table_Row_Frame_Reflower extends Frame_Reflower {
 
   }
 
-  //........................................................................
-
+  
   function get_min_max_width() {
     throw new DOMPDF_Exception("Min/max width is undefined for table rows");
   }
