@@ -181,7 +181,7 @@ class EE_Registry {
 	public static function instance( \EE_Dependency_Map $dependency_map = null ) {
 		// check if class object is instantiated
 		if ( ! self::$_instance instanceof EE_Registry ) {
-			self::$_instance = new EE_Registry( $dependency_map );
+			self::$_instance = apply_filters( 'FHEE__EE_Registry__instance', new EE_Registry( $dependency_map ) );
 		}
 		return self::$_instance;
 	}
@@ -220,21 +220,19 @@ class EE_Registry {
 			)
 		);
 		// class library
-		$this->LIB = new StdClass();
-		$this->addons = new StdClass();
-		$this->modules = new StdClass();
-		$this->shortcodes = new StdClass();
-		$this->widgets = new StdClass();
+		$this->LIB = new stdClass();
+		$this->addons = new stdClass();
+		$this->modules = new stdClass();
+		$this->shortcodes = new stdClass();
+		$this->widgets = new stdClass();
 		$this->load_core( 'Base', array(), true );
 		// add our request and response objects to the cache
-		$request_loader = $this->_dependency_map->class_loader( 'EE_Request' );
 		$this->_set_cached_class(
-			$request_loader(),
+			$this->_dependency_map->class_loader( 'EE_Request' ),
 			'EE_Request'
 		);
-		$response_loader = $this->_dependency_map->class_loader( 'EE_Response' );
 		$this->_set_cached_class(
-			$response_loader(),
+			$this->_dependency_map->class_loader( 'EE_Response' ),
 			'EE_Response'
 		);
 		add_action( 'AHEE__EE_System__set_hooks_for_core', array( $this, 'init' ) );
@@ -860,7 +858,10 @@ class EE_Registry {
 		foreach ( $params as $index => $param ) {
 			// is this a dependency for a specific class ?
 			$param_class = $param->getClass() ? $param->getClass()->name : null;
-			if (
+			// you want a piece of me ?
+			if ( $param_class === 'EE_Registry' ) {
+				$arguments[ $index ] = $this;
+			} else if (
 				// param is not even a class
 				empty( $param_class )
 				// and something already exists in the incoming arguments for this param
@@ -1062,10 +1063,12 @@ class EE_Registry {
 	 * @return EE_Registry
 	 */
 	public static function reset( $hard = false, $reinstantiate = true ) {
-		$instance = self::instance();
+		self::$_instance = null;
+		$instance = self::instance( EE_Dependency_Map::instance() );
+		$instance->initialize();
 		EEH_Activation::reset();
 		$instance->_cache_on = true;
-		$instance->CFG = EE_Config::reset( $hard, $reinstantiate );
+		$instance->CFG = EE_Config::reset( $hard, $reinstantiate, $instance );
 		$instance->LIB->EE_Data_Migration_Manager = EE_Data_Migration_Manager::reset();
 		$instance->LIB = new stdClass();
 		foreach ( array_keys( $instance->non_abstract_db_models ) as $model_name ) {
