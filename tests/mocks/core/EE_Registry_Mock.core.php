@@ -1,4 +1,4 @@
-<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
+<?php
 /**
  * Class EE_Registry_Mock
  *
@@ -40,6 +40,27 @@ class EE_Registry_Mock extends EE_Registry {
 		return self::$_instance;
 	}
 
+
+
+	/**
+	 *    loads core classes - must be singletons
+	 *
+	 * @access    public
+	 * @param string $class_name - simple class name ie: session
+	 * @param mixed  $arguments
+	 * @param bool   $load_only
+	 * @return mixed
+	 */
+	public function load_mock( $class_name, $arguments = array(), $load_only = false ) {
+		$mock_paths = apply_filters(
+			'FHEE__EE_Registry_Mock__load_mock__mock_paths',
+			array(
+				EE_TESTS_DIR . 'mocks' . DS . 'core' . DS,
+			)
+		);
+		// retrieve instantiated class
+		return $this->_load( $mock_paths, 'EE_', $class_name, 'core', $arguments, false, true, $load_only );
+	}
 
 
 
