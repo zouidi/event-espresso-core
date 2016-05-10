@@ -32,6 +32,11 @@ final class EE_Config {
 	private static $_instance = NULL;
 
 	/**
+	 * @var \EE_Registry $registry
+	 */
+	public $registry;
+
+	/**
 	 * An StdClass whose property names are addon slugs,
 	 * and values are their config classes
 	 * @var StdClass
@@ -122,14 +127,15 @@ final class EE_Config {
 
 
 	/**
-	 *		@singleton method used to instantiate class object
-	 *		@access public
-	 *		@return EE_Config instance
+	 * @singleton method used to instantiate class object
+	 * @access    public
+	 * @param \EE_Registry $registry
+	 * @return \EE_Config instance
 	 */
-	public static function instance() {
+	public static function instance( \EE_Registry $registry = null ) {
 		// check if class object is instantiated, and instantiated properly
 		if ( ! self::$_instance instanceof EE_Config ) {
-			self::$_instance = new self();
+			self::$_instance = new self( $registry );
 		}
 		return self::$_instance;
 	}
@@ -138,14 +144,16 @@ final class EE_Config {
 
 	/**
 	 * Resets the config
-	 * @param bool $hard_reset if TRUE, sets EE_CONFig back to its original settings in the database. If FALSE
-	 * (default) leaves the database alone, and merely resets the EE_Config object to reflect its state in the database
-	 * @param boolean $reinstantiate if TRUE (default) call instance() and return it. Otherwise, just leave
-	 * $_instance as NULL. Useful in case you want to forget about the old instance on EE_Config, but might
-	 * not be ready to instantiate EE_Config currently (eg if the site was put into maintenance mode)
-	 * @return EE_Config
+	 *
+	 * @param bool         $hard_reset    if TRUE, sets EE_CONFig back to its original settings in the database. If FALSE
+	 *                                    (default) leaves the database alone, and merely resets the EE_Config object to reflect its state in the database
+	 * @param boolean      $reinstantiate if TRUE (default) call instance() and return it. Otherwise, just leave
+	 *                                    $_instance as NULL. Useful in case you want to forget about the old instance on EE_Config, but might
+	 *                                    not be ready to instantiate EE_Config currently (eg if the site was put into maintenance mode)
+	 * @param \EE_Registry $registry
+	 * @return \EE_Config
 	 */
-	public static function reset( $hard_reset = FALSE, $reinstantiate = TRUE ){
+	public static function reset( $hard_reset = FALSE, $reinstantiate = TRUE, \EE_Registry $registry = null ){
 		if ( $hard_reset ) {
 			self::$_instance->_config_option_names = array();
 			self::$_instance->_initialize_config();
@@ -154,12 +162,12 @@ final class EE_Config {
 		if( self::$_instance instanceof EE_Config ){
 			self::$_instance->shutdown();
 		}
-		self::$_instance = NULL;
+		self::$_instance = null;
 		//we don't need to reset the static properties imo because those should
 		//only change when a module is added or removed. Currently we don't
 		//support removing a module during a request when it previously existed
 		if( $reinstantiate ){
-			return self::instance();
+			return self::instance( $registry );
 		}else{
 			return NULL;
 		}
@@ -171,10 +179,11 @@ final class EE_Config {
 	 *    class constructor
 	 *
 	 * @access    private
-	 * @return \EE_Config
+	 * @param \EE_Registry $registry
 	 */
-	private function __construct() {
+	private function __construct( \EE_Registry $registry ) {
 		do_action( 'AHEE__EE_Config__construct__begin',$this );
+		$this->registry = $registry;
 		$this->_config_option_names = get_option( 'ee_config_option_names', array() );
 		// setup empty config classes
 		$this->_initialize_config();
@@ -827,9 +836,9 @@ final class EE_Config {
 	 */
 	public function register_shortcodes_and_modules() {
 		// allow shortcodes to register with WP and to set hooks for the rest of the system
-		EE_Registry::instance()->shortcodes =$this->_register_shortcodes();
+		$this->registry->shortcodes =$this->_register_shortcodes();
 		// allow modules to set hooks for the rest of the system
-		EE_Registry::instance()->modules = $this->_register_modules();
+		$this->registry->modules = $this->_register_modules();
 	}
 
 
@@ -873,7 +882,7 @@ final class EE_Config {
 				}
 			}
 			// filter list of installed modules
-			EE_Registry::instance()->widgets = apply_filters( 'FHEE__EE_Config__register_widgets__installed_widgets', EE_Registry::instance()->widgets );
+			$this->registry->widgets = apply_filters( 'FHEE__EE_Config__register_widgets__installed_widgets', $this->registry->widgets );
 		}
 	}
 
@@ -933,7 +942,7 @@ final class EE_Config {
 		}
 		register_widget( $widget_class );
 		// add to array of registered widgets
-		EE_Registry::instance()->widgets->{$widget_class} = $widget_path . DS . $widget_class . $widget_ext;
+		EE_Config::instance()->registry->widgets->{$widget_class} = $widget_path . DS . $widget_class . $widget_ext;
 	}
 
 
@@ -953,11 +962,11 @@ final class EE_Config {
 			// cycle thru shortcode folders
 			foreach ( $shortcodes_to_register as $shortcode_path ) {
 				// add to list of installed shortcode modules
-				EE_Config::register_shortcode( $shortcode_path );
+				$this->_register_shortcode( $shortcode_path );
 			}
 		}
 		// filter list of installed modules
-		return apply_filters( 'FHEE__EE_Config___register_shortcodes__installed_shortcodes', EE_Registry::instance()->shortcodes );
+		return apply_filters( 'FHEE__EE_Config___register_shortcodes__installed_shortcodes', $this->registry->shortcodes );
 	}
 
 
@@ -970,6 +979,19 @@ final class EE_Config {
 	 *  @return 	bool
 	 */
 	public static function register_shortcode( $shortcode_path = NULL ) {
+		EE_Config::instance()->_register_shortcode( $shortcode_path );
+	}
+
+
+
+	/**
+	 * 	register_shortcode - makes core aware of this shortcode
+	 *
+	 *  @access 	public
+	 *  @param 	string 		$shortcode_path - full path up to and including shortcode folder
+	 *  @return 	bool
+	 */
+	public function _register_shortcode( $shortcode_path = NULL ) {
 		do_action( 'AHEE__EE_Config__register_shortcode__begin',$shortcode_path );
 		$shortcode_ext = '.shortcode.php';
 		// make all separators match
@@ -1018,7 +1040,7 @@ final class EE_Config {
 		}
 		$shortcode = strtoupper( $shortcode );
 		// add to array of registered shortcodes
-		EE_Registry::instance()->shortcodes->{$shortcode} = $shortcode_path . $shortcode_class . $shortcode_ext;
+		$this->registry->shortcodes->{$shortcode} = $shortcode_path . $shortcode_class . $shortcode_ext;
 		return TRUE;
 	}
 
@@ -1042,14 +1064,14 @@ final class EE_Config {
 			// loop through folders
 			foreach ( $modules_to_register as $module_path ) {
 				/**TEMPORARILY EXCLUDE gateways from modules for time being**/
-				if ( $module_path != EE_MODULES . 'zzz-copy-this-module-template' && $module_path != EE_MODULES . 'gateways' ) {
+				if ( $module_path !== EE_MODULES . 'zzz-copy-this-module-template' && $module_path !== EE_MODULES . 'gateways' ) {
 					// add to list of installed modules
-					EE_Config::register_module( $module_path );
+					$this->_register_module( $module_path );
 				}
 			}
 		}
 		// filter list of installed modules
-		return apply_filters( 'FHEE__EE_Config___register_modules__installed_modules', EE_Registry::instance()->modules );
+		return apply_filters( 'FHEE__EE_Config___register_modules__installed_modules', $this->registry->modules );
 	}
 
 
@@ -1063,6 +1085,20 @@ final class EE_Config {
 	 *  @return 	bool
 	 */
 	public static function register_module( $module_path = NULL ) {
+		EE_Config::instance()->_register_module( $module_path );
+	}
+
+
+
+
+	/**
+	 * 	register_module - makes core aware of this module
+	 *
+	 *  @access 	public
+	 *  @param 	string 		$module_path - full path up to and including module folder
+	 *  @return 	bool
+	 */
+	public function _register_module( $module_path = NULL ) {
 		do_action( 'AHEE__EE_Config__register_module__begin', $module_path );
 		$module_ext = '.module.php';
 		// make all separators match
@@ -1108,8 +1144,8 @@ final class EE_Config {
 			return FALSE;
 		}
 		// add to array of registered modules
-		EE_Registry::instance()->modules->{$module_class} = $module_path . $module_class . $module_ext;
-		do_action( 'AHEE__EE_Config__register_module__complete', $module_class, EE_Registry::instance()->modules->{$module_class} );
+		$this->registry->modules->{$module_class} = $module_path . $module_class . $module_ext;
+		do_action( 'AHEE__EE_Config__register_module__complete', $module_class, EE_Config::instance()->registry->modules->{$module_class} );
 		return TRUE;
 	}
 
@@ -1123,7 +1159,7 @@ final class EE_Config {
 	 */
 	private function _initialize_shortcodes() {
 		// cycle thru shortcode folders
-		foreach ( EE_Registry::instance()->shortcodes as $shortcode => $shortcode_path ) {
+		foreach ( $this->registry->shortcodes as $shortcode => $shortcode_path ) {
 			// add class prefix
 			$shortcode_class = 'EES_' . $shortcode;
 			// fire the shortcode class's set_hooks methods in case it needs to hook into other parts of the system
@@ -1156,7 +1192,7 @@ final class EE_Config {
 	 */
 	private function _initialize_modules() {
 		// cycle thru shortcode folders
-		foreach ( EE_Registry::instance()->modules as $module_class => $module_path ) {
+		foreach ( $this->registry->modules as $module_class => $module_path ) {
 			// fire the shortcode class's set_hooks methods in case it needs to hook into other parts of the system
 			// which set hooks ?
 			if ( is_admin() ) {
@@ -1186,7 +1222,7 @@ final class EE_Config {
 		do_action( 'AHEE__EE_Config__register_route__begin', $route, $module, $method_name );
 		$module = str_replace( 'EED_', '', $module );
 		$module_class = 'EED_' . $module;
-		if ( ! isset( EE_Registry::instance()->modules->{$module_class} )) {
+		if ( ! isset( EE_Config::instance()->registry->modules->{$module_class} )) {
 			$msg = sprintf( __( 'The module %s has not been registered.', 'event_espresso' ), $module );
 			EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
 			return FALSE;
@@ -1431,15 +1467,15 @@ class EE_Config_Base{
 	/**
 	 * 		__clone
 	 */
-	public function __clone() { return FALSE; }
+	public function __clone() {}
 	/**
 	 * 		__wakeup
 	 */
-	public function __wakeup() { return FALSE; }
+	public function __wakeup() {}
 	/**
 	 * 		__destruct
 	 */
-	public function __destruct() { return FALSE; }
+	public function __destruct() {}
 }
 
 
