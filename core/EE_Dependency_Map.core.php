@@ -224,60 +224,69 @@ class EE_Dependency_Map {
 	 * 		EE_Dependency_Map::load_new_object - generates a new object every time
 	 */
 	protected function _register_core_dependencies() {
-		$this->_dependency_map = array(
-			'EE_Request_Handler' => array(
-				'EE_Request' => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_System' => array(
-				'EE_Registry' => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_Session' => array(
-				'EE_Encryption' => EE_Dependency_Map::load_from_cache
-			),
-			'EE_Cart' => array(
-				'EE_Session' => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_Front_Controller' => array(
-				'EE_Registry'              => EE_Dependency_Map::load_from_cache,
-				'EE_Request_Handler'       => EE_Dependency_Map::load_from_cache,
-				'EE_Module_Request_Router' => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_Messenger_Collection_Loader' => array(
-				'EE_Messenger_Collection' => EE_Dependency_Map::load_new_object,
-			),
-			'EE_Message_Type_Collection_Loader' => array(
-				'EE_Message_Type_Collection' => EE_Dependency_Map::load_new_object,
-			),
-			'EE_Message_Resource_Manager' => array(
-				'EE_Messenger_Collection_Loader'    => EE_Dependency_Map::load_new_object,
-				'EE_Message_Type_Collection_Loader' => EE_Dependency_Map::load_new_object,
-				'EEM_Message_Template_Group'        => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_Message_Factory' => array(
-				'EE_Message_Resource_Manager' => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_messages' => array(
-				'EE_Message_Resource_Manager' => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_Messages_Generator' => array(
-				'EE_Messages_Queue'                    => EE_Dependency_Map::load_new_object,
-				'EE_Messages_Data_Handler_Collection'  => EE_Dependency_Map::load_new_object,
-				'EE_Message_Template_Group_Collection' => EE_Dependency_Map::load_new_object,
-				'EEH_Parse_Shortcodes'                 => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_Messages_Processor' => array(
-				'EE_Message_Resource_Manager' => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_Messages_Queue' => array(
-				'EE_Message_Repository' => EE_Dependency_Map::load_new_object,
-			),
-			'EE_Messages_Template_Defaults' => array(
-				'EEM_Message_Template_Group' => EE_Dependency_Map::load_from_cache,
-				'EEM_Message_Template' => EE_Dependency_Map::load_from_cache,
-			),
-			'EE_Message_To_Generate_From_Request' => array(
-				'EE_Message_Resource_Manager' => EE_Dependency_Map::load_from_cache,
-				'EE_Request_Handler' => EE_Dependency_Map::load_from_cache
+		$this->_dependency_map = array_merge(
+			$this->_dependency_map,
+			array(
+				'EE_Registry' => array(
+					'EE_Dependency_Map' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Request_Handler' => array(
+					'EE_Request' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Config' => array(
+					'EE_Registry' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_System' => array(
+					'EE_Registry' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Session' => array(
+					'EE_Encryption' => EE_Dependency_Map::load_from_cache
+				),
+				'EE_Cart' => array(
+					'EE_Session' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Front_Controller' => array(
+					'EE_Registry'              => EE_Dependency_Map::load_from_cache,
+					'EE_Request_Handler'       => EE_Dependency_Map::load_from_cache,
+					'EE_Module_Request_Router' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Messenger_Collection_Loader' => array(
+					'EE_Messenger_Collection' => EE_Dependency_Map::load_new_object,
+				),
+				'EE_Message_Type_Collection_Loader' => array(
+					'EE_Message_Type_Collection' => EE_Dependency_Map::load_new_object,
+				),
+				'EE_Message_Resource_Manager' => array(
+					'EE_Messenger_Collection_Loader'    => EE_Dependency_Map::load_new_object,
+					'EE_Message_Type_Collection_Loader' => EE_Dependency_Map::load_new_object,
+					'EEM_Message_Template_Group'        => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Message_Factory' => array(
+					'EE_Message_Resource_Manager' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_messages' => array(
+					'EE_Message_Resource_Manager' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Messages_Generator' => array(
+					'EE_Messages_Queue'                    => EE_Dependency_Map::load_new_object,
+					'EE_Messages_Data_Handler_Collection'  => EE_Dependency_Map::load_new_object,
+					'EE_Message_Template_Group_Collection' => EE_Dependency_Map::load_new_object,
+					'EEH_Parse_Shortcodes'                 => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Messages_Processor' => array(
+					'EE_Message_Resource_Manager' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Messages_Queue' => array(
+					'EE_Message_Repository' => EE_Dependency_Map::load_new_object,
+				),
+				'EE_Messages_Template_Defaults' => array(
+					'EEM_Message_Template_Group' => EE_Dependency_Map::load_from_cache,
+					'EEM_Message_Template' => EE_Dependency_Map::load_from_cache,
+				),
+				'EE_Message_To_Generate_From_Request' => array(
+					'EE_Message_Resource_Manager' => EE_Dependency_Map::load_from_cache,
+					'EE_Request_Handler' => EE_Dependency_Map::load_from_cache
+				)
 			)
 		);
 	}
@@ -308,52 +317,61 @@ class EE_Dependency_Map {
 	 *
 	 */
 	protected function _register_core_class_loaders() {
-		//for PHP5.3 compat, we need to register any properties called here in a variable because `$this` cannot
-		//be used in a closure.
+		// for PHP5.3 compat,
+		// we need to register any properties called here in a variable
+		// because "$this" cannot be used in a closure.
 		$request = &$this->_request;
 		$response = &$this->_response;
-		$this->_class_loaders = array(
-			//load_core
-			'EE_Encryption'                        => 'load_core',
-			'EE_Front_Controller'                  => 'load_core',
-			'EE_Module_Request_Router'             => 'load_core',
-			'EE_Registry'                          => 'load_core',
-			'EE_Request' => function() use(&$request) {
-				return $request;
-			},
-			'EE_Response' => function() use(&$response) {
-				return $response;
-			},
-			'EE_Request_Handler'                   => 'load_core',
-			'EE_Session'                           => 'load_core',
-			'EE_System'                            => 'load_core',
-			//load_lib
-			'EE_Message_Resource_Manager'          => 'load_lib',
-			'EE_Message_Type_Collection'           => 'load_lib',
-			'EE_Message_Type_Collection_Loader'    => 'load_lib',
-			'EE_Messenger_Collection'              => 'load_lib',
-			'EE_Messenger_Collection_Loader'       => 'load_lib',
-			'EE_Messages_Processor'       		   => 'load_lib',
-			'EE_Message_Repository'       		   => 'load_lib',
-			'EE_Messages_Queue'                    => 'load_lib',
-			'EE_Messages_Data_Handler_Collection'  => 'load_lib',
-			'EE_Message_Template_Group_Collection' => 'load_lib',
-			'EE_Messages_Generator' => function() {
-				return EE_Registry::instance()->load_lib( 'Messages_Generator', array(), false, false );
-			},
-			'EE_Messages_Template_Defaults' => function( $arguments = array() ) {
-				return EE_Registry::instance()->load_lib( 'Messages_Template_Defaults', $arguments, false, false );
-			},
-			//load_model
-			'EEM_Message_Template_Group'           => 'load_model',
-			'EEM_Message_Template'                 => 'load_model',
-			//load_helper
-			'EEH_Parse_Shortcodes'                 => function() {
-				if ( EE_Registry::instance()->load_helper( 'Parse_Shortcodes' ) ) {
-					return new EEH_Parse_Shortcodes();
-				}
-				return null;
-			},
+		$dep_map = &$this;
+		$this->_class_loaders = array_merge(
+			$this->_class_loaders,
+			array(
+				'EE_Request'  => function () use ( &$request ) {
+					return $request;
+				},
+				'EE_Response' => function () use ( &$response ) {
+					return $response;
+				},
+				'EE_Dependency_Map' => function () use ( &$dep_map ) {
+					return $dep_map;
+				},
+				//load_core
+				'EE_Config'                            => 'load_core',
+				'EE_Encryption'                        => 'load_core',
+				'EE_Front_Controller'                  => 'load_core',
+				'EE_Module_Request_Router'             => 'load_core',
+				'EE_Registry'                          => 'load_core',
+				'EE_Request_Handler'                   => 'load_core',
+				'EE_Session'                           => 'load_core',
+				'EE_System'                            => 'load_core',
+				//load_lib
+				'EE_Message_Resource_Manager'          => 'load_lib',
+				'EE_Message_Type_Collection'           => 'load_lib',
+				'EE_Message_Type_Collection_Loader'    => 'load_lib',
+				'EE_Messenger_Collection'              => 'load_lib',
+				'EE_Messenger_Collection_Loader'       => 'load_lib',
+				'EE_Messages_Processor'       		   => 'load_lib',
+				'EE_Message_Repository'       		   => 'load_lib',
+				'EE_Messages_Queue'                    => 'load_lib',
+				'EE_Messages_Data_Handler_Collection'  => 'load_lib',
+				'EE_Message_Template_Group_Collection' => 'load_lib',
+				'EE_Messages_Generator' => function() {
+					return EE_Registry::instance()->load_lib( 'Messages_Generator', array(), false, false );
+				},
+				'EE_Messages_Template_Defaults' => function( $arguments = array() ) {
+					return EE_Registry::instance()->load_lib( 'Messages_Template_Defaults', $arguments, false, false );
+				},
+				//load_model
+				'EEM_Message_Template_Group'           => 'load_model',
+				'EEM_Message_Template'                 => 'load_model',
+				//load_helper
+				'EEH_Parse_Shortcodes'                 => function() {
+					if ( EE_Registry::instance()->load_helper( 'Parse_Shortcodes' ) ) {
+						return new EEH_Parse_Shortcodes();
+					}
+					return null;
+				},
+			)
 		);
 	}
 
@@ -363,6 +381,8 @@ class EE_Dependency_Map {
 	 * Primarily used by unit tests.
 	 */
 	public function reset() {
+		$this->_dependency_map = array();
+		$this->_class_loaders = array();
 		$this->_register_core_class_loaders();
 		$this->_register_core_dependencies();
 	}
