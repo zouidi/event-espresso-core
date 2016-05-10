@@ -50,9 +50,14 @@ class EE_Session_Mock extends EE_Session {
 	}
 
 
+
+	/**
+	 * @return int
+	 */
 	public function lifespan() {
-		return  60 * MINUTE_IN_SECONDS;
+		return  5 * MINUTE_IN_SECONDS;
 	}
+
 
 }
 // End of file EE_Session_Mock.core.php
