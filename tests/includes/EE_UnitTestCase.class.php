@@ -19,6 +19,13 @@
  */
 class EE_UnitTestCase extends WP_UnitTestCase {
 
+	const error_code_undefined_property = 8;
+
+	/**
+	 * @var EE_Registry_Mock $registry
+	 */
+	protected $registry;
+
 	/**
 	 * @var EE_UnitTest_Factory
 	 */
@@ -30,8 +37,12 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @var array
 	 */
 	protected $wp_filters_saved = NULL;
-	const error_code_undefined_property = 8;
+
+	/**
+	 * @var string $_cached_SERVER_NAME
+	 */
 	protected $_cached_SERVER_NAME = NULL;
+
 	/**
 	 *
 	 * @var WP_User
@@ -43,9 +54,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * keep checking or warning the test runner about it
 	 * @var boolean
 	 */
-	static $accidental_txn_commit_noted = FALSE;
-
-
+	public static $accidental_txn_commit_noted = FALSE;
 
 	/**
 	 * Holds an array of default DateTime objects for testing with.
@@ -56,7 +65,6 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 */
 	protected $_default_dates;
 
-
 	/**
 	 * @var EE_Test_Scenario_Factory
 	 */
@@ -64,6 +72,11 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 
 
 
+	/**
+	 * setUp
+	 *
+	 * @throws \EE_Error
+	 */
 	public function setUp() {
 		//save the hooks state before WP_UnitTestCase actually gets its hands on it...
 		//as it immediately adds a few hooks we might not want to backup
@@ -76,7 +89,11 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		);
 		$this->_orig_current_user = $current_user instanceof WP_User ? clone $current_user : new WP_User(1);
 		parent::setUp();
-		EE_Registry::reset( TRUE );
+		$this->registry = EE_Registry_Mock::instance();
+		if ( ! $this->registry->CFG instanceof EE_Config ) {
+			$this->registry->load_core( 'Config' );
+			$this->registry->CFG->register_shortcodes_and_modules();
+		}
 		$auto_made_thing_seed = 1;
 		//reset wpdb's list of queries executed so it only stores those from the current test
 		$wpdb->queries = array();
@@ -98,18 +115,24 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		// load scenarios
 		require_once EE_TESTS_DIR . 'includes/scenarios/EE_Test_Scenario_Classes.php';
 		$this->scenarios = new EE_Test_Scenario_Factory( $this );
-		EE_Registry::reset();
 
 		//IF we detect we're running tests on WP4.1, then we need to make sure current_user_can tests pass by implementing
 		//updating all_caps when `WP_User::add_cap` is run (which is fixed in later wp versions).  So we hook into the
 		// 'user_has_cap' filter to do this
 		$_wp_test_version = getenv( 'WP_VERSION' );
-		if ( $_wp_test_version && $_wp_test_version == '4.1' ) {
-			add_filter( 'user_has_cap', function ( $all_caps, $caps, $args, $WP_User ) {
-				$WP_User->get_role_caps();
-
-				return $WP_User->allcaps;
-			}, 10, 4 );
+		if ( $_wp_test_version && $_wp_test_version === '4.1' ) {
+			add_filter(
+				'user_has_cap',
+				function ( $all_caps, $caps, $args, $WP_User ) {
+					if ( $WP_User instanceof WP_User ){
+						$WP_User->get_role_caps();
+						return $WP_User->allcaps;
+					}
+					return $all_caps;
+				},
+				10,
+				4
+			);
 		}
 	}
 
@@ -139,11 +162,12 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		$merged_filters = $this->wp_filters_saved[ 'merged_filters' ];
 		$wp_current_filter = $this->wp_filters_saved[ 'wp_current_filter' ];
 		$current_user = $this->_orig_current_user;
+		$this->registry = EE_Registry_Mock::reset( true );
 		$this->_detect_accidental_txn_commit();
 		$notices = EE_Error::get_notices( false, false, true );
 		EE_Error::reset_notices();
 		if( ! empty( $notices[ 'errors' ] ) ){
-			$this->fail(  $notices['errors'] );
+			WP_UnitTestCase::fail(  $notices['errors'] );
 		}
 	}
 
@@ -176,13 +200,17 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @todo this of course means we need an easy way to reset our singletons...
 	 * @see parent::cleanup_global_scope();
 	 */
-	function clean_up_global_scope() {
+	public function clean_up_global_scope() {
 		parent::clean_up_global_scope();
 	}
 
 
+
 	/**
 	 * Set up globals necessary to avoid errors when using wp_mail()
+	 *
+	 * @param $args
+	 * @return
 	 */
 	public function setUp_wp_mail( $args ) {
 		if ( isset( $_SERVER['SERVER_NAME'] ) ) {
@@ -199,6 +227,9 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 
 	/**
 	 * Tear down globals set up in setUp_wp_mail()
+	 *
+	 * @param $args
+	 * @return
 	 */
 	public function tearDown_wp_mail( $args ) {
 		if ( ! empty( $this->_cached_SERVER_NAME ) ) {
@@ -301,8 +332,9 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @since 4.3.0
 	 */
 	public function defineAdminConstants() {
-		if ( ! defined( 'EE_ADMIN_PAGES' ) )
+		if ( ! defined( 'EE_ADMIN_PAGES' ) ){
 			define( 'EE_ADMIN_PAGES', EE_TESTS_DIR . 'mocks/admin' );
+		}
 	}
 
 
@@ -458,13 +490,13 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		$month 	= (int)$now->format( 'n' );
 		$day 		= (int)$now->format( 'j' );
 		// determine how to increment or decrement the year and month
-		if ( $adding_interval && $month == 12 ) {
+		if ( $adding_interval && $month === 12 ) {
 			// adding a month to december?
 			$year++;
 			$month = 1;
 		} else if ( $adding_interval ) {
 			$month++;
-		} else if ( $month == 1 ) {
+		} else if ( $month === 1 ) {
 			$year--;
 			$month = 12;
 		} else {
@@ -544,10 +576,13 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	}
 
 
+
 	/**
-	 * @param string $expected_date  The expected date string in the given full_format date string format.
-	 * @param string $actual_date    The actual date string in the given full_format date string format.
-	 * @param $full_format
+	 * @param string $expected_date The expected date string in the given full_format date string format.
+	 * @param string $actual_date   The actual date string in the given full_format date string format.
+	 * @param        $full_format
+	 * @param string $custom_error_message
+	 * @throws \EE_Error
 	 */
 	public function assertDateWithinOneMinute( $expected_date, $actual_date, $full_format, $custom_error_message = '' ) {
 		//take the incoming date strings convert to datetime objects and verify they are within one minute of each other
@@ -564,7 +599,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 			throw new EE_Error( $date_parsing_error );
 		}
 		$difference = $actual_date_obj->format('U') - $expected_date_obj->format('U');
-		$this->assertTrue( $difference < 60, $custom_error_message );
+		EE_UnitTestCase::assertTrue( $difference < 60, $custom_error_message );
 	}
 
 
@@ -653,9 +688,9 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	public function assertArrayContains($item,$haystack){
 		$in_there = in_array($item, $haystack);
 		if($in_there){
-			$this->assertTrue(true);
+			EE_UnitTestCase::assertTrue(true);
 		}else{
-			$this->assertTrue($in_there,  sprintf(__('Array %1$s does not contain %2$s', "event_espresso"), print_r($haystack,true), print_r($item,true) ));
+			EE_UnitTestCase::assertTrue($in_there,  sprintf(__('Array %1$s does not contain %2$s', "event_espresso"), print_r($haystack,true), print_r($item,true) ));
 		}
 	}
 
@@ -668,9 +703,9 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	public function assertArrayDoesNotContain($item,$haystack){
 		$not_in_there = ! in_array($item,$haystack);
 		if($not_in_there){
-			$this->assertTrue($not_in_there);
+			EE_UnitTestCase::assertTrue($not_in_there);
 		}else{
-			$this->assertTrue($not_in_there,  sprintf(__('Array %1$s DOES contain %2$s when it shouldn\'t', 'event_espresso' ), print_r($haystack,true), print_r($item,true) ));
+			EE_UnitTestCase::assertTrue($not_in_there,  sprintf(__('Array %1$s DOES contain %2$s when it shouldn\'t', 'event_espresso' ), print_r($haystack,true), print_r($item,true) ));
 		}
 	}
 	/**
@@ -680,9 +715,9 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	public function assertWPOptionExists($option_name){
 		$option = get_option($option_name,NULL);
 		if($option){
-			$this->assertTrue(true);
+			EE_UnitTestCase::assertTrue(true);
 		}else{
-			$this->assertNotNull($option,  sprintf(__('The WP Option "%s" does not exist but should', "event_espresso" ),$option_name));
+			EE_UnitTestCase::assertNotNull($option,  sprintf(__('The WP Option "%s" does not exist but should', "event_espresso" ),$option_name));
 		}
 	}
 
@@ -694,32 +729,36 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	public function assertWPOptionDoesNotExist($option_name){
 		$option = get_option($option_name,NULL);
 		if( $option){
-			$this->assertNull( $option, sprintf( __('The WP Option "%s" exists but shouldn\'t', "event_espresso"), $option_name ) );
+			EE_UnitTestCase::assertNull( $option, sprintf( __('The WP Option "%s" exists but shouldn\'t', "event_espresso"), $option_name ) );
 		}else{
-			$this->assertTrue(true);
+			EE_UnitTestCase::assertTrue(true);
 		}
 	}
+
+
 
 	/**
 	 * Compares two EE model objects by just looking at their field's values. If you want strict comparison just use ordinary '==='.
 	 * If you pass it two arrays of EE objects, that works too
+	 *
 	 * @param EE_Base_Class|EE_Base_Class[] $expected_object
 	 * @param EE_Base_Class|EE_Base_Class[] $actual_object
+	 * @throws \EE_Error
 	 */
 	public function assertEEModelObjectsEquals( $expected_object, $actual_object){
 		if( is_array( $expected_object ) ){
-			$this->assertTrue( is_array( $actual_object ) );
+			EE_UnitTestCase::assertTrue( is_array( $actual_object ) );
 			foreach( $expected_object as $single_expected_object ){
 				$this->assertEEModelObjectsEquals( $single_expected_object, array_shift( $actual_object ) );
 			}
 		}else{
-			$this->assertInstanceOf( 'EE_Base_Class', $expected_object);
-			$this->assertInstanceOf( 'EE_Base_Class', $actual_object);
-			$this->assertEquals( get_class( $expected_object ), get_class( $actual_object ) );
+			EE_UnitTestCase::assertInstanceOf( 'EE_Base_Class', $expected_object);
+			EE_UnitTestCase::assertInstanceOf( 'EE_Base_Class', $actual_object);
+			EE_UnitTestCase::assertEquals( get_class( $expected_object ), get_class( $actual_object ) );
 			foreach( $expected_object->model_field_array() as $field_name => $expected_value ){
 				$actual_value = $actual_object->get( $field_name );
 				if( $expected_value !== $actual_value ){
-					$this->fail(
+					EE_UnitTestCase::fail(
 						sprintf(
 							__( 'EE objects for the field %4$s of class "%1$s" did not match. They were: %2$s and %3$s.  The values for the field were %5$s and %6$s', 'event_espresso' ),
 							get_class( $expected_object),
@@ -745,7 +784,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @global int    $auto_made_thing_seed
 	 * @return EE_Base_Class
 	 */
-	function new_model_obj_with_dependencies( $model_name, $args = array(), $save = true ) {
+	public function new_model_obj_with_dependencies( $model_name, $args = array(), $save = true ) {
 		global $auto_made_thing_seed;
 		if($auto_made_thing_seed === NULL){
 			$auto_made_thing_seed = 1;
@@ -756,7 +795,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		foreach($model->relation_settings() as $related_model_name => $relation){
 			if($relation instanceof EE_Belongs_To_Any_Relation){
 				continue;
-			}elseif( $related_model_name == 'Country' ){
+			}elseif( $related_model_name === 'Country' ){
 				//we already have lots of countries. lets not make any more
 				//what's more making them is tricky: the primary key needs to be a unique
 				//2-character string but not an integer (else it confuses the country
@@ -765,7 +804,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 					$args[ 'CNT_ISO' ] = 'US';
 				}
 			}
-			elseif( $related_model_name == 'Status' ){
+			elseif( $related_model_name === 'Status' ){
 				$fk = $model->get_foreign_key_to($related_model_name);
 				if( ! isset( $args[ $fk->get_name() ] ) ){
 					//only set the default if they haven't specified anything
@@ -793,18 +832,12 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 			}elseif($field instanceof EE_Enum_Integer_Field ||
 					$field instanceof EE_Enum_Text_Field ||
 					$field instanceof EE_Boolean_Field ||
-					$field_name == 'PMD_type' ||
-					$field->get_name() == 'CNT_cur_dec_mrk' ||
-					$field->get_name() == 'CNT_cur_thsnds' ||
-					$field->get_name() == 'CNT_tel_code'){
+					$field_name === 'PMD_type' || $field_name === 'CNT_cur_dec_mrk' || $field_name === 'CNT_cur_thsnds' || $field_name === 'CNT_tel_code'){
 				$value = $field->get_default_value();
 			}elseif( $field instanceof EE_Integer_Field ||
 					$field instanceof EE_Float_Field ||
 					$field instanceof EE_Foreign_Key_Field_Base ||
-					$field instanceof EE_Primary_Key_String_Field ||
-					$field->get_name() == 'STA_abbrev' ||
-					$field->get_name() == 'CNT_ISO3' ||
-					$field->get_name() == 'CNT_cur_code'){
+					$field instanceof EE_Primary_Key_String_Field || $field_name === 'STA_abbrev' || $field_name === 'CNT_ISO3' || $field_name === 'CNT_cur_code'){
 				$value = $auto_made_thing_seed;
 			}elseif( $field instanceof EE_Primary_Key_String_Field ){
 				$value = "$auto_made_thing_seed";
@@ -816,7 +849,8 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 			}
 		}
 		//and finally make the model obj
-		$classname = 'EE_'.$model_name;
+		$classname = 'EE_' . $model_name;
+		/** @var EE_Base_Class $model_obj */
 		$model_obj = $classname::new_instance($args);
 		if($save){
 			$success = $model_obj->save();
@@ -847,10 +881,10 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @param string $table_name with or without $wpdb->prefix
 	 * @param string $model_name the model's name (only used for error reporting)
 	 */
-	function assertTableExists($table_name,$model_name = 'Unknown'){
+	public function assertTableExists($table_name,$model_name = 'Unknown'){
 		if( ! EEH_Activation::table_exists( $table_name ) ){
 			global $wpdb;
-			$this->fail( $wpdb->last_error);
+			EE_UnitTestCase::fail( $wpdb->last_error);
 		}
 	}
 
@@ -862,9 +896,9 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @param string $table_name with or without $wpdb->prefix
 	 * @param string $model_name the model's name (only used for error reporting)
 	 */
-	function assertTableDoesNotExist($table_name, $model_name = 'Unknown' ){
+	public function assertTableDoesNotExist($table_name, $model_name = 'Unknown' ){
 		if( EEH_Activation::table_exists( $table_name ) ){
-			$this->fail(
+			EE_UnitTestCase::fail(
 				sprintf(
 					__( 'Table like %1$s SHOULD NOT exist. It was apparently defined on the model "%2$s"', 'event_espresso' ),
 					$table_name,
@@ -882,9 +916,11 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 */
 	protected function _pretend_addon_hook_time(){
 		global $wp_actions;
-		unset($wp_actions['AHEE__EE_System___detect_if_activation_or_upgrade__begin']);
-		unset($wp_actions['FHEE__EE_System__parse_model_names']);
-		unset($wp_actions['FHEE__EE_System__parse_implemented_model_names']);
+		unset(
+			$wp_actions['AHEE__EE_System___detect_if_activation_or_upgrade__begin'],
+			$wp_actions['FHEE__EE_System__parse_model_names'],
+			$wp_actions['FHEE__EE_System__parse_implemented_model_names']
+		);
 		$wp_actions['AHEE__EE_System__load_espresso_addons'] = 1;
 		unset($wp_actions[ 'AHEE__EE_System__register_shortcodes_modules_and_widgets' ] );
 	}
@@ -901,54 +937,62 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		unset($wp_actions['AHEE__EE_System__load_espresso_addons']);
 	}
 
+
+
 	/**
 	 * Makes a complete transaction record with all associated data (ie, its line items,
 	 * registrations, tickets, datetimes, events, attendees, questions, answers, etc).
 	 *
-	 * @param array $options {
-	 *	@type int $ticket_types the number of different ticket types in this transaction. Default 1
-	 *	@type int $taxable_tickets how many of those ticket types should be taxable. Default EE_INF
+	 * @param array $options         {
+	 * @type int    $ticket_types    the number of different ticket types in this transaction. Default 1
+	 * @type int    $taxable_tickets how many of those ticket types should be taxable. Default EE_INF
 	 * @return EE_Transaction
+	 * @throws \EE_Error
 	 */
 	protected function new_typical_transaction($options = array()){
+		/** @var EE_Transaction $txn */
 		$txn = $this->new_model_obj_with_dependencies( 'Transaction', array( 'TXN_paid' => 0 ) );
 		$total_line_item = EEH_Line_Item::create_total_line_item( $txn->ID() );
 		$total_line_item->save_this_and_descendants_to_txn( $txn->ID() );
+
+		$ticket_types = 1;
 		if( isset( $options[ 'ticket_types' ] ) ){
 			$ticket_types = $options[ 'ticket_types' ];
-		}else{
-			$ticket_types = 1;
 		}
+
+		$taxable_tickets = EE_INF;
 		if( isset( $options[ 'taxable_tickets' ] ) ){
 			$taxable_tickets = $options[ 'taxable_tickets' ];
-		}else{
-			$taxable_tickets = EE_INF;
 		}
+
+		$fixed_ticket_price_modifiers = 1;
 		if( isset( $options[ 'fixed_ticket_price_modifiers' ] ) ) {
 			$fixed_ticket_price_modifiers = $options[ 'fixed_ticket_price_modifiers' ];
-		} else {
-			$fixed_ticket_price_modifiers = 1;
 		}
+
 		$taxes = EEM_Price::instance()->get_all_prices_that_are_taxes();
 		for( $i = 1; $i <= $ticket_types; $i++ ){
-			$ticket = $this->new_model_obj_with_dependencies( 'Ticket',  array( 'TKT_price'=> $i * 10 , 'TKT_taxable' => $taxable_tickets-- > 0 ? true : false ) );
+			/** @var EE_Ticket $ticket */
+			$ticket = $this->new_model_obj_with_dependencies( 'Ticket', array( 'TKT_price' => $i * 10, 'TKT_taxable' => $taxable_tickets-- > 0 ? true : false ) );
 			$sum_of_sub_prices = 0;
 			for( $j=1; $j<= $fixed_ticket_price_modifiers; $j++ ) {
-				if( $j == $fixed_ticket_price_modifiers ) {
+				if( $j === $fixed_ticket_price_modifiers ) {
 					$price_amount = $ticket->price() - $sum_of_sub_prices;
 				} else {
 					$price_amount = $i * 10 / $fixed_ticket_price_modifiers;
 				}
+				/** @var EE_Price $price */
 				$price = $this->new_model_obj_with_dependencies( 'Price', array( 'PRC_amount' => $price_amount, 'PRC_order' => $j ) );
 				$sum_of_sub_prices += $price->amount();
 				$ticket->_add_relation_to( $price, 'Price' );
 			}
 			$a_datetime = $this->new_model_obj_with_dependencies( 'Datetime' );
 			$ticket->_add_relation_to( $a_datetime, 'Datetime');
-			$this->assertInstanceOf( 'EE_Line_Item', EEH_Line_Item::add_ticket_purchase($total_line_item, $ticket) );
+			EE_UnitTestCase::assertInstanceOf( 'EE_Line_Item', EEH_Line_Item::add_ticket_purchase($total_line_item, $ticket) );
 			$reg_final_price = $ticket->price();
 			foreach($taxes as $taxes_at_priority){
-				foreach($taxes_at_priority as $tax){
+				/** @var EE_Price $tax */
+				foreach( $taxes_at_priority as $tax){
 					$reg_final_price += $reg_final_price * $tax->amount() / 100;
 				}
 			}
@@ -969,17 +1013,21 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		return $txn;
 	}
 
+
+
 	/**
 	 * Creates an interesting ticket, with a base price, dollar surcharge, and a percent surcharge,
 	 * which is for 2 different datetimes.
-	 * @param array $options {
-	 *	@type int $dollar_surcharge the dollar surcharge to add to this ticket
-	 *	@type int $percent_surcharge teh percent surcharge to add to this ticket (value in percent, not in decimal. Eg if it's a 10% surcharge, enter 10.00, not 0.10
-	 *	@type int $datetimes the number of datetimes for this ticket,
-	 *	@type int $TKT_price set the TKT_price to this value.
-	 *	@type int $TKT_taxable set the TKT_taxable to this value.
-	 * }
+	 *
+	 * @param array $options           {
+	 * @type int    $dollar_surcharge  the dollar surcharge to add to this ticket
+	 * @type int    $percent_surcharge teh percent surcharge to add to this ticket (value in percent, not in decimal. Eg if it's a 10% surcharge, enter 10.00, not 0.10
+	 * @type int    $datetimes         the number of datetimes for this ticket,
+	 * @type int    $TKT_price         set the TKT_price to this value.
+	 * @type int    $TKT_taxable       set the TKT_taxable to this value.
+	 *                                 }
 	 * @return EE_Ticket
+	 * @throws \EE_Error
 	 */
 	public function new_ticket( $options = array() ) {
 		// grab ticket price or set to default of 16.50
@@ -989,7 +1037,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		/** @type EE_Ticket $ticket */
 		$ticket = $this->new_model_obj_with_dependencies('Ticket', array( 'TKT_price' => $ticket_price, 'TKT_taxable' => $ticket_taxable ) );
 		$base_price_type = EEM_Price_Type::instance()->get_one( array( array('PRT_name' => 'Base Price' ) ) );
-		$this->assertInstanceOf( 'EE_Price_Type', $base_price_type );
+		EE_UnitTestCase::assertInstanceOf( 'EE_Price_Type', $base_price_type );
 
 		//only associate on the tickets if TKT_price is not included
 		if ( ! isset( $options['TKT_price'] ) ) {
@@ -998,14 +1046,14 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 			$this->assertArrayContains( $base_price, $ticket->prices() );
 			if( isset( $options[ 'dollar_surcharge'] ) ){
 				$dollar_surcharge_price_type = EEM_Price_Type::instance()->get_one( array( array( 'PRT_name' => 'Dollar Surcharge' ) ) );
-				$this->assertInstanceOf( 'EE_Price_Type', $dollar_surcharge_price_type );
+				EE_UnitTestCase::assertInstanceOf( 'EE_Price_Type', $dollar_surcharge_price_type );
 				$dollar_surcharge = $this->new_model_obj_with_dependencies( 'Price', array( 'PRC_amount' => $options[ 'dollar_surcharge'], 'PRT_ID' => $dollar_surcharge_price_type->ID() ) );
 				$ticket->_add_relation_to( $dollar_surcharge, 'Price' );
 				$this->assertArrayContains( $dollar_surcharge, $ticket->prices() );
 			}
 			if( isset( $options[ 'percent_surcharge' ] ) ){
 				$percent_surcharge_price_type = EEM_Price_Type::instance()->get_one( array( array( 'PRT_name' => 'Percent Surcharge' ) ) );
-				$this->assertInstanceOf( 'EE_Price_Type', $percent_surcharge_price_type );
+				EE_UnitTestCase::assertInstanceOf( 'EE_Price_Type', $percent_surcharge_price_type );
 				$percent_surcharge = $this->new_model_obj_with_dependencies( 'Price', array( 'PRC_amount' => $options[ 'percent_surcharge' ], 'PRT_ID' => $percent_surcharge_price_type->ID() ) );
 				$ticket->_add_relation_to( $percent_surcharge, 'Price' );
 				$this->assertArrayContains( $percent_surcharge, $ticket->prices() );
@@ -1060,6 +1108,30 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		}
 		return $user;
 	}
+
+
+
+	/**
+	 * @return \EE_Front_Controller_Mock
+	 * @throws \EE_Error
+	 */
+	public function build_front_controller_mock() {
+		// make sure config is setup and shortcodes, etc, are registered
+		$this->registry->load_core( 'Config' );
+		$this->registry->CFG->register_shortcodes_and_modules();
+		// require_once EE_TESTS_DIR . 'mocks' . DS . 'core' . DS . 'EE_Front_Controller_Mock.core.php';
+		EE_Dependency_Map::register_dependencies(
+			'EE_Front_Controller_Mock',
+			array(
+				'EE_Registry_Mock'         => EE_Dependency_Map::load_from_cache,
+				'EE_Request_Handler'       => EE_Dependency_Map::load_from_cache,
+				'EE_Module_Request_Router' => EE_Dependency_Map::load_from_cache,
+			)
+		);
+		EE_Dependency_Map::register_class_loader( 'EE_Front_Controller_Mock' );
+		return EE_Registry_Mock::instance()->load_core('Front_Controller_Mock');
+	}
+
 
 
 }
