@@ -68,11 +68,12 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	public function handle_request( EE_Request $request, EE_Response $response ) {
 		$this->request = $request;
 		$this->response = $response;
+		do_action( 'AHEE__EE_Load_Espresso_Core__handle_request__start', $this );
 		// info about how to load classes required by other classes
 		$this->dependency_map = $this->_load_dependency_map();
 		// central repository for classes
 		$this->registry = $this->_load_registry();
-		do_action( 'EE_Load_Espresso_Core__handle_request__initialize_core_loading' );
+		do_action( 'EE_Load_Espresso_Core__handle_request__initialize_core_loading', $this );
 		// PSR4 Autoloaders
 		$this->registry->load_core( 'EE_Psr4AutoloaderInit' );
 		// workarounds for PHP < 5.3
@@ -160,7 +161,10 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 			wp_die( EE_Error::get_notices() );
 		}
 		require_once( EE_CORE . 'EE_Dependency_Map.core.php' );
-		return EE_Dependency_Map::instance( $this->request, $this->response );
+		return apply_filters(
+			'FHEE__EE_Load_Espresso_Core___load_dependency_map',
+			EE_Dependency_Map::instance( $this->request, $this->response )
+		);
 	}
 
 
@@ -180,7 +184,10 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 			wp_die( EE_Error::get_notices() );
 		}
 		require_once( EE_CORE . 'EE_Registry.core.php' );
-		return EE_Registry::instance( $this->dependency_map );
+		return apply_filters(
+			'FHEE__EE_Load_Espresso_Core___load_registry',
+			EE_Registry::instance( $this->dependency_map )
+		);
 	}
 
 
@@ -212,10 +219,6 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * @param \EE_Response $response
 	 */
 	public function handle_response( EE_Request $request, EE_Response $response ) {
-		//\EEH_Debug_Tools::printr( __FUNCTION__, __CLASS__, __FILE__, __LINE__, 2 );
-		//EEH_Debug_Tools::printr( $request, '$request', __FILE__, __LINE__ );
-		//EEH_Debug_Tools::printr( $response, '$response', __FILE__, __LINE__ );
-		//die();
 		if ( $response->plugin_deactivated() ) {
 			espresso_deactivate_plugin( EE_PLUGIN_BASENAME );
 		}
