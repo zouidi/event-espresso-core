@@ -16,42 +16,12 @@ class EE_Registry_Test extends EE_UnitTestCase{
 
 
 	public function setUp() {
-		add_filter(
-			'FHEE__EE_Registry____construct___class_abbreviations',
-			array( $this, 'unit_test_registry_class_abbreviations' )
-		);
-		add_filter(
-			'FHEE__EE_Registry__load_core__core_paths',
-			array( $this, 'unit_test_registry_core_paths' )
-		);
-		EE_Dependency_Map::register_dependencies(
-			'EE_Session_Mock',
-			array( 'EE_Encryption' => EE_Dependency_Map::load_from_cache )
-		);
 		EE_Dependency_Map::register_dependencies(
 			'EE_Injector_Tester_With_Array_Session_Int_Constructor_Params',
 			array( 'EE_Session_Mock' => EE_Dependency_Map::load_from_cache )
 		);
-		EE_Dependency_Map::register_class_loader( 'EE_Session_Mock' );
 		EE_Dependency_Map::register_class_loader( 'EE_Injector_Tester_With_Array_Session_Int_Constructor_Params' );
-		require_once EE_TESTS_DIR . 'mocks' . DS . 'core' . DS . 'EE_Registry_Mock.core.php';
-		EE_Registry_Mock::instance( EE_Dependency_Map::instance() );
-		EE_Registry_Mock::instance()->initialize();
 		parent::setUp();
-	}
-
-
-
-	public function unit_test_registry_class_abbreviations( $class_abbreviations = array() ) {
-		$class_abbreviations[ 'EE_Session_Mock' ] = 'SSN';
-		return $class_abbreviations;
-	}
-
-
-
-	public function unit_test_registry_core_paths( $core_paths = array() ) {
-		$core_paths[] = EE_TESTS_DIR . 'mocks' . DS . 'core' . DS;
-		return $core_paths;
 	}
 
 
@@ -64,9 +34,11 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	 * @author                Brent Christensen
 	 */
 	public function test_get_cached_class_abbreviations() {
+		// delete the cached class if it exists
+		EE_Registry_Mock::instance()->NET_CFG = null;
 		// verify that EE_Network_Config has not already been loaded
 		$cached_class = EE_Registry_Mock::instance()->get_cached_class( 'EE_Network_Config' );
-		$this->assertEquals( null, $cached_class );
+		EE_UnitTestCase::assertEquals( null, $cached_class );
 		// create a stdClass object will use to mock the EE_Network_Config class
 		$orig_class = new stdClass();
 		$orig_class->name = 'EE_Network_Config';
@@ -74,7 +46,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		EE_Registry_Mock::instance()->NET_CFG = $orig_class;
 		// now attempt to retrieve it
 		$cached_class = EE_Registry_Mock::instance()->get_cached_class( 'EE_Network_Config' );
-		$this->assertEquals( $orig_class->name, $cached_class->name );
+		EE_UnitTestCase::assertEquals( $orig_class->name, $cached_class->name );
 		// remove what we added
 		EE_Registry_Mock::instance()->NET_CFG = null;
 	}
@@ -90,7 +62,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	public function test_get_cached_class_property() {
 		// verify that "Some_Class" has not already been loaded
 		$cached_class = EE_Registry_Mock::instance()->get_cached_class( 'Some_Class' );
-		$this->assertEquals( null, $cached_class );
+		EE_UnitTestCase::assertEquals( null, $cached_class );
 		// create a stdClass object will use to mock the class
 		$orig_class = new stdClass();
 		$orig_class->name = 'Some_Class';
@@ -98,7 +70,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		EE_Registry_Mock::instance()->Some_Class = $orig_class;
 		// now attempt to retrieve it
 		$cached_class = EE_Registry_Mock::instance()->get_cached_class( 'Some_Class' );
-		$this->assertEquals( $orig_class->name, $cached_class->name );
+		EE_UnitTestCase::assertEquals( $orig_class->name, $cached_class->name );
 	}
 
 
@@ -112,7 +84,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	public function test_get_cached_class_library() {
 		// verify that "Library_Class" has not already been loaded
 		$cached_class = EE_Registry_Mock::instance()->get_cached_class( 'Library_Class' );
-		$this->assertEquals( null, $cached_class );
+		EE_UnitTestCase::assertEquals( null, $cached_class );
 		// create a stdClass object will use to mock the class
 		$orig_class = new stdClass();
 		$orig_class->name = 'Library_Class';
@@ -120,7 +92,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		EE_Registry_Mock::instance()->LIB->Library_Class = $orig_class;
 		// now attempt to retrieve it
 		$cached_class = EE_Registry_Mock::instance()->get_cached_class( 'Library_Class' );
-		$this->assertEquals( $orig_class->name, $cached_class->name );
+		EE_UnitTestCase::assertEquals( $orig_class->name, $cached_class->name );
 	}
 
 
@@ -134,7 +106,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	public function test_get_cached_class_addon() {
 		// verify that "Addon_Class" has not already been loaded
 		$cached_class = EE_Registry_Mock::instance()->get_cached_class( 'Addon_Class', 'addon' );
-		$this->assertEquals( null, $cached_class );
+		EE_UnitTestCase::assertEquals( null, $cached_class );
 		// create a stdClass object will use to mock the class
 		$orig_class = new stdClass();
 		$orig_class->name = 'Addon_Class';
@@ -142,7 +114,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		EE_Registry_Mock::instance()->addons->Addon_Class = $orig_class;
 		// now attempt to retrieve it
 		$cached_class = EE_Registry_Mock::instance()->get_cached_class( 'Addon_Class', 'addon' );
-		$this->assertEquals( $orig_class->name, $cached_class->name );
+		EE_UnitTestCase::assertEquals( $orig_class->name, $cached_class->name );
 	}
 
 
@@ -154,7 +126,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	public function test__load_with_load_only_flag() {
 		// now do a object load request for EE_Answer
 		$class_loaded = EE_Registry_Mock::instance()->load_class( 'EE_Answer' );
-		$this->assertInstanceOf( 'EE_Answer', $class_loaded );
+		EE_UnitTestCase::assertInstanceOf( 'EE_Answer', $class_loaded );
 		// now verify that with the $load_only flag set to true, that boolean true is returned
 		$file_loaded = EE_Registry_Mock::instance()->load(
 			array( EE_CLASSES ),
@@ -166,7 +138,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 			true,
 			true // LOAD ONLY FLAG SET TO TRUE
 		);
-		$this->assertTrue( $file_loaded );
+		EE_UnitTestCase::assertTrue( $file_loaded );
 
 	}
 
@@ -188,13 +160,13 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		);
 
 		//should return true
-		$this->assertTrue( $loaded );
+		EE_UnitTestCase::assertTrue( $loaded );
 		//should be able to access the class now
-		$this->assertTrue( class_exists( 'EE_Answer', false ) );
+		EE_UnitTestCase::assertTrue( class_exists( 'EE_Answer', false ) );
 
 		//now try to grab an instance of EE_Answer
 		$class_instance = EE_Registry_Mock::instance()->load_class( 'EE_Answer' );
-		$this->assertInstanceOf( 'EE_Answer', $class_instance );
+		EE_UnitTestCase::assertInstanceOf( 'EE_Answer', $class_instance );
 	}
 
 
@@ -208,7 +180,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	 */
 	public function test_resolve_path(){
 		// try to find the path to the EE_Session class
-		$this->assertEquals(
+		EE_UnitTestCase::assertEquals(
 			// expected
 			str_replace( array( '\\', '/' ), DS, EE_CORE . 'EE_Session.core.php' ),
 			// actual
@@ -227,17 +199,17 @@ class EE_Registry_Test extends EE_UnitTestCase{
 
 
 
-
 	/**
 	 * this tests that EE class files can be loaded correctly
 	 *
-	 * @group                8284
+	 * @group                 8284
 	 * @author                Brent Christensen
+	 * @throws \EE_Error
 	 */
 	public function test_require_file(){
 		// first verify that EE_Class_For_Testing_Loading is not already loaded
 		// (made sure to set the class_exists() autoload param to false)
-		$this->assertEquals( false, class_exists( 'EE_Class_For_Testing_Loading', false ) );
+		EE_UnitTestCase::assertEquals( false, class_exists( 'EE_Class_For_Testing_Loading', false ) );
 		// let's attempt to load the EE_Cart
 		EE_Registry_Mock::instance()->require_file(
 			EE_MOCKS_DIR . 'core' . DS . 'EE_Class_For_Testing_Loading.core.php',
@@ -251,41 +223,41 @@ class EE_Registry_Test extends EE_UnitTestCase{
 				EE_MOCKS_DIR . 'core' . DS,
 			)
 		);
-		$this->assertEquals( true, class_exists( 'EE_Class_For_Testing_Loading', false ) );
+		EE_UnitTestCase::assertEquals( true, class_exists( 'EE_Class_For_Testing_Loading', false ) );
 	}
-
 
 
 
 	/**
 	 * this tests that abstract EE class files are loaded but not instantiated
 	 *
-	 * @group                8284
+	 * @group                 8284
 	 * @author                Brent Christensen
+	 * @throws \EE_Error
 	 */
 	public function test_create_object_abstract(){
 		// let's attempt to load the abstract EE_Addon class file
 		require_once( EE_CORE . 'EE_Addon.core.php' );
-		$this->assertEquals( true, class_exists( 'EE_Addon' ) );
+		EE_UnitTestCase::assertEquals( true, class_exists( 'EE_Addon' ) );
 		// now attempt instantiation
 		$class_object = EE_Registry_Mock::instance()->create_object( 'EE_Addon' );
 		// abstract classes only return true to denote that they have been loaded
-		$this->assertEquals( true, $class_object );
+		EE_UnitTestCase::assertEquals( true, $class_object );
 	}
-
 
 
 
 	/**
 	 * this tests that EE model object classes can be instantiated correctly
 	 *
-	 * @group                8284
+	 * @group                 8284
 	 * @author                Brent Christensen
+	 * @throws \EE_Error
 	 */
 	public function test_create_object_new_instance_from_db() {
 		// let's attempt to load an instantiate an EE_Question object with ID=1
 		require_once( EE_CLASSES . 'EE_Question.class.php' );
-		$this->assertEquals( true, class_exists( 'EE_Question' ) );
+		EE_UnitTestCase::assertEquals( true, class_exists( 'EE_Question' ) );
 		// now attempt instantiation
 		$class_object = EE_Registry_Mock::instance()->create_object(
 			'EE_Question',
@@ -293,8 +265,8 @@ class EE_Registry_Test extends EE_UnitTestCase{
 			'class',
 			true // FROM DB FLAG SET TO TRUE
 		);
-		$this->assertEquals( true, $class_object instanceof EE_Question );
-		$this->assertEquals( 1, $class_object->ID() );
+		EE_UnitTestCase::assertEquals( true, $class_object instanceof EE_Question );
+		EE_UnitTestCase::assertEquals( 1, $class_object->ID() );
 	}
 
 
@@ -302,23 +274,24 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	/**
 	 * this tests that EE model object classes can be instantiated correctly
 	 *
-	 * @group                8284
+	 * @group                 8284
 	 * @author                Brent Christensen
+	 * @throws \EE_Error
 	 */
 	public function test_create_object_new_instance() {
 		// let's attempt to load an instantiate an EE_Question object with ID=1
 		// despite the fact that we just loaded the file in a previous test,
 		// let's just double check that the class exists
 		require_once( EE_CLASSES . 'EE_Question.class.php' );
-		$this->assertEquals( true, class_exists( 'EE_Question' ) );
+		EE_UnitTestCase::assertEquals( true, class_exists( 'EE_Question' ) );
 		// now attempt instantiation
 		$class_object = EE_Registry_Mock::instance()->create_object(
 			'EE_Question',
 			array(),
 			'class'
 		);
-		$this->assertEquals( true, $class_object instanceof EE_Question );
-		$this->assertEquals( 0, $class_object->ID() );
+		EE_UnitTestCase::assertEquals( true, $class_object instanceof EE_Question );
+		EE_UnitTestCase::assertEquals( 0, $class_object->ID() );
 	}
 
 
@@ -326,16 +299,17 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	/**
 	 * this tests that EE class files can be instantiated correctly
 	 *
-	 * @group                8284
+	 * @group                 8284
 	 * @author                Brent Christensen
+	 * @throws \EE_Error
 	 */
 	public function test_create_object_isInstantiable(){
 		// let's attempt to load the EE_Module_Request_Router class file
 		require_once( EE_CORE . 'EE_Module_Request_Router.core.php' );
-		$this->assertEquals( true, class_exists( 'EE_Module_Request_Router' ) );
+		EE_UnitTestCase::assertEquals( true, class_exists( 'EE_Module_Request_Router' ) );
 		// now attempt instantiation
 		$class_object = EE_Registry_Mock::instance()->create_object( 'EE_Module_Request_Router' );
-		$this->assertEquals( true, $class_object instanceof EE_Module_Request_Router );
+		EE_UnitTestCase::assertEquals( true, $class_object instanceof EE_Module_Request_Router );
 	}
 
 
@@ -343,16 +317,17 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	/**
 	 * this tests that EE singleton classes can be instantiated correctly
 	 *
-	 * @group                8284
+	 * @group                 8284
 	 * @author                Brent Christensen
+	 * @throws \EE_Error
 	 */
 	public function test_create_object_singleton(){
 		// let's attempt to load the EE_Capabilities class file
 		require_once( EE_CORE . 'EE_Capabilities.core.php' );
-		$this->assertEquals( true, class_exists( 'EE_Capabilities' ) );
+		EE_UnitTestCase::assertEquals( true, class_exists( 'EE_Capabilities' ) );
 		// now attempt instantiation
 		$class_object = EE_Registry_Mock::instance()->create_object( 'EE_Capabilities' );
-		$this->assertEquals( true, $class_object instanceof EE_Capabilities );
+		EE_UnitTestCase::assertEquals( true, $class_object instanceof EE_Capabilities );
 	}
 
 
@@ -360,24 +335,25 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	/**
 	 * this tests that EE classes with core dependencies can be instantiated correctly
 	 *
-	 * @group                8284
+	 * @group                 8284
 	 * @author                Brent Christensen
+	 * @throws \EE_Error
 	 */
 	public function test_create_object_and_resolve_dependencies(){
 		// let's attempt to load the EE_Front_Controller class file
 		require_once( EE_CORE . 'EE_Front_Controller.core.php' );
-		$this->assertEquals( true, class_exists( 'EE_Front_Controller' ) );
+		EE_UnitTestCase::assertEquals( true, class_exists( 'EE_Front_Controller' ) );
 		// now attempt instantiation knowing that the EE_Front_Controller class
 		// injects the EE_Module_Request_Router class in the constructor
 		/** @type EE_Front_Controller $class_object */
 		$class_object = EE_Registry_Mock::instance()->create_object( 'EE_Front_Controller' );
-		$this->assertInstanceOf( 'EE_Front_Controller', $class_object );
+		EE_UnitTestCase::assertInstanceOf( 'EE_Front_Controller', $class_object );
 		//echo "\n Request_Handler: \n";
 		//var_dump( $class_object->Request_Handler() );
 		//echo "\n Module_Request_Router: \n";
 		//var_dump( $class_object->Module_Request_Router() );
-		$this->assertInstanceOf( 'EE_Request_Handler', $class_object->Request_Handler() );
-		$this->assertInstanceOf( 'EE_Module_Request_Router', $class_object->Module_Request_Router() );
+		EE_UnitTestCase::assertInstanceOf( 'EE_Request_Handler', $class_object->Request_Handler() );
+		EE_UnitTestCase::assertInstanceOf( 'EE_Module_Request_Router', $class_object->Module_Request_Router() );
 	}
 
 
@@ -396,7 +372,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		EE_Registry_Mock::instance()->set_cached_class( $orig_class, 'EE_Network_Config' );
 		// now attempt to retrieve it
 		$cached_class = EE_Registry_Mock::instance()->NET_CFG;
-		$this->assertEquals( $orig_class, $cached_class );
+		EE_UnitTestCase::assertEquals( $orig_class, $cached_class );
 	}
 
 
@@ -415,7 +391,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		EE_Registry_Mock::instance()->set_cached_class( $orig_class, 'Some_Class' );
 		// now attempt to retrieve it
 		$cached_class = EE_Registry_Mock::instance()->Some_Class;
-		$this->assertEquals( $orig_class, $cached_class );
+		EE_UnitTestCase::assertEquals( $orig_class, $cached_class );
 	}
 
 
@@ -434,7 +410,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		EE_Registry_Mock::instance()->set_cached_class( $orig_class, 'Library_Class' );
 		// now attempt to retrieve it
 		$cached_class = EE_Registry_Mock::instance()->LIB->Library_Class;
-		$this->assertEquals( $orig_class, $cached_class );
+		EE_UnitTestCase::assertEquals( $orig_class, $cached_class );
 	}
 
 
@@ -453,7 +429,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		EE_Registry_Mock::instance()->set_cached_class( $orig_class, 'Addon_Class', 'addon' );
 		// now attempt to retrieve it
 		$cached_class = EE_Registry_Mock::instance()->addons->Addon_Class;
-		$this->assertEquals( $orig_class, $cached_class );
+		EE_UnitTestCase::assertEquals( $orig_class, $cached_class );
 	}
 
 
@@ -463,17 +439,18 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	 * also returns the NEW model
 	 *
 	 * @author    Mike Nelson
+	 * @throws \EE_Error
 	 */
 	public function test_reset_model(){
 		$model_a = EE_Registry_Mock::instance()->load_model('Event');
 		$model_a2 = EE_Registry_Mock::instance()->load_model('Event');
 		$model_a3 = EEM_Event::instance();
-		$this->assertEquals($model_a, $model_a2);
-		$this->assertEquals($model_a2, $model_a3);
+		EE_UnitTestCase::assertEquals($model_a, $model_a2);
+		EE_UnitTestCase::assertEquals($model_a2, $model_a3);
 		$model_b1 = EEM_Event::reset();
-		$this->assertNotSame( $model_a, $model_b1);
+		EE_UnitTestCase::assertNotSame( $model_a, $model_b1);
 		$model_b2 = EE_Registry_Mock::instance()->reset_model('Event');
-		$this->assertNotSame( $model_a, $model_b2);
+		EE_UnitTestCase::assertNotSame( $model_a, $model_b2);
 	}
 
 
@@ -485,41 +462,41 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	 */
 	public function test_array_is_numerically_and_sequentially_indexed() {
 		// empty arrays should return true
-		$this->assertTrue(
+		EE_UnitTestCase::assertTrue(
 			EE_Registry_Mock::instance()->array_is_numerically_and_sequentially_indexed( array() )
 		);
 		// should also be fine
-		$this->assertTrue(
+		EE_UnitTestCase::assertTrue(
 			EE_Registry_Mock::instance()->array_is_numerically_and_sequentially_indexed(
 				array( array() )
 			)
 		);
 		// beauty eh?
-		$this->assertTrue(
+		EE_UnitTestCase::assertTrue(
 			EE_Registry_Mock::instance()->array_is_numerically_and_sequentially_indexed(
 				array( 'a', 'b', 'c' )
 			)
 		);
 		// numeric "string" keys will get typecast as integers
-		$this->assertTrue(
+		EE_UnitTestCase::assertTrue(
 			EE_Registry_Mock::instance()->array_is_numerically_and_sequentially_indexed(
 				array( "0" => 'a', "1" => 'b', "2" => 'c' )
 			)
 		);
 		// arrays that are not zero-indexed should return false
-		$this->assertFalse(
+		EE_UnitTestCase::assertFalse(
 			EE_Registry_Mock::instance()->array_is_numerically_and_sequentially_indexed(
 				array( 1 => 'a', 2 => 'b', 3 => 'c' )
 			)
 		);
 		// out of order
-		$this->assertFalse(
+		EE_UnitTestCase::assertFalse(
 			EE_Registry_Mock::instance()->array_is_numerically_and_sequentially_indexed(
 				array( "1" => 'a', "0" => 'b', "2" => 'c' )
 			)
 		);
 		// oh come on now!!! Not even close !
-		$this->assertFalse(
+		EE_UnitTestCase::assertFalse(
 			EE_Registry_Mock::instance()->array_is_numerically_and_sequentially_indexed(
 				array( "a" => 'a', "b" => 'b', "c" => 'c' )
 			)
@@ -550,9 +527,9 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		$class = EE_Registry_Mock::instance()->load_service(
 			'EE_Injector_Tester_With_Array_Session_Int_Constructor_Params'
 		);
-		$this->assertEquals( array(), $class->array_property() );
-		$this->assertInstanceOf( 'EE_Session_Mock', $class->session_property() );
-		$this->assertEquals( 0, $class->integer_property() );
+		EE_UnitTestCase::assertEquals( array(), $class->array_property() );
+		EE_UnitTestCase::assertInstanceOf( 'EE_Session_Mock', $class->session_property() );
+		EE_UnitTestCase::assertEquals( 0, $class->integer_property() );
 		// reset
 		EE_Registry_Mock::instance()->LIB->EE_Injector_Tester_With_Array_Session_Int_Constructor_Params = null;
 		// test EE_Injector_Tester_With_Array_Session_Int_Constructor_Params
@@ -568,9 +545,9 @@ class EE_Registry_Test extends EE_UnitTestCase{
 			'EE_Injector_Tester_With_Array_Session_Int_Constructor_Params',
 			array( $numerically_indexed_array )
 		);
-		$this->assertEquals( $numerically_indexed_array, $class->array_property() );
-		$this->assertInstanceOf( 'EE_Session_Mock', $class->session_property() );
-		$this->assertEquals( 0, $class->integer_property() );
+		EE_UnitTestCase::assertEquals( $numerically_indexed_array, $class->array_property() );
+		EE_UnitTestCase::assertInstanceOf( 'EE_Session_Mock', $class->session_property() );
+		EE_UnitTestCase::assertEquals( 0, $class->integer_property() );
 		// reset
 		EE_Registry_Mock::instance()->LIB->EE_Injector_Tester_With_Array_Session_Int_Constructor_Params = null;
 		// test EE_Injector_Tester_With_Array_Session_Int_Constructor_Params
@@ -587,9 +564,9 @@ class EE_Registry_Test extends EE_UnitTestCase{
 			'EE_Injector_Tester_With_Array_Session_Int_Constructor_Params',
 			array( $string_indexed_array, null, 2 )
 		);
-		$this->assertEquals( $string_indexed_array, $class->array_property() );
-		$this->assertInstanceOf( 'EE_Session_Mock', $class->session_property() );
-		$this->assertEquals( 2, $class->integer_property() );
+		EE_UnitTestCase::assertEquals( $string_indexed_array, $class->array_property() );
+		EE_UnitTestCase::assertInstanceOf( 'EE_Session_Mock', $class->session_property() );
+		EE_UnitTestCase::assertEquals( 2, $class->integer_property() );
 	}
 
 
@@ -613,7 +590,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 			'EEH_Parse_Shortcodes'                 => EE_Dependency_Map::load_from_cache,
 		);
 		$registered = EE_Dependency_Map::register_dependencies( 'EE_Messages_Generator_Mock', $dependencies );
-		$this->assertTrue( $registered );
+		EE_UnitTestCase::assertTrue( $registered );
 
 		$mock_paths[] = EE_TESTS_DIR . 'mocks/core/libraries/messages';
 
@@ -622,7 +599,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 		$generator = EE_Registry_Mock::instance()->load( $mock_paths, 'EE_', 'Messages_Generator_Mock', '' );
 
 		//verify both queues are distinct
-		$this->assertNotEquals(
+		EE_UnitTestCase::assertNotEquals(
 			spl_object_hash( $generator->generation_queue() ),
 			spl_object_hash( $generator->ready_queue() )
 		);
@@ -646,7 +623,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	 */
 	public function test_registry_can_see_newly_registered_dependencies() {
 		// first verify that dependency doesn't already exist
-		$this->assertFalse(
+		EE_UnitTestCase::assertFalse(
 			EE_Registry_Mock::instance()->dependency_map_has( 'Some_New_Class_Name' )
 		);
 		// then register it
@@ -655,11 +632,11 @@ class EE_Registry_Test extends EE_UnitTestCase{
 			array( 'DependencyOne' => EE_Dependency_Map::load_new_object )
 		);
 		// and verify that it's now available
-		$this->assertTrue(
+		EE_UnitTestCase::assertTrue(
 			EE_Registry_Mock::instance()->dependency_map_has( 'Some_New_Class_Name' )
 		);
 		// verify loading strategy
-		$this->assertEquals(
+		EE_UnitTestCase::assertEquals(
 			EE_Dependency_Map::load_new_object,
 			EE_Registry_Mock::instance()->loading_strategy_for_class_dependency( 'Some_New_Class_Name', 'DependencyOne' )
 		);
@@ -673,21 +650,21 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	 * It may seem wrong because it appears to be testing methods that actually exist on EE_Dependency_Map,
 	 * but they are all methods that are called via the \EE_Registry::$_dependency_map property.
 	 * So this test is just verifying that EE_Registry and EE_Dependency_Map are in sync.
-	 *
 	 * Uses EE_Registry_Mock::loading_strategy_for_class_dependency()
 	 * which calls EE_Dependency_Map::loading_strategy_for_class_dependency() via the property on EE_Registry
 	 *
 	 * @author Brent Christensen
+	 * @throws \EE_Error
 	 */
 	public function test_registry_can_see_newly_registered_class_loaders() {
 		// first verify that class loader doesn't already exist
-		$this->assertEmpty(
+		EE_UnitTestCase::assertEmpty(
 			EE_Registry_Mock::instance()->dependency_map_class_loader( 'DependencyOne' )
 		);
 		// then register it
 		EE_Dependency_Map::register_class_loader( 'DependencyOne', 'load_core' );
 		// and verify that it's now available
-		$this->assertEquals(
+		EE_UnitTestCase::assertEquals(
 			'load_core',
 			EE_Registry_Mock::instance()->dependency_map_class_loader( 'DependencyOne' )
 		);
