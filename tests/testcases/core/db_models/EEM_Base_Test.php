@@ -313,18 +313,21 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		//baseline DateTime object for testing
 		$now = new DateTime( "now" );
 		$DateTimeZone = new DateTimeZone( 'America/Vancouver' );
-		$timezoneTest = new DateTime( "now", new DateTimeZone( 'America/Vancouver' ) );
+		$timezoneTest = new DateTime( "now", $DateTimeZone );
+
+		//just in case some other test has messed up the default date format string in WordPress unit tests.
+		$expected_format = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
 
 		//test getting default formatted string and default formatted unix timestamp.
 		$formatted_string = EEM_Datetime::instance()->current_time_for_query( 'DTT_EVT_start' );
-		$this->assertEquals( $now->format( 'F j, Y g:i a' ), $formatted_string );
+		$this->assertEquals( $now->format( $expected_format ), $formatted_string );
 		$timestamp_with_offset = EEM_Datetime::instance()->current_time_for_query( 'DTT_EVT_start', true );
 		$this->assertEquals( $now->format('U'), $timestamp_with_offset );
 
 		//test values when timezone and formats modified on EE_Datetime instantiation
 		$this->factory->datetime->create( array( 'formats' => array( 'Y-m-d', 'H:i:s' ), 'timezone' => 'America/Vancouver' ) );
 		$formatted_string = EEM_Datetime::instance()->current_time_for_query( 'DTT_EVT_start' );
-		$this->assertEquals( $timezoneTest->format( 'Y-m-d H:i:s' ), $formatted_string );
+		$this->assertDateWithinOneMinute( $timezoneTest->format( 'Y-m-d H:i:s' ), $formatted_string, 'Y-m-d H:i:s' );
 		$unix_timestamp = EEM_Datetime::instance()->current_time_for_query( 'DTT_EVT_start', true );
 		$this->assertEquals( $timezoneTest->format('U'), $unix_timestamp );
 	}
@@ -820,6 +823,22 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$e1 = $this->new_model_obj_with_dependencies( 'Event', array() );
 		$e2 = $this->new_model_obj_with_dependencies( 'Event', array() );
 		$this->assertEquals( array( $e1->ID(), $e2->ID() ), EEM_Event::instance()->get_IDs( array( $e1, $e2 ), true ) );
+	}
+	
+	/**
+	 * @group 9389
+	 */
+	function test_get_all__automatic_group_by() {
+		$this->assertEquals( 2, EEM_Question_Group::instance()->count() );
+		$qsgs = EEM_Question_Group::instance()->get_all( 
+			array(
+				'force_join' => array( 'Question' ),
+				'limit' => array( 2, 2 ),//grab 2 but offset by 2
+			)
+		);
+		//so there are only 2 question groups, and we offset by 2. 
+		//so we shouldn't see any right?
+		$this->assertEmpty( $qsgs );
 	}
         
  

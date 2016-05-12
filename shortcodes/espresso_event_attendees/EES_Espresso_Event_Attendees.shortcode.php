@@ -71,10 +71,6 @@ class EES_Espresso_Event_Attendees  extends EES_Shortcode {
 	 */
 	public function process_shortcode( $attributes = array() ) {
 
-		//load helpers
-		EE_Registry::instance()->load_helper( 'Event_View' );
-		EE_Registry::instance()->load_helper( 'Template' );
-
 		// merge in any attributes passed via fallback shortcode processor
 		$attributes = array_merge( (array) $attributes, (array) $this->_attributes );
 
@@ -121,7 +117,7 @@ class EES_Espresso_Event_Attendees  extends EES_Shortcode {
 				) );
 				$events = empty( $events ) ? EEM_Event::instance()->get_upcoming_events( array( 'limit'    => 1,
 				                                                                              'order_by' => array( 'Datetime.DTT_EVT_start' => 'ASC' )
-				) ) : array();
+				) ) : $events;
 				$event = reset( $events );
 				if ( $event instanceof EE_Event ) {
 					$query[0]['Registration.EVT_ID'] = $event->ID();

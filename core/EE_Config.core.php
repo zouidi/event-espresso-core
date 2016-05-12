@@ -244,13 +244,13 @@ final class EE_Config {
 			// load_core_config__start hook
 			$settings = apply_filters( 'FHEE__EE_Config___load_core_config__config_settings', $settings, $config, $this );
 			if ( is_object( $settings ) && property_exists( $this, $config ) ) {
-				$this->$config = apply_filters( 'FHEE__EE_Config___load_core_config__' . $config, $settings );
+				$this->{$config} = apply_filters( 'FHEE__EE_Config___load_core_config__' . $config, $settings );
 				//call configs populate method to ensure any defaults are set for empty values.
 				if ( method_exists( $settings, 'populate' ) ) {
-					$this->$config->populate();
+					$this->{$config}->populate();
 				}
 				if ( method_exists( $settings, 'do_hooks' ) ) {
-					$this->$config->do_hooks();
+					$this->{$config}->do_hooks();
 				}
 			}
 		}
@@ -335,15 +335,23 @@ final class EE_Config {
 	public function double_check_config_comparison( $option = '', $old_value, $value ) {
 		// make sure we're checking the ee config
 		if ( $option == 'ee_config' ) {
-			// run a loose comparison of the old value against the new value for type and properties, but NOT exact instance like WP update_option does
+			// run a loose comparison of the old value against the new value for type and properties,
+			// but NOT exact instance like WP update_option does
 			if ( $value != $old_value ) {
-				// if they are NOT the same, then remove the hook, which means the subsequent update results will be based solely on the update query results
-				// the reason we do this is because, as stated above, WP update_option performs an exact instance comparison (===) on any update values passed to it
-				// this happens PRIOR to serialization and any subsequent update. If values are found to match their previous old value, then WP bails before performing any update.
-				// Since we are passing the EE_Config object, it is comparing the EXACT instance of the saved version it just pulled from the db, with the one being passed to it (which will not match).
+				// if they are NOT the same, then remove the hook,
+				// which means the subsequent update results will be based solely on the update query results
+				// the reason we do this is because, as stated above,
+				// WP update_option performs an exact instance comparison (===) on any update values passed to it
+				// this happens PRIOR to serialization and any subsequent update.
+				// If values are found to match their previous old value,
+				// then WP bails before performing any update.
+				// Since we are passing the EE_Config object, it is comparing the EXACT instance of the saved version
+				// it just pulled from the db, with the one being passed to it (which will not match).
 				// HOWEVER, once the object is serialized and passed off to MySQL to update,
-				// MySQL MAY ALSO NOT perform the update because the string it sees in the db looks the same as the new one it has been passed!!!
-				// This results in the query returning an "affected rows" value of ZERO, which gets returned immediately by WP update_option and looks like an error.
+				// MySQL MAY ALSO NOT perform the update because
+				// the string it sees in the db looks the same as the new one it has been passed!!!
+				// This results in the query returning an "affected rows" value of ZERO,
+				// which gets returned immediately by WP update_option and looks like an error.
 				remove_action( 'update_option', array( $this, 'check_config_updated' ));
 			}
 		}
@@ -365,7 +373,7 @@ final class EE_Config {
 			if ( $addon_config_obj instanceof $config_class && ! $addon_config_obj instanceof __PHP_Incomplete_Class ) {
 				$this->update_config( 'addons', $addon_name, $addon_config_obj, FALSE );
 			}
-			$this->addons->$addon_name = NULL;
+			$this->addons->{$addon_name} = NULL;
 		}
 	}
 
@@ -385,15 +393,21 @@ final class EE_Config {
 		//self::$_instance = NULL;
 		do_action( 'AHEE__EE_Config__update_espresso_config__begin',$this );
 		$this->_reset_espresso_addon_config();
-		// hook into update_option because that happens AFTER the ( $value === $old_value ) conditional but BEFORE the actual update occurs
+		// hook into update_option because that happens AFTER the ( $value === $old_value ) conditional
+		// but BEFORE the actual update occurs
 		add_action( 'update_option', array( $this, 'double_check_config_comparison' ), 1, 3 );
 		// now update "ee_config"
 		$saved = update_option( 'ee_config', $this );
-		// if not saved... check if the hook we just added still exists; if it does, it means one of two things:
-		// that update_option bailed at the ( $value === $old_value ) conditional, or...
-		// the db update query returned 0 rows affected (probably because the data  value was the same from it's perspective)
-		// so the existence of the hook means that a negative result from update_option is NOT an error, but just means no update occurred, so don't display an error to the user.
-		// BUT... if update_option returns FALSE, AND the hook is missing, then it means that something truly went wrong
+		// if not saved... check if the hook we just added still exists;
+		// if it does, it means one of two things:
+		// 		that update_option bailed at the ( $value === $old_value ) conditional,
+		//		 or...
+		// 		the db update query returned 0 rows affected
+		// 		(probably because the data  value was the same from it's perspective)
+		// so the existence of the hook means that a negative result from update_option is NOT an error,
+		// but just means no update occurred, so don't display an error to the user.
+		// BUT... if update_option returns FALSE, AND the hook is missing,
+		// then it means that something truly went wrong
 		$saved = ! $saved ? has_action( 'update_option', array( $this, 'double_check_config_comparison' )) : $saved;
 		// remove our action since we don't want it in the system anymore
 		remove_action( 'update_option', array( $this, 'double_check_config_comparison' ), 1 );
@@ -403,12 +417,18 @@ final class EE_Config {
 		// if config remains the same or was updated successfully
 		if ( $saved ) {
 			if ( $add_success ) {
-				EE_Error::add_success( __( 'The Event Espresso Configuration Settings have been successfully updated.', 'event_espresso' ), __FILE__, __FUNCTION__, __LINE__ );
+				EE_Error::add_success(
+					__( 'The Event Espresso Configuration Settings have been successfully updated.', 'event_espresso' ),
+					__FILE__, __FUNCTION__, __LINE__
+				);
 			}
 			return TRUE;
 		} else {
 			if ( $add_error ) {
-				EE_Error::add_error( __( 'The Event Espresso Configuration Settings were not updated.', 'event_espresso' ), __FILE__, __FUNCTION__, __LINE__ );
+				EE_Error::add_error(
+					__( 'The Event Espresso Configuration Settings were not updated.', 'event_espresso' ),
+					__FILE__, __FUNCTION__, __LINE__
+				);
 			}
 			return FALSE;
 		}
@@ -427,76 +447,156 @@ final class EE_Config {
 	 * @param    bool                  $display_errors
 	 * @return    bool    TRUE on success, FALSE on fail
 	 */
-	private function _verify_config_params( $section = '', $name = '', $config_class = '', $config_obj = NULL, $tests_to_run = array( 1, 2, 3, 4, 5, 6, 7, 8 ), $display_errors = TRUE ) {
+	private function _verify_config_params(
+		$section = '',
+		$name = '',
+		$config_class = '',
+		$config_obj = NULL,
+		$tests_to_run = array( 1, 2, 3, 4, 5, 6, 7, 8 ),
+		$display_errors = TRUE
+	) {
 		try {
-			// TEST #1 : check that section was set
-			if ( in_array( 1, $tests_to_run ) && empty( $section )) {
-				if ( $display_errors ) {
-					throw new EE_Error( sprintf( __( 'No configuration section has been provided while attempting to save "%s".', 'event_espresso' ), $config_class ));
+			foreach ( $tests_to_run as $test ) {
+				switch ( $test ) {
+
+					// TEST #1 : check that section was set
+					case 1 :
+						if ( empty( $section ) ) {
+							if ( $display_errors ) {
+								throw new EE_Error(
+									sprintf(
+										__( 'No configuration section has been provided while attempting to save "%s".', 'event_espresso' ),
+										$config_class
+									)
+								);
+							}
+							return false;
+						}
+						break;
+
+					// TEST #2 : check that settings section exists
+					case 2 :
+						if ( ! isset( $this->{$section} ) ) {
+							if ( $display_errors ) {
+								throw new EE_Error(
+									sprintf( __( 'The "%s" configuration section does not exist.', 'event_espresso' ),
+											 $section )
+								);
+							}
+							return false;
+						}
+						break;
+
+					// TEST #3 : check that section is the proper format
+					case 3 :
+						if (
+							! ( $this->{$section} instanceof EE_Config_Base || $this->{$section} instanceof stdClass )
+						) {
+							if ( $display_errors ) {
+								throw new EE_Error(
+									sprintf(
+										__( 'The "%s" configuration settings have not been formatted correctly.', 'event_espresso' ),
+										$section
+									)
+								);
+							}
+							return false;
+						}
+						break;
+
+					// TEST #4 : check that config section name has been set
+					case 4 :
+						if ( empty( $name ) ) {
+							if ( $display_errors ) {
+								throw new EE_Error(
+									__( 'No name has been provided for the specific configuration section.', 'event_espresso' )
+								);
+							}
+							return false;
+						}
+						break;
+
+					// TEST #5 : check that a config class name has been set
+					case 5 :
+						if ( empty( $config_class ) ) {
+							if ( $display_errors ) {
+								throw new EE_Error(
+									__( 'No class name has been provided for the specific configuration section.', 'event_espresso' )
+								);
+							}
+							return false;
+						}
+						break;
+
+					// TEST #6 : verify config class is accessible
+					case 6 :
+						if ( ! class_exists( $config_class ) ) {
+							if ( $display_errors ) {
+								throw new EE_Error(
+									sprintf(
+										__( 'The "%s" class does not exist. Please ensure that an autoloader has been set for it.', 'event_espresso' ),
+										$config_class
+									)
+								);
+							}
+							return false;
+						}
+						break;
+
+					// TEST #7 : check that config has even been set
+					case 7 :
+						if ( ! isset( $this->{$section}->{$name} ) ) {
+							if ( $display_errors ) {
+								throw new EE_Error(
+									sprintf(
+										__( 'No configuration has been set for "%1$s->%2$s".', 'event_espresso' ),
+										$section,
+										$name
+									)
+								);
+							}
+							return false;
+						} else {
+							// and make sure it's not serialized
+							$this->{$section}->{$name} = maybe_unserialize( $this->{$section}->{$name} );
+						}
+						break;
+
+					// TEST #8 : check that config is the requested type
+					case 8 :
+						if ( ! $this->{$section}->{$name} instanceof $config_class ) {
+							if ( $display_errors ) {
+								throw new EE_Error(
+									sprintf(
+										__( 'The configuration for "%1$s->%2$s" is not of the "%3$s" class.', 'event_espresso' ),
+										$section,
+										$name,
+										$config_class
+									)
+								);
+							}
+							return false;
+						}
+						break;
+
+					// TEST #9 : verify config object
+					case 9 :
+						if ( ! $config_obj instanceof EE_Config_Base ) {
+							if ( $display_errors ) {
+								throw new EE_Error(
+									sprintf(
+										__( 'The "%s" class is not an instance of EE_Config_Base.', 'event_espresso' ),
+										print_r( $config_obj, true )
+									)
+								);
+							}
+							return false;
+						}
+						break;
+
 				}
-				return FALSE;
 			}
-			// TEST #2 : check that settings section exists
-			if ( in_array( 2, $tests_to_run ) && ! isset( $this->{$section} )) {
-				if ( $display_errors ) {
-					throw new EE_Error( sprintf( __( 'The "%s" configuration section does not exist.', 'event_espresso' ), $section ));
-				}
-				return FALSE;
-			}
-			// TEST #3 : check that section is the proper format
-			if ( in_array( 3, $tests_to_run ) && ! ( $this->{$section} instanceof EE_Config_Base || $this->{$section} instanceof stdClass )) {
-				if ( $display_errors ) {
-					throw new EE_Error( sprintf( __( 'The "%s" configuration settings have not been formatted correctly.', 'event_espresso' ), $section ));
-				}
-				return FALSE;
-			}
-			// TEST #4 : check that config section name has been set
-			if ( in_array( 4, $tests_to_run ) && empty( $name )) {
-				if ( $display_errors ) {
-					throw new EE_Error( __( 'No name has been provided for the specific configuration section.', 'event_espresso' ));
-				}
-				return FALSE;
-			}
-			// TEST #5 : check that a config class name has been set
-			if ( in_array( 5, $tests_to_run ) && empty( $config_class )) {
-				if ( $display_errors ) {
-					throw new EE_Error( __( 'No class name has been provided for the specific configuration section.', 'event_espresso' ));
-				}
-				return FALSE;
-			}
-			// TEST #6 : verify config class is accessible
-			if ( in_array( 6, $tests_to_run ) && ! class_exists( $config_class )) {
-				if ( $display_errors ) {
-					throw new EE_Error( sprintf( __( 'The "%s" class does not exist. Please ensure that an autoloader has been set for it.', 'event_espresso' ), $config_class ));
-				}
-				return FALSE;
-			}
-			// TEST #7 : check that config has even been set
-			if ( in_array( 7, $tests_to_run )) {
-				if ( ! isset( $this->{$section}->{$name} )) {
-					if ( $display_errors ) {
-						throw new EE_Error( sprintf( __( 'No configuration has been set for "%s->%s".', 'event_espresso' ), $section, $name ));
-					}
-					return FALSE;
-				} else {
-					// and make sure it's not serialized
-					$this->{$section}->{$name} = maybe_unserialize( $this->{$section}->{$name} );
-				}
-			}
-			// TEST #8 : check that config is the requested type
-			if ( in_array( 8, $tests_to_run ) && ! $this->{$section}->{$name} instanceof $config_class ) {
-				if ( $display_errors ) {
-					throw new EE_Error( sprintf( __( 'The configuration for "%s->%s" is not of the "%s" class.', 'event_espresso' ), $section, $name, $config_class ));
-				}
-				return FALSE;
-			}
-			// TEST #9 : verify config object
-			if ( in_array( 9, $tests_to_run ) && ! $config_obj instanceof EE_Config_Base ) {
-				if ( $display_errors ) {
-					throw new EE_Error( sprintf( __( 'The "%s" class is not an instance of EE_Config_Base.', 'event_espresso' ), print_r( $config_obj, TRUE )));
-				}
-				return FALSE;
-			}
+
 		} catch( EE_Error $e ) {
 			$e->get_error();
 		}
@@ -515,7 +615,7 @@ final class EE_Config {
 	 * @return        string
 	 */
 	private function _generate_config_option_name( $section = '', $name = '' ) {
-		return 'ee_config-' . $section . '-' . $name;
+		return 'ee_config-' . strtolower( $section . '-' . str_replace( array( 'EE_', 'EED_' ), '', $name ) );
 	}
 
 
@@ -530,26 +630,28 @@ final class EE_Config {
 	 * @return 	string
 	 */
 	private function _set_config_class( $config_class = '', $name = '' ) {
-		return ! empty( $config_class ) ? $config_class : str_replace( ' ', '_', ucwords( str_replace( '_', ' ', $name ))) . '_Config';
+		return ! empty( $config_class )
+			? $config_class
+			: str_replace( ' ', '_', ucwords( str_replace( '_', ' ', $name ) ) ) . '_Config';
 	}
 
 
 	/**
 	 *    set_config
 	 *
-	 * @access        protected
-	 * @param        string  $section
-	 * @param        string  $name
-	 * @param        string  $config_class
-	 * @param        \EE_Config_Base $config_obj
-	 * @return        \EE_Config_Base|bool
+	 * @access 	protected
+	 * @param 	string  $section
+	 * @param 	string  $name
+	 * @param 	string  $config_class
+	 * @param 	EE_Config_Base $config_obj
+	 * @return 	EE_Config_Base
 	 */
-	public function set_config( $section = '', $name = '', $config_class = '', EE_Config_Base $config_obj = NULL ) {
+	public function set_config( $section = '', $name = '', $config_class = '', EE_Config_Base $config_obj = null ) {
 		// ensure config class is set to something
 		$config_class = $this->_set_config_class( $config_class, $name );
 		// run tests 1-4, 6, and 7 to verify all config params are set and valid
-		if ( ! $this->_verify_config_params( $section, $name, $config_class, NULL, array( 1, 2, 3, 4, 5, 6 ))) {
-			return FALSE;
+		if ( ! $this->_verify_config_params( $section, $name, $config_class, null, array( 1, 2, 3, 4, 5, 6 ))) {
+			return null;
 		}
 		$config_option_name = $this->_generate_config_option_name( $section, $name );
 		// if the config option name hasn't been added yet to the list of option names we're tracking, then do so now
@@ -557,12 +659,10 @@ final class EE_Config {
 			$this->_config_option_names[ $config_option_name ] = $config_class;
 		}
 		// verify the incoming config object but suppress errors
-		if ( ! $this->_verify_config_params( $section, $name, $config_class, $config_obj, array( 9 ), FALSE )) {
+		if ( ! $this->_verify_config_params( $section, $name, $config_class, $config_obj, array( 9 ), false )) {
 			$config_obj = new $config_class();
 		}
-		$config_set = get_option( $config_option_name );
-
-		if ( $config_set ) {
+		if ( get_option( $config_option_name ) ) {
 			update_option( $config_option_name, $config_obj );
 			$this->{$section}->{$name} = $config_obj;
 			return $this->{$section}->{$name};
@@ -572,8 +672,11 @@ final class EE_Config {
 				$this->{$section}->{$name} = maybe_unserialize( $config_obj );
 				return $this->{$section}->{$name};
 			} else {
-				EE_Error::add_error( sprintf( __( 'The "%s" could not be saved to the database.', 'event_espresso' ), $config_class ), __FILE__, __FUNCTION__, __LINE__ );
-				return FALSE;
+				EE_Error::add_error(
+					sprintf( __( 'The "%s" could not be saved to the database.', 'event_espresso' ), $config_class ),
+					__FILE__, __FUNCTION__, __LINE__
+				);
+				return null;
 			}
 		}
 	}
@@ -584,20 +687,20 @@ final class EE_Config {
 	 *    update_config
          * Important: the config object must ALREADY be set, otherwise this will produce an error.
 	 *
-	 * @access    public
-	 * @param    string                 $section
-	 * @param    string                 $name
-	 * @param    \EE_Config_Base|string $config_obj
-	 * @param bool                      $throw_errors
-	 * @return  bool
+	 * @access 	public
+	 * @param 	string 					$section
+	 * @param 	string 					$name
+	 * @param 	EE_Config_Base|string 	$config_obj
+	 * @param 	bool 					$throw_errors
+	 * @return 	bool
 	 */
-	public function update_config( $section = '', $name = '', $config_obj = '', $throw_errors = TRUE ) {
+	public function update_config( $section = '', $name = '', $config_obj = '', $throw_errors = true ) {
 		$config_obj = maybe_unserialize( $config_obj );
 		// get class name of the incoming object
 		$config_class = get_class( $config_obj );
 		// run tests 1-5 and 9 to verify config
 		if ( ! $this->_verify_config_params( $section, $name, $config_class, $config_obj, array( 1, 2, 3, 4, 7, 9 ))) {
-			return FALSE;
+			return false;
 		}
 		$config_option_name = $this->_generate_config_option_name( $section, $name );
 		// check if config object has been added to db by seeing if config option name is in $this->_config_option_names array
@@ -611,15 +714,15 @@ final class EE_Config {
 			// just return if db record is already up to date
 			if ( $existing_config == $config_obj ) {
 				$this->{$section}->{$name} = $config_obj;
-				return TRUE;
+				return true;
 			} else if ( update_option( $config_option_name, $config_obj )) {
 				// update wp-option for this config class
 				$this->{$section}->{$name} = $config_obj;
-				return $this->update_espresso_config();
+				return true;
 			} elseif ( $throw_errors ) {
 				EE_Error::add_error(
 					sprintf(
-						__( 'The "%s" object stored at"%s" was not successfully updated in the database.', 'event_espresso' ),
+						__( 'The "%1$s" object stored at"%2$s" was not successfully updated in the database.', 'event_espresso' ),
 						$config_class,
 						'EE_Config->' . $section . '->' . $name
 					),
@@ -627,7 +730,7 @@ final class EE_Config {
 				);
 			}
 		}
-		return FALSE;
+		return false;
 	}
 
 
@@ -667,7 +770,10 @@ final class EE_Config {
 		if ( $this->_verify_config_params( $section, $name, $config_class, $config_obj, array( 9 ))) {
 			return $this->{$section}->{$name};
 		} else {
-			EE_Error::add_error( sprintf( __( 'The "%s" could not be retrieved from the database.', 'event_espresso' ), $config_class ), __FILE__, __FUNCTION__, __LINE__ );
+			EE_Error::add_error(
+				sprintf( __( 'The "%s" could not be retrieved from the database.', 'event_espresso' ), $config_class ),
+				__FILE__, __FUNCTION__, __LINE__
+			);
 		}
 		return NULL;
 	}
@@ -683,61 +789,6 @@ final class EE_Config {
 	public function get_config_option( $config_option_name = '' ) {
 		// retrieve the wp-option for this config class.
 		return maybe_unserialize( get_option( $config_option_name ));
-	}
-
-
-
-
-	/**
-	 *    update_post_shortcodes
-	 *
-	 * @access    public
-	 * @param $page_for_posts
-	 * @return    void
-	 */
-	public function update_post_shortcodes( $page_for_posts = '' ) {
-		// make sure page_for_posts is set
-		$page_for_posts = ! empty( $page_for_posts ) ? $page_for_posts : EE_Config::get_page_for_posts();
-		// critical page shortcodes that we do NOT want added to the Posts page (blog)
-		$critical_shortcodes = $this->core->get_critical_pages_shortcodes_array();
-		// allow others to mess stuff up :D
-		do_action( 'AHEE__EE_Config__update_post_shortcodes', $this->core->post_shortcodes, $page_for_posts );
-		// verify that post_shortcodes is set
-		$this->core->post_shortcodes = isset( $this->core->post_shortcodes ) && is_array( $this->core->post_shortcodes ) ? $this->core->post_shortcodes : array();
-		// cycle thru post_shortcodes
-		foreach( $this->core->post_shortcodes as $post_name => $shortcodes ){
-			// are there any shortcodes to track ?
-			if ( ! empty( $shortcodes )) {
-				// loop thru list of tracked shortcodes
-				foreach( $shortcodes as $shortcode => $post_id ) {
-					// if shortcode is for a critical page, BUT this is NOT the corresponding critical page for that shortcode
-					if ( isset( $critical_shortcodes[ $post_id ] ) && $post_name == $page_for_posts ) {
-						// then remove this shortcode, because we don't want critical page shortcodes like ESPRESSO_TXN_PAGE running on the "Posts Page" (blog)
-						unset( $this->core->post_shortcodes[ $post_name ][ $shortcode ] );
-					}
-					// skip the posts page, because we want all shortcodes registered for it
-					if ( $post_name == $page_for_posts ) {
-						continue;
-					}
-					// make sure post still exists
-					$post = get_post( $post_id );
-					if ( $post ) {
-						// check that the post name matches what we have saved
-						if ( $post->post_name == $post_name ) {
-							// if so, then break before hitting the unset below
-							continue;
-						}
-					}
-					// we don't like missing posts around here >:(
-					unset( $this->core->post_shortcodes[ $post_name ] );
-				}
-			} else {
-				// you got no shortcodes to keep track of !
-				unset( $this->core->post_shortcodes[ $post_name ] );
-			}
-		}
-		//only show errors
-		$this->update_espresso_config();
 	}
 
 
@@ -775,9 +826,6 @@ final class EE_Config {
 	 *  @return 	void
 	 */
 	public function register_shortcodes_and_modules() {
-		if ( EE_Maintenance_Mode::disable_frontend_for_maintenance() ) {
-			return;
-		}
 		// allow shortcodes to register with WP and to set hooks for the rest of the system
 		EE_Registry::instance()->shortcodes =$this->_register_shortcodes();
 		// allow modules to set hooks for the rest of the system
@@ -793,9 +841,6 @@ final class EE_Config {
 	 *  @return 	void
 	 */
 	public function initialize_shortcodes_and_modules() {
-		if ( EE_Maintenance_Mode::disable_frontend_for_maintenance() ) {
-			return;
-		}
 		// allow shortcodes to set hooks for the rest of the system
 		$this->_initialize_shortcodes();
 		// allow modules to set hooks for the rest of the system
@@ -812,9 +857,6 @@ final class EE_Config {
 	 * 	@return void
 	 */
 	public function widgets_init() {
-		if ( EE_Maintenance_Mode::disable_frontend_for_maintenance() ) {
-			return;
-		}
 		//only init widgets on admin pages when not in complete maintenance, and
 		//on frontend when not in any maintenance mode
 		if (( is_admin() && EE_Maintenance_Mode::instance()->level() != EE_Maintenance_Mode::level_2_complete_maintenance)  || ! EE_Maintenance_Mode::instance()->level() ) {
@@ -891,7 +933,7 @@ final class EE_Config {
 		}
 		register_widget( $widget_class );
 		// add to array of registered widgets
-		EE_Registry::instance()->widgets->$widget_class = $widget_path . DS . $widget_class . $widget_ext;
+		EE_Registry::instance()->widgets->{$widget_class} = $widget_path . DS . $widget_class . $widget_ext;
 	}
 
 
@@ -976,7 +1018,7 @@ final class EE_Config {
 		}
 		$shortcode = strtoupper( $shortcode );
 		// add to array of registered shortcodes
-		EE_Registry::instance()->shortcodes->$shortcode = $shortcode_path . $shortcode_class . $shortcode_ext;
+		EE_Registry::instance()->shortcodes->{$shortcode} = $shortcode_path . $shortcode_class . $shortcode_ext;
 		return TRUE;
 	}
 
@@ -1066,8 +1108,8 @@ final class EE_Config {
 			return FALSE;
 		}
 		// add to array of registered modules
-		EE_Registry::instance()->modules->$module_class = $module_path . $module_class . $module_ext;
-		do_action( 'AHEE__EE_Config__register_module__complete', $module_class, EE_Registry::instance()->modules->$module_class );
+		EE_Registry::instance()->modules->{$module_class} = $module_path . $module_class . $module_ext;
+		do_action( 'AHEE__EE_Config__register_module__complete', $module_class, EE_Registry::instance()->modules->{$module_class} );
 		return TRUE;
 	}
 
@@ -1144,7 +1186,7 @@ final class EE_Config {
 		do_action( 'AHEE__EE_Config__register_route__begin', $route, $module, $method_name );
 		$module = str_replace( 'EED_', '', $module );
 		$module_class = 'EED_' . $module;
-		if ( ! isset( EE_Registry::instance()->modules->$module_class )) {
+		if ( ! isset( EE_Registry::instance()->modules->{$module_class} )) {
 			$msg = sprintf( __( 'The module %s has not been registered.', 'event_espresso' ), $module );
 			EE_Error::add_error( $msg . '||' . $msg, __FILE__, __FUNCTION__, __LINE__ );
 			return FALSE;
@@ -1339,10 +1381,10 @@ class EE_Config_Base{
 			throw new EE_Error( sprintf( __('%1$s::get_pretty() has been called with the property %2$s which does not exist on the %1$s config class.', 'event_espresso' ), get_class( $this ), $property ) );
 		}
 		//just handling escaping of strings for now.
-		if ( is_string( $this->$property ) ) {
-			return stripslashes( $this->$property );
+		if ( is_string( $this->{$property} ) ) {
+			return stripslashes( $this->{$property} );
 		}
-		return $this->$property;
+		return $this->{$property};
 	}
 
 
@@ -1355,8 +1397,8 @@ class EE_Config_Base{
 		//loop through the properties for this class and see if they are set.  If they are NOT, then grab the
 		//default from our $defaults object.
 		foreach ( get_object_vars( $defaults ) as $property => $value ) {
-			if ( is_null( $this->$property ) ) {
-				$this->$property = $value;
+			if ( is_null( $this->{$property} ) ) {
+				$this->{$property} = $value;
 			}
 		}
 
@@ -1369,8 +1411,8 @@ class EE_Config_Base{
 	 *		@ override magic methods
 	 *		@ return void
 	 */
-//	public function __get($a) { return apply_filters('FHEE__'.get_class($this).'__get__'.$a,$this->$a); }
-//	public function __set($a,$b) { return apply_filters('FHEE__'.get_class($this).'__set__'.$a, $this->$a = $b ); }
+//	public function __get($a) { return apply_filters('FHEE__'.get_class($this).'__get__'.$a,$this->{$a}); }
+//	public function __set($a,$b) { return apply_filters('FHEE__'.get_class($this).'__set__'.$a, $this->{$a} = $b ); }
 	/**
 	 *        __isset
 	 *
@@ -1831,7 +1873,6 @@ class EE_Currency_Config extends EE_Config_Base {
 		$ORG_CNT = isset( EE_Registry::instance()->CFG->organization ) && EE_Registry::instance()->CFG->organization instanceof EE_Organization_Config ? EE_Registry::instance()->CFG->organization->CNT_ISO : NULL;
 		// but override if requested
 		$CNT_ISO = ! empty( $CNT_ISO ) ? $CNT_ISO : $ORG_CNT;
-		EE_Registry::instance()->load_helper( 'Activation' );
 		// so if that all went well, and we are not in M-Mode (cuz you can't query the db in M-Mode) and double-check the countries table exists
 		if ( ! empty( $CNT_ISO ) && EE_Maintenance_Mode::instance()->models_can_query() && EEH_Activation::table_exists( EE_Registry::instance()->load_model( 'Country' )->table() ) ) {
 			// retrieve the country settings from the db, just in case they have been customized
@@ -1876,6 +1917,14 @@ class EE_Registration_Config extends EE_Config_Base {
 	 * eg 'RPP'
 	 */
 	public $default_STS_ID;
+
+	/**
+	 * level of validation to apply to email addresses
+	 *
+	 * @var string $email_validation_level
+	 * options: 'basic', 'wp_default', 'i18n', 'i18n_dns'
+	 */
+	public $email_validation_level;
 
 	/**
 	 * 	whether or not to show alternate payment options during the reg process if payment status is pending
@@ -1976,6 +2025,7 @@ class EE_Registration_Config extends EE_Config_Base {
 	public function __construct() {
 		// set default registration settings
 		$this->default_STS_ID = EEM_Registration::status_id_pending_payment;
+		$this->email_validation_level = 'wp_default';
 		$this->show_pending_payment_options = TRUE;
 		$this->skip_reg_confirmation = FALSE;
 		$this->reg_steps = array();
@@ -2468,8 +2518,8 @@ class EE_Environment_Config extends EE_Config_Base {
 	 * }
 	 */
 	public function max_input_vars_limit_check( $input_count = 0 ) {
-		if ( ( $input_count >= $this->php->max_input_vars ) && ( PHP_MAJOR_VERSION >= 5 && PHP_MINOR_VERSION >= 3 && PHP_RELEASE_VERSION >=9 ) ) {
-			return  __('The number of inputs on this page has been exceeded.  You cannot add anymore items (i.e. tickets, datetimes, custom fields) on this page because of your servers PHP "max_input_vars" setting.', 'event_espresso');
+		if ( ! empty( $this->php->max_input_vars ) && ( $input_count >= $this->php->max_input_vars ) && ( PHP_MAJOR_VERSION >= 5 && PHP_MINOR_VERSION >= 3 && PHP_RELEASE_VERSION >=9 ) ) {
+			return  sprintf( __('The maximum number of inputs on this page has been exceeded.  You cannot add anymore items (i.e. tickets, datetimes, custom fields) on this page because of your servers PHP "max_input_vars" setting.%1$sThere are %2$d inputs and the maximum amount currently allowed by your server is %3$d.', 'event_espresso'), '<br>', $input_count, $this->php->max_input_vars);
 		} else {
 			return '';
 		}
