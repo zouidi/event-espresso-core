@@ -29,7 +29,7 @@ abstract class EE_Table_Base{
 			$prefix = $wpdb->prefix;
 		}
 		//if they didn't add the prefix, let's add it
-		if( strpos( $table_name, $prefix ) !== 0 ) {
+		if( ! empty( $prefix ) && strpos( $table_name, $prefix ) !== 0 ) {
 			$table_name = $prefix . $table_name;
 		}
 		$this->_table_name = $table_name;
