@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: JSON Basic Authentication
- * Description: Basic Authentication handler for the JSON API, used for development and debugging purposes
+ * Description: Basic Authentication handler for the JSON API, used for development and debugging purposes. If you use CGI or FCGI you may need to edit your .htaccess file, see https://github.com/WP-API/Basic-Auth/issues/1
  * Author: WordPress API Team
  * Author URI: https://github.com/WP-API
- * Version: 0.1
+ * Version: 0.2
  * Plugin URI: https://github.com/WP-API/Basic-Auth
  */
 
@@ -19,16 +19,20 @@ function json_basic_auth_handler( $user ) {
 	//account for issue where some servers remove the PHP auth headers
 	//so instead look for auth info in a custom environment variable set by rewrite rules
 	//probably in .htaccess
-    if( ! isset( $_SERVER['PHP_AUTH_USER'] ) ) {
-        if( isset( $_SERVER['HTTP_AUTHORIZATION'])) {
+    if (
+        !isset($_SERVER['PHP_AUTH_USER']) 
+        && (
+            isset($_SERVER['HTTP_AUTHORIZATION']) 
+            || isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])
+        )
+        ) {
+        if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
             $header = $_SERVER['HTTP_AUTHORIZATION'];
-        } elseif( isset( $_SERVER[ 'REDIRECT_HTTP_AUTHORIZATION' ] ) ) {
-            $header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
         } else {
-			$header = null;
-		}
+            $header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
         if( ! empty( $header ) ) {
-              list($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) = explode( ':', base64_decode( substr( $header, 6 ) ) );
+              list($_SERVER['PHP_AUTH_USER'], $_SERVER['PHP_AUTH_PW']) = explode(':', base64_decode(substr($header, 6)));
         }
     }
 
@@ -81,3 +85,14 @@ function json_basic_auth_error( $error ) {
 }
 add_filter( 'json_authentication_errors', 'json_basic_auth_error' );
 add_filter( 'rest_authentication_errors', 'json_basic_auth_error' );
+
+function json_basic_auth_index( $response_object ) {
+	if ( empty( $response_object->data['authentication'] ) ) {
+		$response_object->data['authentication'] = array();
+	}
+	$response_object->data['authentication']['basic_auth'] = array(
+		'version' => '0.2',
+	);
+	return $response_object;
+}
+add_filter( 'rest_index', 'json_basic_auth_index' );
