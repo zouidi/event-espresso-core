@@ -2181,6 +2181,12 @@ class EE_Admin_Config extends EE_Config_Base {
 	* @var string $affiliate_id
 	*/
 	public $affiliate_id;
+	
+	/**
+	 *
+	 * @var boolean $enable_rest_api_basic_auth
+	 */
+	public $enable_rest_api_basic_auth;
 
 
 	/**
@@ -2209,6 +2215,7 @@ class EE_Admin_Config extends EE_Config_Base {
 		$this->show_reg_footer = TRUE;
 		$this->affiliate_id = 'default';
 		$this->help_tour_activation = TRUE;
+		$this->$enable_rest_api_basic_auth = false;
 	}
 
 
