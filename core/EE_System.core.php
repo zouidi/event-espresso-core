@@ -173,24 +173,6 @@ final class EE_System {
 		//@see https://events.codebasehq.com/projects/event-espresso/tickets/8674
 		$this->registry->CAP->init_caps();
 		do_action( 'AHEE__EE_System__load_espresso_addons' );
-		//if the WP API basic auth plugin isn't already loaded, load it now.
-		//We want it for mobile apps. Just include the entire plugin
-		//also, don't load the basic auth when a plugin is getting activated, because
-		//it could be the basic auth plugin, and it doesn't check if its methods are already defined
-		//and causes a fatal error
-		if( !function_exists( 'json_basic_auth_handler' )
-			&& ! function_exists( 'json_basic_auth_error' )
-			&& ! (
-				isset( $_GET[ 'action'] )
-				&& in_array( $_GET[ 'action' ], array( 'activate', 'activate-selected' ) )
-			)
-			&& ! (
-				isset( $_GET['activate' ] )
-				&& $_GET['activate' ] === 'true'
-			)
-		) {
-			include_once EE_THIRD_PARTY . 'wp-api-basic-auth' . DS . 'basic-auth.php';
-		}
 	}
 
 
@@ -693,6 +675,26 @@ final class EE_System {
 			do_action( 'AHEE__EE_System__brew_espresso__after_pue_init' );
 		}
 		do_action( 'AHEE__EE_System__brew_espresso__complete', $this );
+		
+		//if the WP API basic auth plugin isn't already loaded, load it now.
+		//We want it for mobile apps. Just include the entire plugin
+		//also, don't load the basic auth when a plugin is getting activated, because
+		//it could be the basic auth plugin, and it doesn't check if its methods are already defined
+		//and causes a fatal error
+		if( EE_Registry::instance()->CFG->admin->enable_rest_api_basic_auth 
+			&& !function_exists( 'json_basic_auth_handler' )
+			&& ! function_exists( 'json_basic_auth_error' )
+			&& ! (
+				isset( $_GET[ 'action'] )
+				&& in_array( $_GET[ 'action' ], array( 'activate', 'activate-selected' ) )
+			)
+			&& ! (
+				isset( $_GET['activate' ] )
+				&& $_GET['activate' ] === 'true'
+			)
+		) {
+			include_once EE_THIRD_PARTY . 'wp-api-basic-auth' . DS . 'basic-auth.php';
+		}
 	}
 
 
