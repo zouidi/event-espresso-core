@@ -460,6 +460,7 @@ class General_Settings_Admin_Page extends EE_Admin_Page {
 		$this->_template_args['use_dashboard_widget'] = isset( EE_Registry::instance()->CFG->admin->use_dashboard_widget ) ? absint( EE_Registry::instance()->CFG->admin->use_dashboard_widget ) : TRUE;
 		$this->_template_args['events_in_dashboard'] = isset( EE_Registry::instance()->CFG->admin->events_in_dashboard ) ? absint( EE_Registry::instance()->CFG->admin->events_in_dashboard ) : 30;
 		$this->_template_args['use_event_timezones'] = isset( EE_Registry::instance()->CFG->admin->use_event_timezones ) ? absint( EE_Registry::instance()->CFG->admin->use_event_timezones ) : FALSE;
+		$this->_template_args['enable_rest_api_basic_auth'] = isset( EE_Registry::instance()->CFG->admin->enable_rest_api_basic_auth ) ? filter_var( EE_Registry::instance()->CFG->admin->enable_rest_api_basic_auth, FILTER_VALIDATE_BOOLEAN ) : false ;
 		$this->_template_args['show_reg_footer'] = isset( EE_Registry::instance()->CFG->admin->show_reg_footer ) ? absint( EE_Registry::instance()->CFG->admin->show_reg_footer ) : TRUE;
 		$this->_template_args['affiliate_id'] = isset( EE_Registry::instance()->CFG->admin->affiliate_id ) ? EE_Registry::instance()->CFG->admin->get_pretty('affiliate_id') : '';
 		$this->_template_args['help_tour_activation'] = isset( EE_Registry::instance()->CFG->admin->help_tour_activation ) ? absint( EE_Registry::instance()->CFG->admin->help_tour_activation ): 1;
@@ -476,6 +477,7 @@ class General_Settings_Admin_Page extends EE_Admin_Page {
 		EE_Registry::instance()->CFG->admin->use_dashboard_widget = isset( $this->_req_data['use_dashboard_widget'] ) ? absint( $this->_req_data['use_dashboard_widget'] ) : EE_Registry::instance()->CFG->admin->use_dashboard_widget;
 		EE_Registry::instance()->CFG->admin->events_in_dashboard = isset( $this->_req_data['events_in_dashboard'] ) ? absint( $this->_req_data['events_in_dashboard'] ) : EE_Registry::instance()->CFG->admin->events_in_dashboard;
 		EE_Registry::instance()->CFG->admin->use_event_timezones = isset( $this->_req_data['use_event_timezones'] ) ? absint( $this->_req_data['use_event_timezones'] ) : EE_Registry::instance()->CFG->admin->use_event_timezones;
+		EE_Registry::instance()->CFG->admin->enable_rest_api_basic_auth = isset( $this->_req_data['enable_rest_api_basic_auth'] ) ? filter_var( $this->_req_data['enable_rest_api_basic_auth'], FILTER_VALIDATE_BOOLEAN ) : EE_Registry::instance()->CFG->admin->enable_rest_api_basic_auth;
 		EE_Registry::instance()->CFG->admin->show_reg_footer = isset( $this->_req_data['show_reg_footer'] ) ? absint( $this->_req_data['show_reg_footer'] ) : EE_Registry::instance()->CFG->admin->show_reg_footer;
 		EE_Registry::instance()->CFG->admin->affiliate_id = isset( $this->_req_data['affiliate_id'] ) ? sanitize_text_field( $this->_req_data['affiliate_id'] ) : EE_Registry::instance()->CFG->admin->affiliate_id;
 		EE_Registry::instance()->CFG->admin->help_tour_activation = isset( $this->_req_data['help_tour_activation'] ) ? absint( $this->_req_data['help_tour_activation'] ) : EE_Registry::instance()->CFG->admin->help_tour_activation;

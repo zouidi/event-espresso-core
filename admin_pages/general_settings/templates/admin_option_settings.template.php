@@ -1,5 +1,22 @@
 <div class="padding">
+	<h3 class="ee-admin-settings-hdr">
+		<?php _e('REST API Settings', 'event_espresso'); ?>
+	</h3>
 
+	<table class="form-table">
+		<tbody>
+			<tr>
+				<th>
+					<label>
+						<?php _e('Enable WP REST API Basic Auth', 'event_espresso'); ?> <span id="rest_api_info"><?php echo EEH_Template::get_help_tab_link('enable_rest_api_basic_aut'); ?></span>
+					</label>
+				</th>
+				<td>
+					<?php echo EEH_Form_Fields::select_input('enable_rest_api_basic_auth', $values, $enable_rest_api_basic_auth ); ?>
+				</td>
+			</tr>
+		</tbody>
+	</table>
 	<?php do_action( 'AHEE__admin_option_settings__template__before', $template_args ); ?>
 
 	<?php /* @todo put back once we have a dashboard widget to use
