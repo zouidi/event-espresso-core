@@ -8,6 +8,11 @@
  * Plugin URI: https://github.com/WP-API/Basic-Auth
  */
 
+
+/**
+ * @param $user
+ * @return int|null
+ */
 function json_basic_auth_handler( $user ) {
     global $wp_json_basic_auth_error;
     $wp_json_basic_auth_error = null;
@@ -20,9 +25,9 @@ function json_basic_auth_handler( $user ) {
 	//so instead look for auth info in a custom environment variable set by rewrite rules
 	//probably in .htaccess
     if (
-        !isset($_SERVER['PHP_AUTH_USER']) 
+        !isset($_SERVER['PHP_AUTH_USER'])
         && (
-            isset($_SERVER['HTTP_AUTHORIZATION']) 
+            isset($_SERVER['HTTP_AUTHORIZATION'])
             || isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])
         )
         ) {
@@ -73,6 +78,12 @@ function json_basic_auth_handler( $user ) {
 }
 add_filter( 'determine_current_user', 'json_basic_auth_handler', 5 );
 
+
+
+/**
+ * @param $error
+ * @return mixed
+ */
 function json_basic_auth_error( $error ) {
 	// Passthrough other errors
 	if ( ! empty( $error ) ) {
@@ -86,6 +97,12 @@ function json_basic_auth_error( $error ) {
 add_filter( 'json_authentication_errors', 'json_basic_auth_error' );
 add_filter( 'rest_authentication_errors', 'json_basic_auth_error' );
 
+
+
+/**
+ * @param $response_object
+ * @return mixed
+ */
 function json_basic_auth_index( $response_object ) {
 	if ( empty( $response_object->data['authentication'] ) ) {
 		$response_object->data['authentication'] = array();
