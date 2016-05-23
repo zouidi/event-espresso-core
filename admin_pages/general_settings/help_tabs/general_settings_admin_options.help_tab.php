@@ -10,7 +10,7 @@
 <li>
 <strong><?php _e('Enable WP REST API Basic Auth?', 'event_espresso'); ?></strong><br />
 <?php printf(
-	__('WP API Basic Auth allows authorized 3rd party applications to access sensitive Event Espresso data on your behalf. Currently, it is required for the Event Espresso mobile apps (Android and iOS) to function. Is it easy for developers to use, however it is not very secure, especially on non-SSL protected sites or when accessing your site over public WiFi. It is better for 3rd party applications to use one of the %1$sauthentication methods recommended by the WP REST API team%2$s', 'event_espresso'),
+	__('WP API Basic Auth allows authorized 3rd party applications to access sensitive Event Espresso data on your behalf. Currently, it is required for the Event Espresso mobile apps (Android and iOS) to function. It is easy for developers to use, however it is not very secure, especially on non-SSL protected sites or when accessing your site over public WiFi. It is better for 3rd party applications to use one of the %1$sauthentication methods recommended by the WP REST API team%2$s', 'event_espresso'),
 	'<a target="_blank" href="http://v2.wp-api.org/guide/authentication/">',
 	'</a>'
 ); ?>
@@ -19,7 +19,7 @@
 <strong><?php _e('Enable Full Logging', 'event_espresso'); ?></strong><br />
 <?php _e('This option will save all Event Espresso registration form data, and debugging information to a file in the /wp-content/uploads/espresso/logs directory on your server. This will occur each time a page is accessed on your site until this option is turned off.', 'event_espresso'); ?>
 <br/>
-<?php printf( 
+<?php printf(
 		__('Note that if you are accessing your filesystem over FTP or SSH, and logging writes to the filesystem on every request, you should put your credentials in your wp-config.php file, as described %1$shere.%2$s', 'event_espresso'),
 		'<a href="https://codex.wordpress.org/Editing_wp-config.php#WordPress_Upgrade_Constants" target="_blank">',
 		'</a>' ); ?>
