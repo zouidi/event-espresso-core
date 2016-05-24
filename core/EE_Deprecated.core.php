@@ -24,6 +24,116 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @subpackage  helpers
  * @since       4.5.0
  */
+
+
+
+/**
+ * Generic function that can be used for deprecating actions and filters
+ * generates doing_it_wrong() notices if a deprecated hook is in use,
+ * and attempts to route old hook to replacement, if replacement is specified
+ * The $deprecated_hooks parameter should be an array in the following format:
+ *      array(
+ *          'deprecated_hook_name' => array(
+ *              'replacement' => 'replacement_hook_name',
+ *              'priority'    => 10,
+ *              'arguments'   => 0, // the number of arguments the callback expects
+ *              'version'     => '4.9.0', // version the hook was deprecated
+ *              'message'     => 'Please use "replacement_hook_name" instead'
+ *          ),
+ *      )
+ *
+ * @param array $deprecated_hooks
+ */
+function ee_deprecated_hooks( array $deprecated_hooks = array() ) {
+	foreach ( $deprecated_hooks as $deprecated_hook => $new_hook ) {
+		if (
+			! is_string( $deprecated_hook )
+			|| ! isset( $new_hook['replacement'] )
+			|| ! is_string( $new_hook['replacement'] )
+		) {
+			continue;
+		}
+		$action = strpos( $new_hook['replacement'], 'AHEE' ) === 0 ? true : false;
+		$add_or_apply = $action ? 'add_action' : 'add_filter';
+		$do_or_applies = $action ? 'do_action' : 'apply_filters';
+		if ( $new_hook['replacement'] ) {
+			$add_or_apply(
+				$new_hook['replacement'],
+			// let's use a closure for the callback since that's the only option
+				function () use ( $deprecated_hook, $new_hook, $do_or_applies ) {
+					if (
+						ee_deprecated_hook(
+							array(
+								$deprecated_hook => array(
+									'version'     => $new_hook['version'],
+									'alternative' => ! empty( $new_hook['message'] )
+										? $new_hook['message']
+										: sprintf(
+											__( 'Please use "%1$s" instead', 'event_espresso' ),
+											$new_hook['replacement']
+										),
+									'still_works' => $new_hook['replacement'] ? true : false
+								)
+							)
+						)
+					) {
+						// grab incoming arguments sent to action/filter callback
+						$args = func_get_args();
+						// since the first argument for do_action and apply_filters is the hook name,
+						// we'll add that onto the start of the array
+						array_unshift( $args, $deprecated_hook );
+						// then call do_action() or apply_filters() with our array of arguments
+						call_user_func_array( $do_or_applies, $args );
+					}
+				},
+				isset( $new_hook['priority'] ) ? $new_hook['priority'] : 10,
+				isset( $new_hook['arguments'] ) ? $new_hook['arguments'] : null
+			);
+		}
+	}
+}
+
+/**
+ * generates doing_it_wrong() notice if deprecated hook is currently being used
+ *
+ * @param $hook  array where key is the hook name and the values are:
+ *               array{
+ *                  @type string  $version     when deprecated
+ *                  @type string  $alternative saying what to use instead
+ *                  @type boolean $still_works whether or not the hook still works
+ *               }
+ * @return boolean
+ */
+function ee_deprecated_hook( $hook = array() ) {
+	if ( empty( $hook ) ) {
+		return false;
+	}
+	foreach ( $hook as $name => $deprecation_info ) {
+		if ( has_action( $name ) || has_filter( $name ) ) {
+			EE_Error::doing_it_wrong(
+				$name,
+				sprintf(
+					__( 'This action or filter is deprecated. %1$s%2$s', 'event_espresso' ),
+					$deprecation_info['still_works']
+						? __( 'It *may* work as an attempt to build in backwards compatibility.', 'event_espresso' )
+						: __( 'It has been completely removed.', 'event_espresso' ),
+					isset( $deprecation_info['alternative'] )
+						? $deprecation_info['alternative']
+						: __( 'Please read the current EE4 documentation further or contact Support.', 'event_espresso' )
+				),
+				isset( $deprecation_info['version'] )
+					? $deprecation_info['version']
+					: __( 'recently', 'event_espresso' ),
+				E_USER_DEPRECATED
+			);
+			return true;
+		}
+	}
+	return false;
+}
+
+
+
 /**
  * ee_deprecated__registration_checkout__button_text
  *
@@ -198,41 +308,34 @@ function ee_deprecated_get_templates( $templates, EE_messenger $messenger, EE_me
 }
 add_filter( 'FHEE__EE_Template_Pack___get_templates__templates', 'ee_deprecated_get_templates', 10, 4 );
 
+
 /**
  * Called after EED_Module::set_hooks() and EED_Module::set_admin_hooks() was called.
  * Checks if any deprecated hooks were hooked-into and provide doing_it_wrong messages appropriately.
  */
-function ee_deprecated_hooks(){
+function ee_deprecated_hooks_for_shortcodes_modules_and_addons() {
 	/**
-	 * @var $hooks array where keys are hook names, and their values are array{
-	 *			@type string $version  when deprecated
-	 *			@type string $alternative  saying what to use instead
-	 *			@type boolean $still_works  whether or not the hook still works
-	 *		}
+	 * @var          $hooks       array where keys are hook names, and their values are array{
+	 * @type string  $version     when deprecated
+	 * @type string  $alternative saying what to use instead
+	 * @type boolean $still_works whether or not the hook still works
+	 *        }
 	 */
-	$hooks = array(
-		'AHEE__EE_System___do_setup_validations' => array(
-			'version' => '4.6.0',
-			'alternative' => __( 'Instead use "AHEE__EEH_Activation__validate_messages_system" which is called after validating messages (done on every new install, upgrade, reactivation, and downgrade)', 'event_espresso' ),
-			'still_works' => FALSE
+	ee_deprecated_hook(
+		array(
+			'AHEE__EE_System___do_setup_validations' => array(
+				'version' => '4.6.0',
+				'alternative' => __(
+					'Instead use "AHEE__EEH_Activation__validate_messages_system" which is called after validating messages (done on every new install, upgrade, reactivation, and downgrade)',
+					'event_espresso'
+				),
+				'still_works' => false
+			)
 		)
 	);
-	foreach( $hooks as $name => $deprecation_info ){
-		if( has_action( $name ) ){
-			EE_Error::doing_it_wrong(
-				$name,
-				sprintf(
-					__('This filter is deprecated. %1$s%2$s','event_espresso'),
-					$deprecation_info[ 'still_works' ] ?  __('It *may* work as an attempt to build in backwards compatibility.', 'event_espresso') : __( 'It has been completely removed.', 'event_espresso' ),
-					isset( $deprecation_info[ 'alternative' ] ) ? $deprecation_info[ 'alternative' ] : __( 'Please read the current EE4 documentation further or contact Support.', 'event_espresso' )
-				),
-				isset( $deprecation_info[ 'version' ] ) ? $deprecation_info[ 'version' ] : __( 'recently', 'event_espresso' ),
-				E_USER_DEPRECATED
-			);
-		}
-	}
+
 }
-add_action( 'AHEE__EE_System__set_hooks_for_shortcodes_modules_and_addons', 'ee_deprecated_hooks' );
+add_action( 'AHEE__EE_System__set_hooks_for_shortcodes_modules_and_addons', 'ee_deprecated_hooks_for_shortcodes_modules_and_addons' );
 
 
 
@@ -1222,3 +1325,65 @@ class EE_Null_Address_Formatter extends \EventEspresso\core\services\address\for
 class EE_Generic_Address extends \EventEspresso\core\entities\GenericAddress {}
 
 
+
+add_action(
+	'FHEE__EE_System__manage_fix_espresso_db_upgrade_option__begin',
+	'werwerwerwerwer',
+	10,
+	1
+);
+
+function werwerwerwerwer( $db_version_history ) {
+	\EEH_Debug_Tools::printr( __FUNCTION__, __CLASS__, __FILE__, __LINE__, 2 );
+	\EEH_Debug_Tools::printr( $db_version_history, '$db_version_history', __FILE__, __LINE__ );
+}
+
+
+
+
+ee_deprecated_hooks(
+	array(
+		'EE_System_activations__detect_activations_or_upgrades__begin' => array(
+			'replacement' => 'AHEE__EE_Activation_Manager__detect_activations_or_upgrades__begin',
+			'version'     => '4.9.0'
+		),
+		'EE_System_activations__detect_activations_or_upgrades__end' => array(
+			'replacement' => 'AHEE__EE_Activation_Manager__detect_activations_or_upgrades__end',
+			'version'     => '4.9.0'
+		),
+		'AHEE__EE_System__detect_if_activation_or_upgrade__new_activation' => array(
+			'replacement' => 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations__new_activation',
+			'version'     => '4.9.0'
+		),
+		'AHEE__EE_System__detect_if_activation_or_upgrade__reactivation' => array(
+			'replacement' => 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations__reactivation',
+			'version'     => '4.9.0'
+		),
+		'AHEE__EE_System__detect_if_activation_or_upgrade__upgrade' => array(
+			'replacement' => 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations__upgrade',
+			'version'     => '4.9.0'
+		),
+		'AHEE__EE_System__detect_if_activation_or_upgrade__downgrade' => array(
+			'replacement' => 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations__downgrade',
+			'version'     => '4.9.0'
+		),
+		'AHEE__EE_System__perform_activations_upgrades_and_migrations' => array(
+			'replacement' => 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations',
+			'version'     => '4.9.0'
+		),
+		'FHEE__EE_System__manage_fix_espresso_db_upgrade_option__begin' => array(
+			'replacement' => 'AHEE__EE_Activation_Manager__fix_espresso_db_upgrade_option__begin',
+			'priority'    => 10,
+			'arguments'   => 1,
+			'version'     => '4.9.0',
+			'message' => ''
+		),
+		// 'deprecated_hook' => array(
+		// 	'replacement' => 'replacement_hook',
+		// 	'priority'    => 10,
+		// 	'arguments'   => 0,
+		// 	'version'     => '4.9.0',
+		// 	'message' => ''
+		// ),
+	)
+);
