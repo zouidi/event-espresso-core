@@ -166,7 +166,11 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 		$this->espressoCore->set_request( $request );
 		$this->espressoCore->set_response( $response );
 		// EE_Registry
-		$this->espressoCore->set_registry( EE_Registry::instance() );
+		$this->espressoCore->set_registry(
+			EE_Registry::instance()
+		);
+		$this->espressoCore->registry()->initialize();
+		$this->espressoCore->registry()->set_dependency_map( $this->dependency_map() );
 		$this->espressoCore->registry()->set_request( $this->espressoCore->request() );
 		$this->espressoCore->registry()->set_response( $this->espressoCore->response() );
 		// WP cron jobs
