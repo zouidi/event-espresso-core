@@ -71,6 +71,7 @@ final class EE_System {
 	 * @throws \EE_Error
 	 */
 	public static function reset() {
+		self::$_instance->_req_type = NULL;
 		//we need to reset the migration manager in order for it to detect DMSs properly
 		\EE_Data_Migration_Manager::reset();
 		//make sure none of the old hooks are left hanging around
@@ -302,6 +303,7 @@ final class EE_System {
 			add_action( 'init', array( $this, 'initialize' ), 10 );
 			add_action( 'init', array( $this, 'initialize_last' ), 100 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ), 25 );
+			add_action( 'admin_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ), 25 );
 			if ( is_admin() && apply_filters( 'FHEE__EE_System__brew_espresso__load_pue', true ) ) {
 				// pew pew pew
 				$this->registry->load_core( 'PUE' );
@@ -556,30 +558,43 @@ final class EE_System {
 	 *  	@return 	void
 	 */
 	public function wp_enqueue_scripts() {
-		if (
-			// unlike other systems, EE_System_scripts loading is turned ON by default,
-			// but prior to the init hook, can be turned off via:
-			// add_filter( 'FHEE_load_EE_System_scripts', '__return_false' );
-			apply_filters( 'FHEE_load_EE_System_scripts', TRUE )
+		// unlike other systems, EE_System_scripts loading is turned ON by default,
+		// but prior to the init hook, can be turned off via:
+		// add_filter( 'FHEE_load_EE_System_scripts', '__return_false' );
+		if ( apply_filters( 'FHEE_load_EE_System_scripts', TRUE ) {
 			// similarly, jquery_validate loading is turned OFF by default,
 			// but prior to the wp_enqueue_scripts hook, can be turned back on again via:
 			// add_filter( 'FHEE_load_jquery_validate', '__return_true' );
-			&& apply_filters( 'FHEE_load_jquery_validate', FALSE )
-		) {
 			// register jQuery Validate
+			if ( apply_filters( 'FHEE_load_jquery_validate', FALSE ) {
+				wp_register_script(
+					'jquery-validate',
+					EE_GLOBAL_ASSETS_URL . 'scripts/jquery.validate.min.js',
+					array( 'jquery' ),
+					'1.15.0',
+					true
+				);
+				wp_register_script(
+					'jquery-validate-extra-methods',
+					EE_GLOBAL_ASSETS_URL . 'scripts/jquery.validate.additional-methods.min.js',
+					array( 'jquery-validate' ),
+					'1.15.0',
+					true
+				);
+			}
 			wp_register_script(
-				'jquery-validate',
-				EE_GLOBAL_ASSETS_URL . 'scripts/jquery.validate.min.js',
-				array( 'jquery' ),
-				'1.15.0',
+				'select2',
+				EE_GLOBAL_ASSETS_URL . 'scripts/select2.min.js',
+				array(),
+				'4.0.2',
 				true
 			);
-			wp_register_script(
-				'jquery-validate-extra-methods',
-				EE_GLOBAL_ASSETS_URL . 'scripts/jquery.validate.additional-methods.min.js',
-				array( 'jquery-validate' ),
-				'1.15.0',
-				true
+			wp_register_style(
+				'select2',
+				EE_GLOBAL_ASSETS_URL . 'css/select2.min.css',
+				array(),
+				'4.0.2',
+				'all'
 			);
 		}
 	}

@@ -421,8 +421,9 @@ class Transactions_Admin_Page extends EE_Admin_Page {
 	 */
 	protected function _transaction_legend_items() {
 		EE_Registry::instance()->load_helper( 'MSG_Template' );
+		$items = array();
 
-		if ( EE_Registry::instance()->CAP->current_user_can( 'ee_read_messages', 'view_filtered_messages' ) ) {
+		if ( EE_Registry::instance()->CAP->current_user_can( 'ee_read_global_messages', 'view_filtered_messages' ) ) {
 			$related_for_icon = EEH_MSG_Template::get_message_action_icon( 'see_notifications_for' );
 			if ( isset( $related_for_icon['css_class']) && isset( $related_for_icon['label'] ) ) {
 				$items['view_related_messages'] = array(
@@ -544,7 +545,7 @@ class Transactions_Admin_Page extends EE_Admin_Page {
 		$this->_template_args['txn_nmbr']['value'] = $this->_transaction->ID();
 		$this->_template_args['txn_nmbr']['label'] = __( 'Transaction Number', 'event_espresso' );
 
-		$this->_template_args['txn_datetime']['value'] = $this->_transaction->get_datetime('TXN_timestamp', 'l F j, Y', 'g:i:s a' );
+		$this->_template_args['txn_datetime']['value'] = $this->_transaction->get_i18n_datetime('TXN_timestamp');
 		$this->_template_args['txn_datetime']['label'] = __( 'Date', 'event_espresso' );
 
 		$this->_template_args['txn_status']['value'] = self::$_txn_status[ $this->_transaction->get('STS_ID') ];

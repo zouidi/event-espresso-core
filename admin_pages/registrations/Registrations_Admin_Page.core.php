@@ -810,7 +810,7 @@ class Registrations_Admin_Page extends EE_Admin_Page_CPT {
 			$fc_items['blank'] = array( 'class' => 'blank', 'desc' => '' );
 		}
 
-		if ( EE_Registry::instance()->CAP->current_user_can( 'ee_read_messages', 'view_filtered_messages' ) ) {
+		if ( EE_Registry::instance()->CAP->current_user_can( 'ee_read_global_messages', 'view_filtered_messages' ) ) {
 			$related_for_icon = EEH_MSG_Template::get_message_action_icon( 'see_notifications_for' );
 			if ( isset( $related_for_icon['css_class']) && isset( $related_for_icon['label'] ) ) {
 				$fc_items['view_related_messages'] = array(
@@ -1126,7 +1126,7 @@ class Registrations_Admin_Page extends EE_Admin_Page_CPT {
 			$this->_template_args['reg_nmbr']['value'] = $this->_registration->ID();
 			$this->_template_args['reg_nmbr']['label'] = __( 'Registration Number', 'event_espresso' );
 
-			$this->_template_args['reg_datetime']['value'] =  $this->_registration->pretty_date('l F j, Y','g:i:s a') ;
+			$this->_template_args['reg_datetime']['value'] =  $this->_registration->get_i18n_datetime( 'REG_date' );
 			$this->_template_args['reg_datetime']['label'] = __( 'Date', 'event_espresso' );
 
 			$this->_template_args['grand_total'] = $transaction->total();

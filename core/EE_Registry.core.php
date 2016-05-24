@@ -1,6 +1,6 @@
 <?php if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
 /**
-* EE_Registry Class
+ * EE_Registry Class
  *
  * Centralized Application Data Storage and Management
  *
@@ -1096,21 +1096,25 @@ class EE_Registry {
 	 * @param boolean $hard          whether to reset data in the database too, or just refresh
 	 *                               the Registry to its state at the beginning of the request
 	 * @param boolean $reinstantiate whether to create new instances of EE_Registry's singletons too,
-	 *                               or just reset without re-instantiating (handy to set to FALSE if you're not sure if you CAN
-	 *                               currently reinstantiate the singletons at the moment)
+	 *                               or just reset without re-instantiating (handy to set to FALSE if you're
+	 								 not sure if you CAN currently reinstantiate the singletons at the moment)
+	 * @param bool    $reset_models  Defaults to true.  When false, then the models are not reset.  This is so client
+	 *                               code instead can just change the model context to a different blog id if necessary
 	 *
 	 * @return \EE_Registry
 	 * @throws \EE_Error
 	 */
-	public static function reset( $hard = false, $reinstantiate = true ) {
+	public static function reset( $hard = false, $reinstantiate = true, $reset_models = true ) {
 		$instance = self::instance();
 		EEH_Activation::reset();
 		$instance->_cache_on = true;
 		$instance->CFG = EE_Config::reset( $hard, $reinstantiate );
-		$instance->LIB->EE_Data_Migration_Manager = EE_Data_Migration_Manager::reset();
+		unset( $instance->LIB->EE_Data_Migration_Manager );
 		$instance->LIB = new stdClass();
-		foreach ( $instance->non_abstract_db_models as $model_name => $model ) {
-			$instance->reset_model( $model_name );
+		if ( $reset_models ) {
+			foreach ( array_keys( $instance->non_abstract_db_models ) as $model_name ) {
+				$instance->reset_model( $model_name );
+			}
 		}
 		return $instance;
 	}
