@@ -167,7 +167,7 @@ class EE_Activation_Manager {
 	 * @throws \EE_Error
 	 */
 	public function detect_activations_or_upgrades() {
-		do_action( 'AHEE__EE_System__detect_activations_or_upgrades__begin', $this );
+		do_action( 'AHEE__EE_Activation_Manager__detect_activations_or_upgrades__begin', $this );
 		// check if db has been updated, or if its a brand-new installation
 		$this->espressoCore->registry()->request()->set_activation_type( $this->detect_activation_type() );
 		$this->process_activation_type();
@@ -340,10 +340,10 @@ class EE_Activation_Manager {
 	 * @return array the correct value of 'espresso_db_upgrade', after saving it, if it needed correction
 	 */
 	private function fix_espresso_db_upgrade_option( $db_version_history = null ) {
-		do_action( 'FHEE__EE_System__manage_fix_espresso_db_upgrade_option__begin', $db_version_history );
 		if ( empty( $db_version_history ) ) {
 			$db_version_history = get_option( EE_Activation_Manager::db_version_option_name );
 		}
+		do_action( 'AHEE__EE_Activation_Manager__fix_espresso_db_upgrade_option__begin', $db_version_history );
 		// check that option is an array
 		if ( ! is_array( $db_version_history ) ) {
 			// if option is FALSE, then it never existed
@@ -374,7 +374,7 @@ class EE_Activation_Manager {
 			$db_version_history = $corrected_db_update;
 			update_option( EE_Activation_Manager::db_version_option_name, $db_version_history );
 		}
-		do_action( 'FHEE__EE_System__manage_fix_espresso_db_upgrade_option__complete', $db_version_history );
+		do_action( 'AHEE__EE_Activation_Manager__fix_espresso_db_upgrade_option__complete', $db_version_history );
 		return $db_version_history;
 	}
 
@@ -389,7 +389,7 @@ class EE_Activation_Manager {
 	 * @access public
 	 */
 	public function process_activation_type() {
-		do_action( 'AHEE__EE_System___detect_if_activation_or_upgrade__begin' );
+		do_action( 'AHEE__EE_Activation_Manager__process_activation_type__begin' );
 		if (
 			$this->espressoCore->registry()->request()->activation_type() !== EE_Activation_Manager::activation_type_none
 		) {
@@ -400,7 +400,7 @@ class EE_Activation_Manager {
 			// update the db version history
 			$this->_handle_core_version_change( $this->espressoCore->db_version_history() );
 		}
-		do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__complete' );
+		do_action( 'AHEE__EE_Activation_Manager__process_activation_type__complete' );
 	}
 
 
@@ -415,19 +415,19 @@ class EE_Activation_Manager {
 	public function perform_activations_upgrades_and_migrations() {
 		switch ( $this->espressoCore->registry()->request()->activation_type() ) {
 			case EE_Activation_Manager::activation_type_new:
-				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__new_activation' );
+				do_action( 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations__new_activation' );
 
 				break;
 			case EE_Activation_Manager::activation_type_reactivation:
-				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__reactivation' );
+				do_action( 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations__reactivation' );
 				break;
 			case EE_Activation_Manager::activation_type_upgrade:
-				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__upgrade' );
+				do_action( 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations__upgrade' );
 				//migrations may be required now that we've upgraded
 				$this->maintenanceMode->set_maintenance_mode_if_db_old();
 				break;
 			case EE_Activation_Manager::activation_type_downgrade:
-				do_action( 'AHEE__EE_System__detect_if_activation_or_upgrade__downgrade' );
+				do_action( 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations__downgrade' );
 				//its possible migrations are no longer required
 				$this->maintenanceMode->set_maintenance_mode_if_db_old();
 				break;
@@ -440,7 +440,7 @@ class EE_Activation_Manager {
 		if ( EEH_Activation::upload_directories_incomplete() ) {
 			EEH_Activation::create_upload_directories();
 		}
-		do_action( 'AHEE__EE_System__perform_activations_upgrades_and_migrations', $this );
+		do_action( 'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations', $this );
 	}
 
 
@@ -455,7 +455,7 @@ class EE_Activation_Manager {
 		$this->update_list_of_installed_versions( $db_version_history );
 		//get ready to verify the DB is ok (provided we aren't in maintenance mode, of course)
 		add_action(
-			'AHEE__EE_System__perform_activations_upgrades_and_migrations',
+			'AHEE__EE_Activation_Manager__perform_activations_upgrades_and_migrations',
 			array( $this, 'initialize_db_if_no_migrations_required' )
 		);
 	}
