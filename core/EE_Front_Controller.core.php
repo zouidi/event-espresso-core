@@ -57,21 +57,6 @@ final class EE_Front_Controller {
 
 
 	/**
-	 * @singleton method used to instantiate class object
-	 * @access public
-	 * @return EE_Front_Controller
-	 */
-	public static function instance() {
-		// check if class object is instantiated, and instantiated properly
-		if ( ! self::$_instance instanceof  EE_Front_Controller ) {
-			self::$_instance = new self();
-		}
-		return self::$_instance;
-	}
-
-
-
-	/**
 	 * class constructor
 	 *
 	 * should fire after shortcode, module, addon, or other plugin's default priority init phases have run
