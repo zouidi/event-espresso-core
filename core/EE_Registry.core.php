@@ -82,7 +82,7 @@ class EE_Registry {
 	 *
 	 * @var EE_Message_Resource_Manager
 	 */
-	public $MRM = null;
+	public $MRM;
 
 	/**
 	 *    $addons - StdClass object for holding addons which have registered themselves to work with EE core
@@ -199,20 +199,35 @@ class EE_Registry {
 	 *
 	 * @Constructor
 	 * @access protected
-	 * @param  \EE_Dependency_Map $dependency_map
 	 * @return \EE_Registry
 	 */
-	protected function __construct( \EE_Dependency_Map $dependency_map ) {
-		$this->_dependency_map = $dependency_map;
-		add_action( 'EE_Load_Espresso_Core__handle_request__initialize_core_loading', array( $this, 'initialize' ) );
+	protected function __construct() {
 	}
 
 
 
 	/**
 	 * initialize
+	 *
+	 * @throws \EE_Error
+	 * @throws \RuntimeException
 	 */
 	public function initialize() {
+		if ( ! $this->dependency_map() instanceof \EE_Dependency_Map ) {
+			throw new RuntimeException(
+				__( 'The EE_Dependency_Map object needs to be setter injected before initializing the Registry', 'event_espresso' )
+			);
+		}
+		if ( ! $this->request() instanceof \EE_Request ) {
+			throw new RuntimeException(
+					__( 'The EE_Request object needs to be setter injected before initializing the Registry', 'event_espresso' )
+			);
+		}
+		if ( ! $this->response() instanceof \EE_Response ) {
+			throw new RuntimeException(
+					__( 'The EE_Response object needs to be setter injected before initializing the Registry', 'event_espresso' )
+			);
+		}
 		$this->_class_abbreviations = apply_filters(
 			'FHEE__EE_Registry____construct___class_abbreviations',
 			array(
@@ -226,23 +241,14 @@ class EE_Registry {
 			)
 		);
 		// class library
-		$this->LIB = new StdClass();
-		$this->addons = new StdClass();
-		$this->modules = new StdClass();
-		$this->shortcodes = new StdClass();
-		$this->widgets = new StdClass();
+		$this->LIB = new stdClass();
+		$this->addons = new stdClass();
+		$this->modules = new stdClass();
+		$this->shortcodes = new stdClass();
+		$this->widgets = new stdClass();
+		$this->_set_cached_class( $this->request(), 'EE_Request' );
+		$this->_set_cached_class( $this->response(), 'EE_Response' );
 		$this->load_core( 'Base', array(), true );
-		// add our request and response objects to the cache
-		$request_loader = $this->_dependency_map->class_loader( 'EE_Request' );
-		$this->_set_cached_class(
-			$request_loader(),
-			'EE_Request'
-		);
-		$response_loader = $this->_dependency_map->class_loader( 'EE_Response' );
-		$this->_set_cached_class(
-			$response_loader(),
-			'EE_Response'
-		);
 		add_action( 'AHEE__EE_System__set_hooks_for_core', array( $this, 'init' ) );
 	}
 
@@ -258,15 +264,6 @@ class EE_Registry {
 
 
 	/**
-	 * @return EE_Response
-	 */
-	public function response() {
-		return $this->response;
-	}
-
-
-
-	/**
 	 * @param \EE_Request $request
 	 */
 	public function set_request( \EE_Request $request ) {
@@ -276,10 +273,37 @@ class EE_Registry {
 
 
 	/**
+	 * @return EE_Response
+	 */
+	public function response() {
+		return $this->response;
+	}
+
+
+
+	/**
 	 * @param \EE_Response $response
 	 */
 	public function set_response( \EE_Response $response ) {
 		$this->response = $response;
+	}
+
+
+
+	/**
+	 * @return \EE_Dependency_Map
+	 */
+	public function dependency_map() {
+		return $this->_dependency_map;
+	}
+
+
+
+	/**
+	 * @param \EE_Dependency_Map $dependency_map
+	 */
+	public function set_dependency_map( \EE_Dependency_Map $dependency_map ) {
+		$this->_dependency_map = $dependency_map;
 	}
 
 
@@ -320,6 +344,7 @@ class EE_Registry {
 
 	/**
 	 * @param mixed string | EED_Module $module
+	 * @throws \EE_Error
 	 */
 	public function add_module( $module ) {
 		if ( $module instanceof EED_Module ) {
@@ -357,6 +382,7 @@ class EE_Registry {
 	 * @param array  $arguments
 	 * @param bool   $load_only
 	 * @return mixed
+	 * @throws \EE_Error
 	 */
 	public function load_core( $class_name, $arguments = array(), $load_only = false ) {
 		$core_paths = apply_filters(
@@ -381,9 +407,10 @@ class EE_Registry {
 	 *
 	 * @access    public
 	 * @param string $class_name - simple class name ie: session
-	 * @param mixed $arguments
-	 * @param bool $load_only
+	 * @param mixed  $arguments
+	 * @param bool   $load_only
 	 * @return mixed
+	 * @throws \EE_Error
 	 */
 	public function load_service( $class_name, $arguments = array(), $load_only = false ) {
 		$service_paths = apply_filters(
@@ -405,6 +432,7 @@ class EE_Registry {
 	 * @param string $class_name - class name for the DMS ie: EE_DMS_Core_4_2_0
 	 * @param array  $arguments
 	 * @return EE_Data_Migration_Script_Base
+	 * @throws \EE_Error
 	 */
 	public function load_dms( $class_name, $arguments = array() ) {
 		// retrieve instantiated class
@@ -414,14 +442,16 @@ class EE_Registry {
 
 
 	/**
-	 *    loads object creating classes - must be singletons
+	 * loads object creating classes - must be singletons
 	 *
-	 *	@param string $class_name - simple class name ie: attendee
-	 *	@param array  $arguments - an array of arguments to pass to the class
-	 *	@param bool   $from_db    - some classes are instantiated from the db and thus call a different method to instantiate
-	 *	@param bool   $cache      if you don't want the class to be stored in the internal cache (non-persistent) then set this to FALSE (ie. when instantiating model objects from client in a loop)
-	 *	@param bool   $load_only      whether or not to just load the file and NOT instantiate, or load AND instantiate (default)
-	 *	@return EE_Base_Class
+	 * @param string $class_name - simple class name ie: attendee
+	 * @param array  $arguments  - an array of arguments to pass to the class
+	 * @param bool   $from_db    - some classes are instantiated from the db and thus call a different method to instantiate
+	 * @param bool   $cache      if you don't want the class to be stored in the internal cache (non-persistent)
+	 *                           then set this to FALSE (ie. when instantiating model objects from client in a loop)
+	 * @param bool   $load_only  whether or not to just load the file and NOT instantiate, or load AND instantiate (default)
+	 * @return EE_Base_Class
+	 * @throws \EE_Error
 	 */
 	public function load_class( $class_name, $arguments = array(), $from_db = false, $cache = true, $load_only = false ) {
 		$paths = apply_filters( 'FHEE__EE_Registry__load_class__paths', array(
@@ -442,6 +472,7 @@ class EE_Registry {
 	 * @param array  $arguments
 	 * @param bool   $load_only
 	 * @return EEH_Base
+	 * @throws \EE_Error
 	 */
 	public function load_helper( $class_name, $arguments = array(), $load_only = true ) {
 		// todo: add doing_it_wrong() in a few versions after all addons have had calls to this method removed
@@ -459,7 +490,9 @@ class EE_Registry {
 	 * @param string $class_name - simple class name ie: session
 	 * @param array  $arguments
 	 * @param bool   $load_only
+	 * @param bool   $cache
 	 * @return mixed
+	 * @throws \EE_Error
 	 */
 	public function load_lib( $class_name, $arguments = array(), $load_only = false, $cache = true ) {
 		$paths = array(
@@ -482,6 +515,7 @@ class EE_Registry {
 	 * @param array  $arguments
 	 * @param bool   $load_only
 	 * @return EEM_Base
+	 * @throws \EE_Error
 	 */
 	public function load_model( $class_name, $arguments = array(), $load_only = false ) {
 		$paths = apply_filters( 'FHEE__EE_Registry__load_model__paths', array(
@@ -501,6 +535,7 @@ class EE_Registry {
 	 * @param array  $arguments
 	 * @param bool   $load_only
 	 * @return mixed
+	 * @throws \EE_Error
 	 */
 	public function load_model_class( $class_name, $arguments = array(), $load_only = true ) {
 		$paths = array(
@@ -530,11 +565,12 @@ class EE_Registry {
 	 *    generic class loader
 	 *
 	 * @param string $path_to_file - directory path to file location, not including filename
-	 * @param string $file_name   - file name  ie:  my_file.php, including extension
+	 * @param string $file_name    - file name  ie:  my_file.php, including extension
 	 * @param string $type         - file type - core? class? helper? model?
 	 * @param array  $arguments
 	 * @param bool   $load_only
 	 * @return mixed
+	 * @throws \EE_Error
 	 */
 	public function load_file( $path_to_file, $file_name, $type = '', $arguments = array(), $load_only = true ) {
 		// retrieve instantiated class
@@ -552,6 +588,7 @@ class EE_Registry {
 	 * @param array  $arguments
 	 * @param bool   $load_only
 	 * @return EE_Addon
+	 * @throws \EE_Error
 	 */
 	public function load_addon( $path_to_file, $class_name, $type = 'class', $arguments = array(), $load_only = false ) {
 		// retrieve instantiated class
@@ -563,7 +600,45 @@ class EE_Registry {
 	/**
 	 *    loads and tracks classes
 	 *
-	 * @param array       $file_paths
+	 * @param bool|string $class_name - $class name
+	 * @param array       $arguments  - an argument or array of arguments to pass to the class upon instantiation
+	 * @param bool        $from_db    - some classes are instantiated from the db and thus call a different method to instantiate
+	 * @param bool        $cache
+	 * @param bool        $load_only
+	 * @param bool|string $addon
+	 * @return mixed                    null = failure to load or instantiate class object.
+	 * @throws \EE_Error
+	 */
+	public function load_fqcn(
+		$class_name = false,
+		$arguments = array(),
+		$from_db = false,
+		$cache = true,
+		$load_only = false,
+		$addon = false
+	) {
+		if ( ! class_exists( $class_name ) ) {
+			return null;
+		}
+		// if we're only loading the class and it already exists, then let's just return true immediately
+		if ( $load_only ) {
+			return true;
+		}
+		$addon = $addon ? 'addon' : '';
+		$class_obj = $this->_check_cache_for_class( $class_name, $addon, $cache, $load_only );
+		if ( $class_obj !== null ) {
+			// return object if it's already cached
+			return $class_obj;
+		}
+		// instantiate the requested object
+		return $this->_create_object_and_cache( $class_name, $addon, $arguments, 'FQCN', $from_db, $cache );
+	}
+
+
+	/**
+	 *    loads and tracks classes
+	 *
+	 * @param array $file_paths
 	 * @param string      $class_prefix - EE  or EEM or... ???
 	 * @param bool|string $class_name   - $class name
 	 * @param string      $type         - file type - core? class? helper? model?
@@ -571,10 +646,10 @@ class EE_Registry {
 	 * @param bool        $from_db      - some classes are instantiated from the db and thus call a different method to instantiate
 	 * @param bool        $cache
 	 * @param bool        $load_only
-	 * @return null|object|bool  	null = failure to load or instantiate class object.
-	 *                              object = class loaded and instantiated successfully.
-	 *                              bool = fail or success when $load_only is true
-
+	 * @return mixed                    null = failure to load or instantiate class object.
+	 *                                  object = class loaded and instantiated successfully.
+	 *                                  bool = fail or success when $load_only is true
+	 * @throws \EE_Error
 	 */
 	private function _load(
 		$file_paths = array(),
@@ -586,6 +661,39 @@ class EE_Registry {
 		$cache = true,
 		$load_only = false
 	) {
+		$class_name = $this->_process_classname( $class_prefix, $class_name );
+		$class_exists = class_exists( $class_name );
+		// if we're only loading the class and it already exists, then let's just return true immediately
+		if ( $load_only && $class_exists ) {
+			return true;
+		}
+		$class_obj = $this->_check_cache_for_class( $class_name, $class_prefix, $cache, $load_only );
+		if ( $class_obj !== null ) {
+			// return object if it's already cached
+			return $class_obj;
+		}
+		// if the class doesn't exist and can't be found, then just return nothing
+		if ( ! $this->_resolve_path_and_require_file( $class_exists, $class_name, $type, $file_paths, $load_only ) ) {
+			return null;
+		}
+		// instantiate the requested object
+		return $this->_create_object_and_cache( $class_name, $class_prefix, $arguments, $type, $from_db, $cache );
+	}
+
+
+
+
+	/**
+	 *    loads and tracks classes
+	 *
+	 * @param string $class_prefix
+	 * @param string $class_name
+	 * @return string
+	 */
+	private function _process_classname(
+		$class_prefix = 'EE_',
+		$class_name = ''
+	) {
 		// strip php file extension
 		$class_name = str_replace( '.php', '', trim( $class_name ) );
 		// does the class have a prefix ?
@@ -595,11 +703,22 @@ class EE_Registry {
 			// add class prefix ONCE!!!
 			$class_name = $class_prefix . str_replace( $class_prefix, '', $class_name );
 		}
-		$class_exists = class_exists( $class_name );
-		// if we're only loading the class and it already exists, then let's just return true immediately
-		if ( $load_only && $class_exists ) {
-			return true;
-		}
+		return $class_name;
+	}
+
+
+
+	/**
+	 *    loads and tracks classes
+	 *
+	 * @param string      $class_prefix - EE  or EEM or... ???
+	 * @param bool|string $class_name   - $class name
+	 * @param bool        $cache
+	 * @param bool        $load_only
+	 * @return mixed  	                null = failure to load or instantiate class object.
+	 *                                  object = class loaded and instantiated successfully.
+	 */
+	private function _check_cache_for_class( $class_name, $class_prefix, $cache, $load_only ) {
 		// $this->_cache_on is toggled during the recursive loading that can occur with dependency injection
 		// $cache is controlled by individual calls to separate Registry loader methods like load_class()
 		// $load_only is also controlled by individual calls to separate Registry loader methods like load_file()
@@ -610,27 +729,9 @@ class EE_Registry {
 				return $cached_class;
 			}
 		}
-		// if the class doesn't already exist.. then we need to try and find the file and load it
-		if ( ! $class_exists ) {
-			// get full path to file
-			$path = $this->_resolve_path( $class_name, $type, $file_paths );
-			// load the file
-			$loaded = $this->_require_file( $path, $class_name, $type, $file_paths );
-			// if loading failed, or we are only loading a file but NOT instantiating an object
-			if ( ! $loaded || $load_only ) {
-				// return boolean if only loading, or null if an object was expected
-				return $load_only ? $loaded : null;
-			}
-		}
-		// instantiate the requested object
-		$class_obj = $this->_create_object( $class_name, $arguments, $type, $from_db );
-		if ( $this->_cache_on && $cache ) {
-			// save it for later... kinda like gum  { : $
-			$this->_set_cached_class( $class_obj, $class_name, $class_prefix, $from_db );
-		}
-		$this->_cache_on = true;
-		return $class_obj;
+		return null;
 	}
+
 
 
 
@@ -647,17 +748,16 @@ class EE_Registry {
 	 * @access protected
 	 * @param string $class_name
 	 * @param string $class_prefix
-	 * @return null|object
+	 * @return mixed
 	 */
 	protected function _get_cached_class( $class_name, $class_prefix = '' ) {
+		// have to specify something, but not anything that will conflict
+		$class_abbreviation = 'FANCY_BATMAN_PANTS';
 		if ( isset( $this->_class_abbreviations[ $class_name ] ) ) {
 			$class_abbreviation = $this->_class_abbreviations[ $class_name ];
-		} else {
-			// have to specify something, but not anything that will conflict
-			$class_abbreviation = 'FANCY_BATMAN_PANTS';
 		}
 		// check if class has already been loaded, and return it if it has been
-		if ( isset( $this->{$class_abbreviation} ) && ! is_null( $this->{$class_abbreviation} ) ) {
+		if ( isset( $this->{$class_abbreviation} ) && $this->{$class_abbreviation} !== null ) {
 			return $this->{$class_abbreviation};
 		} else if ( isset ( $this->{$class_name} ) ) {
 			return $this->{$class_name};
@@ -667,6 +767,43 @@ class EE_Registry {
 			return $this->addons->{$class_name};
 		}
 		return null;
+	}
+
+
+
+	/**
+	 * _resolve_path_and_require_file
+	 * attempts to find and load the file for the requested class.
+	 *
+	 * @access protected
+	 * @param bool   $class_exists
+	 * @param string $class_name
+	 * @param string $type
+	 * @param array  $file_paths
+	 * @param bool   $load_only
+	 * @return bool
+	 * @throws \EE_Error
+	 */
+	protected function _resolve_path_and_require_file(
+		$class_exists = false,
+		$class_name,
+		$type = '',
+		$file_paths = array(),
+		$load_only = false
+	) {
+		// if the class doesn't already exist.. then we need to try and find the file and load it
+		if ( ! $class_exists ) {
+			// get full path to file
+			$path = $this->_resolve_path( $class_name, $type, $file_paths );
+			// load the file
+			$loaded = $this->_require_file( $path, $class_name, $type, $file_paths );
+			// if loading failed, or we are only loading a file but NOT instantiating an object
+			if ( ! $loaded || $load_only ) {
+				// return boolean if only loading, or null if an object was expected
+				return $load_only ? $loaded : false;
+			}
+		}
+		return true;
 	}
 
 
@@ -760,6 +897,40 @@ class EE_Registry {
 
 	/**
 	 * _create_object
+	 * Attempts to instantiate the requested class and then cache it
+	 *
+	 * @access protected
+	 * @param string $class_name
+	 * @param        $class_prefix
+	 * @param array  $arguments
+	 * @param string $type
+	 * @param bool   $from_db
+	 * @param bool   $cache
+	 * @return mixed
+	 * @throws \EE_Error
+	 */
+	protected function _create_object_and_cache(
+		$class_name,
+		$class_prefix,
+		$arguments = array(),
+		$type = '',
+		$from_db = false,
+		$cache = true
+	) {
+		// instantiate the requested object
+		$class_obj = $this->_create_object( $class_name, $arguments, $type, $from_db );
+		if ( $this->_cache_on && $cache ) {
+			// save it for later... kinda like gum  { : $
+			$this->_set_cached_class( $class_obj, $class_name, $class_prefix, $from_db );
+		}
+		$this->_cache_on = true;
+		return $class_obj;
+	}
+
+
+
+	/**
+	 * _create_object
 	 * Attempts to instantiate the requested class via any of the
 	 * commonly used instantiation methods employed throughout EE.
 	 * The priority for instantiation is as follows:
@@ -778,7 +949,7 @@ class EE_Registry {
 	 * @param array $arguments
 	 * @param string $type
 	 * @param bool $from_db
-	 * @return null | object
+	 * @return mixed
 	 * @throws \EE_Error
 	 */
 	protected function _create_object( $class_name, $arguments = array(), $type = '', $from_db = false ) {
@@ -1132,7 +1303,7 @@ class EE_Registry {
 	 * @override magic methods
 	 * @return void
 	 */
-	final function __destruct() {
+	final public function __destruct() {
 	}
 
 
@@ -1141,7 +1312,7 @@ class EE_Registry {
 	 * @param $a
 	 * @param $b
 	 */
-	final function __call( $a, $b ) {
+	final public function __call( $a, $b ) {
 	}
 
 
@@ -1149,7 +1320,7 @@ class EE_Registry {
 	/**
 	 * @param $a
 	 */
-	final function __get( $a ) {
+	final public function __get( $a ) {
 	}
 
 
@@ -1158,7 +1329,7 @@ class EE_Registry {
 	 * @param $a
 	 * @param $b
 	 */
-	final function __set( $a, $b ) {
+	final public function __set( $a, $b ) {
 	}
 
 
@@ -1166,7 +1337,7 @@ class EE_Registry {
 	/**
 	 * @param $a
 	 */
-	final function __isset( $a ) {
+	final public function __isset( $a ) {
 	}
 
 
@@ -1174,7 +1345,7 @@ class EE_Registry {
 	/**
 	 * @param $a
 	 */
-	final function __unset( $a ) {
+	final public function __unset( $a ) {
 	}
 
 
@@ -1182,13 +1353,13 @@ class EE_Registry {
 	/**
 	 * @return array
 	 */
-	final function __sleep() {
+	final public function __sleep() {
 		return array();
 	}
 
 
 
-	final function __wakeup() {
+	final public function __wakeup() {
 	}
 
 
@@ -1196,23 +1367,23 @@ class EE_Registry {
 	/**
 	 * @return string
 	 */
-	final function __toString() {
+	final public function __toString() {
 		return '';
 	}
 
 
 
-	final function __invoke() {
+	final public function __invoke() {
 	}
 
 
 
-	final function __set_state() {
+	final public function __set_state() {
 	}
 
 
 
-	final function __clone() {
+	final public function __clone() {
 	}
 
 
@@ -1221,7 +1392,7 @@ class EE_Registry {
 	 * @param $a
 	 * @param $b
 	 */
-	final static function __callStatic( $a, $b ) {
+	final public static function __callStatic( $a, $b ) {
 	}
 
 	/**
@@ -1240,6 +1411,10 @@ class EE_Registry {
 
 
 
+	/**
+	 * @return \EE_Config
+	 * @throws \EE_Error
+	 */
 	public static function CFG() {
 		return self::instance()->CFG;
 	}
