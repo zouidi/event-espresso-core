@@ -73,7 +73,7 @@ class EE_Dependency_Map {
 	protected function __construct( EE_Request $request, EE_Response $response ) {
 		$this->_request = $request;
 		$this->_response = $response;
-		add_action( 'EE_Load_Espresso_Core__handle_request__initialize_core_loading', array( $this, 'initialize' ) );
+		$this->initialize();
 		do_action( 'EE_Dependency_Map____construct' );
 	}
 
@@ -141,6 +141,24 @@ class EE_Dependency_Map {
 			return true;
 		}
 		return false;
+	}
+
+
+
+	/**
+	 * @return EE_Request
+	 */
+	public function request() {
+		return $this->_request;
+	}
+
+
+
+	/**
+	 * @return EE_Response
+	 */
+	public function response() {
+		return $this->_response;
 	}
 
 
@@ -227,6 +245,10 @@ class EE_Dependency_Map {
 		$this->_dependency_map = array(
 			'EE_Request_Handler' => array(
 				'EE_Request' => EE_Dependency_Map::load_from_cache,
+			),
+			'EE_Module_Request_Router' => array(
+				'EE_Request' => EE_Dependency_Map::load_from_cache,
+				'EE_Response' => EE_Dependency_Map::load_from_cache,
 			),
 			'EE_System' => array(
 				'EE_Registry' => EE_Dependency_Map::load_from_cache,
