@@ -142,10 +142,11 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 *    provides "AHEE__EE_System__construct__complete" hook for EE Addons to use as their starting point
 	 *    starting EE Addons from any other point may lead to problems
 	 *
-	 * @access 	public
-	 * @param 	EE_Request 	$request
-	 * @param 	EE_Response $response
-	 * @return 	EE_Response
+	 * @access    public
+	 * @param    EE_Request  $request
+	 * @param    EE_Response $response
+	 * @return    EE_Response
+	 * @throws \RuntimeException
 	 * @throws \EE_Error
 	 */
 	public function handle_request( EE_Request $request, EE_Response $response ) {
@@ -160,19 +161,18 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * @param    EE_Request  $request
 	 * @param    EE_Response $response
 	 * @return void
+	 * @throws \RuntimeException
 	 * @throws \EE_Error
 	 */
 	protected function initializeEspressoCore( EE_Request $request, EE_Response $response ) {
 		$this->espressoCore->set_request( $request );
 		$this->espressoCore->set_response( $response );
 		// EE_Registry
-		$this->espressoCore->set_registry(
-			EE_Registry::instance()
-		);
-		$this->espressoCore->registry()->initialize();
+		$this->espressoCore->set_registry( EE_Registry::instance() );
 		$this->espressoCore->registry()->set_dependency_map( $this->dependency_map() );
 		$this->espressoCore->registry()->set_request( $this->espressoCore->request() );
 		$this->espressoCore->registry()->set_response( $this->espressoCore->response() );
+		$this->espressoCore->registry()->initialize();
 		// WP cron jobs
 		$this->espressoCore->registry()->load_core( 'Cron_Tasks' );
 		$this->espressoCore->registry()->load_core( 'Request_Handler' );
@@ -267,7 +267,6 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 
 	/**
 	 * loadAddonsAndSetCaps
-	 *
 	 * allow addons to load first so that they can set hooks for running DMS's, etc
 	 * this is hooked into both:
 	 *    'AHEE__EE_Bootstrap__load_core_configuration'
@@ -276,6 +275,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 *
 	 * @access public
 	 * @return void
+	 * @throws \EE_Error
 	 */
 	public function loadAddonsAndSetCaps() {
 		try {
@@ -323,6 +323,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 *
 	 * @param int $blog_id
 	 * @throws \EE_Error
+	 * @throws \RuntimeException
 	 */
 	public static function switchToBlog( $blog_id = 0 ) {
 		\EE_Load_Espresso_Core::instance()->getEspressoCore( $blog_id );
