@@ -92,9 +92,11 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 
 	/**
 	 * @access private
+	 * @param    EE_Request  $request
+	 * @param    EE_Response $response
 	 * @throws \EE_Error
 	 */
-	private function init() {
+	private function init( EE_Request $request, EE_Response $response ) {
 		static $initialized = false;
 		if ( ! $initialized ) {
 			// load text domain right away so that any error messages can be translated asap
@@ -117,7 +119,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 				EE_Maintenance_Mode::instance()
 			);
 			// info about how to load classes required by other classes
-			$this->dependency_map = $this->_load_dependency_map();
+			$this->dependency_map = $this->_load_dependency_map( $request, $response );
 			// now setup the first core
 			$this->getEspressoCore();
 			//$this->activationManager->setEspressoCore( $this->espressoCore );
@@ -147,7 +149,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 	 * @throws \EE_Error
 	 */
 	public function handle_request( EE_Request $request, EE_Response $response ) {
-		$this->init();
+		$this->init( $request, $response );
 		$this->initializeEspressoCore( $request, $response );
 		return $this->espressoCore->response();
 	}
@@ -202,24 +204,6 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 
 
 	/**
-	 * @return EE_Request
-	 */
-	public function request() {
-		return $this->request;
-	}
-
-
-
-	/**
-	 * @return EE_Response
-	 */
-	public function response() {
-		return $this->response;
-	}
-
-
-
-	/**
 	 * @return \EE_Dependency_Map
 	 * @throws \EE_Error
 	 */
@@ -238,30 +222,14 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 
 
 	/**
-	 * @return \EE_Registry
-	 * @throws \EE_Error
-	 */
-	public function registry() {
-		if ( ! $this->registry instanceof EE_Registry ) {
-			throw new EE_Error(
-				sprintf(
-					__( 'Invalid EE_Registry: "%1$s"', 'event_espresso' ),
-					print_r( $this->registry, true )
-				)
-			);
-		}
-		return $this->registry;
-	}
-
-
-
-	/**
-	 * 	_load_registry
+	 *    _load_dependency_map
 	 *
-	 * 	@access private
+	 * @access private
+	 * @param    EE_Request  $request
+	 * @param    EE_Response $response
 	 * 	@return EE_Dependency_Map
 	 */
-	private function _load_dependency_map() {
+	private function _load_dependency_map( EE_Request $request, EE_Response $response ) {
 		if ( ! is_readable( EE_CORE . 'EE_Dependency_Map.core.php' ) ) {
 			EE_Error::add_error(
 				__( 'The EE_Dependency_Map core class could not be loaded.', 'event_espresso' ),
@@ -270,27 +238,7 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 			wp_die( EE_Error::get_notices() );
 		}
 		require_once( EE_CORE . 'EE_Dependency_Map.core.php' );
-		return EE_Dependency_Map::instance( $this->request, $this->response );
-	}
-
-
-
-	/**
-	 * 	_load_registry
-	 *
-	 * 	@access private
-	 * 	@return EE_Registry
-	 */
-	private function _load_registry() {
-		if ( ! is_readable( EE_CORE . 'EE_Registry.core.php' )) {
-			EE_Error::add_error(
-				__( 'The EE_Registry core class could not be loaded.', 'event_espresso' ),
-				__FILE__, __FUNCTION__, __LINE__
-			);
-			wp_die( EE_Error::get_notices() );
-		}
-		require_once( EE_CORE . 'EE_Registry.core.php' );
-		return EE_Registry::instance( $this->dependency_map );
+		return EE_Dependency_Map::instance( $request, $response );
 	}
 
 
@@ -309,24 +257,6 @@ class EE_Load_Espresso_Core implements EEI_Request_Decorator, EEI_Request_Stack_
 		}
 		unset( $this->espressoCoreCache[ $blog_id ] );
 		return true;
-	}
-
-
-
-	/**
-	 * 	_load_class_tools()
-	 *
-	 * 	@access private
-	 * 	@return void
-	 */
-	private function _load_class_tools() {
-		if ( ! is_readable( EE_HELPERS . 'EEH_Class_Tools.helper.php' )) {
-			EE_Error::add_error(
-				__( 'The EEH_Class_Tools helper could not be loaded.', 'event_espresso' ),
-				__FILE__, __FUNCTION__, __LINE__
-			);
-		}
-		require_once( EE_HELPERS . 'EEH_Class_Tools.helper.php' );
 	}
 
 
