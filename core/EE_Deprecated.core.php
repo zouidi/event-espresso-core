@@ -1326,19 +1326,6 @@ class EE_Generic_Address extends \EventEspresso\core\entities\GenericAddress {}
 
 
 
-add_action(
-	'FHEE__EE_System__manage_fix_espresso_db_upgrade_option__begin',
-	'werwerwerwerwer',
-	10,
-	1
-);
-
-function werwerwerwerwer( $db_version_history ) {
-	\EEH_Debug_Tools::printr( __FUNCTION__, __CLASS__, __FILE__, __LINE__, 2 );
-	\EEH_Debug_Tools::printr( $db_version_history, '$db_version_history', __FILE__, __LINE__ );
-}
-
-
 
 
 ee_deprecated_hooks(
