@@ -397,10 +397,7 @@ final class EE_System {
 		// let's get it started
 		if ( ! is_admin() && ! EE_Maintenance_Mode::instance()->level() ) {
 			do_action( 'AHEE__EE_System__load_controllers__load_front_controllers' );
-			/** @var EE_Front_Controller $Front_Controller */
-			$Front_Controller = $this->registry->load_core( 'Front_Controller' );
-			$Front_Controller->set_request( $this->request );
-			$Front_Controller->set_response( $this->response );
+			$this->registry->load_core( 'Front_Controller' );
 		} else if ( ! EE_FRONT_AJAX ) {
 			do_action( 'AHEE__EE_System__load_controllers__load_admin_controllers' );
 			$this->registry->load_core( 'Admin' );
@@ -561,12 +558,12 @@ final class EE_System {
 		// unlike other systems, EE_System_scripts loading is turned ON by default,
 		// but prior to the init hook, can be turned off via:
 		// add_filter( 'FHEE_load_EE_System_scripts', '__return_false' );
-		if ( apply_filters( 'FHEE_load_EE_System_scripts', TRUE ) {
+		if ( apply_filters( 'FHEE_load_EE_System_scripts', TRUE ) ) {
 			// similarly, jquery_validate loading is turned OFF by default,
 			// but prior to the wp_enqueue_scripts hook, can be turned back on again via:
 			// add_filter( 'FHEE_load_jquery_validate', '__return_true' );
 			// register jQuery Validate
-			if ( apply_filters( 'FHEE_load_jquery_validate', FALSE ) {
+			if ( apply_filters( 'FHEE_load_jquery_validate', FALSE ) ) {
 				wp_register_script(
 					'jquery-validate',
 					EE_GLOBAL_ASSETS_URL . 'scripts/jquery.validate.min.js',
