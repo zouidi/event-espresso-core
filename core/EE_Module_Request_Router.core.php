@@ -55,26 +55,11 @@ final class EE_Module_Request_Router {
 	 *    class constructor
 	 *
 	 * @access    public
-	 * @return \EE_Module_Request_Router
-	 */
-	public function __construct() {
-	}
-
-
-
-	/**
-	 * @param \EE_Request $request
-	 */
-	public function set_request( \EE_Request $request ) {
-		$this->request = $request;
-	}
-
-
-
-	/**
+	 * @param \EE_Request  $request
 	 * @param \EE_Response $response
 	 */
-	public function set_response( \EE_Response$response ) {
+	public function __construct( \EE_Request $request, \EE_Response $response ) {
+		$this->request = $request;
 		$this->response = $response;
 	}
 
@@ -215,7 +200,7 @@ final class EE_Module_Request_Router {
 	 * @return    EED_Module | NULL
 	 */
 	public static function module_factory( $module_name, \EE_Request $request, \EE_Response $response  ) {
-		if ( $module_name == 'EED_Module' ) {
+		if ( $module_name === 'EED_Module' ) {
 			EE_Error::add_error( sprintf( __( 'EED_Module is an abstract parent class an can not be instantiated. Please provide a proper module name.', 'event_espresso' ), $module_name ), __FILE__, __FUNCTION__, __LINE__ );
 			return NULL;
 		}
@@ -245,7 +230,7 @@ final class EE_Module_Request_Router {
 		if ( $module instanceof EED_Module ) {
 			// and call whatever action the route was for
 			try {
-				call_user_func( array( $module, $method ), $this->WP_Query );
+				$module->{$method}( $this->WP_Query );
 			} catch ( EE_Error $e ) {
 				$e->get_error();
 				return NULL;
@@ -318,21 +303,21 @@ final class EE_Module_Request_Router {
 	/**
 	 * @return bool
 	 */
-	public function __clone() { return FALSE; }
+	public function __clone() {}
 
 
 
 	/**
 	 * @return bool
 	 */
-	public function __wakeup() { return FALSE; }
+	public function __wakeup() {}
 
 
 
 	/**
 	 *
 	 */
-	public function __destruct() { return FALSE; }
+	public function __destruct() {}
 
 }
 // End of file EE_Module_Request_Router.core.php
