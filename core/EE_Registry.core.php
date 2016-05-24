@@ -960,7 +960,7 @@ class EE_Registry {
 		// and grab it if it exists
 		if ( $cached_class instanceof $param_class ) {
 			$dependency = $cached_class;
-		} else if ( $param_class != $class_name ) {
+		} else if ( $param_class !== $class_name ) {
 			// obtain the loader method from the dependency map
 			$loader = $this->_dependency_map->class_loader( $param_class );
 			// is loader a custom closure ?
@@ -1011,7 +1011,7 @@ class EE_Registry {
 			$this->{$class_abbreviation} = $class_obj;
 		} else if ( property_exists( $this, $class_name ) ) {
 			$this->{$class_name} = $class_obj;
-		} else if ( $class_prefix == 'addon' ) {
+		} else if ( $class_prefix === 'addon' ) {
 			$this->addons->{$class_name} = $class_obj;
 		} else if ( ! $from_db ) {
 			$this->LIB->{$class_name} = $class_obj;
@@ -1023,15 +1023,22 @@ class EE_Registry {
 	/**
 	 * call any loader that's been registered in the EE_Dependency_Map::$_class_loaders array
 	 *
-	 *
 	 * @param string $classname PLEASE NOTE: the class name needs to match what's registered
 	 *                          in the EE_Dependency_Map::$_class_loaders array,
 	 *                          including the class prefix, ie: "EE_", "EEM_", "EEH_", etc
 	 * @param array  $arguments
-	 * @return object
+	 * @return mixed
+	 * @throws \EE_Error
 	 */
 	public static function factory( $classname, $arguments = array() ) {
-
+		$loader = self::instance()->_dependency_map->class_loader( $classname );
+		if ( $loader instanceof Closure ) {
+			return $loader( $arguments );
+		} else if ( method_exists( EE_Registry::instance(), $loader ) ) {
+			return EE_Registry::instance()->{$loader}( $classname, $arguments );
+		}
+		return null;
+	}
 
 
 	/**
@@ -1042,7 +1049,7 @@ class EE_Registry {
 	 */
 	public function get_addon_by_name( $name ) {
 		foreach ( $this->addons as $addon ) {
-			if ( $addon->name() == $name ) {
+			if ( $addon->name() === $name ) {
 				return $addon;
 			}
 		}
