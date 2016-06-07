@@ -411,8 +411,8 @@ class EEG_Paypal_Standard extends EE_Offsite_Gateway {
 		);
 		// then check the response
 		if (
-			array_key_exists( 'body', $response )
-			&& ! is_wp_error( $response )
+			! is_wp_error( $response )
+			&& isset( $response[ 'body' ] )
 			&& strcmp( $response[ 'body' ], "VERIFIED" ) === 0
 		) {
 			return true;
@@ -426,7 +426,7 @@ class EEG_Paypal_Standard extends EE_Offsite_Gateway {
 				$response->get_error_message(),
 				print_r( $response->get_error_data(), true )
 			);
-		} elseif( is_array( $response ) && isset( $response[ 'body' ] ) ) {
+		} elseif( isset( $response[ 'body' ] ) ) {
 			$error_msg = $response[ 'body' ];
 		} else {
 			$error_msg = print_r( $response, true );
