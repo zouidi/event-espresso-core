@@ -51,11 +51,69 @@ class EE_Paypal_Standard_Form extends EE_Payment_Method_Form {
 						EE_PMT_Paypal_Standard::shipping_info_required => __( "Prompt for an address, and require it", 'event_espresso' )
 					) ),
 				),
+				'subsections' => array(
+					'tls_check' => $this->_meets_new_tls_requirements()
+				),
 				'before_form_content_template' => $payment_method_type->file_folder() . DS . 'templates' . DS . 'paypal_standard_settings_before_form.template.php',
 			)
 		);
 	}
 
+	/**
+	 * Pings the tls test server for paypal
+	 * @return array|WP_Remote_Requests_Response|WP_Error
+	 */
+	protected function _meets_new_tls_requirements() {
+		//not httpS
+//		$result = wp_remote_get( 'http://tlstest.paypal.com', array( 'httpversion' => '1.1' );
+		//using http 1.0
+//		$result = wp_remote_get( 'https://tlstest.paypal.com', array( 'httpversion' => '1.0') );
+		//tls problem
+//		add_action( 
+//			'http_api_curl', 
+//			function( $handle ) {
+//				curl_setopt( $handle, CURLOPT_SSLVERSION, 3 );
+//			},
+//			10,
+//			1 
+//		);
+//		$result = wp_remote_get( 'https://tlstest.paypal.com', array( 'httpversion' => '1.1' ) );
+		//ok
+		$result = wp_remote_get( 'https://tlstest.paypal.com' );
+		if( is_wp_error( $result ) ) {
+			$success = false;
+			$message = sprintf(
+				__( 'Problem communicating with PayPal: %1$s', 'event_espresso' ),
+				$result->get_error_message()
+			);
+		} else {
+			
+			$response_body = wp_remote_retrieve_body( $result );
+			if( strpos(  $response_body,
+					'ERROR' ) !== false ) {
+				$success = false;
+				$message = sprintf(
+					__( 'Problem communicating with PayPal: %1$s', 'event_espresso' ),
+					$response_body
+				);
+			} else {
+				$success = true;
+				$message = sprintf(
+					__( 'Successful communication with Paypal: %1$s', 'event_espresso' ),
+					$response_body
+				);
+			}
+		}
+		if( ! $success ) {
+			$message .= '<br><a href="https://devblog.paypal.com/upcoming-security-changes-notice/">' . __( 'Please Review PayPal\'s Documentation', 'event_espresso' ) . '</a>';
+		}
+		return new EE_Form_Section_HTML(
+			EEH_HTML::tr(
+				EEH_HTML::td( __( 'Communicateion Test', 'event_espresso' ) )
+				. EEH_HTML::td( $message, 'paypal-communication-test', $success ? 'success' : 'attention' )
+			)
+		);
+	}
 
 
 	/**
