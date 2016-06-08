@@ -51,6 +51,9 @@ class EE_Payment_Method_Form extends EE_Model_Form_Section{
 		}
 		if($this->_extra_meta_inputs){
 			$this->_subsections = array_merge($this->_subsections,$this->_extra_meta_inputs);
+			if( isset( $options_array[ 'subsections' ] ) ) {
+				$this->_subsections = array_merge( $this->_subsections, $options_array['subsections' ] );
+			}
 		}
 		$this->_subsections['PMD_button_url'] = new EE_Admin_File_Uploader_Input(
 			array( 'html_label_text'=>  __( 'Button URL', 'event_espresso' ))
