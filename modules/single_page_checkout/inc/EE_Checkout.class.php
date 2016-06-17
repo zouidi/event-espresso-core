@@ -35,7 +35,7 @@ class EE_Checkout {
 	 * is registration allowed to progress or halted for some reason such as failing to pass recaptcha?
 	 * @type bool
 	 */
-	public $continue_reg = TRUE;
+	public $continue_reg = false;
 
 	/**
 	 * redirect to thank you page ?
