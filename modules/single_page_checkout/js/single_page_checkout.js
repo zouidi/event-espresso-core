@@ -385,10 +385,8 @@ jQuery(document).ready( function($) {
 			// console.log( JSON.stringify( '**set_listener_for_process_next_reg_step_button**', null, 4 ) );
 			SPCO.main_container.on( 'click', '.spco-next-step-btn', function( e ) {
 				// console.log( JSON.stringify( 'SPCO spco-next-step-btn  >CLICK <', null, 4 ) );
-				// not disabled? you are NOW!!!
+				// immediately disable submit button to prevent double submission
 				SPCO.disable_submit_buttons();
-				// SPCO.current_form_to_validate = $(this).parents('form:first');
-				// SPCO.form_is_valid = SPCO.current_form_to_validate.valid();
 				SPCO.form_is_valid = SPCO.validate_reg_form( $( this ) );
 				//console.log( JSON.stringify( 'SPCO FINISHED "process_next_step_button_click" event', null, 4 ) );
 				//console.log( JSON.stringify( 'SPCO.form_is_valid: ' + SPCO.form_is_valid, null, 4 ) );
@@ -404,10 +402,11 @@ jQuery(document).ready( function($) {
 					e.stopPropagation();
 				}
 			});
+			// also set listener for forms submitted by pressing enter (key 13),
+			// so they also get routed through the same path as when the submit button is pressed
 			$( '.input' ).keypress(
 				function ( e ) {
 					if ( e.which == 13 ) {
-						alert( 'e.which = ' + e.which );
 						$( '.spco-next-step-btn').trigger('click');
 						return false;
 					}
@@ -439,6 +438,7 @@ jQuery(document).ready( function($) {
 		set_listener_for_input_validation_value_change : function() {
 			SPCO.form_inputs.focusout( function() {
 				if ( $(this).valid() ) {
+					// re-enable the submit button after fixing the invalid input
 					SPCO.enable_submit_buttons();
 				}
             });
@@ -452,6 +452,7 @@ jQuery(document).ready( function($) {
 		set_listener_for_datepicker_change : function() {
 			$('.datepicker').on('change', function () {
 				if ( $( this ).valid() ) {
+					// re-enable the submit button after fixing the invalid input
 					SPCO.enable_submit_buttons();
 				}
 			});
