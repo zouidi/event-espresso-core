@@ -510,6 +510,28 @@ class EEM_Datetime extends EEM_Soft_Delete_Base {
 
 
 
+	/**
+	 * Returns a count of all of the active datetimes for the supplied event
+	 *
+	 * @param \EE_Event $event
+	 * @return int
+	 */
+	public function count_active_datetimes_for_event( EE_Event $event ) {
+		return $this->count(
+			array(
+				array(
+					'EVT_ID'        => $event->ID(),
+					'DTT_EVT_start' => array('<', time()),
+					'DTT_EVT_end'   => array('>', time()),
+				)
+			),
+			'DTT_ID',
+			true
+		);
+	}
+
+
+
 }
 // End of file EEM_Datetime.model.php
 // Location: /includes/models/EEM_Datetime.model.php
