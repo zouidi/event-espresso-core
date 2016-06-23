@@ -468,8 +468,12 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 		$next_week->save();
 		$datetime_count = EEM_Datetime::instance()->count_active_datetimes_for_event($event);
 		$this->assertEquals(1, $datetime_count, 'THERE CAN ONLY BE ONE... active datetime for this event');
+		$datetime_count = EEM_Datetime::instance()->count_upcoming_datetimes_for_event($event);
+		$this->assertEquals(1, $datetime_count, 'THERE CAN ONLY BE ONE... upcoming datetime for this event');
+		$datetime_count = EEM_Datetime::instance()->count_active_and_upcoming_datetimes_for_event($event);
+		$this->assertEquals(2, $datetime_count, 'there should be 2 active/upcoming datetimes for this event');
 	}
-	
+
 
 
 }
