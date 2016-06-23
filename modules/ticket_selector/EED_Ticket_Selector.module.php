@@ -520,6 +520,28 @@ class EED_Ticket_Selector extends  EED_Module {
 		if ( EE_Registry::instance()->REQ->is_set( 'tkt-slctr-event-id' ) ) {
 			// validate/sanitize data
 			$valid = self::_validate_post_data();
+			$event = $valid['event'];
+			if ( ! $event instanceof EE_Event ) {
+				EE_Error::add_error(
+					sprintf(
+						__('Invalid Event Submitted: %1$s', 'event_espresso'),
+						print_r($valid['event'], true)
+					),
+					__FILE__, __FUNCTION__, __LINE__
+				);
+				return false;
+			}
+			if ( ! $event->is_active_or_upcoming() ) {
+				EE_Error::add_error(
+					__(
+						'You can not register for an event that does not have any active or upcoming datetimes.',
+						'event_espresso'
+					),
+					__FILE__, __FUNCTION__, __LINE__
+				);
+				return false;
+			}
+
 
 			//EEH_Debug_Tools::printr( $_REQUEST, '$_REQUEST', __FILE__, __LINE__ );
 			//EEH_Debug_Tools::printr( $valid, '$valid', __FILE__, __LINE__ );
@@ -547,23 +569,34 @@ class EED_Ticket_Selector extends  EED_Module {
 				// cycle thru the number of data rows sent from the event listing
 				for ( $x = 0; $x < $valid['rows']; $x++ ) {
 					// does this row actually contain a ticket quantity?
-					if ( isset( $valid['qty'][$x] ) && $valid['qty'][$x] > 0 ) {
+					if ( isset( $valid['qty'][$x] ) && $valid['qty'][$x] > 0 && isset( $valid['ticket_obj'][$x]) ) {
 						// YES we have a ticket quantity
 						$tckts_slctd = TRUE;
-						//						d( $valid['ticket_obj'][$x] );
-						if ( $valid['ticket_obj'][$x] instanceof EE_Ticket ) {
-							// then add ticket to cart
-							$ticket_added = self::_add_ticket_to_cart( $valid['ticket_obj'][$x], $valid['qty'][$x] );
-							$success = ! $ticket_added ? FALSE : $success;
-							if ( EE_Error::has_error() ) {
-								break;
-							}
-						} else {
+						$ticket_obj = $valid['ticket_obj'][$x];
+						if ( ! $ticket_obj instanceof EE_Ticket ) {
 							// nothing added to cart retrieved
 							EE_Error::add_error(
-								sprintf( __( 'A valid ticket could not be retrieved for the event.%sPlease click the back button on your browser and try again.', 'event_espresso' ), '<br/>' ),
+								sprintf(__('A valid ticket could not be retrieved for the event.%sPlease click the back button on your browser and try again.',
+									'event_espresso'), '<br/>'),
 								__FILE__, __FUNCTION__, __LINE__
 							);
+							continue;
+						}
+						if ( ! $ticket_obj->is_on_sale() || ! $ticket_obj->is_remaining() ) {
+							EE_Error::add_error(
+								__(
+									'You can not register for this ticket because it is either no longer on sale or available at this time.',
+									'event_espresso'
+								),
+								__FILE__, __FUNCTION__, __LINE__
+							);
+							return false;
+						}
+						// then add ticket to cart
+						$ticket_added = self::_add_ticket_to_cart( $valid['ticket_obj'][$x], $valid['qty'][$x] );
+						$success = ! $ticket_added ? FALSE : $success;
+						if ( EE_Error::has_error() ) {
+							break;
 						}
 					}
 				}
