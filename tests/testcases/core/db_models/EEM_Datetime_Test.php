@@ -438,4 +438,40 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 		$this->assertEquals( 1, EEM_Datetime::instance()->get_datetime_count_for_status() );
 		$this->assertEquals( 2, EEM_Datetime::instance()->get_datetime_count_for_status( EE_Datetime::expired ) );
 	}
+
+
+
+	public function test_count_active_datetimes_for_event()
+	{
+		$event = EE_Event::new_instance();
+		$event->save();
+		// last week event
+		$last_week = EE_Datetime::new_instance(array(
+			'EVT_ID'        => $event->ID(),
+			'DTT_EVT_start' => time() - (10 * DAY_IN_SECONDS),
+			'DTT_EVT_end'   => time() - (3 * DAY_IN_SECONDS),
+		));
+		$last_week->save();
+		// this week event
+		$this_week = EE_Datetime::new_instance(array(
+			'EVT_ID'        => $event->ID(),
+			'DTT_EVT_start' => time() - (3 * DAY_IN_SECONDS),
+			'DTT_EVT_end'   => time() + (4 * DAY_IN_SECONDS),
+		));
+		$this_week->save();
+		// next week event
+		$next_week = EE_Datetime::new_instance(array(
+			'EVT_ID'        => $event->ID(),
+			'DTT_EVT_start' => time() + (4 * DAY_IN_SECONDS),
+			'DTT_EVT_end'   => time() + (11 * DAY_IN_SECONDS),
+		));
+		$next_week->save();
+		$datetime_count = EEM_Datetime::instance()->count_active_datetimes_for_event($event);
+		$this->assertEquals(1, $datetime_count, 'THERE CAN ONLY BE ONE... active datetime for this event');
+	}
+	
+
+
 }
+
+// location: \tests\testcases\core\db_models\EEM_Datetime_Test.php
