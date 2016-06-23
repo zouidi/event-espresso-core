@@ -623,25 +623,7 @@ class EE_Event extends EE_CPT_Base implements EEI_Line_Item_Object, EEI_Admin_Li
 		if ( $this->is_inactive() ) {
 			return FALSE;
 		}
-		// set initial value
-		$upcoming = FALSE;
-		//next let's get all datetimes and loop through them
-		$datetimes = $this->datetimes_in_chronological_order();
-		foreach ( $datetimes as $datetime ) {
-			if ( $datetime instanceof EE_Datetime ) {
-				//if this dtt is expired then we continue cause one of the other datetimes might be upcoming.
-				if ( $datetime->is_expired() ) {
-					continue;
-				}
-				//if this dtt is active then we return false.
-				if ( $datetime->is_active() ) {
-					return FALSE;
-				}
-				//otherwise let's check upcoming status
-				$upcoming = $datetime->is_upcoming();
-			}
-		}
-		return $upcoming;
+		return EEM_Datetime::instance($this->_timezone)->count_upcoming_datetimes_for_event($this) > 0;
 	}
 
 
@@ -654,9 +636,20 @@ class EE_Event extends EE_CPT_Base implements EEI_Line_Item_Object, EEI_Admin_Li
 		if ( $this->is_inactive() ) {
 			return FALSE;
 		}
-		return EEM_Datetime::instance($this->_timezone)->count_active_datetimes_for_event($this) > 0
-			? true
-			: false;
+		return EEM_Datetime::instance($this->_timezone)->count_active_datetimes_for_event($this) > 0;
+	}
+
+
+
+	/**
+	 * @return bool
+	 */
+	public function is_active_or_upcoming() {
+		// check if event id is present and if this event is published
+		if ( $this->is_inactive() ) {
+			return FALSE;
+		}
+		return EEM_Datetime::instance($this->_timezone)->count_active_and_upcoming_datetimes_for_event($this) > 0;
 	}
 
 
