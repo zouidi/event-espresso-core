@@ -361,7 +361,11 @@ class EE_Event_Test extends EE_UnitTestCase{
 
 
 
-	public function test_is_active() {
+	/**
+	 * @return \EE_Event
+	 * @throws \EE_Error
+     */
+	public function get_event_with_one_expired_active_and_upcoming_datetime() {
 		/** @var EE_Event $event */
 		$event = EE_Event::new_instance();
 		$event->set_status('publish');
@@ -373,10 +377,6 @@ class EE_Event_Test extends EE_UnitTestCase{
 			'DTT_EVT_end'   => time() - (3 * DAY_IN_SECONDS),
 		));
 		$last_week->save();
-		// confirm that $last_week datetime is expired
-		$this->assertTrue($last_week->is_expired(), '$last_week datetime is NOT expired when it should be');
-		$this->assertFalse($last_week->is_active(), '$last_week datetime IS active when it shouldn\'t be');
-		$this->assertFalse($last_week->is_upcoming(), '$last_week datetime IS upcoming when it shouldn\'t be');
 		// this week event
 		$this_week = EE_Datetime::new_instance(array(
 			'EVT_ID'        => $event->ID(),
@@ -384,10 +384,6 @@ class EE_Event_Test extends EE_UnitTestCase{
 			'DTT_EVT_end'   => time() + (4 * DAY_IN_SECONDS),
 		));
 		$this_week->save();
-		// confirm that $this_week datetime is active
-		$this->assertFalse($this_week->is_expired(), '$this_week datetime IS expired when it shouldn\'t be');
-		$this->assertTrue($this_week->is_active(), '$this_week datetime is NOT active when it should be');
-		$this->assertFalse($this_week->is_upcoming(), '$this_week datetime IS upcoming when it shouldn\'t be');
 		// next week event
 		$next_week = EE_Datetime::new_instance(array(
 			'EVT_ID'        => $event->ID(),
@@ -395,15 +391,51 @@ class EE_Event_Test extends EE_UnitTestCase{
 			'DTT_EVT_end'   => time() + (11 * DAY_IN_SECONDS),
 		));
 		$next_week->save();
-		// confirm that $next_week datetime is upcoming
-		$this->assertFalse($next_week->is_expired(), '$next_week datetime IS expired when it shouldn\'t be');
-		$this->assertFalse($next_week->is_active(), '$next_week datetime IS active when it shouldn\'t be');
-		$this->assertTrue($next_week->is_upcoming(), '$next_week datetime is NOT upcoming when it should be');
-		// now get all datetimes for event in ASC chronological order
-		$datetimes = $event->datetimes();
-		$this->assertCount( 3, $datetimes, 'there should be three datetimes for this event' );
+		static $run_assertions = true;
+		if ($run_assertions) {
+			// confirm that $last_week datetime is expired
+			$this->assertTrue($last_week->is_expired(), '$last_week datetime is NOT expired when it should be');
+			$this->assertFalse($last_week->is_active(), '$last_week datetime IS active when it shouldn\'t be');
+			$this->assertFalse($last_week->is_upcoming(), '$last_week datetime IS upcoming when it shouldn\'t be');
+			// confirm that $this_week datetime is active
+			$this->assertFalse($this_week->is_expired(), '$this_week datetime IS expired when it shouldn\'t be');
+			$this->assertTrue($this_week->is_active(), '$this_week datetime is NOT active when it should be');
+			$this->assertFalse($this_week->is_upcoming(), '$this_week datetime IS upcoming when it shouldn\'t be');
+			// confirm that $next_week datetime is upcoming
+			$this->assertFalse($next_week->is_expired(), '$next_week datetime IS expired when it shouldn\'t be');
+			$this->assertFalse($next_week->is_active(), '$next_week datetime IS active when it shouldn\'t be');
+			$this->assertTrue($next_week->is_upcoming(), '$next_week datetime is NOT upcoming when it should be');
+			// now get all datetimes for event in ASC chronological order
+			$datetimes = $event->datetimes();
+			$this->assertCount(3, $datetimes, 'there should be three datetimes for this event');
+			// don't run tests again
+			$run_assertions = false;
+		}
+		return $event;
+	}
+
+
+
+	public function test_is_upcoming() {
+		$event = $this->get_event_with_one_expired_active_and_upcoming_datetime();
+		// confirm that $event is active
+		$this->assertTrue($event->is_upcoming(), '$event is NOT upcoming when it should be');
+	}
+
+
+
+	public function test_is_active() {
+		$event = $this->get_event_with_one_expired_active_and_upcoming_datetime();
 		// confirm that $event is active
 		$this->assertTrue($event->is_active(), '$event is NOT active when it should be');
+	}
+
+
+
+	public function test_is_active_or_upcoming() {
+		$event = $this->get_event_with_one_expired_active_and_upcoming_datetime();
+		// confirm that $event is active or upcoming
+		$this->assertTrue($event->is_active_or_upcoming(), '$event is NOT active/upcoming when it should be');
 	}
 
 
