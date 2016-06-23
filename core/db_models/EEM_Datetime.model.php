@@ -517,17 +517,43 @@ class EEM_Datetime extends EEM_Soft_Delete_Base {
 	 * @return int
 	 */
 	public function count_active_datetimes_for_event( EE_Event $event ) {
-		return $this->count(
-			array(
-				array(
-					'EVT_ID'        => $event->ID(),
-					'DTT_EVT_start' => array('<', time()),
-					'DTT_EVT_end'   => array('>', time()),
-				)
-			),
-			'DTT_ID',
-			true
+		$datetime_counts = $this->get_datetime_counts_by_status(
+			array( EE_Datetime::active ),
+			array('EVT_ID' => $event->ID() )
 		);
+		return reset($datetime_counts);
+	}
+
+
+
+	/**
+	 * Returns a count of all of the upcoming datetimes for the supplied event
+	 *
+	 * @param \EE_Event $event
+	 * @return int
+	 */
+	public function count_upcoming_datetimes_for_event( EE_Event $event ) {
+		$datetime_counts = $this->get_datetime_counts_by_status(
+			array( EE_Datetime::upcoming ),
+			array('EVT_ID' => $event->ID() )
+		);
+		return reset($datetime_counts);
+	}
+
+
+
+	/**
+	 * Returns a count of all of the active and upcoming datetimes for the supplied event
+	 *
+	 * @param \EE_Event $event
+	 * @return int
+	 */
+	public function count_active_and_upcoming_datetimes_for_event( EE_Event $event ) {
+		$datetime_counts = $this->get_datetime_counts_by_status(
+			array( EE_Datetime::active, EE_Datetime::upcoming ),
+			array('EVT_ID' => $event->ID() )
+		);
+		return array_sum($datetime_counts);
 	}
 
 
