@@ -654,25 +654,9 @@ class EE_Event extends EE_CPT_Base implements EEI_Line_Item_Object, EEI_Admin_Li
 		if ( $this->is_inactive() ) {
 			return FALSE;
 		}
-		// set initial value
-		$active = FALSE;
-		//next let's get all datetimes and loop through them
-		$datetimes = $this->datetimes_in_chronological_order();
-		foreach ( $datetimes as $datetime ) {
-			if ( $datetime instanceof EE_Datetime ) {
-				//if this dtt is expired then we continue cause one of the other datetimes might be active.
-				if ( $datetime->is_expired() ) {
-					continue;
-				}
-				//if this dtt is upcoming then we return false.
-				if ( $datetime->is_upcoming() ) {
-					return FALSE;
-				}
-				//otherwise let's check active status
-				$active = $datetime->is_active();
-			}
-		}
-		return $active;
+		return EEM_Datetime::instance($this->_timezone)->count_active_datetimes_for_event($this) > 0
+			? true
+			: false;
 	}
 
 
