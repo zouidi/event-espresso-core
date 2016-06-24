@@ -11,6 +11,10 @@
  */
 class EED_Ticket_Selector extends EED_Module {
 
+	const LOG_NAME           = 'ee_ticket_selector_log';
+
+	const LOG_LENGTH         = 100;
+
 	/**
 	 * event that ticket selector is being generated for
 	 *
@@ -631,6 +635,7 @@ class EED_Ticket_Selector extends EED_Module {
 	 */
 	public function process_ticket_selections() {
 		do_action( 'EED_Ticket_Selector__process_ticket_selections__before' );
+		EED_Ticket_Selector::log();
 		$EVT_ID = $this->_get_event_id_and_process_nonce();
 		if ( ! $EVT_ID ) {
 			return false;
@@ -1128,6 +1133,55 @@ class EED_Ticket_Selector extends EED_Module {
 		return '<div class="clear"></div></div>';
 	}
 
+
+
+	/**
+	 * log
+	 */
+	public static function log() {
+		$log = get_option( EED_Ticket_Selector::LOG_NAME, array() );
+		// copy incoming $_SERVER and $_REQUEST globals
+		// then sanitize them so we can save them to the log
+		$server = $_SERVER;
+		$request = $_REQUEST;
+		array_walk_recursive( $server, 'sanitize_text_field' );
+		array_walk_recursive( $request, 'sanitize_text_field' );
+		$log[ (string) microtime( true ) ] = array(
+			'server' => $server,
+			'request' => $request,
+		);
+		update_option(
+			EED_Ticket_Selector::LOG_NAME,
+			EED_Ticket_Selector::trim_log( (array) $log ),
+			false
+		);
+	}
+
+
+
+	/**
+	 * trim_log
+	 * reduces the size of the config log to the length specified by EE_Config::LOG_LENGTH
+	 *
+	 * @param array $log
+	 * @return array
+	 */
+	public static function trim_log( $log = array() ) {
+		$log = is_array( $log ) && ! empty( $log )
+			? $log
+			: get_option( EED_Ticket_Selector::LOG_NAME, array() );
+		$log_length = count( $log );
+		if ( $log_length > EED_Ticket_Selector::LOG_LENGTH ) {
+			ksort( $log );
+			$log = array_slice(
+				$log,
+				$log_length - EED_Ticket_Selector::LOG_LENGTH,
+				null,
+				true
+			);
+		}
+		return $log;
+	}
 
 
 }
