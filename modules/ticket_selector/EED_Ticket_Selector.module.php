@@ -569,7 +569,7 @@ class EED_Ticket_Selector extends  EED_Module {
 				// cycle thru the number of data rows sent from the event listing
 				for ( $x = 0; $x < $valid['rows']; $x++ ) {
 					// does this row actually contain a ticket quantity?
-					if ( isset( $valid['qty'][$x] ) && $valid['qty'][$x] > 0 && isset( $valid['ticket_obj'][$x]) ) {
+					if ( isset( $valid['qty'][$x], $valid['ticket_obj'][$x] ) && $valid['qty'][$x] > 0 ) {
 						// YES we have a ticket quantity
 						$tckts_slctd = TRUE;
 						$ticket_obj = $valid['ticket_obj'][$x];
