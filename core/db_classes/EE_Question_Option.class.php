@@ -37,34 +37,6 @@ class EE_Question_Option extends EE_Soft_Delete_Base_Class implements EEI_Duplic
 
 
 	/**
-	 *
-	 * @param array $props_n_values  incoming values
-	 * @param string $timezone  incoming timezone (if not set the timezone set for the website will be
-	 *                          		used.)
-	 * @param array $date_formats  incoming date_formats in an array where the first value is the
-	 *                             		    date_format and the second value is the time format
-	 * @return EE_Attendee
-	 */
-	public static function new_instance( $props_n_values = array(), $timezone = null, $date_formats = array() ) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__, $timezone, $date_formats );
-		return $has_object ? $has_object : new self( $props_n_values, false, $timezone, $date_formats );
-	}
-
-
-
-	/**
-	 * @param array $props_n_values  incoming values from the database
-	 * @param string $timezone  incoming timezone as set by the model.  If not set the timezone for
-	 *                          		the website will be used.
-	 * @return EE_Attendee
-	 */
-	public static function new_instance_from_db( $props_n_values = array(), $timezone = null ) {
-		return new self( $props_n_values, TRUE, $timezone );
-	}
-
-
-
-	/**
 	 * Sets the option's key value
 	 * @param string $value
 	 * @return bool success
@@ -205,7 +177,7 @@ class EE_Question_Option extends EE_Soft_Delete_Base_Class implements EEI_Duplic
 		}
 		$new_question_option->save();
 	}
-	
+
 	/**
 	 * Gets the QSO_system value
 	 * @return string|null
@@ -213,7 +185,7 @@ class EE_Question_Option extends EE_Soft_Delete_Base_Class implements EEI_Duplic
 	public function system() {
 		return $this->get('QSO_system');
 	}
-	
+
 	/**
 	 * Sets QSO_system
 	 * @param string $QSO_system
