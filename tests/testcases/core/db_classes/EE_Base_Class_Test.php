@@ -26,9 +26,15 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 //		require_once(EE_TESTS_DIR.'mocks/core/db_classes/EE_Mock.class.php');
 		parent::setUpBeforeClass();
 	}
+
+
+
+	/**
+	 * @return \EE_Base_Class
+	 */
 	function test_new_instance(){
 		$a = EE_Attendee::new_instance();
-		$this->assertNotNUll($a);
+		$this->assertNotNull($a);
 		$this->assertInstanceOf('EE_Attendee', $a);
 		return $a;
 	}
@@ -45,7 +51,6 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$payment_object = EE_Payment::new_instance();
 		$payment_object->save();
 		$payment_object_id = $payment_object->ID();
-
 		//now let's setup a new payment object using that ID but with different formats than the defaults
 		//that way we can verify the timestamp gets set correctly.
 		$expected_date = '2016-24-01';
@@ -57,6 +62,10 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 			'',
 			array( 'Y-d-m', 'g:i a' )
 		);
+		// check that objects have same ID
+		$this->assertEquals( $payment_object_id, $payment_object_to_test->ID() );
+		// and are the same instance, since the first object should have been returned from cache
+		$this->assertEquals( spl_object_hash( $payment_object ), spl_object_hash( $payment_object_to_test ) );
 		$this->assertEquals( $expected_date, $payment_object_to_test->get_date( 'PAY_timestamp' ) );
 	}
 
@@ -117,55 +126,63 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$this->assertNotEquals( 0, $result2 );
 	}
 
-//	function test_save_no_pk(){
-		//@todo: make this test work
-		//the following is known to not work for the time-being (the models
-		//system should be improved to allow this, when we get time)
-//		$term_taxonomy = $this->new_model_obj_with_dependencies('Term_Taxonomy', array('taxonomy'=>'monkeys'));
-//		$e = $this->new_model_obj_with_dependencies('Event');
-//		$tr = EE_Term_Relationship::new_instance(array('object_id'=>$e->ID()));
-//		$results = $tr->save();
-//		$this->assertNotNull($results);
-//	}
-        /**
-         * @group 8686
-         */
-	function test_add_relation_to(){
-            $t = EE_Transaction::new_instance();
-            $t->save();
-            $r = EE_Registration::new_instance();
-            $r->save();
-            //verify the relations
-            $t_from_r = $r->transaction();
-            $this->assertNull( $t_from_r );
-            $rs_from_t = $t->registrations();
-            $this->assertTrue( empty( $rs_from_t ) );
+	// function test_save_no_pk(){
+	// 	@todo: make this test work
+	// 	the following is known to not work for the time-being (the models
+	// 	system should be improved to allow this, when we get time)
+	// 	$term_taxonomy = $this->new_model_obj_with_dependencies('Term_Taxonomy', array('taxonomy'=>'monkeys'));
+	// 	$e = $this->new_model_obj_with_dependencies('Event');
+	// 	$tr = EE_Term_Relationship::new_instance(array('object_id'=>$e->ID()));
+	// 	$results = $tr->save();
+	// 	$this->assertNotNull($results);
+	// }
 
-            //add a relation and verify it changes the model object with the PK
-            $r->_add_relation_to($t, 'Transaction');
-            $this->assertEquals( $t->ID(), $r->get('TXN_ID'));
-            //and we get expected results when fetching using it
-            $t_from_r = $r->transaction();
-            $this->assertEquals( $t, $t_from_r );
-            $rs_from_t = $t->registrations();
-            $this->assertFalse( empty( $rs_from_t ) );
+
+
+    /**
+     * @group 8686
+     */
+	function test_add_relation_to(){
+		/** @var EE_Transaction $t */
+		$t = EE_Transaction::new_instance();
+        $t->save();
+		/** @var EE_Registration $r */
+		$r = EE_Registration::new_instance();
+        $r->save();
+        //verify the relations
+        $t_from_r = $r->transaction();
+        $this->assertNull( $t_from_r );
+        $rs_from_t = $t->registrations();
+        $this->assertTrue( empty( $rs_from_t ) );
+
+        //add a relation and verify it changes the model object with the PK
+        $r->_add_relation_to($t, 'Transaction');
+        $this->assertEquals( $t->ID(), $r->get('TXN_ID'));
+        //and we get expected results when fetching using it
+        $t_from_r = $r->transaction();
+        $this->assertEquals( $t, $t_from_r );
+        $rs_from_t = $t->registrations();
+        $this->assertFalse( empty( $rs_from_t ) );
 	}
-        /**
-         * @group 8686
-         */
-        function test_add_relation_to__unsaved() {
-            $t = EE_Transaction::new_instance();
-            $r = EE_Registration::new_instance();
-            $t->_add_relation_to($r, 'Registration');
-            $t_from_r = $r->transaction();
-            $this->assertEquals( $t, $t_from_r );
-            $rs_from_t = $t->registrations();
-            $this->assertFalse( empty( $rs_from_t ) );
-        }
+    /**
+     * @group 8686
+     */
+    function test_add_relation_to__unsaved() {
+	    /** @var EE_Transaction $t */
+	    $t = EE_Transaction::new_instance();
+	    /** @var EE_Registration $r */
+	    $r = EE_Registration::new_instance();
+        $t->_add_relation_to($r, 'Registration');
+        $t_from_r = $r->transaction();
+        $this->assertEquals( $t, $t_from_r );
+        $rs_from_t = $t->registrations();
+        $this->assertFalse( empty( $rs_from_t ) );
+    }
 	/**
 	 * @group 7084
 	 */
 	function test_set_defaults_on_unspecified_fields(){
+		/** @var EE_Registration $r */
 		$r = EE_Registration::new_instance( array( 'TXN_ID' => 99 ) );
 		$this->assertEquals( 99, $r->transaction_ID() );
 		//the STS_ID should have been set to the default, not left NULL
@@ -210,9 +227,12 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$r_from_t = $t->get_first_related('Registration');
 		$this->assertEquals($r,$r_from_t);
 	}
-        /**
-         * @group 8686
-         */
+
+
+
+    /**
+     * @group 8686
+     */
 	function test_remove_relation_to(){
 		$t = EE_Transaction::new_instance();
 		$t->save();
@@ -231,9 +251,12 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
                 $rs_from_t = $t->get_many_related( 'Registration' );
                 $this->assertTrue( empty( $rs_from_t ) );
 	}
-        /**
-         * @group 8686
-         */
+
+
+
+    /**
+     * @group 8686
+     */
 	function test_remove_relations(){
 		$t = EE_Transaction::new_instance();
 		$t->save();
@@ -251,6 +274,9 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
                 $rs_from_t = $t->get_many_related( 'Registration' );
                 $this->assertTrue( empty( $rs_from_t ) );
 	}
+
+
+
 	function test_count_related(){
 		$e1 = EE_Event::new_instance(array('EVT_name'=>'1'));
 		$e1->save();
@@ -502,6 +528,8 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$this->assertFalse( $att2->in_entity_map() );
 	}
 
+
+
 	/**
 	 * @group 7151
 	 */
@@ -521,6 +549,9 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 			$this->assertTrue( TRUE );
 		}
 	}
+
+
+
 	public function test_delete_permanently_with_extra_meta(){
 		$attendee = EE_Attendee::new_instance( array( 'ATT_fname' => 'bob', 'ATT_lname' => 'deleteme', 'ATT_email' => 'ef@ew.dw'));
 		$attendee->save();
@@ -547,6 +578,9 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		//and now verify get_raw is returning that same value
 		$this->assertTrue( 1 == $l2_from_db->get_raw( 'LIN_quantity' ) );
 	}
+
+
+
 	/**
 	 * Tests when we set a field to INFINITY, it stays that way even after we re-fetch it from the db
 	 * @group 7358
@@ -664,6 +698,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$this->assertInstanceOf( 'EE_Event', $event );
 
 		//test method retrieving object
+		/** @var EE_Event[] $next_events */
 		$next_events = $event->next_x( 'EVT_ID', 2 );
 
 		//verify we have two returned.
@@ -678,6 +713,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		}
 
 		//test retrieving just ids
+		/** @var array $next_events */
 		$next_events = $event->next_x( 'EVT_ID', 2, array(), 'EVT_ID' );
 
 		//verify we have two returned
@@ -702,6 +738,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$events = $this->factory->event->create_many( 5 );
 
 		//grab the last event in the list as the reference
+		/** @var EE_Event $event */
 		$event = end( $events );
 
 		$this->assertInstanceOf( 'EE_Event', $event );
@@ -715,6 +752,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		//loop through and verify the events returned are correct.
 		$pointer = 1;
 		foreach( $previous_events as $next_event ) {
+			/** @var EE_Event $next_event */
 			$this->assertInstanceOf( 'EE_Event', $next_event );
 			$this->assertEquals( $event->ID()-$pointer, $next_event->ID() );
 			$pointer++;
@@ -729,6 +767,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		//loop through and verify the IDS returned are correct.
 		$pointer = 1;
 		foreach( $previous_events as $next_event ) {
+			/** @var array $next_event */
 			$this->assertTrue( array_key_exists( 'EVT_ID', $next_event ) );
 			$this->assertEquals( $event->ID()-$pointer, $next_event['EVT_ID'] );
 			$pointer++;
@@ -745,11 +784,13 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$events = $this->factory->event->create_many( 5 );
 
 		//grab the first event in the list as the reference
+		/** @var EE_Event $event */
 		$event = reset( $events );
 
 		$this->assertInstanceOf( 'EE_Event', $event );
 
 		//test method retrieving object
+		/** @var EE_Event $next_event */
 		$next_event = $event->next( 'EVT_ID' );
 
 		//verify we have an event returned and that its the right one in sequence.
@@ -757,6 +798,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$this->assertEquals( $event->ID()+1, $next_event->ID() );
 
 		//test retrieving just id
+		/** @var array $next_event */
 		$next_event = $event->next( 'EVT_ID', array(), 'EVT_ID' );
 
 		//verify the returned array has the right key and value.
@@ -775,11 +817,13 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$events = $this->factory->event->create_many( 5 );
 
 		//grab the last event in the list as the reference
+		/** @var EE_Event $event */
 		$event = end( $events );
 
 		$this->assertInstanceOf( 'EE_Event', $event );
 
 		//test method retrieving object
+		/** @var EE_Event $previous_event */
 		$previous_event = $event->previous( 'EVT_ID' );
 
 		//verify we have an event returned and that its the right one in sequence.
@@ -787,6 +831,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 		$this->assertEquals( $event->ID()-1, $previous_event->ID() );
 
 		//test retrieving just id
+		/** @var array $previous_event */
 		$previous_event = $event->previous( 'EVT_ID', array(), 'EVT_ID' );
 
 		//verify the returned array has the right key and value.
@@ -852,8 +897,10 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
          * @group 8686
          */
         public function test_delete__remove_from_related_items_in_entity_mapper() {
-            $p = $this->new_model_obj_with_dependencies( 'Payment' );
-            $r = $this->new_model_obj_with_dependencies( 'Registration' );
+	        /** @var EE_Payment $p */
+	        $p = $this->new_model_obj_with_dependencies( 'Payment' );
+	        /** @var EE_Registration $r */
+	        $r = $this->new_model_obj_with_dependencies( 'Registration' );
             $p->_add_relation_to( $r, 'Registration' );
             $reg_payments = $p->registration_payments();
             $this->assertFalse( empty( $reg_payments ) );
@@ -863,7 +910,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
                     $this->assertEquals( 1, $registration_payment->delete() );
                 }
             }
-            //now there shoudl eb no more registraiton payments on that payment right?
+            //now there should be no more registration payments on that payment right?
             $reg_payments = $p->registration_payments();
             $this->assertTrue( empty( $reg_payments ) );
         }
@@ -885,7 +932,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
                     $this->assertEquals( $registration, $p->_remove_relation_to( $registration, 'Registration' ) );
                 }
             }
-            //now there shoudl eb no more relations between those two right?
+            //now there should eb no more relations between those two right?
             $regs_on_p = $p->get_many_related( 'Registration' );
             $pays_on_r = $r->get_many_related( 'Payment' );
             $this->assertTrue( empty( $regs_on_p ) );
@@ -896,3 +943,4 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 }
 
 // End of file EE_Base_Class_Test.php
+// Location: \tests\testcases\core\db_classes\EE_Base_Class_Test.php
