@@ -325,7 +325,7 @@ class EE_Registry {
 			)
 		);
 		// retrieve instantiated class
-		return $this->_load( $core_paths, 'EE_', $class_name, 'core', $arguments, false, true, $load_only );
+		return $this->_load( $core_paths, 'EE_', $class_name, 'core', $arguments, true, $load_only );
 	}
 
 
@@ -347,7 +347,7 @@ class EE_Registry {
 			)
 		);
 		// retrieve instantiated class
-		return $this->_load( $service_paths, 'EE_', $class_name, 'class', $arguments, false, true, $load_only );
+		return $this->_load( $service_paths, 'EE_', $class_name, 'class', $arguments, true, $load_only );
 	}
 
 
@@ -362,7 +362,10 @@ class EE_Registry {
 	 */
 	public function load_dms( $class_name, $arguments = array() ) {
 		// retrieve instantiated class
-		return $this->_load( EE_Data_Migration_Manager::instance()->get_data_migration_script_folders(), 'EE_DMS_', $class_name, 'dms', $arguments, false, false, false );
+		return $this->_load(
+			EE_Data_Migration_Manager::instance()->get_data_migration_script_folders(),
+			'EE_DMS_', $class_name, 'dms', $arguments, false, false
+		);
 	}
 
 
@@ -372,7 +375,7 @@ class EE_Registry {
 	 *
 	 * @param string $class_name - simple class name ie: attendee
 	 * @param mixed $arguments - an array of arguments to pass to the class
-	 * @param bool $from_db - some classes are instantiated from the db and thus call a different method to instantiate
+	 * @param bool $from_db - deprecated
 	 * @param bool $cache if you don't want the class to be stored in the internal cache (non-persistent) then set this to FALSE (ie. when instantiating model objects from client in a loop)
 	 * @param bool $load_only whether or not to just load the file and NOT instantiate, or load AND instantiate (default)
 	 * @return EE_Base_Class | bool
@@ -384,7 +387,7 @@ class EE_Registry {
 			EE_BUSINESS
 		) );
 		// retrieve instantiated class
-		return $this->_load( $paths, 'EE_', $class_name, 'class', $arguments, $from_db, $cache, $load_only );
+		return $this->_load( $paths, 'EE_', $class_name, 'class', $arguments, $cache, $load_only );
 	}
 
 
@@ -401,7 +404,7 @@ class EE_Registry {
 		// todo: add doing_it_wrong() in a few versions after all addons have had calls to this method removed
 		$helper_paths = apply_filters( 'FHEE__EE_Registry__load_helper__helper_paths', array( EE_HELPERS ) );
 		// retrieve instantiated class
-		return $this->_load( $helper_paths, 'EEH_', $class_name, 'helper', $arguments, false, true, $load_only );
+		return $this->_load( $helper_paths, 'EEH_', $class_name, 'helper', $arguments, true, $load_only );
 	}
 
 
@@ -425,7 +428,7 @@ class EE_Registry {
 			EE_LIBRARIES . 'payment_methods' . DS,
 		);
 		// retrieve instantiated class
-		return $this->_load( $paths, 'EE_', $class_name, 'lib', $arguments, false, $cache, $load_only );
+		return $this->_load( $paths, 'EE_', $class_name, 'lib', $arguments, $cache, $load_only );
 	}
 
 
@@ -444,7 +447,7 @@ class EE_Registry {
 			EE_CORE
 		) );
 		// retrieve instantiated class
-		return $this->_load( $paths, 'EEM_', $class_name, 'model', $arguments, false, true, $load_only );
+		return $this->_load( $paths, 'EEM_', $class_name, 'model', $arguments, true, $load_only );
 	}
 
 
@@ -465,7 +468,7 @@ class EE_Registry {
 			EE_MODELS . 'strategies' . DS
 		);
 		// retrieve instantiated class
-		return $this->_load( $paths, 'EE_', $class_name, '', $arguments, false, true, $load_only );
+		return $this->_load( $paths, 'EE_', $class_name, '', $arguments, true, $load_only );
 	}
 
 
@@ -493,7 +496,7 @@ class EE_Registry {
 	 */
 	public function load_file( $path_to_file, $file_name, $type = '', $arguments = array(), $load_only = true ) {
 		// retrieve instantiated class
-		return $this->_load( $path_to_file, '', $file_name, $type, $arguments, false, true, $load_only );
+		return $this->_load( $path_to_file, '', $file_name, $type, $arguments, true, $load_only );
 	}
 
 
@@ -510,7 +513,7 @@ class EE_Registry {
 	 */
 	public function load_addon( $path_to_file, $class_name, $type = 'class', $arguments = array(), $load_only = false ) {
 		// retrieve instantiated class
-		return $this->_load( $path_to_file, 'addon', $class_name, $type, $arguments, false, true, $load_only );
+		return $this->_load( $path_to_file, 'addon', $class_name, $type, $arguments, true, $load_only );
 	}
 
 
@@ -520,7 +523,6 @@ class EE_Registry {
 	 *
 	 * @param bool|string $class_name - $class name
 	 * @param array       $arguments  - an argument or array of arguments to pass to the class upon instantiation
-	 * @param bool        $from_db    - some classes are instantiated from the db and thus call a different method to instantiate
 	 * @param bool        $cache
 	 * @param bool        $load_only
 	 * @param bool|string $addon
@@ -531,7 +533,6 @@ class EE_Registry {
 	public function create(
 		$class_name = false,
 		$arguments = array(),
-		$from_db = false,
 		$cache = true,
 		$load_only = false,
 		$addon = false
@@ -556,10 +557,10 @@ class EE_Registry {
 			}
 		}
 		// instantiate the requested object
-		$class_obj = $this->_create_object( $class_name, $arguments, $addon, $from_db );
+		$class_obj = $this->_create_object( $class_name, $arguments, $addon );
 		if ( $this->_cache_on && $cache ) {
 			// save it for later... kinda like gum  { : $
-			$this->_set_cached_class( $class_obj, $class_name, $addon, $from_db );
+			$this->_set_cached_class( $class_obj, $class_name, $addon );
 		}
 		$this->_cache_on = true;
 		return $class_obj;
@@ -575,7 +576,6 @@ class EE_Registry {
 	 * @param bool|string $class_name - $class name
 	 * @param string $type - file type - core? class? helper? model?
 	 * @param mixed $arguments - an argument or array of arguments to pass to the class upon instantiation
-	 * @param bool $from_db - some classes are instantiated from the db and thus call a different method to instantiate
 	 * @param bool $cache
 	 * @param bool $load_only
 	 * @return null|object|bool  	null = failure to load or instantiate class object.
@@ -588,7 +588,6 @@ class EE_Registry {
 		$class_name = false,
 		$type = 'class',
 		$arguments = array(),
-		$from_db = false,
 		$cache = true,
 		$load_only = false
 	) {
@@ -630,10 +629,10 @@ class EE_Registry {
 			}
 		}
 		// instantiate the requested object
-		$class_obj = $this->_create_object( $class_name, $arguments, $type, $from_db );
+		$class_obj = $this->_create_object( $class_name, $arguments, $type );
 		if ( $this->_cache_on && $cache ) {
 			// save it for later... kinda like gum  { : $
-			$this->_set_cached_class( $class_obj, $class_name, $class_prefix, $from_db );
+			$this->_set_cached_class( $class_obj, $class_name, $class_prefix );
 		}
 		$this->_cache_on = true;
 		return $class_obj;
@@ -784,11 +783,10 @@ class EE_Registry {
 	 * @param string $class_name
 	 * @param array $arguments
 	 * @param string $type
-	 * @param bool $from_db
 	 * @return null | object
 	 * @throws \EE_Error
 	 */
-	protected function _create_object( $class_name, $arguments = array(), $type = '', $from_db = false ) {
+	protected function _create_object( $class_name, $arguments = array(), $type = '' ) {
 		$class_obj = null;
 		$instantiation_mode = '0) none';
 		// don't give up! you gotta...
@@ -816,9 +814,6 @@ class EE_Registry {
 				// no constructor = static methods only... nothing to instantiate, loading file was enough
 				$instantiation_mode = "2) no constructor but instantiable";
 				$class_obj = $reflector->newInstance();
-			} else if ( $from_db && method_exists( $class_name, 'new_instance_from_db' ) ) {
-				$instantiation_mode = "3) new_instance_from_db()";
-				$class_obj = call_user_func_array( array( $class_name, 'new_instance_from_db' ), $arguments );
 			} else if ( method_exists( $class_name, 'new_instance' ) ) {
 				$instantiation_mode = "4) new_instance()";
 				$class_obj = call_user_func_array( array( $class_name, 'new_instance' ), $arguments );
@@ -1018,10 +1013,9 @@ class EE_Registry {
 	 * @param object $class_obj
 	 * @param string $class_name
 	 * @param string $class_prefix
-	 * @param bool $from_db
 	 * @return void
 	 */
-	protected function _set_cached_class( $class_obj, $class_name, $class_prefix = '', $from_db = false ) {
+	protected function _set_cached_class( $class_obj, $class_name, $class_prefix = '' ) {
 		// return newly instantiated class
 		if ( isset( $this->_class_abbreviations[ $class_name ] ) ) {
 			$class_abbreviation = $this->_class_abbreviations[ $class_name ];
@@ -1030,7 +1024,7 @@ class EE_Registry {
 			$this->{$class_name} = $class_obj;
 		} else if ( $class_prefix == 'addon' ) {
 			$this->addons->{$class_name} = $class_obj;
-		} else if ( ! $from_db ) {
+		} else {
 			$this->LIB->{$class_name} = $class_obj;
 		}
 	}

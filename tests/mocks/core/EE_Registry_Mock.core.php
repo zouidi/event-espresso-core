@@ -51,7 +51,6 @@ class EE_Registry_Mock extends EE_Registry {
 	 * @param bool|string $class_name   - $class name
 	 * @param string      $type         - file type - core? class? helper? model?
 	 * @param mixed       $arguments    - an argument or array of arguments to pass to the class upon instantiation
-	 * @param bool        $from_db      - some classes are instantiated from the db and thus call a different method to instantiate
 	 * @param bool        $cache
 	 * @param bool        $load_only
 	 * @return null|object|bool    null = failure to load or instantiate class object.
@@ -64,11 +63,10 @@ class EE_Registry_Mock extends EE_Registry {
 		$class_name = false,
 		$type = 'class',
 		$arguments = array(),
-		$from_db = false,
 		$cache = true,
 		$load_only = false
 	) {
-		return $this->_load( $file_paths, $class_prefix, $class_name, $type, $arguments, $from_db, $cache, $load_only );
+		return $this->_load( $file_paths, $class_prefix, $class_name, $type, $arguments, $cache, $load_only );
 	}
 
 
@@ -118,16 +116,15 @@ class EE_Registry_Mock extends EE_Registry {
 	 * @param string $class_name
 	 * @param array $arguments
 	 * @param string $type
-	 * @param bool $from_db
 	 * @return null | object
 	 * @throws \EE_Error
 	 */
-	public function create_object( $class_name, $arguments = array(), $type = 'core', $from_db = false ) {
+	public function create_object( $class_name, $arguments = array(), $type = 'core' ) {
 		//echo "\n create_object";
 		//echo "\n $class_name";
 		//echo "\n resolve_dependencies: ";
 		//var_dump( $resolve_dependencies );
-		return $this->_create_object( $class_name, $arguments, $type, $from_db );
+		return $this->_create_object( $class_name, $arguments, $type );
 	}
 
 
@@ -137,11 +134,10 @@ class EE_Registry_Mock extends EE_Registry {
 	 * @param  object $class_obj
 	 * @param  string $class_name
 	 * @param  string $class_prefix
-	 * @param  bool   $from_db
 	 * @return void
 	 */
-	public function set_cached_class( $class_obj, $class_name, $class_prefix = '', $from_db = false ) {
-		$this->_set_cached_class( $class_obj, $class_name, $class_prefix, $from_db );
+	public function set_cached_class( $class_obj, $class_name, $class_prefix = '' ) {
+		$this->_set_cached_class( $class_obj, $class_name, $class_prefix );
 	}
 
 
