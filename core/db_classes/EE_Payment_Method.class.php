@@ -20,29 +20,6 @@ class EE_Payment_Method extends EE_Base_Class{
 
 
 	/**
-	 * @param array $props_n_values
-	 * @return EE_Payment_Method
-	 * @throws \EE_Error
-	 */
-	public static function new_instance( $props_n_values = array()) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__ );
-		return $has_object ? $has_object : new self( $props_n_values, FALSE );
-	}
-
-
-
-	/**
-	 * @param array $props_n_values
-	 * @return EE_Payment_Method
-	 * @throws \EE_Error
-	 */
-	public static function new_instance_from_db ( $props_n_values = array()) {
-		return new self( $props_n_values, TRUE );
-	}
-
-
-
-	/**
 	 * Checks if there is a payment method class of the given 'PMD_type', and if so returns the classname.
 	 * Otherwise returns a normal EE_Payment_Method
 	 * @param array $props_n_values where 'PMD_type' is a gateway name like 'Paypal_Standard','Invoice',etc (basically
