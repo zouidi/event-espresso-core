@@ -1919,15 +1919,15 @@ abstract class EEM_Base extends EE_Base{
 				throw new EE_Error( sprintf( __( 'WPDB Error occurred, but no error message was logged by wpdb! The wpdb method called was "%1$s" and the arguments were "%2$s"', 'event_espresso' ), $wpdb_method, var_export( $arguments_to_provide, true ) ) );
 			}
 		}elseif( $result === false ) {
-			EE_Error::add_error( 
-				sprintf( 
+			EE_Error::add_error(
+				sprintf(
 					__( 'A database error has occurred. Turn on WP_DEBUG for more information.||A database error occurred doing wpdb method "%1$s", with arguments "%2$s". The error was "%3$s"', 'event_espresso' ),
 					$wpdb_method,
 					var_export( $arguments_to_provide, true ),
 					$wpdb->last_error
-				), 
-				__FILE__, 
-				__FUNCTION__, 
+				),
+				__FILE__,
+				__FUNCTION__,
 				__LINE__
 			);
 		}
@@ -4105,8 +4105,11 @@ abstract class EEM_Base extends EE_Base{
 
 
 	/**
-	 * The purpose of this method is to allow us to create a model object that is not in the db that holds default values.
-	 * A typical example of where this is used is when creating a new item and the initial load of a form.  We dont' necessarily want to test for if the object is present but just assume it is BUT load the defaults from the object (as set in the model_field!).
+	 * The purpose of this method is to allow us to create
+	 * a model object that is not in the db that holds default values.
+	 * A typical example of where this is used is when creating a new item and the initial load of a form.
+	 * We don't necessarily want to test for if the object is present
+	 * but just assume it is BUT load the defaults from the object (as set in the model_field!).
 	 *
 	 * @return EE_Base_Class single EE_Base_Class object with default values for the properties.
 	 */
@@ -4161,18 +4164,46 @@ abstract class EEM_Base extends EE_Base{
 		if ( $primary_key){
 			$classInstance = $this->get_from_entity_map( $primary_key );
 			if( ! $classInstance) {
-				$classInstance = EE_Registry::instance()->load_class( $className, array( $this_model_fields_n_values, $this->_timezone ), TRUE, FALSE );
+				$classInstance = $this->_instantiate_new_instance_from_db( $className, $this_model_fields_n_values );
 				// add this new object to the entity map
 				$classInstance = $this->add_to_entity_map( $classInstance );
 			}
 		}else{
-			$classInstance = EE_Registry::instance()->load_class( $className, array( $this_model_fields_n_values, $this->_timezone ), TRUE, FALSE );
+			$classInstance = $this->_instantiate_new_instance_from_db( $className, $this_model_fields_n_values );
 		}
 
 			//it is entirely possible that the instantiated class object has a set timezone_string db field and has set it's internal _timezone property accordingly (see new_instance_from_db in model objects particularly EE_Event for example).  In this case, we want to make sure the model object doesn't have its timezone string overwritten by any timezone property currently set here on the model so, we intentionally override the model _timezone property with the model_object timezone property.
 		$this->set_timezone( $classInstance->get_timezone() );
 		return $classInstance;
 	}
+
+
+
+	/**
+	 * _instantiate_new_instance_from_db
+	 *
+	 * @param string $class_name
+	 * @param array  $arguments
+	 * @return \EE_Base_Class
+	 * @throws \Exception
+	 */
+	public function _instantiate_new_instance_from_db( $class_name, $arguments ){
+		if ( ! class_exists( $class_name ) ) {
+			throw new EE_Error(
+				sprintf(
+					__( 'The "%s" class does not exist. Please ensure that an autoloader is set.', "event_espresso" ),
+					$class_name
+				)
+			);
+		}
+		return call_user_func_array(
+			array( $class_name, 'new_instance' ),
+			array( (array) $arguments, $this->_timezone, array(), true )
+		);
+	}
+
+
+
 	/**
 	 * Gets the model object from the  entity map if it exists
 	 * @param int|string $id the ID of the model object
@@ -4580,7 +4611,7 @@ abstract class EEM_Base extends EE_Base{
 		}
 		return array( $this->primary_key_name() => $this->get_primary_key_field());
 	}
-	
+
 
 
 
