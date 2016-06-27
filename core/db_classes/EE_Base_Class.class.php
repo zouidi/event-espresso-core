@@ -106,27 +106,62 @@ abstract class EE_Base_Class{
 
 
 	/**
-	 * basic constructor for Event Espresso classes, performs any necessary initialization, and verifies it's children play nice
-	 *
-	 * @param array 		$fieldValues where each key is a field (ie, array key in the 2nd layer of the model's _fields array, (eg, EVT_ID, TXN_amount, QST_name, etc) and values are their values
-	 * @param boolean 	$bydb 			a flag for setting if the class is instantiated by the corresponding db model or not.
-	 * @param string 		$timezone 	indicate what timezone you want any datetime fields to be in when instantiating a EE_Base_Class object.
-	 * @param array                      $date_formats An array of date formats to set on construct where first
-	 *                                                 		 value is the date_format and second value is the time
-	 *                                                 		 format.
-	 * @throws EE_Error
+	 * @param array  $fieldValues
+	 * @param string $timezone
+	 * @param array  $date_formats
+	 * @param bool   $bydb
 	 * @return \EE_Base_Class
 	 */
-	protected function __construct( $fieldValues = array(), $bydb = FALSE, $timezone = '', $date_formats = array() ){
+	public static function new_instance( $fieldValues = array(), $timezone = '', $date_formats = array(), $bydb = false ) {
+		$className = get_called_class();
+		if ( ! $bydb ) {
+			$cached_object = \EE_Base_Class::_check_for_object( $fieldValues, $className );
+			if ( $cached_object instanceof $className ) {
+				return $cached_object;
+			}
+		}
+		return new static( $fieldValues, false, $timezone, $date_formats );
+	}
 
-		$className=get_class($this);
 
+
+	/**
+	 * @deprecated
+	 * @param array  $fieldValues
+	 * @param string $timezone
+	 * @param array  $date_formats
+	 * @return \EE_Base_Class
+	 */
+	public static function new_instance_from_db( $fieldValues = array(), $timezone = '', $date_formats = array() ) {
+		return static::new_instance( $fieldValues, $timezone, $date_formats, true );
+	}
+
+
+
+	/**
+	 * basic constructor for Event Espresso classes
+	 * performs any necessary initialization, and verifies it's children play nice
+	 *
+	 * @param array $fieldValues    where each key is a field
+	 *                              (ie, array key in the 2nd layer of the model's _fields array,
+	 *                              (eg, EVT_ID, TXN_amount, QST_name, etc) and values are their values
+	 * @param boolean $bydb         a flag for setting if the class is instantiated
+	 *                              by the corresponding db model or not.
+	 * @param string  $timezone     indicate what timezone you want any datetime fields
+	 *                              to be in when instantiating a EE_Base_Class object.
+	 * @param array   $date_formats An array of date formats to set on construct where first
+	 *                              value is the date_format and second value is the time
+	 *                              format.
+	 * @throws \EE_Error
+	 * @throws \Exception
+	 */
+	protected function __construct( $fieldValues = array(), $bydb = false, $timezone = '', $date_formats = array() ){
+		$className = get_class($this);
 		do_action("AHEE__{$className}__construct",$this,$fieldValues);
 		$model=$this->get_model();
 		$model_fields = $model->field_settings( FALSE );
 		// ensure $fieldValues is an array
 		$fieldValues = is_array( $fieldValues ) ? $fieldValues : array( $fieldValues );
-		// EEH_Debug_Tools::printr( $fieldValues, '$fieldValues  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span>', 'auto' );
 		// verify client code has not passed any invalid field names
 		foreach($fieldValues as $field_name=> $field_value){
 			if( ! isset( $model_fields[ $field_name] ) ){
