@@ -29,26 +29,6 @@
  */
 class EE_Message_Template extends EE_Base_Class {
 
-	/**
-	 * @param array  $props_n_values
-	 * @param string $timezone
-	 * @return EE_Message_Template|mixed
-	 */
-	public static function new_instance( $props_n_values = array(), $timezone = '' ) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__, $timezone );
-		return $has_object ? $has_object : new self( $props_n_values, FALSE, $timezone );
-	}
-
-
-
-	/**
-	 * @param array  $props_n_values
-	 * @param string $timezone
-	 * @return EE_Message_Template
-	 */
-	public static function new_instance_from_db( $props_n_values = array(), $timezone = '' ) {
-		return new self( $props_n_values, TRUE, $timezone );
-	}
 
 
 
