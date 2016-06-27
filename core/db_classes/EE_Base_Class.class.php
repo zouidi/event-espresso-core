@@ -115,12 +115,12 @@ abstract class EE_Base_Class{
 	public static function new_instance( $fieldValues = array(), $timezone = '', $date_formats = array(), $bydb = false ) {
 		$className = get_called_class();
 		if ( ! $bydb ) {
-			$cached_object = \EE_Base_Class::_check_for_object( $fieldValues, $className );
-			if ( $cached_object instanceof $className ) {
+			$cached_object = \EE_Base_Class::_check_for_object( $fieldValues, $className, $timezone, $date_formats );
+			if ( $cached_object ) {
 				return $cached_object;
 			}
 		}
-		return new static( $fieldValues, false, $timezone, $date_formats );
+		return new static( $fieldValues, $bydb, $timezone, $date_formats );
 	}
 
 
@@ -1718,8 +1718,9 @@ abstract class EE_Base_Class{
 		$existing = null;
 		if ( self::_get_model( $classname )->has_primary_key_field() ) {
 			$primary_id_ref = self::_get_primary_key_name( $classname );
-			if ( array_key_exists( $primary_id_ref, $props_n_values )
-			     && ! empty( $props_n_values[ $primary_id_ref ] )
+			if (
+				array_key_exists( $primary_id_ref, $props_n_values )
+			    && ! empty( $props_n_values[ $primary_id_ref ] )
 			) {
 				$existing = self::_get_model( $classname, $timezone )->get_one_by_ID(
 					$props_n_values[ $primary_id_ref ]
