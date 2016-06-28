@@ -130,7 +130,19 @@ abstract class CoffeeMaker implements CoffeeMakerInterface
      */
     protected function resolveInstantiationMethod(\ReflectionClass $reflector)
     {
-        if ($reflector->getConstructor() === null) {
+        if ($reflector->isAbstract()) {
+	        $identifier = $reflector->getName();
+	        throw new InstantiationException(
+		        $identifier,
+		        sprintf(
+			        __(
+				        '"%1$s" is an abstract class and therefore can not be constructed.',
+				        'event_espresso'
+			        ),
+			        $identifier
+		        )
+	        );
+        } else if ($reflector->getConstructor() === null) {
             return 'NewInstance';
         } else if ($reflector->isInstantiable()) {
             return 'NewInstanceArgs';
