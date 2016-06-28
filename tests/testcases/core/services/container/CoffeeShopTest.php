@@ -14,14 +14,14 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
 
 
 /**
- * Class CoffeePotTest
+ * Class CoffeeShopTest
  * Description
  *
  * @package       Event Espresso
  * @author        Brent Christensen
  * @since         $VID:$
  */
-class CoffeePotTest extends EE_UnitTestCase
+class CoffeeShopTest extends EE_UnitTestCase
 {
 
     /**
@@ -359,5 +359,5 @@ class CoffeePotTest extends EE_UnitTestCase
         $this->assertInstanceOf('EE_Encryption', $session->encryption());
     }
 }
-// End of file CoffeePotTest.php
-// Location:\tests\testcases\core\services\container\CoffeePotTest.php
+// End of file CoffeeShopTest.php
+// Location:\tests\testcases\core\services\container\CoffeeShopTest.php
