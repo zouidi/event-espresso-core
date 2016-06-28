@@ -220,7 +220,7 @@ class Create {
 		$chars = strpos( $reg_url_link, '-' ) + 5;
 		// TXN_ID + TKT_ID + first 3 and last 3 chars of reg_url_link
 		$new_reg_code = array(
-			$reg_url_link,
+			$TXN_ID,
 			$TKT_ID,
 			substr( $reg_url_link, 0, $chars )
 		);
