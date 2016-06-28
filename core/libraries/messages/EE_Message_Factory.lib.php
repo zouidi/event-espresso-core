@@ -125,14 +125,10 @@ class EE_Message_Factory {
 	 * @throws \EE_Error
 	 */
 	protected function _create( $props_n_values = array() ) {
-		$new_instance = false;
-		if ( ! empty( $props_n_values['MSG_ID'] ) ) {
-			$message = EE_Message::new_instance_from_db( $props_n_values );
-		} else {
-			$message = EE_Message::new_instance( $props_n_values );
-			$new_instance = true;
-		}
-		return $this->_set_messenger_and_message_type( $message, $new_instance );
+		return $this->_set_messenger_and_message_type(
+			EE_Message::new_instance( $props_n_values ),
+			! empty( $props_n_values['MSG_ID'] )
+		);
 	}
 
 

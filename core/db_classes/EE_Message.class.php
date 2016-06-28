@@ -42,32 +42,25 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links {
 
 
 	/**
-	 *
-	 * @param array  $props_n_values
-	 * @param string $timezone
-	 * @param array $date_formats incoming date formats in an array.  First value is the date_format, second is time format.
+	 * @param array   $fieldValues  where each key is a field
+	 *                              (ie, array key in the 2nd layer of the model's _fields array,
+	 *                              (eg, EVT_ID, TXN_amount, QST_name, etc) and values are their values
+	 * @param boolean $bydb         a flag for setting if the class is instantiated
+	 *                              by the corresponding db model or not.
+	 * @param string $timezone      indicate what timezone you want any datetime fields
+	 *                              to be in when instantiating a EE_Base_Class object.
+	 * @param array   $date_formats An array of date formats to set on construct where first
+	 *                              value is the date_format and second value is the time
+	 *                              format.
+	 * @throws EE_Error
 	 * @return EE_Message
 	 */
-	public static function new_instance( $props_n_values = array(), $timezone = null, $date_formats = array() ) {
-		$has_object = parent::_check_for_object( $props_n_values, __CLASS__ );
-		//if object doesn't exist, let's generate a unique token on instantiation so that its available even before saving to db.
-		if ( ! $has_object ) {
+	public function __construct( $fieldValues = array(), $bydb = false, $timezone = '', $date_formats = array() ) {
+		parent::__construct( $fieldValues, $bydb, $timezone, $date_formats );
+		if ( ! $bydb && ! $this->MSG_token() ) {
 			EE_Registry::instance()->load_helper( 'URL' );
-			$props_n_values['MSG_token'] = EEH_URL::generate_unique_token();
+			$this->set_MSG_token( EEH_URL::generate_unique_token() );
 		}
-		return $has_object ? $has_object : new self( $props_n_values, false, $timezone, $date_formats );
-	}
-
-
-
-	/**
-	 *
-	 * @param array  $props_n_values
-	 * @param string $timezone
-	 * @return EE_Message
-	 */
-	public static function new_instance_from_db( $props_n_values = array(), $timezone = null ) {
-		return new self( $props_n_values, true, $timezone );
 	}
 
 
