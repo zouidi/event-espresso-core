@@ -25,19 +25,17 @@
 	private $_primary_keys;
 
 	/**
-	 *
-	 * @var EE_Registry
-	 */
-	private $EE;
-	/**
 	 * string used for 1st cell in exports, which indicates that the following 2 rows will be metadata keys and values
 	 */
 	const metadata_header = 'Event Espresso Export Meta Data';
+
+
+
 	/**
-	 *		private constructor to prevent direct creation
-	 *		@Constructor
-	 *		@access private
-	 *		@return void
+	 * private constructor to prevent direct creation
+	 *
+	 * @Constructor
+	 * @access private
 	 */
  	private function __construct() {
 
@@ -90,7 +88,7 @@
 	}
 
 	/**
-	 * Opens a unicode or utf file (normal file_get_contents has difficulty readin ga unicode file. @see http://stackoverflow.com/questions/15092764/how-to-read-unicode-text-file-in-php
+	 * Opens a unicode or utf file (normal file_get_contents has difficulty reading a unicode file. @see http://stackoverflow.com/questions/15092764/how-to-read-unicode-text-file-in-php
 	 * @param string $file_path
 	 * @return string
 	 * @throws EE_Error
@@ -136,7 +134,6 @@
 
 		if (($file_handle = fopen($path_to_file, "r")) !== FALSE) {
 			# Set the parent multidimensional array key to 0.
-			$nn = 0;
 			$csvarray = array();
 
 			// in PHP 5.3 fgetcsv accepts a 5th parameter, but the pre 5.3 versions of fgetcsv choke if passed more than 4 - is that crazy or what?
@@ -164,29 +161,30 @@
 	}
 
 
+
 	/**
-	 *			@Import contents of csv file and store values in an array to be manipulated by other functions
-	 *		  @access public
-	 *			@param string $path_to_file - the csv file to be imported including the path to it's location.
-	 *			If $model_name is provided, assumes that each row in the CSV represents a model object for that model
-	 *			If $model_name ISN'T provided, assumes that before model object data, there is a row where the first entry is simply
-	 *			'MODEL', and next entry is the model's name, (untranslated) like Event, and then maybe a row of headers, and then the model data.
-	 *			Eg. '<br>MODEL,Event,<br>EVT_ID,EVT_name,...<br>1,Monkey Party,...<br>2,Llamarama,...<br>MODEL,Venue,<br>VNU_ID,VNU_name<br>1,The Forest
-	 *			@param string $model_name model name if we know what model we're importing
-	 *			@param boolean $first_row_is_headers - whether the first row of data is headers or not - TRUE = headers, FALSE = data
-	 *			@return mixed - array on success - multi dimensional with headers as keys (if headers exist) OR string on fail - error message
-	 * like the following array('Event'=>array(
-	 *								array('EVT_ID'=>1,'EVT_name'=>'bob party',...),
-	 *								array('EVT_ID'=>2,'EVT_name'=>'llamarama',...),
-	 *								...
-	 *							)
-	 *							'Venue'=>array(
-	 *								array('VNU_ID'=>1,'VNU_name'=>'the shack',...),
-	 *								array('VNU_ID'=>2,'VNU_name'=>'tree house',...),
-	 *								...
-	 *							)
-	 *						...
-	 *						)
+	 * @Import contents of csv file and store values in an array to be manipulated by other functions
+	 * @access public
+	 * @param string      $path_to_file         - the csv file to be imported including the path to it's location.
+	 *                                          If $model_name is provided, assumes that each row in the CSV represents a model object for that model
+	 *                                          If $model_name ISN'T provided, assumes that before model object data, there is a row where the first entry is simply
+	 *                                          'MODEL', and next entry is the model's name, (untranslated) like Event, and then maybe a row of headers, and then the model data.
+	 *                                          Eg. '<br>MODEL,Event,<br>EVT_ID,EVT_name,...<br>1,Monkey Party,...<br>2,Llamarama,...<br>MODEL,Venue,<br>VNU_ID,VNU_name<br>1,The Forest
+	 * @param bool|string $model_name           model name if we know what model we're importing
+	 * @param boolean     $first_row_is_headers - whether the first row of data is headers or not - TRUE = headers, FALSE = data
+	 * @return mixed - array on success - multi dimensional with headers as keys (if headers exist) OR string on fail - error message
+	 *                                          like the following array('Event'=>array(
+	 *                                          array('EVT_ID'=>1,'EVT_name'=>'bob party',...),
+	 *                                          array('EVT_ID'=>2,'EVT_name'=>'llamarama',...),
+	 *                                          ...
+	 *                                          )
+	 *                                          'Venue'=>array(
+	 *                                          array('VNU_ID'=>1,'VNU_name'=>'the shack',...),
+	 *                                          array('VNU_ID'=>2,'VNU_name'=>'tree house',...),
+	 *                                          ...
+	 *                                          )
+	 *                                          ...
+	 *                                          )
 	 */
 	public function import_csv_to_model_data_array( $path_to_file, $model_name = FALSE, $first_row_is_headers = TRUE ) {
 		$multi_dimensional_array = $this->import_csv_to_multi_dimensional_array($path_to_file);
@@ -282,6 +280,12 @@
 	}
 
 
+
+	/**
+	 * @param      $csv_data_array
+	 * @param bool $model_name
+	 * @return TRUE
+	 */
 	public function save_csv_to_db( $csv_data_array, $model_name = FALSE ) {
 		EE_Error::doing_it_wrong('save_csv_to_db', __( 'Function moved to EE_Import and renamed to save_csv_data_array_to_db', 'event_espresso' ), '4.6.7' );
 		return EE_Import::instance()->save_csv_data_array_to_db( $csv_data_array, $model_name );
@@ -291,7 +295,7 @@
 	 * Sends HTTP headers to indicate that the browser should download a file,
 	 * and starts writing the file to PHP's output. Returns the file handle so other functions can
 	 * also write to it
-	 * @param string $new_filename the name of the file that the user will download
+	 * @param string $filename the name of the file that the user will download
 	 * @return resource, like the results of fopen(), which can be used for fwrite, fputcsv2, etc.
 	 */
 	public function begin_sending_csv($filename){
@@ -345,11 +349,14 @@
 
 	/**
 	 * Writes $data to the csv file open in $filehandle. uses the array indices of $data for column headers
+	 *
+	 * @param       $filehandle
 	 * @param array $data 2D array, first numerically-indexed, and next-level-down preferably indexed by string
-	 * @param boolean $add_csv_column_names whether or not we should add the keys in the bottom-most array as a row for headers in the CSV.
-	 * Eg, if $data looked like array(0=>array('EVT_ID'=>1,'EVT_name'=>'monkey'...), 1=>array(...),...))
-	 * then the first row we'd write to the CSV would be "EVT_ID,EVT_name,..."
-	 * @return boolean if we successfully wrote to the CSV or not. If there's no $data, we consider that a success (because we wrote everything there was...nothing)
+	 * @return bool if we successfully wrote to the CSV or not. If there's no $data, we consider that a success (because we wrote everything there was...nothing)
+	 * @throws \EE_Error
+	 * @internal param bool $add_csv_column_names whether or not we should add the keys in the bottom-most array as a row for headers in the CSV.
+	 *                    Eg, if $data looked like array(0=>array('EVT_ID'=>1,'EVT_name'=>'monkey'...), 1=>array(...),...))
+	 *                    then the first row we'd write to the CSV would be "EVT_ID,EVT_name,..."
 	 */
 	public function write_data_array_to_csv($filehandle, $data){
 
@@ -366,11 +373,11 @@
 			if(EEH_Array::is_associative_array($item_in_top_level_array)){
 				//its associative, so we want to output its keys as column headers
 				$keys = array_keys($item_in_top_level_array);
-				echo $this->fputcsv2($filehandle, $keys);
+				$this->fputcsv2($filehandle, $keys);
 			}
 			//start writing data
 			foreach($data as $data_row){
-				echo $this->fputcsv2($filehandle, $data_row);
+				$this->fputcsv2($filehandle, $data_row);
 			}
 			return true;
 		}else{
@@ -435,7 +442,7 @@
 		$this->write_metadata_to_csv($filehandle);
 		foreach($model_data_array as $model_name => $model_instance_arrays){
 			//first: output a special row stating the model
-			echo $this->fputcsv2($filehandle,array('MODEL',$model_name));
+			$this->fputcsv2($filehandle,array('MODEL',$model_name));
 			//if we have items to put in the CSV, do it normally
 
 			if( ! empty($model_instance_arrays) ){
@@ -466,12 +473,15 @@
 		$this->write_model_data_to_csv($filehandle, $model_data_array);
 		$this->end_sending_csv($filehandle);
 	}
+
+
+
 	/**
-	 *			@Export contents of an array to csv file
-	 *		  @access public
-	 *			@param array $data - the array of data to be converted to csv and exported
-	 *			@param string $filename - name for newly created csv file
-	 *			@return TRUE on success, FALSE on fail
+	 * @Export contents of an array to csv file
+	 * @access public
+	 * @param array|bool  $data     - the array of data to be converted to csv and exported
+	 * @param bool|string $filename - name for newly created csv file
+	 * @return TRUE on success, FALSE on fail
 	 */
 	public function export_array_to_csv( $data = FALSE, $filename = FALSE  ) {
 
@@ -484,28 +494,19 @@
 		if ( ! $filename ) {
 			return FALSE;
 		}
-
-
-
-		// somebody told me i might need this ???
-		global $wpdb;
-		$prefix = $wpdb->prefix;
-
-
 		$fh = $this->begin_sending_csv($filename);
-
-
 		$this->end_sending_csv($fh);
 
-
+		return true;
 	}
 
 
+
 	/**
-	 *			@Determine the maximum upload file size based on php.ini settings
-	 *		  @access public
-	 *			@param int $percent_of_max - desired percentage of the max upload_mb
-	 *			@return int KB
+	 * @Determine the maximum upload file size based on php.ini settings
+	 * @access    public
+	 * @param bool|int $percent_of_max - desired percentage of the max upload_mb
+	 * @return int KB
 	 */
 	public function get_max_upload_size ( $percent_of_max = FALSE ) {
 
@@ -519,11 +520,11 @@
 		//convert MB to KB
 		$upload_mb = $upload_mb * 1024;
 
-		// don't want the full monty? then reduce the max uplaod size
+		// don't want the full monty? then reduce the max upload size
 		if ( $percent_of_max ) {
 			// is percent_of_max like this -> 50 or like this -> 0.50 ?
 			if ( $percent_of_max > 1 ) {
-				// chnages 50 to 0.50
+				// changes 50 to 0.50
 				$percent_of_max = $percent_of_max / 100;
 			}
 			// make upload_mb a percentage of the max upload_mb
@@ -534,15 +535,15 @@
 	}
 
 
+
 	/**
-	 *			@Drop in replacement for PHP's fputcsv function - but this one works!!!
-	 *		  @access private
-	 *			@param resource $fh - file handle - what we are writing to
-	 *			@param array $row - individual row of csv data
-	 *			@param string $delimiter - csv delimiter
-	 *			@param string $enclosure - csv enclosure
-	 *			@param string $mysql_null - allows php NULL to be overridden with MySQl's insertable NULL value
-	 *			@return void
+	 * @Drop   in replacement for PHP's fputcsv function - but this one works!!!
+	 * @access private
+	 * @param resource    $fh         - file handle - what we are writing to
+	 * @param array       $row        - individual row of csv data
+	 * @param string      $delimiter  - csv delimiter
+	 * @param string      $enclosure  - csv enclosure
+	 * @param bool|string $mysql_null - allows php NULL to be overridden with MySQl's insertable NULL value
 	 */
 	private function fputcsv2 ($fh, array $row, $delimiter = ',', $enclosure = '"', $mysql_null = FALSE) {
 		//Allow user to filter the csv delimiter and enclosure for other countries csv standards
@@ -621,4 +622,3 @@
 }
 /* End of file EE_CSV.class.php */
 /* Location: //includes/classes/EE_CSV.class.php */
-?>
