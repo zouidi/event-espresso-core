@@ -25,9 +25,9 @@ class CoffeeShopTest extends EE_UnitTestCase
 {
 
     /**
-     * @var CoffeeShop $CoffeePot
+     * @var CoffeeShop $CoffeeShop
      */
-    private $CoffeePot;
+    private $CoffeeShop;
 
     /**
      * @var DependencyInjector $DependencyInjector
@@ -42,20 +42,20 @@ class CoffeeShopTest extends EE_UnitTestCase
     public function setUp()
     {
         // instantiate the container
-        $this->CoffeePot = new CoffeeShop();
+        $this->CoffeeShop = new CoffeeShop();
         // create a dependency injector class for resolving class constructor arguments
         $this->DependencyInjector = new DependencyInjector(
-            $this->CoffeePot,
+            $this->CoffeeShop,
             new EEH_Array()
         );
         // and some coffeemakers, one for creating new instances
-        $this->CoffeePot->addCoffeeMaker(
-            new NewCoffeeMaker($this->CoffeePot, $this->DependencyInjector),
+        $this->CoffeeShop->addCoffeeMaker(
+            new NewCoffeeMaker( $this->CoffeeShop, $this->DependencyInjector),
             CoffeeMaker::BREW_NEW
         );
         // and one for shared services
-        $this->CoffeePot->addCoffeeMaker(
-            new SharedCoffeeMaker($this->CoffeePot, $this->DependencyInjector),
+        $this->CoffeeShop->addCoffeeMaker(
+            new SharedCoffeeMaker( $this->CoffeeShop, $this->DependencyInjector),
             CoffeeMaker::BREW_SHARED
         );
     }
@@ -64,7 +64,7 @@ class CoffeeShopTest extends EE_UnitTestCase
 
     public function addDefaultRecipes()
     {
-        $this->CoffeePot->addRecipe(new Recipe(Recipe::DEFAULT_ID));
+        $this->CoffeeShop->addRecipe( new Recipe( Recipe::DEFAULT_ID));
     }
 
 
@@ -73,8 +73,8 @@ class CoffeeShopTest extends EE_UnitTestCase
     {
         try {
             // and CoffeeMaker for classes that do not require instantiation
-            $added = $this->CoffeePot->addCoffeeMaker(
-                new LoadOnlyCoffeeMaker($this->CoffeePot, $this->DependencyInjector),
+            $added = $this->CoffeeShop->addCoffeeMaker(
+                new LoadOnlyCoffeeMaker( $this->CoffeeShop, $this->DependencyInjector),
                 CoffeeMaker::BREW_LOAD_ONLY
             );
             $this->assertTrue($added);
@@ -95,7 +95,7 @@ class CoffeeShopTest extends EE_UnitTestCase
             $closure = function () {
                 return 'I AM CLOSURE';
             };
-            $added = $this->CoffeePot->addClosure('i-am-closure', $closure);
+            $added = $this->CoffeeShop->addClosure( 'i-am-closure', $closure);
             $this->assertInstanceOf('Closure', $added);
         } catch (Exception $e) {
             $this->fail(
@@ -112,7 +112,7 @@ class CoffeeShopTest extends EE_UnitTestCase
     public function test_addService()
     {
         try {
-            $added = $this->CoffeePot->addService('i-am-stdClass', new stdClass());
+            $added = $this->CoffeeShop->addService( 'i-am-stdClass', new stdClass());
             $this->assertTrue($added);
         } catch (Exception $e) {
             $this->fail(
@@ -132,7 +132,7 @@ class CoffeeShopTest extends EE_UnitTestCase
             // add default recipe, which should handle loading for most PSR-4 compatible classes
             // as long as they are not type hinting for interfaces
             $this->assertTrue(
-                $this->CoffeePot->addRecipe(new Recipe(Recipe::DEFAULT_ID))
+                $this->CoffeeShop->addRecipe( new Recipe( Recipe::DEFAULT_ID))
             );
         } catch (Exception $e) {
             $this->fail(
@@ -150,7 +150,7 @@ class CoffeeShopTest extends EE_UnitTestCase
     {
         $this->addDefaultRecipes();
         try {
-            $recipe = $this->CoffeePot->getRecipe(Recipe::DEFAULT_ID);
+            $recipe = $this->CoffeeShop->getRecipe( Recipe::DEFAULT_ID);
             $this->assertInstanceOf('EventEspresso\core\services\container\RecipeInterface', $recipe);
             $this->assertEquals(Recipe::DEFAULT_ID, $recipe->identifier());
             $this->assertEquals(CoffeeMaker::BREW_NEW, $recipe->type());
@@ -169,7 +169,7 @@ class CoffeeShopTest extends EE_UnitTestCase
     public function test_addAliases()
     {
         try {
-            $this->CoffeePot->addAliases('EE_Class_For_Testing_Loading', array('Testing_Loading'));
+            $this->CoffeeShop->addAliases( 'EE_Class_For_Testing_Loading', array( 'Testing_Loading'));
         } catch (Exception $e) {
             $this->fail(
                 sprintf(
@@ -184,7 +184,7 @@ class CoffeeShopTest extends EE_UnitTestCase
 
     public function test_has()
     {
-        $this->assertFalse($this->CoffeePot->has('EE_Class_For_Testing_Loading'));
+        $this->assertFalse($this->CoffeeShop->has( 'EE_Class_For_Testing_Loading'));
     }
 
 
@@ -194,7 +194,7 @@ class CoffeeShopTest extends EE_UnitTestCase
         $this->addDefaultRecipes();
         try {
             // attempt to get class that should NOT have a valid Recipe yet
-            $this->CoffeePot->get('EE_Class_For_Testing_Loading');
+            $this->CoffeeShop->get( 'EE_Class_For_Testing_Loading');
             $this->fail('CoffeeShop::get() should have thrown an Exception');
         } catch (Exception $e) {
             $this->assertInstanceOf('Exception', $e);
@@ -208,13 +208,13 @@ class CoffeeShopTest extends EE_UnitTestCase
         $this->addDefaultRecipes();
         try {
             // attempt to get class that should NOT have a valid Recipe yet
-            $this->CoffeePot->get('EE_Class_For_Testing_Loading');
+            $this->CoffeeShop->get( 'EE_Class_For_Testing_Loading');
             $this->fail('CoffeeShop::get() should have thrown an Exception');
         } catch (Exception $e) {
             $this->assertInstanceOf('Exception', $e);
         }
         // add recipe for our mock class
-        $added = $this->CoffeePot->addRecipe(
+        $added = $this->CoffeeShop->addRecipe(
             new Recipe(
                 'EE_Class_For_Testing_Loading',
                 CoffeeMaker::BREW_NEW,
@@ -226,10 +226,10 @@ class CoffeeShopTest extends EE_UnitTestCase
         );
         $this->assertTrue($added);
         // attempt to brew class
-        $mock1 = $this->CoffeePot->brew('EE_Class_For_Testing_Loading');
+        $mock1 = $this->CoffeeShop->brew( 'EE_Class_For_Testing_Loading');
         $this->assertInstanceOf('EE_Class_For_Testing_Loading', $mock1);
         // and another one which should be a NEW instance
-        $mock2 = $this->CoffeePot->brew('EE_Class_For_Testing_Loading');
+        $mock2 = $this->CoffeeShop->brew( 'EE_Class_For_Testing_Loading');
         $this->assertInstanceOf('EE_Class_For_Testing_Loading', $mock2);
         $this->assertFalse($mock1 === $mock2);
     }
@@ -241,13 +241,13 @@ class CoffeeShopTest extends EE_UnitTestCase
         $this->addDefaultRecipes();
         try {
             // attempt to get class that should NOT have a valid Recipe yet
-            $this->CoffeePot->get('EE_Class_For_Testing_Loading');
+            $this->CoffeeShop->get( 'EE_Class_For_Testing_Loading');
             $this->fail('CoffeeShop::get() should have thrown an Exception');
         } catch (Exception $e) {
             $this->assertInstanceOf('Exception', $e);
         }
         // add recipe for our mock class
-        $added = $this->CoffeePot->addRecipe(
+        $added = $this->CoffeeShop->addRecipe(
             new Recipe(
                 'EE_Class_For_Testing_Loading',
                 CoffeeMaker::BREW_SHARED,
@@ -259,10 +259,10 @@ class CoffeeShopTest extends EE_UnitTestCase
         );
         $this->assertTrue($added);
         // attempt to brew class
-        $mock1 = $this->CoffeePot->brew('EE_Class_For_Testing_Loading');
+        $mock1 = $this->CoffeeShop->brew( 'EE_Class_For_Testing_Loading');
         $this->assertInstanceOf('EE_Class_For_Testing_Loading', $mock1);
         // and another one which should be the SAME instance
-        $mock2 = $this->CoffeePot->brew('EE_Class_For_Testing_Loading');
+        $mock2 = $this->CoffeeShop->brew( 'EE_Class_For_Testing_Loading');
         $this->assertInstanceOf('EE_Class_For_Testing_Loading', $mock2);
         $this->assertTrue($mock1 === $mock2);
     }
@@ -274,13 +274,13 @@ class CoffeeShopTest extends EE_UnitTestCase
         $this->addDefaultRecipes();
         try {
             // attempt to get class that should NOT have a valid Recipe yet
-            $this->CoffeePot->get('EE_Taxes');
+            $this->CoffeeShop->get( 'EE_Taxes');
             $this->fail('CoffeeShop::get() should have thrown an Exception');
         } catch (Exception $e) {
             $this->assertInstanceOf('Exception', $e);
         }
         // now add recipe for loading our entities as shared services (singletons)
-        $added = $this->CoffeePot->addRecipe(
+        $added = $this->CoffeeShop->addRecipe(
             new Recipe(
                 'EE_*',
                 CoffeeMaker::BREW_NEW,
@@ -290,10 +290,10 @@ class CoffeeShopTest extends EE_UnitTestCase
         );
         $this->assertTrue($added);
         // attempt to brew EE_Taxes class since it is not coupled to EE_Base_Class
-        $object_1 = $this->CoffeePot->brew('EE_Taxes', array());
+        $object_1 = $this->CoffeeShop->brew( 'EE_Taxes', array());
         $this->assertInstanceOf('EE_Taxes', $object_1);
         // and another one which should be the SAME instance
-        $object_2 = $this->CoffeePot->brew('EE_Taxes', array());
+        $object_2 = $this->CoffeeShop->brew( 'EE_Taxes', array());
         $this->assertInstanceOf('EE_Taxes', $object_2);
         $this->assertFalse($object_1 === $object_2);
     }
@@ -305,13 +305,13 @@ class CoffeeShopTest extends EE_UnitTestCase
         $this->addDefaultRecipes();
         try {
             // attempt to get class that should NOT have a valid Recipe yet
-            $this->CoffeePot->get('EE_Taxes');
+            $this->CoffeeShop->get( 'EE_Taxes');
             $this->fail('CoffeeShop::get() should have thrown an Exception');
         } catch (Exception $e) {
             $this->assertInstanceOf('Exception', $e);
         }
         // now add recipe for loading our entities as shared services (singletons)
-        $added = $this->CoffeePot->addRecipe(
+        $added = $this->CoffeeShop->addRecipe(
             new Recipe(
                 'EE_*',
                 CoffeeMaker::BREW_SHARED,
@@ -321,10 +321,10 @@ class CoffeeShopTest extends EE_UnitTestCase
         );
         $this->assertTrue($added);
         // attempt to brew EE_Taxes class since it is not coupled to EE_Base_Class
-        $object_1 = $this->CoffeePot->brew('EE_Taxes', array());
+        $object_1 = $this->CoffeeShop->brew( 'EE_Taxes', array());
         $this->assertInstanceOf('EE_Taxes', $object_1);
         // and another one which should be the SAME instance
-        $object_2 = $this->CoffeePot->brew('EE_Taxes', array());
+        $object_2 = $this->CoffeeShop->brew( 'EE_Taxes', array());
         $this->assertInstanceOf('EE_Taxes', $object_2);
         $this->assertTrue($object_1 === $object_2);
     }
@@ -336,13 +336,13 @@ class CoffeeShopTest extends EE_UnitTestCase
         $this->addDefaultRecipes();
         try {
             // attempt to get class that should NOT have a valid Recipe yet
-            $this->CoffeePot->get('EE_Session_Mock');
+            $this->CoffeeShop->get( 'EE_Session_Mock');
             $this->fail('CoffeeShop::get() should have thrown an Exception');
         } catch (Exception $e) {
             $this->assertInstanceOf('Exception', $e);
         }
         // add default recipe for our mock classes
-        $added = $this->CoffeePot->addRecipe(
+        $added = $this->CoffeeShop->addRecipe(
             new Recipe(
                 'EE_*',
                 CoffeeMaker::BREW_SHARED,
@@ -354,7 +354,7 @@ class CoffeeShopTest extends EE_UnitTestCase
         );
         $this->assertTrue($added);
         // attempt to brew EE_Session_Mock class which type hints for EE_Encryption
-        $session = $this->CoffeePot->brew('EE_Session_Mock', array());
+        $session = $this->CoffeeShop->brew( 'EE_Session_Mock', array());
         $this->assertInstanceOf('EE_Session_Mock', $session);
         $this->assertInstanceOf('EE_Encryption', $session->encryption());
     }
