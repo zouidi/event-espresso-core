@@ -21,14 +21,13 @@ class EE_Registration_Test extends EE_UnitTestCase{
 		$t->save();
 		$e = EE_Event::new_instance();
 		$e->save();
+		/** @var EE_Ticket $tkt */
 		$tkt = EE_Ticket::new_instance();
 		$tkt->save();
 		$d = EE_Datetime::new_instance(array('EVT_ID'=>$e->ID()));
 		$d->save();
-		$tkt->_add_relation_to($d, 'Datetime');
-		/** @type EE_Registration_Processor $registration_processor */
-		$registration_processor = EE_Registry::instance()->load_class( 'Registration_Processor' );
-		$reg_url = $registration_processor->generate_reg_url_link(
+		$tkt->_add_relation_to( $d, 'Datetime');
+		$reg_url = EventEspresso\core\services\registration\Create::regUrlLink(
 			1,
 			EE_Line_Item::new_instance(
 				array(
@@ -40,21 +39,28 @@ class EE_Registration_Test extends EE_UnitTestCase{
 					'LIN_order'			=> 0,
 					'LIN_total'			=> $tkt->price(),
 					'LIN_type'			=> EEM_Line_Item::type_line_item,
-					'OBJ_ID'				=> $tkt->ID(),
+					'OBJ_ID'			=> $tkt->ID(),
 					'OBJ_type'			=> 'Ticket'
 				)
 			)
 		);
-		$r = EE_REgistration::new_instance(
+		/** @var EE_Registration $r */
+		$r = EE_Registration::new_instance(
 			array(
-				'EVT_ID'			=>$e->ID(),
-				'TXN_ID'			=>$t->ID(),
-				'TKT_ID'			=>$tkt->ID(),
-				'STS_ID'			=>  EEM_Registration::status_id_pending_payment,
-				'REG_url_link' 	=> $reg_url
+				'EVT_ID'		=> $e->ID(),
+				'TXN_ID'		=> $t->ID(),
+				'TKT_ID'		=> $tkt->ID(),
+				'STS_ID'		=> EEM_Registration::status_id_pending_payment,
+				'REG_url_link' 	=> $reg_url,
+				'REG_code' 	    => EventEspresso\core\services\registration\Create::regCodeFromRegUrlLink(
+					$reg_url,
+					$t->ID(),
+					$tkt->ID()
+				),
 			)
 		);
-		$r->set_reg_code( $registration_processor->generate_reg_code( $r ));
+		/** @type EE_Registration_Processor $registration_processor */
+		$registration_processor = EE_Registry::instance()->load_class( 'Registration_Processor' );
 		$registration_processor->update_registration_after_checkout_or_payment( $r );
 		$this->assertNotNull($r->reg_code());
 		$this->assertEquals(EEM_Registration::status_id_approved,$r->status_ID());
@@ -63,7 +69,7 @@ class EE_Registration_Test extends EE_UnitTestCase{
 	function test_answer_value_to_question() {
 		$r = $this->new_model_obj_with_dependencies( 'Registration' );
 		$q1 = $this->new_model_obj_with_dependencies( 'Question' );
-		//also grab the default firstname question
+		//also grab the default first name question
 		$q2 = EEM_Question::instance()->get_Question_ID_from_system_string(EEM_Attendee::system_question_fname);
 		$this->assertNotNull($q2);
 		$a1 = $this->new_model_obj_with_dependencies( 'Answer', array('REG_ID'=>$r->ID(), 'QST_ID'=>$q1->ID()));
@@ -127,3 +133,4 @@ class EE_Registration_Test extends EE_UnitTestCase{
 }
 
 // End of file EE_Registration_Test.php
+// Location: \tests\testcases\core\db_classes\EE_Registration_Test.php
