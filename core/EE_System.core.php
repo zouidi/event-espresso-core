@@ -134,7 +134,7 @@ final class EE_System {
 		add_action( 'AHEE__EE_Bootstrap__detect_activations_or_upgrades', array( $this, 'detect_activations_or_upgrades' ), 3 );
 		// load EE_Config, EE_Textdomain, etc
 		add_action( 'AHEE__EE_Bootstrap__load_core_configuration', array( $this, 'load_core_configuration' ), 5 );
-		// load EE_Config, EE_Textdomain, etc
+		// load shortcodes modules and widgets
 		add_action( 'AHEE__EE_Bootstrap__register_shortcodes_modules_and_widgets', array( $this, 'register_shortcodes_modules_and_widgets' ), 7 );
 		// you wanna get going? I wanna get going... let's get going!
 		add_action( 'AHEE__EE_Bootstrap__brew_espresso', array( $this, 'brew_espresso' ), 9 );
