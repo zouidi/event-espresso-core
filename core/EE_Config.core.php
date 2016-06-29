@@ -34,7 +34,7 @@ final class EE_Config {
 	/**
 	 * @var \EE_Registry $registry
 	 */
-	public $registry;
+	private $registry;
 
 	/**
 	 * An StdClass whose property names are addon slugs,
@@ -250,6 +250,9 @@ final class EE_Config {
 		do_action( 'AHEE__EE_Config___load_core_config__start', $this );
 		$espresso_config = $this->get_espresso_config();
 		foreach ( $espresso_config as $config => $settings ) {
+			if ( $config === 'registry' ) {
+				continue;
+			}
 			// load_core_config__start hook
 			$settings = apply_filters( 'FHEE__EE_Config___load_core_config__config_settings', $settings, $config, $this );
 			if ( is_object( $settings ) && property_exists( $this, $config ) ) {
@@ -405,9 +408,15 @@ final class EE_Config {
 		// hook into update_option because that happens AFTER the ( $value === $old_value ) conditional
 		// but BEFORE the actual update occurs
 		add_action( 'update_option', array( $this, 'double_check_config_comparison' ), 1, 3 );
+		// we don't want to save the registry property with the rest of the config,
+		// so save it to a local variable, then remove it
+		$registry = $this->registry;
+		$this->registry = null;
 		// now update "ee_config"
 		$saved = update_option( 'ee_config', $this );
-		// if not saved... check if the hook we just added still exists;
+		// and restore the registry
+		$this->registry = $registry;
+		// Now if the update didn't save... check if the hook we just added still exists;
 		// if it does, it means one of two things:
 		// 		that update_option bailed at the ( $value === $old_value ) conditional,
 		//		 or...
