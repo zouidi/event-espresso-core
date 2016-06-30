@@ -91,6 +91,8 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		parent::setUp();
 		$this->registry = EE_Registry_Mock::instance();
 		if ( ! $this->registry->CFG instanceof EE_Config ) {
+			// run this action or config will fail
+			do_action( 'AHEE__EE_System__load_core_configuration__begin' );
 			$this->registry->load_core( 'Config' );
 			$this->registry->CFG->register_shortcodes_and_modules();
 		}
