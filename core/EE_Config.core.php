@@ -180,14 +180,17 @@ final class EE_Config {
 	 *
 	 * @access    private
 	 * @param \EE_Registry $registry
+	 * @throws \EE_Error
 	 */
 	private function __construct( \EE_Registry $registry ) {
-		if ( ! did_action( 'AHEE__EE_System__load_core_configuration__begin' ) ) {
-			throw new EE_Error(
-				__( 'The EE_Config class should not be instantiated until AFTER the "AHEE__EE_System__load_core_configuration__begin" has been triggered.', 'event_espresso' ),
-				__FILE__, __FUNCTION__, __LINE__
-			);
-		}
+		// if ( ! did_action( 'AHEE__EE_System__load_core_configuration__begin' ) ) {
+		// 	throw new EE_Error(
+		// 		__(
+		// 			'The EE_Config class should not be instantiated until AFTER the "AHEE__EE_System__load_core_configuration__begin" has been triggered.',
+		// 			'event_espresso'
+		// 		)
+		// 	);
+		// }
 		do_action( 'AHEE__EE_Config__construct__begin',$this );
 		$this->registry = $registry;
 		$this->_config_option_names = get_option( 'ee_config_option_names', array() );
