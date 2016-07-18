@@ -467,28 +467,32 @@ class Read extends Base {
 	 */
 	protected function _get_entity_links( $model, $db_row, $entity_array ) {
 		//add basic links
-		$links = array(
-			'self' => array(
+		$links = array();
+		if( $model instanceof \EEM_Base 
+			&& $model->has_primary_key_field() ) {
+			$links[ 'self' ] = array(
 				array(
 					'href' => $this->get_versioned_link_to(
 						\EEH_Inflector::pluralize_and_lower( $model->get_this_model_name() ) . '/' . $entity_array[ $model->primary_key_name() ]
 					)
 				)
-			),
-			'collection' => array(
-				array(
-					'href' => $this->get_versioned_link_to(
-						\EEH_Inflector::pluralize_and_lower( $model->get_this_model_name() )
-					)
+			);
+		}
+		$links[ 'collection' ] = array(
+			array(
+				'href' => $this->get_versioned_link_to(
+					\EEH_Inflector::pluralize_and_lower( $model->get_this_model_name() )
 				)
-			),
+			)
 		);
 
 		//add link to the wp core endpoint, if wp api is active
 		global $wp_rest_server;
-		if( $model instanceof \EEM_CPT_Base &&
-			$wp_rest_server instanceof \WP_REST_Server &&
-			$wp_rest_server->get_route_options( '/wp/v2/posts' ) ) {
+		if( $model instanceof \EEM_CPT_Base
+			&& $wp_rest_server instanceof \WP_REST_Server
+			&& $wp_rest_server->get_route_options( '/wp/v2/posts' )
+			&& $model->has_primary_key_field() ) 
+		{
 			$links[ \EED_Core_Rest_Api::ee_api_link_namespace . 'self_wp_post' ] = array(
 				array(
 					'href' => rest_url( '/wp/v2/posts/' . $db_row[ $model->get_primary_key_field()->get_qualified_column() ] ),
@@ -500,14 +504,18 @@ class Read extends Base {
 		//add links to related models
 		foreach( $this->get_model_version_info()->relation_settings( $model ) as $relation_name => $relation_obj ) {
 			$related_model_part = Read::get_related_entity_name( $relation_name, $relation_obj );
-			$links[ \EED_Core_Rest_Api::ee_api_link_namespace . $related_model_part ] = array(
-				array(
-					'href' => $this->get_versioned_link_to(
-						\EEH_Inflector::pluralize_and_lower( $model->get_this_model_name() ) . '/' . $entity_array[ $model->primary_key_name() ] . '/' . $related_model_part
-					),
-					'single' => $relation_obj instanceof \EE_Belongs_To_Relation ? true : false
-				)
-			);
+			if( $model instanceof \EEM_Base
+				&& $model->has_primary_key_field() ) 
+			{
+				$links[ \EED_Core_Rest_Api::ee_api_link_namespace . $related_model_part ] = array(
+					array(
+						'href' => $this->get_versioned_link_to(
+							\EEH_Inflector::pluralize_and_lower( $model->get_this_model_name() ) . '/' . $entity_array[ $model->primary_key_name() ] . '/' . $related_model_part
+						),
+						'single' => $relation_obj instanceof \EE_Belongs_To_Relation ? true : false
+					)
+				);
+			}
 		}
 		return $links;
 	}
