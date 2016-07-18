@@ -23,6 +23,13 @@ Resources on Event Espresso 4 for a beginner to advanced users.
 
 [View Event Espresso 4 Documentation →](https://eventespresso.com/support/documentation/versioned-docs?doc_ver=ee4&utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=view+ee4+documentation)
 
+## Mobile Event Apps
+The Event Espresso 4 check-in & ticket scanning event app is available for [Android](http://evts.io/EE4_Android_App?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=mobile+event+apps+android) and [Apple](http://evts.io/EE4_Apple_App?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=mobile+event+apps+apple) devices.
+
+[View Mobile Event App Documentation →](https://eventespresso.com/wiki/ee4-event-apps/?utm_source=github&utm_medium=link&utm_campaign=ee4_github_plugin_description_homepage&utm_content=mobile+event+apps+documentation)
+
+## Newsletter
+Be the first to know when we ship new features ... [signup here](https://eventespresso.com/newsletter/).
 
 ## Developers
 
@@ -38,7 +45,8 @@ This is the Core for Event Espresso 4. This README.md file is targeted for displ
 
 > Extra:  The code structure and phpdoc parsed documentation can be found at http://code.eventespresso.com
 >
-> Developer Targeted Documentation can be found at http://developer.eventespresso.com
+> Developer Targeted Documentation can be found at http://developer.eventespresso.com/docs
+> Developer News & Updates can be found at http://developer.eventespresso.com
 
 
 ## Event Espresso Releases

@@ -1,5 +1,8 @@
 <?php
 namespace EventEspresso\core\libraries\rest_api\controllers\model;
+
+use EventEspresso\core\libraries\rest_api\Model_Data_Translator;
+
 if ( !defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
@@ -61,13 +64,11 @@ class Meta extends Base {
 				}else{
 					$datatype = 'String';
 				}
-				$default_value = $field_obj->get_default_value();
-				if( $default_value === EE_INF ) {
-					$default_value = EE_INF_IN_DB;
-				} elseif( $field_obj instanceof \EE_Datetime_Field &&
-					$default_value instanceof \DateTime ) {
-					$default_value = $default_value->format( 'c' );
-				}
+				$default_value = Model_Data_Translator::prepare_field_value_for_json(
+					$field_obj,
+					$field_obj->get_default_value(),
+					$this->get_model_version_info()->requested_version()
+				);
 				$field_json = array(
 					'name' => $field_name,
 					'nicename' => $field_obj->get_nicename(),
@@ -116,6 +117,7 @@ class Meta extends Base {
 		}
 		$response_data[ 'ee' ] = array(
 			'version' => \EEM_System_Status::instance()->get_ee_version(),
+			'documentation_url' => 'https://github.com/eventespresso/event-espresso-core/tree/master/docs/C--REST-API',
 			'addons' => $addons,
 			'maintenance_mode' => \EE_Maintenance_Mode::instance()->real_level(),
 			'served_core_versions' => array_keys( \EED_Core_Rest_Api::versions_served() )

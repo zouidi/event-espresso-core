@@ -1,7 +1,7 @@
 <?php if (!defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
 /**
  * CSV Import Export class
- * 
+ *
  * For dealing with CSV files directly. For exports/reports, it would generally
  * be preferred to use EventEspressoBatchRequest\BatchRequestProcessor and
  * EEH_Export to create csv files on the server and then direct the user to download them
@@ -293,10 +293,8 @@
 	 * @return void
 	 */
 	public function write_metadata_to_csv( $filehandle, $models_to_update = array() ){
-		EE_Registry::instance()->load_helper('DTT_Helper');
 		$data_row = array(EE_CSV::metadata_header);//do NOT translate because this exact string is used when importing
 		$this->fputcsv2($filehandle, $data_row);
-		EE_Registry::instance()->load_helper('DTT_Helper');
 		$meta_data = array( 0=> array(
 			'version'=>espresso_version(),
 			'timezone'=>  EEH_DTT_Helper::get_timezone(),
@@ -308,16 +306,15 @@
 
 
 
-	 /**
-	  * Writes $data to the csv file open in $filehandle. uses the array indices of $data for column headers
-	  *
-	  * @param resource $filehandle name of file to load
-	  * @param array $data 2D array, first numerically-indexed, and next-level-down preferably indexed by string
-	  * @return bool if we successfully wrote to the CSV or not. If there's no $data, we consider that a success (because we wrote everything there was...nothing)
-	  * @throws \EE_Error
-	  */
-	public function write_data_array_to_csv( $filehandle, $data){
-		EE_Registry::instance()->load_helper('Array');
+	/**
+	 * Writes $data to the csv file open in $filehandle. uses the array indices of $data for column headers
+	 * @param array $data 2D array, first numerically-indexed, and next-level-down preferably indexed by string
+	 * @param boolean $add_csv_column_names whether or not we should add the keys in the bottom-most array as a row for headers in the CSV.
+	 * Eg, if $data looked like array(0=>array('EVT_ID'=>1,'EVT_name'=>'monkey'...), 1=>array(...),...))
+	 * then the first row we'd write to the CSV would be "EVT_ID,EVT_name,..."
+	 * @return boolean if we successfully wrote to the CSV or not. If there's no $data, we consider that a success (because we wrote everything there was...nothing)
+	 */
+	public function write_data_array_to_csv($filehandle, $data){
 
 
 		//determine if $data is actually a 2d array
