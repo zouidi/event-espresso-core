@@ -21,7 +21,7 @@ class EEM_Registration extends EEM_Soft_Delete_Base {
 	 * are status codes (eg, approved, cancelled, etc)
 	 * @var array
 	 */
-	private static $_reg_status;
+	private static $_reg_status = array();
 
 	/**
 	 * The value of REG_count for a primary registrant
