@@ -49,7 +49,9 @@ class EED_Bot_Trap  extends EED_Module {
 	 *  @return 	void
 	 */
 	public static function set_trap() {
-        define('EE_BOT_TRAP_BASE_URL', plugin_dir_url(__FILE__) . DS);
+		if ( ! defined( 'EE_BOT_TRAP_BASE_URL' )) {
+			define( 'EE_BOT_TRAP_BASE_URL', plugin_dir_url( __FILE__ ) . DS );
+		}
         add_action(
             'AHEE__ticket_selector_chart__template__after_ticket_selector',
             array('EED_Bot_Trap', 'generate_bot_trap'),
