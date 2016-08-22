@@ -44,15 +44,16 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 	public function test_get_datetimes_for_event_ordered_by_DTT_order__different_timezone() {
 
 		//create an event and datetime
+		/** @var EE_Event $event */
 		$event = $this->factory->event->create( array( 'EVT_timezone_string' =>  'Australia/Sydney' ) );
 
-		//for test we want a datetime begining one hour before now and ending now (-1min), and a datetime starting now and ending one hour from now.
-		$dtt1_start = time() - 60*60*24;
-		$dtt1_end = time() - 60*60;
-		$dtt2_start = $dtt1_start + 60*60;
-		$dtt2_end = $dtt1_end + 60*60*24;
-
-
+		//for test we want a datetime beginning one hour before now and ending now (-1min), and a datetime starting now and ending one hour from now.
+		$dtt1_start = time() - WEEK_IN_SECONDS;
+		$dtt1_end = time() - HOUR_IN_SECONDS;
+		$dtt2_start = $dtt1_start + HOUR_IN_SECONDS;
+		$dtt2_end = $dtt1_end + WEEK_IN_SECONDS;
+		/** @var EE_Datetime $dtt1 */
+		/** @var EE_Datetime $dtt2 */
 		$dtt1 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt1_start, 'DTT_EVT_end' => $dtt1_end ) );
 		$dtt2 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt2_start, 'DTT_EVT_end' => $dtt2_end ) );
 
@@ -100,19 +101,22 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 	 */
 	public function test_get_datetimes_for_event_ordered_by_start_time() {
 		//create an event we'll use
+		/** @var EE_Event $event */
 		$event = $this->factory->event->create();
 
 		//let's create three datetimes ( one that started one hour ago and ended now(-1min), one that starts now and ends one hour from now, and one that starts one hour from now and ends two hours from now)
-		$dtt1start = time() - 60*60;
-		$dtt1end = time() - 60;
+		$dtt1start = time() - HOUR_IN_SECONDS;
+		$dtt1end = time() - MINUTE_IN_SECONDS;
 
-		$dtt2start = $dtt1start + 60*60;
-		$dtt2end = $dtt1end + 60*60;
-		$dtt3start = $dtt2start + 60*60;
-		$dtt3end = $dtt2end + 60*60;
-
+		$dtt2start = $dtt1start + HOUR_IN_SECONDS;
+		$dtt2end = $dtt1end + HOUR_IN_SECONDS;
+		$dtt3start = $dtt2start + HOUR_IN_SECONDS;
+		$dtt3end = $dtt2end + HOUR_IN_SECONDS;
+		/** @var EE_Datetime $dtt1 */
 		$dtt1 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt1start, 'DTT_EVT_end' => $dtt1end ) );
+		/** @var EE_Datetime $dtt2 */
 		$dtt2 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt2start, 'DTT_EVT_end' => $dtt2end ) );
+		/** @var EE_Datetime $dtt3 */
 		$dtt3 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt3start, 'DTT_EVT_end' => $dtt3end ) );
 
 		//verify
@@ -161,19 +165,22 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 	 */
 	public function test_get_datetimes_for_ticket_ordered_by_start_time() {
 		//now create a TICKET we'll use.
+		/** @var EE_TICKET $ticket */
 		$ticket = $this->factory->ticket->create();
 
 		//let's create three datetimes ( one that started one hour ago and ended now (-1min), one that starts now and ends one hour from now, and one that starts one hour from now and ends two hours from now)
-		$dtt1start = time() - 60*60;
-		$dtt1end = time() - 60;
+		$dtt1start = time() - HOUR_IN_SECONDS;
+		$dtt1end = time() - MINUTE_IN_SECONDS;
 
-		$dtt2start = $dtt1start + 60*60;
-		$dtt2end = $dtt1end + 60*60;
-		$dtt3start = $dtt2start + 60*60;
-		$dtt3end = $dtt2end + 60*60;
-
+		$dtt2start = $dtt1start + HOUR_IN_SECONDS;
+		$dtt2end = $dtt1end + HOUR_IN_SECONDS;
+		$dtt3start = $dtt2start + HOUR_IN_SECONDS;
+		$dtt3end = $dtt2end + HOUR_IN_SECONDS;
+		/** @var EE_Datetime $dtt1 */
 		$dtt1 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt1start, 'DTT_EVT_end' => $dtt1end ) );
+		/** @var EE_Datetime $dtt2 */
 		$dtt2 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt2start, 'DTT_EVT_end' => $dtt2end ) );
+		/** @var EE_Datetime $dtt3 */
 		$dtt3 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt3start, 'DTT_EVT_end' => $dtt3end ) );
 
 		//verify
@@ -222,16 +229,17 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 	 */
 	public function test_get_datetimes_for_ticket_ordered_by_DTT_order() {
 		//create an event and datetime
+		/** @var EE_TICKET $ticket */
 		$ticket = $this->factory->ticket->create();
 
-		//for test we want a datetime begining one hour before now and ending now (-1min), and a datetime starting now and ending one hour from now.
-		$dtt1_start = time() - 60*60;
-		$dtt1_end = time() - 60;
-		$dtt2_start = $dtt1_start + 60*60;
-		$dtt2_end = $dtt1_end + 60*60;
-
-
+		//for test we want a datetime beginning one hour before now and ending now (-1min), and a datetime starting now and ending one hour from now.
+		$dtt1_start = time() - HOUR_IN_SECONDS;
+		$dtt1_end = time() - MINUTE_IN_SECONDS;
+		$dtt2_start = $dtt1_start + HOUR_IN_SECONDS;
+		$dtt2_end = $dtt1_end + HOUR_IN_SECONDS;
+		/** @var EE_Datetime $dtt1 */
 		$dtt1 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt1_start, 'DTT_EVT_end' => $dtt1_end ) );
+		/** @var EE_Datetime $dtt2 */
 		$dtt2 = $this->factory->datetime->create( array( 'DTT_EVT_start' => $dtt2_start, 'DTT_EVT_end' => $dtt2_end ) );
 
 		//verify
@@ -284,35 +292,30 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 			EEM_Datetime::reset();
 			EEM_Datetime::instance();
 		}
-
+		$tz_string = EEH_DTT_Helper::get_timezone();
+		$this->assertEquals( $tz_string, 'Australia/Sydney' );
 		//make sure now is in the timezone we want to test with.
-		$now =  new Datetime( '@' . ( time() + ( DAY_IN_SECONDS * 30 ) ) );
-		$now->setTimeZone( new DateTimeZone( EEH_DTT_Helper::get_timezone() ) );
+		$now = new Datetime( '@' . ( time() + MONTH_IN_SECONDS ) );
+		$now->setTimeZone( new DateTimeZone( $tz_string ) );
 		$now->setTime( '8', '0', '0' );
 		$now->setTimeZone( new DateTimeZone( 'America/Toronto' ) );
-
 		//get the default datetime
 		$default_date = EEM_Datetime::instance()->create_new_blank_datetime();
 		$default_date = reset( $default_date );
-
 		//assert instance
 		$this->assertInstanceOf( 'EE_Datetime', $default_date );
-
 		//set its timezone to match our expected timezone
 		$default_date->set_timezone( 'America/Toronto' );
-		$actual = $default_date->get_DateTime_object( 'DTT_EVT_start');
-
+		$actual = $default_date->get_DateTime_object( 'DTT_EVT_start' );
 		$this->assertInstanceOf( 'DateTime', $actual );
-
 		//assert timezones are the same
 		$this->assertEquals( $now->getTimezone(), $actual->getTimeZone() );
-
 		//assert that we have the correct values on the date... we'll do each part separately to verify.
-		$this->assertEquals( $now->format('Y'), $actual->format('Y' ) );
-		$this->assertEquals( $now->format('m'), $actual->format( 'm' ) );
-		$this->assertEquals( $now->format('d'), $actual->format( 'd' ) );
-		$this->assertEquals( $now->format('H'), $actual->format( 'H' ) );
-		$this->assertEquals( $now->format('i'), $actual->format('i' ) );
+		$this->assertEquals( $now->format( 'Y' ), $actual->format( 'Y' ) );
+		$this->assertEquals( $now->format( 'm' ), $actual->format( 'm' ) );
+		$this->assertEquals( $now->format( 'd' ), $actual->format( 'd' ) );
+		$this->assertEquals( $now->format( 'H' ), $actual->format( 'H' ) );
+		$this->assertEquals( $now->format( 'i' ), $actual->format( 'i' ) );
 	}
 
 
@@ -328,6 +331,7 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 		$full_format = implode( ' ', $formats );
 
 		//setup some datetimes to attach to events.
+		/** @var EE_Datetime[] $datetimes */
 		$datetimes = array(
 			'expired_datetime' => $this->factory->datetime->create( array( 'DTT_EVT_start' => $past_start_date->format( $full_format ), 'DTT_EVT_end' => $past_start_date->format( $full_format), 'timezone' => 'America/Toronto', 'formats' =>  $formats ) ),
 			'upcoming_datetime' => $this->factory->datetime->create( array( 'DTT_EVT_start' => $upcoming_start_date->format( $full_format ), 'DTT_EVT_end' => $upcoming_start_date->format( $full_format), 'timezone' => 'America/Toronto', 'formats' => $formats ) ),
@@ -335,8 +339,7 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 			'sold_out_datetime' => $this->factory->datetime->create( array( 'DTT_EVT_start' => $upcoming_start_date->format( $full_format ), 'DTT_EVT_end' => $upcoming_start_date->format( $full_format), 'DTT_reg_limit' => 10, 'DTT_sold' => 10,  'timezone' => 'America/Toronto', 'formats' =>  $formats ) ),
 			'inactive_datetime' => $this->factory->datetime->create( array( 'DTT_EVT_start' => $current->format( $full_format ), 'DTT_EVT_end' => $current_end_date->format( $full_format), 'timezone' => 'America/Toronto', 'formats' =>  $formats ) )
 		);
-
-
+		/** @var EE_Event[] $events */
 		$events = $this->factory->event->create_many(5);
 
 		//add datetimes to the events.
@@ -406,6 +409,7 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 	 */
 	public function test_get_datetime_counts_by_status_and_get_datetime_count_for_status() {
 		//setup some datetimes for testing with
+		/** @var EE_Datetime[] $upcoming_datetimes */
 		$upcoming_datetimes = $this->factory->datetime->create_many(5);
 		//set upcoming datetimes to actually be upcoming!
 		foreach( $upcoming_datetimes as $datetime ) {
@@ -414,6 +418,7 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 		}
 
 		//setup some expired datetimes
+		/** @var EE_Datetime[] $expired_datetimes */
 		$expired_datetimes = $this->factory->datetime->create_many(2);
 		//set expired
 		foreach( $expired_datetimes as $datetime ) {
@@ -439,3 +444,6 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 		$this->assertEquals( 2, EEM_Datetime::instance()->get_datetime_count_for_status( EE_Datetime::expired ) );
 	}
 }
+
+
+// Location: testcases/core/db_models/EEM_Datetime_Test.php
