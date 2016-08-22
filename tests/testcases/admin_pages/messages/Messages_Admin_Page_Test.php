@@ -23,16 +23,12 @@ class Messages_Admin_Page_Test extends EE_UnitTestCase {
 
 	public function setUp() {
 		parent::setUp();
+		$this->loadAdminMocks();
 		$this->delayedAdminPageMocks( 'messages' );
-		$this->_load_requirements();
-	}
-
-
-
-	protected function _load_requirements() {
 		$this->_MessagesAdminPage = new Messages_Admin_Page_Mock();
-		$this->_MessageResourceManager = EE_Registry::instance()->load_lib( 'Message_Resource_Manager' );
+		$this->_MessageResourceManager = $this->registry()->load_lib( 'Message_Resource_Manager' );
 	}
+
 
 
 	/**
@@ -61,8 +57,8 @@ class Messages_Admin_Page_Test extends EE_UnitTestCase {
 	 * @group 9330
 	 */
 	public function test_deactivate_messenger_with_valid_messenger() {
+		$this->assertTrue( $this->_MessageResourceManager->ensure_messenger_is_active( 'html' ) );
 		$original_active_messenger_settings = $this->_MessageResourceManager->get_active_messengers_option( true );
-		$this->assertTrue( isset( $original_active_messenger_settings['html'] ) );
 		//unset manually the html messenger from this array so we'll have our expected array.
 		unset( $original_active_messenger_settings['html'] );
 
@@ -77,3 +73,6 @@ class Messages_Admin_Page_Test extends EE_UnitTestCase {
 		EE_Error::reset_notices();
 	}
 }
+
+
+// Location: testcases/admin_pages/messages/Messages_Admin_Page_Test.php
