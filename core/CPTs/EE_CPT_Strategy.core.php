@@ -56,7 +56,7 @@ class EE_CPT_Strategy extends EE_BASE {
 	protected $CPT_model;
 
 	/**
-	 *	@var EventEspresso\Core\CPTs\CptQueryModifier
+	 *	@var EventEspresso\core\CPTs\CptQueryModifier
 	 */
 	protected $query_modifier;
 
@@ -83,6 +83,7 @@ class EE_CPT_Strategy extends EE_BASE {
 	 */
 	protected function __construct() {
 		// get CPT data
+		EE_Registry::instance()->load_core('EE_Register_CPTs');
 		$this->_CPTs = EE_Register_CPTs::get_CPTs();
 		$this->_CPT_endpoints = $this->_set_CPT_endpoints();
 		$this->_CPT_taxonomies = EE_Register_CPTs::get_taxonomies();
