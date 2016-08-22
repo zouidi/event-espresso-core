@@ -23,7 +23,7 @@ class EE_Enum_Text_Field extends EE_Text_Field_Base {
 	 * @param mixed $default_value
 	 * @param array $allowed_enum_values  keys are values to be used in the DB, values are how they should be displayed
 	 */
-	function __construct($table_column, $nice_name, $nullable, $default_value, $allowed_enum_values){
+	function __construct($table_column, $nice_name, $nullable, $default_value, array $allowed_enum_values){
 		$this->_allowed_enum_values = $allowed_enum_values;
 		parent::__construct($table_column, $nice_name, $nullable, $default_value);
 	}
