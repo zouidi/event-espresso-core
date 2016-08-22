@@ -3,6 +3,9 @@
 if (!defined('EVENT_ESPRESSO_VERSION'))
 	exit('No direct script access allowed');
 
+
+
+
 /**
  *
  * Messages_Admin_Page_Mock
@@ -14,12 +17,12 @@ if (!defined('EVENT_ESPRESSO_VERSION'))
  * @since  4.6
  *
  */
-require_once EE_ADMIN . 'EE_Admin_Page.core.php';
-require_once EE_ADMIN . 'EE_Admin_Page_CPT.core.php';
-require_once EE_ADMIN_PAGES . 'messages/Messages_Admin_Page.core.php';
 class Messages_Admin_Page_Mock extends Messages_Admin_Page {
 
 
+	/**
+	 * @param bool $routing
+	 */
 	public function __construct( $routing = true ) {
 		//define any constants that might not be defined yet when using this mock.
 		if ( ! defined( 'EE_MSG_PG_SLUG' ) ) {
@@ -38,22 +41,42 @@ class Messages_Admin_Page_Mock extends Messages_Admin_Page {
 
 
 
-
+	/**
+	 * @param $messenger_name
+	 * @return bool
+	 */
 	public function activate_messenger( $messenger_name ) {
 		return $this->_activate_messenger( $messenger_name );
 	}
 
 
+
+	/**
+	 * @param $messenger_name
+	 * @param $message_type_name
+	 * @return bool
+	 */
 	public function activate_message_type_for_messenger( $messenger_name, $message_type_name ) {
 		return $this->_activate_message_type_for_messenger( $messenger_name, $message_type_name );
 	}
 
 
+
+	/**
+	 * @param $messenger_name
+	 * @return bool
+	 */
 	public function deactivate_messenger( $messenger_name ) {
 		return $this->_deactivate_messenger( $messenger_name );
 	}
 
 
+
+	/**
+	 * @param $messenger_name
+	 * @param $message_type_name
+	 * @return bool
+	 */
 	public function deactivate_message_type_for_messenger( $messenger_name, $message_type_name ) {
 		return $this->_deactivate_message_type_for_messenger( $messenger_name, $message_type_name );
 	}
