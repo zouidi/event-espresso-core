@@ -18,6 +18,7 @@ class EE_Payment_Processor_Test extends EE_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 		$this->_pretend_addon_hook_time();
+		EE_Registry::instance()->load_lib( 'Payment_Method_Manager' );
 		EE_Register_Payment_Method::register(
 			'onsite',
 			array(
