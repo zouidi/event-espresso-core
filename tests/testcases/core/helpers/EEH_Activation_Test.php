@@ -145,11 +145,12 @@ class EEH_Activation_Test extends EE_UnitTestCase {
 	public function test_get_default_creator_id() {
 		//clear out any previous users that may be lurking in teh system
 		foreach( get_users() as $wp_user ){
-			wp_delete_user( $wp_user->ID );
+			$this->assertTrue( wp_delete_user( $wp_user->ID ) );
 		}
-		//set some users; and just make it interesting by having the first user NOT be an admin
-		$this->factory->user->create_many( 2 );
+		\EEH_Activation::reset_default_creator_id();
+		//set some users; and just make it interesting by only having the first users be an admin
 		$users = $this->factory->user->create_many( 2 );
+		$this->factory->user->create_many( 2 );
 		//make users administrators.
 		foreach ( $users as $user_id ) {
 			$user = $this->factory->user->get_object_by_id( $user_id );
@@ -172,11 +173,12 @@ class EEH_Activation_Test extends EE_UnitTestCase {
 		 */
 		EEH_Activation::reset();
 		foreach( get_users() as $wp_user ){
-			wp_delete_user( $wp_user->ID );
+			$this->assertTrue( wp_delete_user( $wp_user->ID ) );
 		}
+		\EEH_Activation::reset_default_creator_id();
 		//set some users; and just make it interesting by having the first user NOT be an admin
-		$this->factory->user->create_many( 2 );
 		$users_created_after_reset = $this->factory->user->create_many( 2 );
+		$this->factory->user->create_many( 2 );
 		//make users administrators.
 		foreach ( $users_created_after_reset as $user_id ) {
 			$user = $this->factory->user->get_object_by_id( $user_id );
@@ -249,12 +251,12 @@ class EEH_Activation_Test extends EE_UnitTestCase {
 			self::expired_cron_task_name => EEH_Activation::cron_task_no_longer_in_use
 		);
 	}
-	
+
 	function test_table_exists__success() {
 		$this->assertTrue( EEH_Activation::table_exists( 'posts' ) );
 		$this->assertTrue( EEH_Activation::table_exists( 'esp_attendee_meta' ) );
 	}
-	
+
 	function test_table_exists__false() {
 		$this->assertFalse( EEH_Activation::table_exists( 'monkeys' ) );
 	}
