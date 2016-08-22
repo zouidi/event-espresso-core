@@ -183,10 +183,16 @@ class EE_Registry {
 	 * @access    public
 	 * @param  \EE_Dependency_Map $dependency_map
 	 * @return \EE_Registry instance
+	 * @throws \Exception
 	 */
 	public static function instance( \EE_Dependency_Map $dependency_map = null ) {
 		// check if class object is instantiated
 		if ( ! self::$_instance instanceof EE_Registry ) {
+			if ( ! $dependency_map instanceof EE_Dependency_Map ) {
+				throw new Exception(
+					__( 'EE_Dependency_Map is required when constructing EE_Registry.', 'event_espresso' )
+				);
+			}
 			self::$_instance = new EE_Registry( $dependency_map );
 		}
 		return self::$_instance;
@@ -1055,7 +1061,7 @@ class EE_Registry {
 	 * @return void
 	 */
 	protected function _set_cached_class( $class_obj, $class_name, $class_prefix = '', $from_db = false ) {
-		if ( empty( $class_obj ) ) {
+		if ( empty( $class_obj ) || empty( $class_name ) ) {
 			return;
 		}
 		// return newly instantiated class
