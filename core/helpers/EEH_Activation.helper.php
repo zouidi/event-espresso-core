@@ -561,6 +561,16 @@ class EEH_Activation {
 
 
 	/**
+	 * @since  4.9.9
+	 * @return void
+	 */
+	public static function reset_default_creator_id() {
+		self::$_default_creator_id  = null;
+	}
+
+
+
+	/**
 	 * Tries to find the oldest admin for this site.  If there are no admins for this site then return NULL.
 	 * The role being used to check is filterable.
 	 *
@@ -584,9 +594,13 @@ class EEH_Activation {
 			return (int) $pre_filtered_id;
 		}
 
-		$capabilities_key = EEH_Activation::ensure_table_name_has_prefix( 'capabilities' );
-		$query = $wpdb->prepare( "SELECT user_id FROM $wpdb->usermeta WHERE meta_key = '$capabilities_key' AND meta_value LIKE %s ORDER BY user_id ASC LIMIT 0,1", '%' . $role_to_check . '%' );
-		$user_id = $wpdb->get_var( $query );
+		$user_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT user_id FROM $wpdb->usermeta WHERE meta_key = '%s' AND meta_value LIKE %s ORDER BY user_id ASC LIMIT 0,1",
+				EEH_Activation::ensure_table_name_has_prefix( 'capabilities' ),
+				'%' . $role_to_check . '%'
+			)
+		);
 		 $user_id = apply_filters( 'FHEE__EEH_Activation_Helper__get_default_creator_id__user_id', $user_id );
 		 if ( $user_id && (int)$user_id ) {
 		 	self::$_default_creator_id = (int)$user_id;
