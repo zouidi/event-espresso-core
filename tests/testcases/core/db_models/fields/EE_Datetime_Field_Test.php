@@ -103,9 +103,9 @@ class EE_Datetime_Field_Test extends EE_UnitTestCase {
 	 * @since 4.6
 	 */
 	public function test_construct() {
+		update_option( 'timezone_string', 'America/Vancouver' );
 		//instantiate a _datetime_field object for tests.
 		$this->_set_dtt_field_object();
-
 		//verify date_format
 		$this->assertEquals( $this->_datetime_field->get_property( '_date_format' ), 'F j, Y' );
 		$this->assertEquals( $this->_datetime_field->get_property( '_time_format'), 'g:i a'  );
@@ -113,7 +113,7 @@ class EE_Datetime_Field_Test extends EE_UnitTestCase {
 		$this->assertEquals( $this->_datetime_field->get_property( '_pretty_time_format' ), 'g:i a' );
 
 		//verify timezone
-		$this->assertEquals( $this->_datetime_field->get_timezone(), 'Africa/Abidjan' );
+		$this->assertEquals( $this->_datetime_field->get_timezone(), 'America/Vancouver' );
 	}
 
 
@@ -363,4 +363,6 @@ class EE_Datetime_Field_Test extends EE_UnitTestCase {
 
 
 
-} // end class EE_Datetime_Field_Test
+}
+// end class EE_Datetime_Field_Test
+// Location: testcases/core/db_models/fields/EE_Datetime_Field_Test.php
