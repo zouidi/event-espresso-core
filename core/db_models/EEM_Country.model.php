@@ -23,9 +23,9 @@
  */
 class EEM_Country extends EEM_Base {
 
-  	// private instance of the Attendee object
-	protected static $_instance = NULL;
-  	// array of all countries
+  	// private instance of the EEM_Country object
+	protected static $_instance = null;
+	// array of all countries
 	private static $_all_countries = FALSE;
   	// array of all active countries
 	private static $_active_countries = FALSE;
@@ -34,7 +34,9 @@ class EEM_Country extends EEM_Base {
 
 	/**
 	 * Resets the country
-	 * @return EEM_Country
+	 *
+	 * @param null $timezone
+	 * @return \EEM_Country
 	 */
 	public static function reset( $timezone = NULL ){
 		self::$_active_countries = NULL;
@@ -42,6 +44,13 @@ class EEM_Country extends EEM_Base {
 		return parent::reset( $timezone );
 	}
 
+
+
+	/**
+	 * EEM_Country constructor.
+	 *
+	 * @param null $timezone
+	 */
 	protected function __construct( $timezone = NULL ){
 		$this->singular_item = __('Country','event_espresso');
 		$this->plural_item = __('Countries','event_espresso');
