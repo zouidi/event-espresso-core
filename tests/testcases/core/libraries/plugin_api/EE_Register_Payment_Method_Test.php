@@ -20,16 +20,27 @@ if (!defined('EVENT_ESPRESSO_VERSION')) {
  * @group payment_methods
  */
 class EE_Register_Payment_Method_Test extends EE_UnitTestCase{
+
 	protected $_pmt_name = 'Mock_Onsite';
 	protected $_pmt_args = NULL;
+
 	public function __construct($name = NULL, array $data = array(), $dataName = '') {
 		parent::__construct($name, $data, $dataName);
 		$this->_pmt_args = array('payment_method_paths' =>
 			array(
 				EE_TESTS_DIR . 'mocks' . DS . 'payment_methods' . DS . 'Mock_Onsite',
 			));
+	}
+
+
+
+	public function setUp() {
+		parent::setUp();
 		EE_Registry::instance()->load_lib( 'Payment_Method_Manager' );
 	}
+
+
+
 	public function test_register__fail(){
 		$this->_stop_pretending_addon_hook_time();
 		remove_all_filters('FHEE__EE_Payment_Method_Manager__register_payment_methods__payment_methods_to_register');
@@ -84,3 +95,4 @@ class EE_Register_Payment_Method_Test extends EE_UnitTestCase{
 }
 
 // End of file EE_Register_Payment_Method_Test.php
+// Location: testcases/core/libraries/plugin_api/EE_Register_Payment_Method_Test.php
