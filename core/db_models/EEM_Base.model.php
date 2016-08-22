@@ -585,20 +585,21 @@ abstract class EEM_Base extends EE_Base{
 
 
 	/**
-	 *		This function is a singleton method used to instantiate the Espresso_model object
+	 * This function is a singleton method used to instantiate the Espresso_model object
 	 *
-	 *		@access public
-	 *		@param string $timezone string representing the timezone we want to set for returned Date Time Strings (and any incoming timezone data that gets saved).  Note this just sends the timezone info to the date time model field objects.  Default is NULL (and will be assumed using the set timezone in the 'timezone_string' wp option)
-	 *		@return static (as in the concrete child class)
+	 * @param string $timezone string representing the timezone we want to set for returned Date Time Strings
+	 *                         (and any incoming timezone data that gets saved).
+	 *                         Note this just sends the timezone info to the date time model field objects.
+	 *                         Default is NULL
+	 *                         (and will be assumed using the set timezone in the 'timezone_string' wp option)
+	 * @return EEM_Base (as in the concrete child class)
 	 */
 	public static function instance( $timezone = NULL ){
-
 		// check if instance of Espresso_model already exists
 		if ( ! static::$_instance instanceof static) {
 			// instantiate Espresso_model
 			static::$_instance = new static( $timezone );
 		}
-
 		//we might have a timezone set, let set_timezone decide what to do with it
 		static::$_instance->set_timezone( $timezone );
 
@@ -611,12 +612,11 @@ abstract class EEM_Base extends EE_Base{
 	/**
 	 * resets the model and returns it
 	 * @param null | string $timezone
-	 * @return static
+	 * @return EEM_Base|null
 	 */
 	public static function reset(  $timezone = NULL ){
 		if ( ! is_null( static::$_instance ) ) {
 			static::$_instance = null;
-
 			return self::instance( $timezone );
 		}
 		return null;
@@ -1919,15 +1919,15 @@ abstract class EEM_Base extends EE_Base{
 				throw new EE_Error( sprintf( __( 'WPDB Error occurred, but no error message was logged by wpdb! The wpdb method called was "%1$s" and the arguments were "%2$s"', 'event_espresso' ), $wpdb_method, var_export( $arguments_to_provide, true ) ) );
 			}
 		}elseif( $result === false ) {
-			EE_Error::add_error( 
-				sprintf( 
+			EE_Error::add_error(
+				sprintf(
 					__( 'A database error has occurred. Turn on WP_DEBUG for more information.||A database error occurred doing wpdb method "%1$s", with arguments "%2$s". The error was "%3$s"', 'event_espresso' ),
 					$wpdb_method,
 					var_export( $arguments_to_provide, true ),
 					$wpdb->last_error
-				), 
-				__FILE__, 
-				__FUNCTION__, 
+				),
+				__FILE__,
+				__FUNCTION__,
 				__LINE__
 			);
 		}
@@ -4580,7 +4580,7 @@ abstract class EEM_Base extends EE_Base{
 		}
 		return array( $this->primary_key_name() => $this->get_primary_key_field());
 	}
-	
+
 
 
 
