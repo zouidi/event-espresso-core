@@ -197,14 +197,19 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 * @throws \EE_Error
 	 */
 	public static function set_definitions() {
-		define( 'SPCO_BASE_PATH', rtrim( str_replace( array( '\\', '/' ), DS, plugin_dir_path( __FILE__ )), DS ) . DS );
-		define( 'SPCO_CSS_URL', plugin_dir_url( __FILE__ ) . 'css' . DS );
-		define( 'SPCO_IMG_URL', plugin_dir_url( __FILE__ ) . 'img' . DS );
-		define( 'SPCO_JS_URL', plugin_dir_url( __FILE__ ) . 'js' . DS );
-		define( 'SPCO_INC_PATH', SPCO_BASE_PATH . 'inc' . DS );
-		define( 'SPCO_REG_STEPS_PATH', SPCO_BASE_PATH . 'reg_steps' . DS );
-		define( 'SPCO_TEMPLATES_PATH', SPCO_BASE_PATH . 'templates' . DS );
-		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( SPCO_BASE_PATH, TRUE );
+		if ( ! defined( 'SPCO_BASE_PATH' ) ) {
+			define(
+				'SPCO_BASE_PATH',
+				rtrim( str_replace( array( '\\', '/' ), DS, plugin_dir_path( __FILE__ ) ), DS ) . DS
+			);
+			define( 'SPCO_CSS_URL', plugin_dir_url( __FILE__ ) . 'css' . DS );
+			define( 'SPCO_IMG_URL', plugin_dir_url( __FILE__ ) . 'img' . DS );
+			define( 'SPCO_JS_URL', plugin_dir_url( __FILE__ ) . 'js' . DS );
+			define( 'SPCO_INC_PATH', SPCO_BASE_PATH . 'inc' . DS );
+			define( 'SPCO_REG_STEPS_PATH', SPCO_BASE_PATH . 'reg_steps' . DS );
+			define( 'SPCO_TEMPLATES_PATH', SPCO_BASE_PATH . 'templates' . DS );
+			EEH_Autoloader::register_autoloaders_for_each_file_in_folder( SPCO_BASE_PATH, true );
+		}
 	}
 
 
@@ -215,7 +220,7 @@ class EED_Single_Page_Checkout  extends EED_Module {
 	 *
 	 * @access    private
 	 * @throws EE_Error
-	 * @return    array
+	 * @return    void
 	 */
 	public static function load_reg_steps() {
 		static $reg_steps_loaded = FALSE;
