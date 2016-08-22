@@ -26,9 +26,17 @@ if (!defined('EVENT_ESPRESSO_VERSION'))
  * ------------------------------------------------------------------------
  */
 class EEM_Currency extends EEM_Base{
-		// private instance of the Attendee object
-	protected static $_instance = NULL;
 
+	// private instance of the EEM_Currency object
+	protected static $_instance = null;
+
+
+
+	/**
+	 * EEM_Currency constructor.
+	 *
+	 * @param null $timezone
+	 */
 	protected function __construct( $timezone = NULL ) {
 		$this->singular_item = __('Currency','event_espresso');
 		$this->plural_item = __('Currencies','event_espresso');
@@ -53,8 +61,9 @@ class EEM_Currency extends EEM_Base{
 		parent::__construct( $timezone );
 	}
 
+
 	/**
-	 * Gets all thea ctive currencies, and orders them by their singular name, and then their code
+	 * Gets all the active currencies, and orders them by their singular name, and then their code
 	 * (may be overridden)
 	 * @param array $query_params see EEM_Base::get_all
 	 * @return EE_Currency[]
@@ -66,6 +75,9 @@ class EEM_Currency extends EEM_Base{
 		}
 		return $this->get_all($query_params);
 	}
+
+
+
 	/**
 	 * Gets all the currencies which can be used by that payment method type
 	 * @param EE_PMT_Base $payment_method_type
