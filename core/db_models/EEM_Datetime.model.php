@@ -27,7 +27,7 @@ require_once ( EE_CLASSES . 'EE_Datetime.class.php' );
 class EEM_Datetime extends EEM_Soft_Delete_Base {
 
   	// private instance of the EEM_Datetime object
-	protected static $_instance = NULL;
+	protected static $_instance = null;
 
 	/**
 	 *		private constructor to prevent direct creation
@@ -83,8 +83,8 @@ class EEM_Datetime extends EEM_Soft_Delete_Base {
 	public function create_new_blank_datetime() {
 		$blank_datetime = EE_Datetime::new_instance(
 			array(
-				'DTT_EVT_start' => $this->current_time_for_query( 'DTT_EVT_start', true ) + (60 * 60 * 24 * 30),
-				'DTT_EVT_end' => $this->current_time_for_query( 'DTT_EVT_end', true ) + (60 * 60 * 24 * 30),
+				'DTT_EVT_start' => $this->current_time_for_query( 'DTT_EVT_start', true ) + MONTH_IN_SECONDS,
+				'DTT_EVT_end' => $this->current_time_for_query( 'DTT_EVT_end', true ) + MONTH_IN_SECONDS,
 				'DTT_order' => 1,
 				'DTT_reg_limit' => EE_INF
 			),
