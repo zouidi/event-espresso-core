@@ -117,7 +117,7 @@ class EE_Dependency_Map {
 	 * @return boolean
 	 */
 	public static function register_dependencies( $class, $dependencies ) {
-		if ( ! isset( self::$_instance->_dependency_map[ $class ] ) ) {
+		if ( ! isset( self::instance()->_dependency_map[ $class ] ) ) {
 			// we need to make sure that any aliases used when registering a dependency
 			// get resolved to the correct class name
 			foreach ( (array) $dependencies as $dependency => $load_source ) {
@@ -149,7 +149,7 @@ class EE_Dependency_Map {
 				)
 			);
 		}
-		$class_name = self::$_instance->get_alias( $class_name );
+		$class_name = self::instance()->get_alias( $class_name );
 		if ( ! isset( self::$_instance->_class_loaders[ $class_name ] ) ) {
 			self::$_instance->_class_loaders[ $class_name ] = $loader;
 			return true;
