@@ -26,7 +26,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 			//checks their relations
 			foreach($model_instance->relation_settings() as $relation_name => $relation_obj){
 				//verify that each relation is named according to an existing model
-				$related_model_instance = EE_Registry::instance()->load_model($relation_name);
+				EE_Registry::instance()->load_model($relation_name);
 				$this->assertInstanceOf('EE_Model_Relation_Base', $relation_obj);
 			}
 			foreach($model_instance->field_settings(true) as $field_name => $field_obj){
@@ -59,7 +59,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	 */
 	function test_has_field(){
 		$this->assertTrue(EEM_Question::instance()->has_field('QST_ID'));
-		$this->assertTrue(EEM_QUestion::instance()->has_field('QST_admin_only'));
+		$this->assertTrue(EEM_Question::instance()->has_field('QST_admin_only'));
 		$this->assertFalse(EEM_Question::instance()->has_field('monkey brains'));
 	}
 
@@ -103,7 +103,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$this->assertEmpty( EEM_Event::instance()->get_one_by_ID( $e1->ID() ) );
 		$this->assertEmpty( EEM_Event::instance()->get_one_by_ID( $e2->ID() ) );
 		$this->assertEquals( EEM_Event::instance()->get_one_by_ID( $e3->ID() ), $e3 );
-		//and now chekc $e1 and $e2 don't exist in the entity map either
+		//and now check $e1 and $e2 don't exist in the entity map either
 		$this->assertEmpty( EEM_Event::instance()->get_from_entity_map( $e1->ID() ) );
 		$this->assertEmpty( EEM_Event::instance()->get_from_entity_map( $e2->ID() ) );
 		$this->assertEquals( EEM_Event::instance()->get_from_entity_map( $e3->ID() ), $e3 );
@@ -151,14 +151,14 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$att2->save();
 		$att3->save();
 
-		//test taht when do perform an update, the model objects are updated also
+		//test that when do perform an update, the model objects are updated also
 		$attm = EE_Registry::instance()->load_model( 'EEM_Attendee' );
 		$attm->update( array( 'ATT_fname' => 'win' ), array( array( 'ATT_fname' => 'two' ) ) );
 		$this->assertEquals( 'one', $att1->fname() );
 		$this->assertEquals( 'win', $att2->fname() );
 		$this->assertEquals( 'three', $att3->fname() );
 
-		//now test doing an update that should be more efficient wehre we DON'T update
+		//now test doing an update that should be more efficient where we DON'T update
 		//model objects
 		$attm->update( array( 'ATT_fname' => 'win_again'), array( array( 'ATT_fname' => 'one' ) ), FALSE );
 		$this->assertEquals( 'one', $att1->fname() );
@@ -169,7 +169,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$this->assertEquals( 'win_again', $name_in_db );
 
 		//also test to make sure there are no errors when there was nothing to update in the entity map
-		$att4 = EEM_Attendee::instance()->insert( array( 'ATT_fname' => 'four' ) );
+		EEM_Attendee::instance()->insert( array( 'ATT_fname' => 'four' ) );
 		$wpdb->last_error = NULL;
 		EEM_Attendee::instance()->update( array( 'ATT_fname' => 'lose' ), array( array( 'ATT_fname' => 'four' ) ) );
 		$this->assertEmpty( $wpdb->last_error );
@@ -194,6 +194,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	function test_refresh_entity_map_from_db(){
 		//get an object purposefully out-of-sync with the DB
 		//call this and make sure it's wiped clean and
+		/** @var EE_Payment $p */
 		$p = $this->new_model_obj_with_dependencies( 'Payment', array ( 'PAY_amount' => 25 ) );
 		$p->save();
 		$this->assertEquals( $p,  EEM_Payment::instance()->get_from_entity_map( $p->ID() ) );
@@ -203,7 +204,8 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$affected = $wpdb->query( $wpdb->prepare( "update {$wpdb->prefix}esp_payment SET PAY_amount = 100, TXN_ID = 0 WHERE PAY_ID = %d", $p->ID() ) );
 		$this->assertEquals( 1, $affected );
 
-		//and when it's refreshed, its PAY_amount should be updated too and it should no longer have any transaction cached or evenfindable
+		//and when it's refreshed, its PAY_amount should be updated too
+		// and it should no longer have any transaction cached or even findable
 		EEM_Payment::instance()->refresh_entity_map_from_db( $p->ID() );
 		$this->assertEquals( 100, $p->get( 'PAY_amount' ) );
 		$this->assertEquals( 0, $p->get ('TXN_ID' ) );
@@ -218,6 +220,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	function test_refresh_entity_map_from_db__serialized_object() {
 		//get an object purposefully out-of-sync with the DB
 		//call this and make sure it's wiped clean and
+		/** @var EE_Payment $p */
 		$p = $this->new_model_obj_with_dependencies( 'Payment', array( 'PAY_amount' => 25 ) );
 		$p->save();
 		$this->assertEquals( $p, EEM_Payment::instance()->get_from_entity_map( $p->ID() ) );
@@ -231,6 +234,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$affected = $wpdb->query( $wpdb->prepare( "update {$wpdb->prefix}esp_payment SET PAY_amount = 100, TXN_ID = 0 WHERE PAY_ID = %d", $p_id ) );
 		$this->assertEquals( 1, $affected );
 		//now unserialize it and verify it's what we thought it was
+		/** @var EE_Payment $p_unserialized */
 		$p_unserialized = unserialize( $p_serialized );
 		$this->assertEquals( $p_id, $p_unserialized->ID() );
 		$this->assertEquals( 25, $p_unserialized->get( 'PAY_amount' ) );
@@ -280,7 +284,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	function test_get_formats_for_with_exception() {
 		//test expected exception for invalid field
 		$this->setExpectedException( 'EE_Error' );
-		$formats = EEM_Datetime::instance()->get_formats_for( 'Bogus_Field' );
+		EEM_Datetime::instance()->get_formats_for( 'Bogus_Field' );
 	}
 
 
@@ -415,6 +419,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	public function test_alter_query_params_to_only_include_mine__logged_in() {
 		global $current_user;
 		//setup our user and set as current user.
+		/** @var WP_User $user */
 		$user = $this->factory->user->create_and_get();
 		$this->assertInstanceOf( 'WP_User', $user );
 		$user->add_role( 'administrator' );
@@ -489,7 +494,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$first_mtg_i_can_see_now = reset( $mtgs_i_can_see_now );
 		$this->assertEquals( $mtg_mine, $first_mtg_i_can_see_now );
 
-		//ok now allowthem to see others non-global messages (tesing global-related-caps should happen on EEM_Message_template_Group_Test)
+		//ok now allow them to see others non-global messages (testing global-related-caps should happen on EEM_Message_template_Group_Test)
 		$current_user->add_cap( 'ee_read_others_messages' );
 		$mtgs_i_can_see_now = EEM_Message_Template_Group::instance()->get_all( array( 'caps' => EEM_Base::caps_read_admin, array( 'MTP_is_global' => false ) ) );
 		$this->assertEquals( 2, count( $mtgs_i_can_see_now ) );
@@ -522,7 +527,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$first_event_i_can_see = reset( $events_i_can_see );
 		$this->assertEquals( $my_e, $first_event_i_can_see );
 
-		//ok now allowthem to see others, but not others private events
+		//ok now allow them to see others, but not others private events
 		$current_user->add_cap( 'ee_read_others_events' );
 		$events_i_can_see = EEM_Event::instance()->get_all( array( 'caps' => EEM_Base::caps_read_admin ) );
 		$this->assertEquals( 2, count( $events_i_can_see ) );
@@ -531,7 +536,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$second_event_i_can_see = next( $events_i_can_see );
 		$this->assertEquals( $others_public_e, $second_event_i_can_see );
 
-		//ok now allowthem to see others private events
+		//ok now allow them to see others private events
 		$current_user->add_cap( 'ee_read_private_events' );
 		$events_i_can_see = EEM_Event::instance()->get_all( array( 'caps' => EEM_Base::caps_read_admin, 'order_by' => array( 'EVT_ID' => 'ASC' ) ) );
 		$this->assertEquals( 3, count( $events_i_can_see ) );
@@ -593,7 +598,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$this->assertEquals( $my_private_e, $fourth_event_i_can_see );
 
 
-		//ok now allowthem to see others, but not others private events
+		//ok now allow them to see others, but not others private events
 		$current_user->add_cap( 'ee_read_others_events' );
 		$events_i_can_see = EEM_Event::instance()->get_all( array( 'caps' => EEM_Base::caps_read, 'order_by' => array( 'EVT_ID' => 'ASC'  ) ) );
 		$this->assertEquals( 4, count( $events_i_can_see ) );
@@ -607,7 +612,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$this->assertEquals( $my_private_e, $fourth_event_i_can_see );
 
 
-		//ok now allowthem to see others private events
+		//ok now allow them to see others private events
 		$current_user->add_cap( 'ee_read_private_events' );
 		$events_i_can_see = EEM_Event::instance()->get_all( array( 'caps' => EEM_Base::caps_read, 'order_by' => array( 'EVT_ID' => 'ASC'  ) ) );
 		$this->assertEquals( 5, count( $events_i_can_see ) );
@@ -653,7 +658,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		//now forget about the old event object we had, we want to see what happens when we fetch it again
 		EEM_Event::reset();
 		$incomplete_e = EEM_Event::instance()->get_one_by_ID( $e->ID() );
-		$actual_row = EEM_Event::instance()->get_all_wpdb_results( array( array( 'EVT_ID' => $e->ID() ) ) );
+		EEM_Event::instance()->get_all_wpdb_results( array( array( 'EVT_ID' => $e->ID() ) ) );
 		$a_field_from_meta_table = EEM_Event::instance()->field_settings_for( 'EVT_display_ticket_selector' );
 		$another_field_from_meta_table = EEM_Event::instance()->field_settings_for( 'EVT_additional_limit' );
 		$this->assertEquals( $a_field_from_meta_table->get_default_value(), $incomplete_e->get( 'EVT_display_ticket_selector' ) );
@@ -670,6 +675,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	function test_get_all_if_related_model_blank_use_nulls(){
 		$price_sans_price_type = EE_Price::new_instance( array ( 'PRC_name' => 'original', 'PRT_ID' => EEM_Price_Type::instance()->count() + 1 ) );
 		$price_sans_price_type->save();
+		/** @var EE_Price $fetched_price */
 		$fetched_price = EEM_Price::reset()->get_one( array( array( 'PRC_ID' => $price_sans_price_type->ID() ), 'force_join' => array( 'Price_Type' ) ) );
 		$this->assertInstanceOf( 'EE_Price', $fetched_price );
 		$this->assertEquals( null, $fetched_price->type_obj() );
@@ -824,19 +830,19 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$e2 = $this->new_model_obj_with_dependencies( 'Event', array() );
 		$this->assertEquals( array( $e1->ID(), $e2->ID() ), EEM_Event::instance()->get_IDs( array( $e1, $e2 ), true ) );
 	}
-	
+
 	/**
 	 * @group 9389
 	 */
 	function test_get_all__automatic_group_by() {
 		$this->assertEquals( 2, EEM_Question_Group::instance()->count() );
-		$qsgs = EEM_Question_Group::instance()->get_all( 
+		$qsgs = EEM_Question_Group::instance()->get_all(
 			array(
 				'force_join' => array( 'Question' ),
 				'limit' => array( 2, 2 ),//grab 2 but offset by 2
 			)
 		);
-		//so there are only 2 question groups, and we offset by 2. 
+		//so there are only 2 question groups, and we offset by 2.
 		//so we shouldn't see any right?
 		$this->assertEmpty( $qsgs );
 	}
@@ -851,7 +857,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	public function test_model_query_blog_id_set_on_instantiation() {
 
 		//instantiate a model and verify that sets to current_blog_id();
-		$attendee = EEM_Attendee::instance();
+		EEM_Attendee::instance();
 		$this->assertEquals( EEM_Base::get_model_query_blog_id(), get_current_blog_id() );
 
 		//verify blog_id changes
@@ -859,14 +865,14 @@ class EEM_Base_Test extends EE_UnitTestCase{
 		$this->assertEquals( EEM_Base::get_model_query_blog_id(), 2 );
 
 		//verify that any NEW models instantiated retain that change.
-		$question = EEM_Question::reset();
+		EEM_Question::reset();
 		$this->assertEquals( EEM_Base::get_model_query_blog_id(), 2 );
 
 		//make sure we restore the models to blog 1 for future tests.
 		EEM_Base::set_model_query_blog_id(1);
 	}
-        
- 
+
+
 }
 
 // End of file EEM_Base_Test.php
