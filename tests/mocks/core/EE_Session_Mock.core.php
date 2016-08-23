@@ -27,14 +27,17 @@ class EE_Session_Mock extends EE_Session {
 	 */
 	public static function instance( EE_Encryption $encryption = null ) {
 		// check if class object is instantiated
-		// session loading is turned ON by default, but prior to the init hook, can be turned back OFF via:
-		// add_filter( 'FHEE_load_EE_Session', '__return_false' );
 		if ( ! self::$_instance instanceof EE_Session_Mock ) {
 			self::$_instance = new self( $encryption );
 		}
 		return self::$_instance;
 	}
 
+
+
+	public static function reset() {
+		self::$_instance = null;
+	}
 
 
 	/**
@@ -44,12 +47,17 @@ class EE_Session_Mock extends EE_Session {
 	 * @param \EE_Encryption $encryption
 	 */
 	protected function __construct( EE_Encryption $encryption = null ) {
+		// session loading is turned ON by default, but prior to the init hook, can be turned back OFF via:
 		add_filter( 'FHEE_load_EE_Session', '__return_false' );
 		$this->encryption = $encryption;
 		parent::__construct( $encryption );
 	}
 
 
+
+	/**
+	 * @return int
+	 */
 	public function lifespan() {
 		return  60 * MINUTE_IN_SECONDS;
 	}
