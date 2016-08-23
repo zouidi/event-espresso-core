@@ -491,9 +491,27 @@ class EED_Ticket_Selector extends  EED_Module {
 	public function process_ticket_selections() {
         do_action( 'EED_Ticket_Selector__process_ticket_selections__before' );
 		// check nonce
-		if ( ! is_admin() && ( ! EE_Registry::instance()->REQ->is_set( 'process_ticket_selections_nonce' ) || ! wp_verify_nonce( EE_Registry::instance()->REQ->get( 'process_ticket_selections_nonce' ), 'process_ticket_selections' ))) {
+		if (
+			! is_admin()
+			&& (
+				! EE_Registry::instance()->REQ->is_set( 'process_ticket_selections_nonce' )
+				|| ! wp_verify_nonce(
+					EE_Registry::instance()->REQ->get( 'process_ticket_selections_nonce' ),
+					'process_ticket_selections'
+				)
+			)
+		) {
 			EE_Error::add_error(
-				sprintf( __( 'We\'re sorry but your request failed to pass a security check.%sPlease click the back button on your browser and try again.', 'event_espresso' ), '<br/>' ),
+				sprintf(
+					__(
+						'We\'re sorry but the form submission time limit has expired.%1$sPlease click the back button on your browser and try again.%1$sYou may need to %2$sclick here to learn how to refresh your browser\'s cache%3$srefresh your browser\'s cache%4$s.',
+						'event_espresso'
+					),
+					'<br/>',
+					'<a title="',
+					'" href="http://www.refreshyourcache.com/en/home/">',
+					'</a>'
+				),
 				__FILE__, __FUNCTION__, __LINE__
 			);
 			return FALSE;
