@@ -40,6 +40,9 @@ class EE_Bootstrap {
 
 
 
+	/**
+	 * EE_Bootstrap constructor.
+	 */
 	public function __construct() {
 		// construct request stack and run middleware apps as soon as all WP plugins are loaded
 		add_action( 'plugins_loaded', array( $this, 'run_request_stack' ), 0 );
