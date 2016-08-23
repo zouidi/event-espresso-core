@@ -158,14 +158,14 @@ class Payments_Admin_Page extends EE_Admin_Page {
 
 		$payment_method_admin_only_list_config = array(
 			'nav'           => array(
-				'label' => __( 'Payment Methods (Admin Only)', 'event_espresso' ),
+				'label' => __( 'Admin Only', 'event_espresso' ),
 				'order' => 20
 			),
 			'metaboxes'     => $this->_default_espresso_metaboxes,
 			'help_tabs'     => array_merge(
 				array(
 					'payment_methods_admin_only_overview_help_tab' => array(
-						'title'    => __( 'Payment Methods (Admin Only) Overview', 'event_espresso' ),
+						'title'    => __( 'Admin Only Payment Methods Overview', 'event_espresso' ),
 						'filename' => 'payment_methods_overview'
 					)
 				),
