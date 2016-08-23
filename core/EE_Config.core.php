@@ -142,6 +142,9 @@ final class EE_Config {
 	 * @return EE_Config
 	 */
 	public static function reset( $hard_reset = false, $reinstantiate = true ) {
+		if ( ! self::$_instance instanceof EE_Config ) {
+			return $reinstantiate ? self::instance() : null;
+		}
 		if ( $hard_reset ) {
 			self::$_instance->_addon_option_names = array();
 			self::$_instance->_initialize_config();
@@ -154,11 +157,7 @@ final class EE_Config {
 		//we don't need to reset the static properties imo because those should
 		//only change when a module is added or removed. Currently we don't
 		//support removing a module during a request when it previously existed
-		if ( $reinstantiate ) {
-			return self::instance();
-		} else {
-			return null;
-		}
+		return $reinstantiate ? self::instance() : null;
 	}
 
 
