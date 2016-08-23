@@ -6,7 +6,7 @@
  * @package 		Event Espresso
  * @subpackage 	Tests
  */
-
+echo EE_UNIT_TEST_DEBUG ? "\n " . __LINE__ . ") " . basename( __FILE__ ) . "()\n\n" : '';
 /** check for env variable for special setups where phpunit is being run outside of the tests folder */
 if ( getenv( 'EE_TESTS_DIR' ) ) {
 	define( 'EE_TESTS_DIR', getenv( 'EE_TESTS_DIR' ) );
@@ -27,6 +27,8 @@ if ( file_exists( $_tests_dir . '/includes/functions.php' ) ) {
 } else {
 	define( 'WP_TESTS_DIR', dirname( dirname( dirname( dirname( dirname( dirname( __DIR__ ) ) ) ) ) ) . '/tests/phpunit' );
 }
+//save wpdb queries in case we want to know what queries ran during a test
+define( 'SAVEQUERIES', true );
 
 /**
  * In the pre-develop.svn WP development environment, an environmental bash
