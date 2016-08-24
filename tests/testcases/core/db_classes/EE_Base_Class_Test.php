@@ -437,6 +437,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 	 *
 	 */
 	function test_set_primary_key_clear_relations() {
+		$this->load_factories();
 		/** @type EE_Event $event */
 		$event = $this->factory->event->create();
 		/** @type EE_Datetime $datetime */
@@ -575,6 +576,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 	 * @since 4.6.12+
 	 */
 	public function test_get_i18n_datetime() {
+		$this->load_factories();
 		//setup a datetime object with some known values for testing with.
 		$original_timezone = get_option('timezone_string' );
 		update_option( 'timezone_string', 'America/Toronto' );
@@ -613,6 +615,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 	 * EE_Base_Class
 	 */
 	public function test_set_date_time() {
+		$this->load_factories();
 		//setup a datetime object with some known values for testing with.
 		$original_timezone = get_option( 'timezone_string' );
 		update_option( 'timezone_string', 'America/Toronto' );
@@ -664,6 +667,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	public function test_next_x() {
+		$this->load_factories();
 		//create 5 events for testing with.
 		$events = $this->factory->event->create_many( 5 );
 
@@ -707,6 +711,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	public function test_previous_x() {
+		$this->load_factories();
 		//create 5 events for testing with.
 		$events = $this->factory->event->create_many( 5 );
 
@@ -750,6 +755,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	public function test_next() {
+		$this->load_factories();
 		//create 5 events for testing with.
 		$events = $this->factory->event->create_many( 5 );
 
@@ -780,6 +786,7 @@ class EE_Base_Class_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	public function test_previous() {
+		$this->load_factories();
 		//create 5 events for testing with.
 		$events = $this->factory->event->create_many( 5 );
 
