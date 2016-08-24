@@ -34,10 +34,11 @@ class EEM_Event_Test extends EE_UnitTestCase {
 
 
 	/**
-	 * This just setsup some events in the db for running certain tests that query getting events back.
+	 * This just sets up some events in the db for running certain tests that query getting events back.
 	 * @since 4.6.x
 	 */
 	protected function _setup_events() {
+		$this->load_factories();
 		//setup some dates we'll use for testing with.
 		$timezone = new DateTimeZone( 'America/Toronto' );
 		$upcoming_start_date = new DateTime( "now +2hours", $timezone );
