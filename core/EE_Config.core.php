@@ -2375,16 +2375,25 @@ class EE_Registration_Config extends EE_Config_Base {
 	 * @since 4.8.8.rc.019
 	 */
 	public function do_hooks() {
-		add_action( 'AHEE__EE_Config___load_core_config__end', array( $this, 'set_default_reg_status_on_EEM_Event' ) );
+		add_filter(
+			'FHEE__EE_Model_Field_Base___construct_finalize___default_value',
+			array( $this, 'set_default_reg_status_on_EEM_Event' ),
+			10, 2
+		);
 	}
 
 
 
 	/**
-	 * @return void
+	 * @param mixed                $default_value
+	 * @param \EE_Model_Field_Base $field
+	 * @return string
 	 */
-	public function set_default_reg_status_on_EEM_Event() {
-		EEM_Event::set_default_reg_status( $this->default_STS_ID );
+	public function set_default_reg_status_on_EEM_Event( $default_value, EE_Model_Field_Base $field ) {
+		if ( $field->get_table_column() === 'EVT_default_registration_status' ) {
+			$default_value = $this->default_STS_ID;
+		}
+		return $default_value;
 	}
 
 
