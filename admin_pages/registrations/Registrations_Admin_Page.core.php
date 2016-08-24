@@ -877,7 +877,7 @@ class Registrations_Admin_Page extends EE_Admin_Page_CPT {
 				$EVT_ID
 				)
 			) {
-				$this->_admin_page_title .= $this->get_action_link_or_button(
+				$this->_admin_page_title .= ' ' . $this->get_action_link_or_button(
 					'new_registration',
 					'add-registrant',
 					array( 'event_id' => $EVT_ID ),
