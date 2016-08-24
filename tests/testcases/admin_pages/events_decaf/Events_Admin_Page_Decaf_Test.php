@@ -49,6 +49,7 @@ class Events_Admin_Page_Decaf_Test extends EE_UnitTestCase {
 	 * @since 4.6
 	 */
 	protected function _load_requirements( $timezone = 'America/Vancouver' ) {
+		$this->load_factories();
 		$this->_admin_page = new Events_Admin_Page_Mock();
 		$this->_event = $this->factory->event->create();
 		$this->_event->set_timezone( $timezone );
