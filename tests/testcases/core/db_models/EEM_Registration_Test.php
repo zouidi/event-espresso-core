@@ -38,6 +38,7 @@ class EEM_Registration_Test extends EE_UnitTestCase {
 	 * @since 4.6.0
 	 */
 	public function _setup_registrations() {
+		$this->load_factories();
 		//setup some dates we'll use for testing with.
 		$timezone = new DateTimeZone( 'America/Toronto' );
 		$future_today_date = new DateTime( "now +2hours", $timezone );
@@ -114,6 +115,7 @@ class EEM_Registration_Test extends EE_UnitTestCase {
 	 * @group 7965
 	 */
 	function test_delete_registrations_with_no_transaction(){
+		$this->load_factories();
 		$deletable_count = 5;
 		$safe_count = 8;
 		$this->factory->registration->create_many( $deletable_count, array( 'TXN_ID' =>  0 ) );
