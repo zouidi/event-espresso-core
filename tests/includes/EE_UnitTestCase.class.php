@@ -108,6 +108,24 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 
 
 	/**
+	 * @return \EE_Registry
+	 */
+	public static function get_EE_Registry() {
+		return self::$EE_Registry;
+	}
+
+
+
+	/**
+	 * @return \EE_Dependency_Map
+	 */
+	public static function get_EE_Dependency_Map() {
+		return self::$EE_Dependency_Map;
+	}
+
+
+
+	/**
 	 * @return \EE_Dependency_Map
 	 */
 	public static function load_dependency_map() {
@@ -186,9 +204,6 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		if ( ! $this->registry()->SSN instanceof EE_Session_Mock ) {
 			$this->registry()->SSN = $this->registry()->load_core( 'EE_Session_Mock' );
 		}
-		// make sure the config gets reset, because the database records get created
-		// AFTER the config gets loaded, which means that some config fields will be empty
-		$this->registry()->CFG->reset();
 		//save the hooks state before WP_UnitTestCase actually gets its hands on it...
 		//as it immediately adds a few hooks we might not want to backup
 		global $auto_made_thing_seed, $wp_filter, $wp_actions, $merged_filters, $wp_current_filter, $wpdb, $current_user;
@@ -287,7 +302,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		$notices = EE_Error::get_notices( false, false, true );
 		EE_Error::reset_notices();
 		if ( ! empty( $notices['errors'] ) ) {
-			$this->fail( $notices['errors'] );
+			$this->fail( wp_strip_all_tags( $notices['errors'] ) );
 		}
 		gc_collect_cycles();
 		echo EE_UNIT_TEST_DEBUG ? "\n --------------------------------------------------  \n " : '';
