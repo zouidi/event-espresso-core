@@ -54,7 +54,7 @@ class EEH_Parse_Shortcodes_Test extends EE_UnitTestCase {
 
 	public function setUp() {
 		parent::setUp();
-
+		$this->load_factories();
 		//all shortcode parse tests will require a full event to be setup with some datetimes and tickets.
 		$price = $this->factory->price_chained->create_object( array('PRC_name' => 'Not Free Price', 'PRC_amount' => '125.00' ) );
 		$this->_ticket = $this->factory->ticket_chained->create_object( array( 'PRC_ID' => $price->ID() ) );
