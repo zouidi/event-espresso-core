@@ -225,27 +225,44 @@ class EEM_Registration extends EEM_Soft_Delete_Base {
 
 
 	/**
+	 * get list of registration statuses, excluding those supplied in the $exclude array
+	 *
+	 * @access private
+	 * @param array $exclude array of status ID's
+	 * @return array
+	 */
+	private function _exclude_registration_statuses( $exclude = array() ) {
+		$registration_status_array = array();
+		foreach ( self::$_reg_status as $status ) {
+			if ( ! in_array( $status->STS_ID, $exclude ) ) {
+				$registration_status_array[ $status->STS_ID ] = $status->STS_code;
+			}
+		}
+		return $registration_status_array;
+	}
+
+
+
+	/**
 	 * 	get list of registration statuses
 	 * @access private
 	 * @param array $exclude
 	 * @return array
 	 */
 	private function _get_registration_status_array( $exclude = array() ) {
-		//in the very rare circumstance that we are deleting a model's table's data
-		//and the table hasn't actually been created, this could have an error
-		/** @type WPDB $wpdb */
-		global $wpdb;
-		if( EEH_Activation::table_exists( $wpdb->prefix . 'esp_status' ) ){
-			$SQL = 'SELECT STS_ID, STS_code FROM '. $wpdb->prefix . 'esp_status WHERE STS_type = "registration"';
-			$results = $wpdb->get_results( $SQL );
-			self::$_reg_status = array();
-			foreach ( $results as $status ) {
-				if ( ! in_array( $status->STS_ID, $exclude )) {
-					self::$_reg_status[ $status->STS_ID ] = $status->STS_code;
-				}
-			}
+		// in the very rare circumstance that we are deleting a model's table's data
+		// and the table hasn't actually been created, this could have an error
+		if( empty( self::$_reg_status ) && EEH_Activation::table_exists( $this->table() ) ){
+			global $wpdb;
+			$SQL = "SELECT STS_ID, STS_code FROM %s WHERE STS_type = 'registration'";
+			self::$_reg_status = $wpdb->get_results(
+				$wpdb->prepare( $SQL, $this->table() )
+			);
 		}
-
+		if ( ! empty( $exclude ) ) {
+			return $this->_exclude_registration_statuses( $exclude );
+		}
+		return self::$_reg_status;
 	}
 
 
