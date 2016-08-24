@@ -198,7 +198,7 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 
 		//first we'll add dummy metabox to simulate our metaboxes.
 		add_meta_box( 'add-espresso_events', __('Event Espresso Pages', 'event_espresso'), '__return_true', 'nav-menus', 'side', 'core' );
-
+		$this->load_factories();
 		//need to set the current user
 		//$current_user = get_current_user_id();
 		wp_set_current_user( $this->factory->user->create( array( 'role' => 'administrator' ) ) );
@@ -227,6 +227,7 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 	 * @depends test_loading_admin
 	 */
 	function test_dashboard_glance_items() {
+		$this->load_factories();
 		//add some events and registrations
 		$this->factory->event->create_many(10);
 		$this->factory->registration->create_many(5, array( 'STS_ID' => EEM_Registration::status_id_not_approved ) );
@@ -249,7 +250,7 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 		$this->assertInternalType('array', $generated_items);
 
 		//assert the count for the array is two
-		$this->assertcount( 2, $generated_items);
+		$this->assertCount( 2, $generated_items);
 
 		//assert that the first item matches the xpctd event string.
 		$this->assertEquals( $xpct_event_assembled, $generated_items[0] );
@@ -320,11 +321,11 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 		$expected_link = EEH_URL::add_query_args_and_nonce( array( 'action' => 'edit_attendee', 'post' => $id ), admin_url('admin.php?page=espresso_registrations' ) );
 
 		//first test that if the id given doesn't match our post type that the original link is returned.
-		$notmodified = EE_Admin::instance()->modify_edit_post_link( $orig_link, 5555, '' );
+		$notmodified = EE_Admin::instance()->modify_edit_post_link( $orig_link, 5555 );
 		$this->assertEquals( $orig_link, $notmodified );
 
 		//next test that if the id given matches our post type that the expected link is generated
-		$ismodified = EE_Admin::instance()->modify_edit_post_link( $orig_link, $id, '' );
+		$ismodified = EE_Admin::instance()->modify_edit_post_link( $orig_link, $id );
 
 		$this->assertEquals( $expected_link, $ismodified );
 	}
