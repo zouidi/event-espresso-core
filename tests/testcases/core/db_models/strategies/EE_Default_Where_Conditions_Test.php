@@ -17,6 +17,7 @@ if ( !defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 class EE_Default_Where_Conditions_Test extends EE_UnitTestCase{
 	function test_add_model_relation_chain_onto_where_conditions(){
 		global $current_user;
+		$this->load_factories();
 		$current_user = $this->factory->user->create_and_get();
 		$value1 = 12;
 		$value2 = 23;
