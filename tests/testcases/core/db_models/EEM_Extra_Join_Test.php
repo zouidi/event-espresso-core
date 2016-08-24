@@ -20,11 +20,13 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 class EEM_Extra_Join_Test extends EE_UnitTestCase{
 
 	public function setUp() {
+		parent::setUp();
 		//for the testing's sake, we want events to be related to payment methods via a HABTM_Any relation
 		add_filter( 'FHEE__EEM_Event__construct__model_relations', array( $this, 'relate_events_to_payment_methods' ) );
 		add_filter( 'FHEE__EEM_Payment_Method__construct__model_relations', array( $this, 'relate_payment_methods_to_events' ) );
 		$this->registry()->reset(true);
-		parent::setUp();
+		EEM_Event::instance()->reset();
+		EEM_Payment_Method::instance()->reset();
 	}
 
 
