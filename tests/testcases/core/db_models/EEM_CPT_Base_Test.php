@@ -27,6 +27,7 @@ class EEM_CPT_Base_Test extends EE_UnitTestCase{
 	 * @group 9179
 	 */
 	public function test_get_minimum_where_conditions_during_query() {
+		$this->load_factories();
 		// count number of existing posts, such as EE's  critical pages that get created during activation
 		$existing_post_count = EEM_Event::instance()->count( array( 'default_where_conditions' => 'none' ) );
 		$e_normal = $this->new_model_obj_with_dependencies( 'Event', array( 'status' => EEM_CPT_Base::post_status_publish ) );
