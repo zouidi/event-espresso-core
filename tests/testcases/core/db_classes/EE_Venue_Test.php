@@ -25,6 +25,7 @@ class EE_Venue_Test extends EE_UnitTestCase{
 	 * @since 4.6
 	 */
 	public function test_events() {
+		$this->load_factories();
 		//setup some dates we'll use for testing with.
 		$timezone = new DateTimeZone( 'America/Toronto' );
 		$upcoming_start_date = new DateTime( "now +2hours", $timezone );
