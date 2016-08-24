@@ -44,6 +44,7 @@ class EE_Registrations_List_Table_Test extends EE_UnitTestCase {
 	 */
 	public function test_total_registrations_this_month() {
 		$this->_load_mock();
+		$this->load_factories();
 		//baseline dates
 		$now = new DateTime( 'now' );
 
@@ -79,9 +80,10 @@ class EE_Registrations_List_Table_Test extends EE_UnitTestCase {
 	 */
 	public function test_total_registrations_today() {
 		$this->_load_mock();
+		$this->load_factories();
 		//baseline dates
 		$now = new DateTime( 'now' );
-		$nowEST = new DateTime( 'now', new DateTimeZone( 'America/Toronto' ) );
+		// $nowEST = new DateTime( 'now', new DateTimeZone( 'America/Toronto' ) );
 
 		//let's setup some registrations to test. Setting status as not approved to avoid the incomplete exclusion on the method tested.
 		$registrations = $this->factory->registration->create_many( 4, array( 'STS_ID' => EEM_Registration::status_id_not_approved ) );
