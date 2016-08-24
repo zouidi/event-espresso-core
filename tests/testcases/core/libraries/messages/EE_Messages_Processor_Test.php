@@ -21,6 +21,7 @@ class EE_Messages_Processor_Test extends EE_UnitTestCase {
 
 	public function setUp() {
 		parent::setUp();
+		$this->load_scenarios();
 		//setup events etc for previewer to use
 		$this->scenarios->get_scenarios_by_type('event');
 	}
@@ -76,6 +77,7 @@ class EE_Messages_Processor_Test extends EE_UnitTestCase {
 	 * @param EE_Messages_Processor $message_proc
 	 */
 	function test_batch_generate_from_queue( EE_Messages_Processor $message_proc ) {
+		$this->load_factories();
 		//first we know there is nothing in the db, so let's verify that returns false. (this also verifies the clear param)
 		$this->assertFalse( $message_proc->batch_generate_from_queue( array(), true ) );
 
@@ -98,6 +100,7 @@ class EE_Messages_Processor_Test extends EE_UnitTestCase {
 	 * @param   EE_Messages_Processor $message_proc
 	 */
 	function test_batch_generate_from_queue_with_messages( EE_Messages_Processor $message_proc ) {
+		$this->load_factories();
 		//make sure clear works
 		$this->assertFalse( $message_proc->batch_generate_from_queue( array(), true ) );
 
@@ -128,6 +131,7 @@ class EE_Messages_Processor_Test extends EE_UnitTestCase {
 	 * @param EE_Messages_Processor $message_proc
 	 */
 	function test_batch_send_from_queue( EE_Messages_Processor $message_proc ) {
+		$this->load_factories();
 
 		//create messages ready to send.
 		$this->factory->message->create_many( 5, array( 'STS_ID' => EEM_Message::status_idle ) );
@@ -150,6 +154,7 @@ class EE_Messages_Processor_Test extends EE_UnitTestCase {
 	 * @param EE_Messages_Processor $messages_proc
 	 */
 	function test_batch_send_from_queue_with_messages( EE_Messages_Processor $messages_proc ) {
+		$this->load_factories();
 		//create messages we're going to use for sending
 		$messages_to_send = $this->factory->message->create_many( 5, array( 'STS_ID' => EEM_Message::status_idle ) );
 
@@ -284,6 +289,7 @@ class EE_Messages_Processor_Test extends EE_UnitTestCase {
 
 
 	function test_setup_messages_from_ids_and_send() {
+		$this->load_factories();
 		//setup processor to work with
 		/** @type EE_Messages_Processor $proc */
 		$proc = EE_Registry::instance()->load_lib( 'Messages_Processor' );
