@@ -21,6 +21,7 @@ class EEM_Ticket_Test extends EE_UnitTestCase {
 	 * @group 8861
 	 */
 	public function test_sum_tickets_currently_available_at_datetime() {
+		$this->load_scenarios();
 		//echo "\n\n test_sum_tickets_currently_available_at_datetime: ";
 		$scenarios = $this->scenarios->get_scenarios_by_type( 'datetime' );
 		foreach ( $scenarios as $scenario ) {
