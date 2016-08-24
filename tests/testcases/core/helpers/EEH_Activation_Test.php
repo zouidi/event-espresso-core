@@ -143,6 +143,7 @@ class EEH_Activation_Test extends EE_UnitTestCase {
 	 * @since 4.6.0
 	 */
 	public function test_get_default_creator_id() {
+		$this->load_factories();
 		//clear out any previous users that may be lurking in teh system
 		foreach( get_users() as $wp_user ){
 			$this->assertTrue( wp_delete_user( $wp_user->ID ) );
