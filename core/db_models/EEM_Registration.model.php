@@ -218,8 +218,10 @@ class EEM_Registration extends EEM_Soft_Delete_Base {
 	 *		@return array
 	 */
 	public static function reg_status_array( $exclude = array(), $translated = FALSE ) {
-		EEM_Registration::instance()->_get_registration_status_array( $exclude );
-		return $translated ? EEM_Status::instance()->localized_status( self::$_reg_status, FALSE, 'sentence') : self::$_reg_status;
+		$reg_status_array = EEM_Registration::instance()->_get_registration_status_array( $exclude );
+		return $translated
+			? EEM_Status::instance()->localized_status( $reg_status_array, FALSE, 'sentence')
+			: $reg_status_array;
 	}
 
 
@@ -254,15 +256,11 @@ class EEM_Registration extends EEM_Soft_Delete_Base {
 		// and the table hasn't actually been created, this could have an error
 		if( empty( self::$_reg_status ) && EEH_Activation::table_exists( $this->table() ) ){
 			global $wpdb;
-			$SQL = "SELECT STS_ID, STS_code FROM %s WHERE STS_type = 'registration'";
 			self::$_reg_status = $wpdb->get_results(
-				$wpdb->prepare( $SQL, $this->table() )
+				"SELECT STS_ID, STS_code FROM {$wpdb->prefix}esp_status WHERE STS_type = 'registration'"
 			);
 		}
-		if ( ! empty( $exclude ) ) {
-			return $this->_exclude_registration_statuses( $exclude );
-		}
-		return self::$_reg_status;
+		return $this->_exclude_registration_statuses( $exclude );
 	}
 
 
