@@ -66,6 +66,7 @@ class EEM_Term_Caps_Test extends EE_UnitTestCase{
 
 	function test_get_all__caps__read_admin__read_event_cats() {
 		global $current_user;
+		$this->load_factories();
 		$current_user = $this->factory->user->create_and_get();
 		$current_user->add_cap( 'ee_manage_event_categories');
 		$venue_and_event_cats = EEM_Term::instance()->get_all( array(
@@ -79,6 +80,7 @@ class EEM_Term_Caps_Test extends EE_UnitTestCase{
 
 	function test_get_all__caps__read_admin__read_venue_cats() {
 		global $current_user;
+		$this->load_factories();
 		$current_user = $this->factory->user->create_and_get();
 		$current_user->add_cap( 'ee_manage_venue_categories');
 		$venue_and_event_cats = EEM_Term::instance()->get_all( array(
@@ -92,6 +94,7 @@ class EEM_Term_Caps_Test extends EE_UnitTestCase{
 
 	function test_get_all__caps__read_admin__read_event_and_venue_cats() {
 		global $current_user;
+		$this->load_factories();
 		$current_user = $this->factory->user->create_and_get();
 		$current_user->add_cap( 'ee_manage_event_categories');
 		$current_user->add_cap( 'ee_manage_venue_categories');
@@ -116,6 +119,7 @@ class EEM_Term_Caps_Test extends EE_UnitTestCase{
 
 	function test_get_all__caps__edit__event_caps() {
 		global $current_user;
+		$this->load_factories();
 		$current_user = $this->factory->user->create_and_get();
 		$current_user->add_cap( 'ee_edit_event_category');
 		$venue_and_event_cats = EEM_Term::instance()->get_all( array(
@@ -129,6 +133,7 @@ class EEM_Term_Caps_Test extends EE_UnitTestCase{
 
 	function test_get_all__caps__edit__venue__caps() {
 		global $current_user;
+		$this->load_factories();
 		$current_user = $this->factory->user->create_and_get();
 		$current_user->add_cap( 'ee_edit_venue_category');
 		$venue_and_event_cats = EEM_Term::instance()->get_all( array(
@@ -151,6 +156,7 @@ class EEM_Term_Caps_Test extends EE_UnitTestCase{
 
 	function test_get_all__caps__delete__event_caps() {
 		global $current_user;
+		$this->load_factories();
 		$current_user = $this->factory->user->create_and_get();
 		$current_user->add_cap( 'ee_delete_event_category');
 		$venue_and_event_cats = EEM_Term::instance()->get_all( array(
@@ -164,6 +170,7 @@ class EEM_Term_Caps_Test extends EE_UnitTestCase{
 
 	function test_get_all__caps__delete__venue_and_event_caps() {
 		global $current_user;
+		$this->load_factories();
 		$current_user = $this->factory->user->create_and_get();
 		$current_user->add_cap( 'ee_delete_venue_category');
 		$current_user->add_cap( 'ee_delete_event_category');
