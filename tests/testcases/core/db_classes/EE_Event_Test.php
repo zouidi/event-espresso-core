@@ -138,6 +138,7 @@ class EE_Event_Test extends EE_UnitTestCase{
 	 * @since 4.8.0
 	 */
 	function test_total_available_spaces() {
+		$this->load_scenarios();
 		//grab test scenarios.
 		$scenarios = $this->scenarios->get_scenarios_by_type( 'event' );
 		foreach ( $scenarios as $scenario ) {
@@ -156,6 +157,7 @@ class EE_Event_Test extends EE_UnitTestCase{
 	 * @since 4.8.0
 	 */
 	function test_spaces_remaining_for_sale() {
+		$this->load_scenarios();
 		//grab test scenarios
 		$scenarios = $this->scenarios->get_scenarios_by_type( 'event' );
 		foreach ( $scenarios as $scenario ) {
@@ -180,6 +182,7 @@ class EE_Event_Test extends EE_UnitTestCase{
 	 * @since 4.8.0
 	 */
 	function test_spaces_remaining_for_sale_for_Event_Scenario_H() {
+		$this->load_scenarios();
 		//grab test scenario
 		$scenario = $this->scenarios->get_scenario_by_name( 'Event Scenario H - Two Classes' );
 		// verify
@@ -250,7 +253,7 @@ class EE_Event_Test extends EE_UnitTestCase{
 	 * @since 4.8.0
 	 */
 	function test_spaces_remaining_for_sale_for_Event_Scenario_I() {
-
+		$this->load_scenarios();
 		//grab test scenario
 		$scenario = $this->scenarios->get_scenario_by_name( 'Event Scenario I - Four Tickets One Date' );
 		// verify
