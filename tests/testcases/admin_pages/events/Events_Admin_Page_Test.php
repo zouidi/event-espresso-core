@@ -24,17 +24,18 @@ class Events_Admin_Page_Test extends EE_UnitTestCase {
 	 * @var EE_Event
 	 */
 	protected $_event;
-	
-	
-	
+
+
+
 	public function setUp() {
 		parent::setUp();
 		$this->delayedAdminPageMocks( 'events' );
 	}
-	
-	
-	
+
+
+
 	protected function _load_requirements( $timezone = 'America/Vancouver' ) {
+		$this->load_factories();
 		$this->_admin_page = new Events_Admin_Page_Mock();
 		$this->_event = $this->factory->event->create();
 		$this->_event->set_timezone( $timezone );
