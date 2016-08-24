@@ -38,9 +38,11 @@ class EEM_Term_Relationship_Caps_Test extends EE_UnitTestCase {
 	 * @var WP_User
 	 */
 	public $user = null;
+
 	//don't bother with a private term relationship.
 	public function setUp(){
 		parent::setUp();
+		$this->load_factories();
 		$this->user = $this->factory->user->create_and_get();
 		$this->my_event = $this->new_model_obj_with_dependencies( 'Event', array( 'EVT_wp_user' => $this->user->ID ) );
 		$term_id_and_taxonomy_id = wp_insert_term('term_r_for_my_event', 'espresso_event_categories' );
