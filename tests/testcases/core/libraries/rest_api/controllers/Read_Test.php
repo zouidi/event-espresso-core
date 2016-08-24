@@ -51,30 +51,30 @@ class Read_Test extends \EE_UnitTestCase{
 	public function test_explode_and_get_items_prefixed_with__related_model_all() {
 		$controller = new Read();
 		$controller->set_requested_version( '4.8.29' );
-		$this->assertEquals( 
+		$this->assertEquals(
 			array(
 				'*'
-			), 
-			$controller->explode_and_get_items_prefixed_with( 'Registration.*', 'Registration' ) 
+			),
+			$controller->explode_and_get_items_prefixed_with( 'Registration.*', 'Registration' )
 		);
 	}
 	public function test_explode_and_get_items_prefixed_with__related_models_but_searching_for_this_one() {
 		$controller = new Read();
 		$controller->set_requested_version( '4.8.29' );
-		$this->assertEquals( 
-			array(), 
-			$controller->explode_and_get_items_prefixed_with( 'Registration.REG_ID, Registration.Attendee.ATT_ID', '' ) 
+		$this->assertEquals(
+			array(),
+			$controller->explode_and_get_items_prefixed_with( 'Registration.REG_ID, Registration.Attendee.ATT_ID', '' )
 		);
 	}
 	public function test_explode_and_get_items_prefixed_with__related_models_but_searching_for_other() {
 		$controller = new Read();
 		$controller->set_requested_version( '4.8.29' );
-		$this->assertEquals( 
+		$this->assertEquals(
 			array(
 				'REG_ID',
 				'Attendee.ATT_ID'
-			), 
-			$controller->explode_and_get_items_prefixed_with( 'Registration.REG_ID, Registration.Attendee.ATT_ID', 'Registration' ) 
+			),
+			$controller->explode_and_get_items_prefixed_with( 'Registration.REG_ID, Registration.Attendee.ATT_ID', 'Registration' )
 		);
 	}
 
@@ -97,11 +97,11 @@ class Read_Test extends \EE_UnitTestCase{
 			array (
 				'EVT_ID' => $event->ID(),
 				'EVT_name' => $event->name()
-			), 
-			$result 
+			),
+			$result
 		);
 	}
-	
+
 	public function test_handle_request_get_one__event_includes_two_related_models() {
 		$event = $this->new_model_obj_with_dependencies( 'Event', array( 'status' => 'publish' ) );
 		$req = new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.36/events/' . $event->ID() );
@@ -119,7 +119,7 @@ class Read_Test extends \EE_UnitTestCase{
 		$result = $response->get_data();
 		//make sure we still included all the normal event fields
 		$this->assertArrayHasKey(
-			'EVT_name', 
+			'EVT_name',
 			$result
 		);
 		$this->assertArrayHasKey(
@@ -131,7 +131,7 @@ class Read_Test extends \EE_UnitTestCase{
 			$result
 		);
 	}
-	
+
 	public function test_handle_request_get_one__event_include_non_model_field() {
 		$this->set_current_user_to_new();
 		$event = $this->new_model_obj_with_dependencies( 'Event' );
@@ -164,7 +164,7 @@ class Read_Test extends \EE_UnitTestCase{
 		$controller->set_requested_version( '4.8.29' );
 		$this->assertEquals( array('*'), $controller->explode_and_get_items_prefixed_with( '*', '' ) );
 	}
-	
+
 	/**
 	 * @group 9406
 	 */
@@ -173,27 +173,27 @@ class Read_Test extends \EE_UnitTestCase{
 		$limit_on_datetime = 100;
 		$limit_on_ticket = 50;
 		$event = $this->new_model_obj_with_dependencies( 'Event' );
-		$dtt = $this->new_model_obj_with_dependencies( 
-			'Datetime', 
-			array( 
-				'DTT_reg_limit' => $limit_on_datetime, 
-				'EVT_ID' => $event->ID() 
-			) 
+		$dtt = $this->new_model_obj_with_dependencies(
+			'Datetime',
+			array(
+				'DTT_reg_limit' => $limit_on_datetime,
+				'EVT_ID' => $event->ID()
+			)
 		);
-		$tkt = $this->new_model_obj_with_dependencies( 
-			'Ticket', 
-			array( 
-				'TKT_qty' => $limit_on_ticket 
-			) 
+		$tkt = $this->new_model_obj_with_dependencies(
+			'Ticket',
+			array(
+				'TKT_qty' => $limit_on_ticket
+			)
 		);
 		$tkt->_add_relation_to( $dtt, 'Datetime' );
-		$reg1 = $this->new_model_obj_with_dependencies( 
-			'Registration', 
-			array( 
+		$reg1 = $this->new_model_obj_with_dependencies(
+			'Registration',
+			array(
 				'EVT_ID' => $event->ID(),
 				'TKT_ID' => $tkt->ID(),
-				'STS_ID' => \EEM_Registration::status_id_approved 
-			) 
+				'STS_ID' => \EEM_Registration::status_id_approved
+			)
 		);
 		$req = new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.36/events/' . $event->ID() );
 		$req->set_url_params(
@@ -210,38 +210,39 @@ class Read_Test extends \EE_UnitTestCase{
 		$response = Read::handle_request_get_one( $req );
 		$result = $response->get_data();
 		$this->assertTrue( isset( $result[ 'EVT_ID' ] ) );
-		//check that the requested calculated fields were added. 
+		//check that the requested calculated fields were added.
 		//Seeing how these calculated fields just wrap other EE methods (which sould already be tested)
 		//the emphasis here is just on whether or not they get included properly, not exhaustively
 		//testing the calculations themselves
 		$this->assertTrue( isset( $result[ '_calculated_fields' ] ) );
-		
+
 		$this->assertEquals(
 			(object) array(
 				'optimum_sales_at_start' => min( array( $limit_on_datetime, $limit_on_ticket ) ),
 				'spots_taken' => 1
 			),
-			$result[ '_calculated_fields' ] 
+			$result[ '_calculated_fields' ]
 		);
 		$this->assertTrue( isset( $result[ 'datetimes' ] ) );
 		$this->assertTrue( isset( $result[ 'datetimes' ][ 0 ] ) );
 		$this->assertTrue( isset( $result[ 'datetimes' ][ 0 ][ '_calculated_fields' ] ) );
 		$this->assertEquals(
-			(object) array( 
+			(object) array(
 				'registrations_checked_in_count' => 0
 			),
 			$result[ 'datetimes' ][ 0 ][ '_calculated_fields' ]
 		);
 	}
-	
+
 	/**
 	 * Verifies the format of the response hasn't changed (unless of course we actually
 	 * DO change it, in which case this unit test will need to be updated to
-	 * include the known modifications). 
+	 * include the known modifications).
 	 * This helps prevent accidental changes
+	 * @skip
 	 */
 	public function test_handle_request_get_one__event() {
-		
+
 		\EED_Core_Rest_Api::set_hooks_for_changes();
 		//set a weird timezone
 		update_option( 'gmt_offset', '-04:30' );
@@ -249,35 +250,33 @@ class Read_Test extends \EE_UnitTestCase{
 		$event = $this->new_model_obj_with_dependencies( 'Event' );
 		$req = new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.29/events/' . $event->ID() );
 		$req->set_url_params(
-				array(
-					'id' => $event->ID()
-				)
-			);
-		$response = Read::handle_request_get_one( $req );
-
-		$result = $response->get_data();
+			array( 'id' => $event->ID() )
+		);
+		$result = Read::handle_request_get_one( $req )->get_data();
+		$current_time = current_time( 'Y-m-d\TH:i:s' );
+		$current_time_gmt = current_time( 'Y-m-d\TH:i:s', true );
 		$this->assertTrue( is_array( $result ) );
 		//compare all the times, realizing that _gmt times should be in UTC, others in the site's timezone
-		$this->assertDateWithinOneMinute( $result[ 'EVT_created' ], current_time( 'Y-m-d\TH:i:s' ), 'Y-m-d\TH:i:s');
-		$this->assertDateWithinOneMinute( $result[ 'EVT_modified' ], current_time( 'Y-m-d\TH:i:s' ), 'Y-m-d\TH:i:s');
-		$this->assertDateWithinOneMinute( $result[ 'EVT_visible_on' ], current_time( 'Y-m-d\TH:i:s' ), 'Y-m-d\TH:i:s');
-		$this->assertDateWithinOneMinute( $result[ 'EVT_created_gmt' ], current_time( 'Y-m-d\TH:i:s', true ), 'Y-m-d\TH:i:s');
-		$this->assertDateWithinOneMinute( $result[ 'EVT_modified_gmt' ], current_time( 'Y-m-d\TH:i:s', true ), 'Y-m-d\TH:i:s');
-		$this->assertDateWithinOneMinute( $result[ 'EVT_visible_on_gmt' ], current_time( 'Y-m-d\TH:i:s', true ), 'Y-m-d\TH:i:s');
+		$this->assertDateWithinOneMinute( $result[ 'EVT_created' ], $current_time, 'Y-m-d\TH:i:s');
+		$this->assertDateWithinOneMinute( $result[ 'EVT_modified' ], $current_time, 'Y-m-d\TH:i:s');
+		$this->assertDateWithinOneMinute( $result[ 'EVT_visible_on' ], $current_time, 'Y-m-d\TH:i:s');
+		$this->assertDateWithinOneMinute( $result[ 'EVT_created_gmt' ], $current_time_gmt, 'Y-m-d\TH:i:s');
+		$this->assertDateWithinOneMinute( $result[ 'EVT_modified_gmt' ], $current_time_gmt, 'Y-m-d\TH:i:s');
+		$this->assertDateWithinOneMinute( $result[ 'EVT_visible_on_gmt' ], $current_time_gmt, 'Y-m-d\TH:i:s');
 		//and let's just double-check the site's timezone isn't UTC, which would make it impossible to know if timezone offsets
 		//are being applied properly or not
-		$this->assertNotEquals( 
-			$result[ 'EVT_created' ], 
-			$result[ 'EVT_created_gmt' ], 
-			'There is no timezone offset, so its impossible to know if the timezone offset is being applied properly' 
+		$this->assertNotEquals(
+			$result[ 'EVT_created' ],
+			$result[ 'EVT_created_gmt' ],
+			'There is no timezone offset, so its impossible to know if the timezone offset is being applied properly'
 		);
 		$properties_we_cant_compare_exactly = array(
-			'EVT_created', 
-			'EVT_modified', 
-			'EVT_visible_on', 
-			'EVT_created_gmt', 
-			'EVT_modified_gmt', 
-			'EVT_visible_on_gmt' 
+			'EVT_created',
+			'EVT_modified',
+			'EVT_visible_on',
+			'EVT_created_gmt',
+			'EVT_modified_gmt',
+			'EVT_visible_on_gmt'
 		);
 		foreach( $properties_we_cant_compare_exactly as $property_name ) {
 			unset( $result[ $property_name ] );
@@ -424,7 +423,7 @@ class Read_Test extends \EE_UnitTestCase{
 				$result
 				);
 	}
-	
+
 	public function test_handle_request_get_one__registration_include_attendee(){
 		$this->set_current_user_to_new();
 		$r = $this->new_model_obj_with_dependencies( 'Registration' );
@@ -446,8 +445,8 @@ class Read_Test extends \EE_UnitTestCase{
 		$entity = $response->get_data();
 		$this->assertArrayHasKey( 'attendee', $entity );
 	}
-	
-	
+
+
 	public function test_handle_request_get_one__registration_include_answers_and_questions_use_star(){
 		$this->set_current_user_to_new();
 		$r = $this->new_model_obj_with_dependencies( 'Registration' );
@@ -472,7 +471,7 @@ class Read_Test extends \EE_UnitTestCase{
 			$this->assertArrayHasKey( 'question', $answer );
 		}
 	}
-	
+
 	public function test_handle_request_get_one__registration_include_answers_and_questions(){
 		$this->set_current_user_to_new();
 		$r = $this->new_model_obj_with_dependencies( 'Registration' );
@@ -556,7 +555,7 @@ class Read_Test extends \EE_UnitTestCase{
 		$this->assertInstanceOf( 'WP_REST_Response', $response );
 		$this->assertEquals( 403, $response->get_status() );
 	}
-	
+
 	/**
 	 * @group 9406
 	 */
@@ -573,7 +572,7 @@ class Read_Test extends \EE_UnitTestCase{
 		);
 		$this->assertInstanceOf( 'WP_REST_Response', $response );
 		$headers = $response->get_headers();
-		
+
 		$this->assertArrayHasKey( Controller_Base::header_prefix_for_wp . 'Total', $headers );
 		$this->assertArrayHasKey( Controller_Base::header_prefix_for_wp . 'TotalPages', $headers );
 		$this->assertEquals( $datetimes_created, $headers[ Controller_Base::header_prefix_for_wp . 'Total' ] );
@@ -585,6 +584,7 @@ class Read_Test extends \EE_UnitTestCase{
 	* @return \WP_User
 	*/
 	public function get_wp_user_mock( $role = 'administrator' ) {
+		$this->load_factories();
 	   /** @type \WP_User $user */
 	   $user = $this->factory->user->create_and_get();
 	   $user->add_role( $role );
@@ -669,7 +669,7 @@ class Read_Test extends \EE_UnitTestCase{
 							'Datetime.DTT_reg_limit*1' => '',
 							'Datetime.DTT_EVT_start' => array( '<', '2016-01-01T00:00:00' ),
 						),
-						
+
 					),
 					'order_by' => array(
 						'EVT_desc' => 'ASC'
@@ -683,13 +683,13 @@ class Read_Test extends \EE_UnitTestCase{
 					'caps' => \EEM_Base::caps_read_admin
 				) ) );
 	}
-	
+
 	/**
 	 * @group 9389
 	 */
 	public function test_handle_request_get_all__automatic_group_by() {
 		$request = new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.36/question_groups' );
-		$request->set_query_params( 
+		$request->set_query_params(
 			array(
 				'where' => array(
 					'Question.QST_ID' => array( 'IS_NOT_NULL' )
@@ -703,3 +703,4 @@ class Read_Test extends \EE_UnitTestCase{
 }
 
 // End of file Read_Test.php
+// Location: tests\testcases\core\libraries\rest_api\controllers\Read_Test.php
