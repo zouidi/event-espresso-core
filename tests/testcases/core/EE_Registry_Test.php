@@ -16,50 +16,16 @@ class EE_Registry_Test extends EE_UnitTestCase{
 
 
 	public function setUp() {
-		add_filter(
-			'FHEE__EE_Registry____construct___class_abbreviations',
-			array( $this, 'unit_test_registry_class_abbreviations' )
-		);
-		add_filter(
-			'FHEE__EE_Registry__load_core__core_paths',
-			array( $this, 'unit_test_registry_core_paths' )
-		);
-		EE_Dependency_Map::register_dependencies(
-			'EE_Session_Mock',
-			array( 'EE_Encryption' => EE_Dependency_Map::load_from_cache )
-		);
+		parent::setUp();
 		EE_Dependency_Map::register_dependencies(
 			'EE_Injector_Tester_With_Array_Session_Int_Constructor_Params',
 			array( 'EE_Session_Mock' => EE_Dependency_Map::load_from_cache )
 		);
-		EE_Dependency_Map::register_class_loader( 'EE_Session_Mock' );
+		// EE_Dependency_Map::register_class_loader( 'EE_Session_Mock' );
 		EE_Dependency_Map::register_class_loader( 'EE_Injector_Tester_With_Array_Session_Int_Constructor_Params' );
 		require_once EE_TESTS_DIR . 'mocks' . DS . 'core' . DS . 'EE_Registry_Mock.core.php';
 		EE_Registry_Mock::instance( EE_Dependency_Map::instance() );
 		EE_Registry_Mock::instance()->initialize();
-		parent::setUp();
-	}
-
-
-
-	/**
-	 * @param array $class_abbreviations
-	 * @return array
-	 */
-	public function unit_test_registry_class_abbreviations( $class_abbreviations = array() ) {
-		$class_abbreviations[ 'EE_Session_Mock' ] = 'SSN';
-		return $class_abbreviations;
-	}
-
-
-
-	/**
-	 * @param array $core_paths
-	 * @return array
-	 */
-	public function unit_test_registry_core_paths( $core_paths = array() ) {
-		$core_paths[] = EE_TESTS_DIR . 'mocks' . DS . 'core' . DS;
-		return $core_paths;
 	}
 
 
@@ -543,7 +509,7 @@ class EE_Registry_Test extends EE_UnitTestCase{
 	 */
 	public function test_dependency_injection() {
 		// either need to set an autoloader for any dependency classes or just pre-load them
-		EE_Registry_Mock::instance()->load_core('EE_Session_Mock');
+		// EE_Registry_Mock::instance()->load_core('EE_Session_Mock');
 		add_filter(
 			'FHEE__EE_Registry__load_service__service_paths',
 			function() {
