@@ -188,7 +188,7 @@ class Events_Admin_Page_Decaf_Test extends EE_UnitTestCase {
 		}
 
 
-		//now let's verify these items were saved corectly in the db.
+		//now let's verify these items were saved correctly in the db.
 		/*$new_tkts = $new_dtts = array();
 		foreach ( $tkt as $format => $tkt ) {
 			$new_tkts[$format] = EEM_Ticket::instance()->refresh_entity_map_from_db( $tkt->ID() );
@@ -225,4 +225,6 @@ class Events_Admin_Page_Decaf_Test extends EE_UnitTestCase {
 
 
 
-} // end class Events_Admin_Page_Decaf
+}
+// end class Events_Admin_Page_Decaf
+// Location : testcases/admin_pages/events_decaf/Events_Admin_Page_Decaf_Test.php
