@@ -23,8 +23,6 @@ tests_add_filter( 'FHEE__EE_Front_Controller____construct__set_test_cookie', '__
 tests_add_filter( 'FHEE__EE_Error__get_error__show_normal_exceptions', '__return_true');
 // don't bootstrap EE immediately upon loading espresso.php
 tests_add_filter( 'FHEE__espresso__bootstrap', '__return_false');
-// prepare to run activation for first request
-delete_option( 'espresso_db_update' );
 // Start loading EE
 require dirname( __FILE__ ) . '/../../espresso.php';
 // load PSR4 autoloader and other files needed for bootstrapping
