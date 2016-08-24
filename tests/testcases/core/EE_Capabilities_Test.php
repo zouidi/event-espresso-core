@@ -43,6 +43,7 @@ class EE_Capabilities_Test extends EE_UnitTestCase {
 
 	public function test_add_new_capabilities() {
 		global $wp_roles;
+		$this->load_factories();
 		//check the current user is an admin
 		$user = $this->factory->user->create_and_get();
 		$this->assertInstanceOf( 'WP_User', $user );
@@ -74,6 +75,7 @@ class EE_Capabilities_Test extends EE_UnitTestCase {
 	 */
 	public function test_current_user_can_and_user_can() {
 		global $current_user;
+		$this->load_factories();
 		//setup our user and set as current user.
 		$user = $this->factory->user->create_and_get();
 		$this->assertInstanceOf( 'WP_User', $user );
