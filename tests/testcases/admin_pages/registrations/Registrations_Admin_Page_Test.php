@@ -31,6 +31,7 @@ class Registrations_Admin_Page_Test extends EE_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 		$this->delayedAdminPageMocks( 'registrations' );
+		$this->load_factories();
 	}
 
 
