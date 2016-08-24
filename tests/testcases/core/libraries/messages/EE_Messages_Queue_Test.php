@@ -37,6 +37,7 @@ class EE_Messages_Queue_Test extends EE_UnitTestCase {
 	 * @return EE_Messages_Queue
 	 */
 	function test_add_and_get_queue() {
+		$this->load_factories();
 		$queue = $this->_get_queue();
 		$message = $this->factory->message->create(array('nosave'=> 1));
 
@@ -131,7 +132,8 @@ class EE_Messages_Queue_Test extends EE_UnitTestCase {
 		//did it get removed?
 		$test_queue->rewind();
 		$this->assertFalse( $test_queue->valid() );
-
+		//ensure message gets removed from entity map
+		EEM_Message::instance()->clear_entity_map( $message->ID() );
 		//should not be in db either
 		$this->assertEmpty( EEM_Message::instance()->get_one_by_ID( $message->ID() ) );
 	}
@@ -145,6 +147,7 @@ class EE_Messages_Queue_Test extends EE_UnitTestCase {
 	 * @return EE_Messages_Queue
 	 */
 	function test_get_batch_to_generate() {
+		$this->load_factories();
 		//grab a bunch of message objects and add to queue.
 		$queue = $this->_get_queue();
 		for ( $i=0;$i<5;$i++ ) {
@@ -173,6 +176,7 @@ class EE_Messages_Queue_Test extends EE_UnitTestCase {
 
 
 	function test_get_to_send_batch_and_send() {
+		$this->load_factories();
 		//grab a bunch of message objects and add to queue.
 		$queue = $this->_get_queue();
 		for ( $i=0;$i<5;$i++ ) {
@@ -211,6 +215,7 @@ class EE_Messages_Queue_Test extends EE_UnitTestCase {
 	 * @group 9787
 	 */
 	public function test_send_only_ready_to_send_messages() {
+		$this->load_factories();
 		//get some messages ready for the test and add to queue
 		$queue = $this->_get_queue();
 		for ( $i = 0; $i < 5; $i++ ) {
@@ -229,4 +234,6 @@ class EE_Messages_Queue_Test extends EE_UnitTestCase {
 	}
 
 
-} //end EE_Messages_Queue_Test
+}
+//end EE_Messages_Queue_Test
+// Location: tests\testcases\core\libraries\messages\EE_Messages_Queue_Test.php
