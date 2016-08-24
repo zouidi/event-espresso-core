@@ -54,6 +54,7 @@ class Transactions_Admin_Page_Test extends EE_UnitTestCase {
 	 * @return \EE_Transaction
 	 */
 	protected function _generate_transaction_and_registrations( $txn_total = 10.00, $reg_count = 0 ) {
+		$this->load_factories();
 		/** @type EE_Transaction $transaction */
 		$transaction = $this->new_model_obj_with_dependencies(
 			'Transaction',
