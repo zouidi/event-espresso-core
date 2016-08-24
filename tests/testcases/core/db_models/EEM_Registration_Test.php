@@ -130,3 +130,4 @@ class EEM_Registration_Test extends EE_UnitTestCase {
 
 }
 // End of file EEM_Registration_Test.php
+// Location: testcases/core/db_models/EEM_Registration_Test.php
