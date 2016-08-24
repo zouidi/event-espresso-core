@@ -19,6 +19,8 @@
  */
 class EE_UnitTestCase extends WP_UnitTestCase {
 
+	const error_code_undefined_property = 8;
+
 	/**
 	 * @var EE_UnitTest_Factory
 	 */
@@ -30,7 +32,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @var array
 	 */
 	protected $wp_filters_saved = NULL;
-	const error_code_undefined_property = 8;
+
 	protected $_cached_SERVER_NAME = NULL;
 	/**
 	 *
@@ -62,9 +64,131 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 */
 	public $scenarios;
 
+	/** @var \EE_Bootstrap $EE_Bootstrap */
+	private static $EE_Bootstrap;
+
+	/** @var \EE_Dependency_Map $EE_Dependency_Map */
+	private static $EE_Dependency_Map;
+
+	/** @var \EE_Registry $EE_Registry */
+	private static $EE_Registry;
+
+
+
+
+
+	public static function setUpBeforeClass() {
+		if ( EE_UNIT_TEST_DEBUG ) {
+			echo "\n\n************************************************************************************************************** ";
+			echo "\n " . __LINE__ . ") " . __METHOD__ . "() TEST CASE : " . get_called_class() . "() ";
+			echo "\n**************************************************************************************************************\n\n";
+		}
+		parent::setUpBeforeClass();
+	}
+
+
+
+
+	/**
+	 * @param \EE_Bootstrap $EE_Bootstrap
+	 */
+	public static function set_EE_Bootstrap( \EE_Bootstrap $EE_Bootstrap ) {
+		self::$EE_Bootstrap = $EE_Bootstrap;
+	}
+
+
+
+	/**
+	 * @return \EE_Bootstrap
+	 */
+	public static function get_EE_Bootstrap() {
+		return self::$EE_Bootstrap;
+	}
+
+
+
+	/**
+	 * @return \EE_Dependency_Map
+	 */
+	public static function load_dependency_map() {
+		// echo EE_UNIT_TEST_DEBUG ? "\n " . __LINE__ . ") " . str_pad( " " . __METHOD__ . "() ", 60, "*", STR_PAD_BOTH ) : '';
+		EE_UnitTestCase::$EE_Dependency_Map = EE_Dependency_Map::instance(
+			new EE_Request( $_GET, $_POST, $_COOKIE ),
+			new EE_Response()
+		);
+		EE_Dependency_Map::register_dependencies(
+			'EE_Session_Mock',
+			array( 'EE_Encryption' => EE_Dependency_Map::load_from_cache )
+		);
+		EE_Dependency_Map::register_class_loader( 'EE_Session_Mock' );
+		return EE_UnitTestCase::$EE_Dependency_Map;
+	}
+
+
+
+	/**
+	 * @return \EE_Registry
+	 */
+	public static function load_registry() {
+		// echo EE_UNIT_TEST_DEBUG ? "\n " . __LINE__ . ") " . str_pad( " " . __METHOD__ . "() ", 60, "*", STR_PAD_BOTH ) : '';
+		add_filter(
+			'FHEE__EE_Registry____construct___class_abbreviations',
+			function ( $class_abbreviations = array() ) {
+				$class_abbreviations['EE_Session_Mock'] = 'SSN';
+				return $class_abbreviations;
+			}
+		);
+		add_filter(
+			'FHEE__EE_Registry__load_core__core_paths',
+			function ( $core_paths = array() ) {
+				$core_paths[] = EE_TESTS_DIR . 'mocks' . DS . 'core' . DS;
+				return $core_paths;
+			}
+		);
+		EE_UnitTestCase::$EE_Registry = EE_Registry::instance( EE_UnitTestCase::$EE_Dependency_Map );
+		return EE_UnitTestCase::$EE_Registry;
+	}
+
+
+
+	/**
+	 * @return \EE_Registry
+	 */
+	public function registry() {
+		return EE_UnitTestCase::$EE_Registry instanceof EE_Registry
+			? EE_UnitTestCase::$EE_Registry
+			:EE_UnitTestCase::load_registry();
+	}
+
+
+
+	/**
+	 * @return \EE_Dependency_Map
+	 */
+	public function dependency_map() {
+		return EE_UnitTestCase::$EE_Dependency_Map instanceof EE_Dependency_Map
+			? EE_UnitTestCase::$EE_Dependency_Map
+			: EE_UnitTestCase::load_dependency_map();
+	}
+
 
 
 	public function setUp() {
+		if ( EE_UNIT_TEST_DEBUG ) {
+			echo " <== TEST RESULT for " . $this->getName() . "()";
+			echo "\n---------------------------------------------------------------------------------------- \n";
+			echo " " . __LINE__ . ") " . __METHOD__ . "() DETAILS : " . $this->getName() . "() \n";
+			echo "---------------------------------------------------------------------------------------- \n";
+		} else {
+			echo " " . get_called_class() . "::" . $this->getName() . "() \n";
+		}
+		parent::setUp();
+		if ( ! $this->registry()->SSN instanceof EE_Session_Mock ) {
+			$this->registry()->SSN = $this->registry()->load_core( 'EE_Session_Mock' );
+		}
+		// make sure the config gets reset, because the database records get created
+		// AFTER the config gets loaded, which means that some config fields will be empty
+		$this->registry()->CFG->reset();
 		//save the hooks state before WP_UnitTestCase actually gets its hands on it...
 		//as it immediately adds a few hooks we might not want to backup
 		global $auto_made_thing_seed, $wp_filter, $wp_actions, $merged_filters, $wp_current_filter, $wpdb, $current_user;
@@ -74,9 +198,10 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 			'merged_filters'=>$merged_filters,
 			'wp_current_filter'=>$wp_current_filter
 		);
-		$this->_orig_current_user = $current_user instanceof WP_User ? clone $current_user : new WP_User(1);
-		parent::setUp();
-		EE_Registry::reset( TRUE );
+		// ensure current user is always set up
+		$current_user = $current_user instanceof WP_User ? $current_user : new WP_User(1);
+		$this->_orig_current_user = clone $current_user;
+		// $this->registry()->reset( TRUE );
 		$auto_made_thing_seed = 1;
 		//reset wpdb's list of queries executed so it only stores those from the current test
 		$wpdb->queries = array();
@@ -91,29 +216,43 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		add_filter( 'FHEE__EEH_Activation__add_column_if_it_doesnt_exist__short_circuit', '__return_true' );
 		add_filter( 'FHEE__EEH_Activation__drop_index__short_circuit', '__return_true' );
 
-		// load factories
-		EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_TESTS_DIR . 'includes' . DS . 'factories' );
-		$this->factory = new EE_UnitTest_Factory;
-
-		// load scenarios
-		require_once EE_TESTS_DIR . 'includes/scenarios/EE_Test_Scenario_Classes.php';
-		$this->scenarios = new EE_Test_Scenario_Factory( $this );
-		EE_Registry::reset();
-
 		//IF we detect we're running tests on WP4.1, then we need to make sure current_user_can tests pass by implementing
 		//updating all_caps when `WP_User::add_cap` is run (which is fixed in later wp versions).  So we hook into the
 		// 'user_has_cap' filter to do this
 		$_wp_test_version = getenv( 'WP_VERSION' );
 		if ( $_wp_test_version && $_wp_test_version == '4.1' ) {
-			add_filter( 'user_has_cap', function ( $all_caps, $caps, $args, $WP_User ) {
-				$WP_User->get_role_caps();
-
-				return $WP_User->allcaps;
-			}, 10, 4 );
+			add_filter(
+				'user_has_cap',
+				function ( $all_caps, $caps, $args, WP_User $WP_User ) {
+					$WP_User->get_role_caps();
+					return $WP_User->allcaps;
+				},
+				10,
+				4
+			);
 		}
+		// echo "\n " . __LINE__ . ") " . __METHOD__ . '() Price_Types: ' . EEM_Price_Type::instance()->count();
+		// echo EE_UNIT_TEST_DEBUG ? " date_format: " . get_option( 'date_format' ) . "\n\n" : '';
 	}
 
 
+
+	public function load_factories() {
+		if ( ! $this->factory instanceof EE_UnitTest_Factory ) {
+			// load factories
+			EEH_Autoloader::register_autoloaders_for_each_file_in_folder( EE_TESTS_DIR . 'includes' . DS . 'factories' );
+			$this->factory = new EE_UnitTest_Factory();
+		}
+	}
+
+	public function load_scenarios() {
+		if ( ! $this->scenarios instanceof EE_Test_Scenario_Factory ) {
+			$this->load_factories();
+			// load scenarios
+			require_once EE_TESTS_DIR . 'includes/scenarios/EE_Test_Scenario_Classes.php';
+			$this->scenarios = new EE_Test_Scenario_Factory( $this );
+		}
+	}
 
 	/**
 	 * @param bool $short_circuit
@@ -132,7 +271,12 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	}
 
 	public function tearDown(){
+		if ( EE_UNIT_TEST_DEBUG ) {
+			echo "\n -------------------------------------------------- ";
+			echo "\n " . __LINE__ . ") " . __METHOD__ . "() " . $this->getName() . "()";
+		}
 		parent::tearDown();
+		$this->registry()->reset( true );
 		global $wp_filter, $wp_actions, $merged_filters, $wp_current_filter, $current_user;
 		$wp_filter = $this->wp_filters_saved[ 'wp_filter' ];
 		$wp_actions = $this->wp_filters_saved[ 'wp_actions' ];
@@ -142,10 +286,26 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 		$this->_detect_accidental_txn_commit();
 		$notices = EE_Error::get_notices( false, false, true );
 		EE_Error::reset_notices();
-		if( ! empty( $notices[ 'errors' ] ) ){
-			$this->fail(  $notices['errors'] );
+		if ( ! empty( $notices['errors'] ) ) {
+			$this->fail( $notices['errors'] );
 		}
+		gc_collect_cycles();
+		echo EE_UNIT_TEST_DEBUG ? "\n --------------------------------------------------  \n " : '';
 	}
+
+	public static function tearDownAfterClass() {
+		// EE_UnitTestCase::$EE_Registry->reset( true );
+		// \EEH_Activation::delete_all_espresso_cpt_data();
+		// \EEH_Activation::delete_all_espresso_tables_and_data();
+		// EE_UnitTestCase::$EE_Bootstrap = null;
+		// EE_UnitTestCase::$EE_Dependency_Map = null;
+		// EE_UnitTestCase::$EE_Registry = null;
+		// delete_option( 'espresso_db_update' );
+		parent::tearDownAfterClass();
+		echo EE_UNIT_TEST_DEBUG ? __LINE__ . ") " . __METHOD__ . '() COMPLETED: ' . get_called_class() . "() " : '';
+	}
+
+
 
 	/**
 	 * Detects whether or not a MYSQL query was issued which caused an implicit commit
@@ -313,6 +473,9 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @since  4.3.0
 	 */
 	public function loadAdminMocks() {
+		require_once EE_ADMIN . 'EE_Admin_Page.core.php';
+		require_once EE_ADMIN . 'EE_Admin_Page_CPT.core.php';
+		require_once EE_ADMIN_PAGES . 'messages/Messages_Admin_Page.core.php';
 		require_once EE_TESTS_DIR . 'mocks/admin/EE_Admin_Mocks.php';
 		require_once EE_TESTS_DIR . 'mocks/admin/admin_mock_valid/Admin_Mock_Valid_Admin_Page.core.php';
 		require_once EE_TESTS_DIR . 'mocks/admin/pricing/espresso_events_Pricing_Hooks_Mock.php';
@@ -418,7 +581,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 			'DTT_end' => new DateTime( '2015-02-20 2:00 pm', $tz ),
 			'TKT_start' => new DateTime( '2015-01-30 8:00 am', $tz ),
 			'TKT_end' => new DateTime( '2015-02-20 8:00 am', $tz )
-			);
+		);
 	}
 
 
@@ -544,10 +707,13 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	}
 
 
+
 	/**
-	 * @param string $expected_date  The expected date string in the given full_format date string format.
-	 * @param string $actual_date    The actual date string in the given full_format date string format.
-	 * @param $full_format
+	 * @param string $expected_date The expected date string in the given full_format date string format.
+	 * @param string $actual_date   The actual date string in the given full_format date string format.
+	 * @param        $full_format
+	 * @param string $custom_error_message
+	 * @throws \EE_Error
 	 */
 	public function assertDateWithinOneMinute( $expected_date, $actual_date, $full_format, $custom_error_message = '' ) {
 		//take the incoming date strings convert to datetime objects and verify they are within one minute of each other
@@ -564,6 +730,13 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 			throw new EE_Error( $date_parsing_error );
 		}
 		$difference = $actual_date_obj->format('U') - $expected_date_obj->format('U');
+		$custom_error_message = ! empty( $custom_error_message )
+			? $custom_error_message
+			: sprintf(
+				__( 'The expected date "%1$s" differs from the actual date "%2$s" by more than one minute', 'event_espresso' ),
+				print_r( $expected_date, true ),
+				print_r( $actual_date, true )
+			);
 		$this->assertTrue( $difference < 60, $custom_error_message );
 	}
 
@@ -1048,6 +1221,7 @@ class EE_UnitTestCase extends WP_UnitTestCase {
 	 * @return WP_User
 	 */
 	public function wp_admin_with_ee_caps( $ee_capabilities = array() ) {
+		$this->load_factories();
 		/** @type WP_User $user */
 		$user = $this->factory->user->create_and_get( array( 'role' => 'administrator' ));
 		$ee_capabilities = (array)$ee_capabilities;
