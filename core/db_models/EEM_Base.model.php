@@ -4173,6 +4173,8 @@ abstract class EEM_Base extends EE_Base{
 		$this->set_timezone( $classInstance->get_timezone() );
 		return $classInstance;
 	}
+
+
 	/**
 	 * Gets the model object from the  entity map if it exists
 	 * @param int|string $id the ID of the model object
@@ -4180,6 +4182,26 @@ abstract class EEM_Base extends EE_Base{
 	 */
 	public function get_from_entity_map( $id ){
 		return isset( $this->_entity_map[ EEM_Base::$_model_query_blog_id ][ $id ] ) ? $this->_entity_map[ EEM_Base::$_model_query_blog_id ][ $id ] : NULL;
+	}
+
+
+	/**
+	 * if a valid identifier is provided, then that entity is unset from the entity map,
+	 * if no identifier is provided, then the entire entity map is emptied
+	 *
+	 * @param int|string $id the ID of the model object
+	 * @return boolean
+	 */
+	public function clear_entity_map( $id = null ){
+		if ( empty( $id ) ) {
+			$this->_entity_map[ EEM_Base::$_model_query_blog_id ] = array();
+			return true;
+		}
+		if ( isset( $this->_entity_map[ EEM_Base::$_model_query_blog_id ][ $id ] ) ) {
+			unset( $this->_entity_map[ EEM_Base::$_model_query_blog_id ][ $id ] );
+			return true;
+		}
+		return false;
 	}
 
 
