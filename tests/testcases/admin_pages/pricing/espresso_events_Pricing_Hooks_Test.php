@@ -47,6 +47,7 @@ class espresso_events_Pricing_Hooks_Test extends EE_UnitTestCase {
 	 * @since 4.6
 	 */
 	protected function _load_pricing_mock( $timezone = 'America/Vancouver') {
+		$this->load_factories();
 		$this->_pricingMock = new espresso_events_Pricing_Hooks_Mock();
 		$this->_event = $this->factory->event->create();
 		$this->_event->set_timezone( $timezone );
