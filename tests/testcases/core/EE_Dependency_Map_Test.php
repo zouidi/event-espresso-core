@@ -11,27 +11,10 @@
  */
 class EE_Dependency_Map_Test extends EE_UnitTestCase {
 
-	/**
-	 * @type EE_Dependency_Map
-	 */
-	protected $_dependency_map;
-
-
-	public function setUp() {
-		parent::setUp();
-		$this->_dependency_map = EE_Dependency_Map::instance();
-	}
-
-
-	public function tearDown() {
-		$this->_dependency_map->reset();
-		parent::tearDown();
-	}
-
 
 
 	public function test_core_dependencies() {
-		$this->validate_core_dependency_map( $this->_dependency_map->dependency_map() );
+		$this->validate_core_dependency_map( $this->dependency_map()->dependency_map() );
 	}
 
 
@@ -48,17 +31,17 @@ class EE_Dependency_Map_Test extends EE_UnitTestCase {
 				}
 			}
 		} else {
-		    $classname = $this->_dependency_map->get_alias($classname);
+		    $classname = $this->dependency_map()->get_alias($classname);
 			// verify that a valid class constant has been set for the value
 			$this->assertEquals(
 				( EE_Dependency_Map::load_new_object || EE_Dependency_Map::load_from_cache ),
 				$dependencies_or_load,
-				sprintf( 'The %s class has an invalid value in the EE_Dependency_Map.', $classname )
+				sprintf( 'The "%s" class has an invalid value in the EE_Dependency_Map.', $classname )
 			);
             // if class is not using PSR-4 compatible namespacing
             if (strpos($classname,'\\') === false) {
                 // verify that a loader exists for the class
-                $loader = $this->_dependency_map->class_loader($classname);
+                $loader = $this->dependency_map()->class_loader($classname);
                 $this->assertNotEmpty(
                     $loader,
                     sprintf('A class loader should be set for "%s" but appears to be missing.', $classname)
@@ -76,8 +59,8 @@ class EE_Dependency_Map_Test extends EE_UnitTestCase {
 			'EE_Messages_Template_Defaults' => 'Closure has required arguments'
 		);
 		//loop through and verify the class loader can successfully load the class it is set for
-		foreach ( $this->_dependency_map->class_loaders() as $class => $loader ) {
-			if ( isset( $skip[ $class ] ) || strpos( $class, 'Command' ) !== false ) {
+		foreach ( $this->dependency_map()->class_loaders() as $class => $loader ) {
+			if ( isset( $skip[ $class ] ) || strpos( $class, 'Command' ) !== false || empty( $class ) || empty( $loader ) ) {
 				continue;
 			}
 			$dependency = $loader instanceof Closure ? $loader() : EE_Registry::instance()->$loader( $class );
@@ -104,7 +87,7 @@ class EE_Dependency_Map_Test extends EE_UnitTestCase {
 	public function test_core_class_loader_for_EE_Messages_Template_Defaults() {
 		/** @type EE_Message_Resource_Manager $Message_Resource_Manager */
 		$Message_Resource_Manager = EE_Registry::instance()->load_lib( 'Message_Resource_Manager' );
-		$loader = $this->_dependency_map->class_loader('EE_Messages_Template_Defaults');
+		$loader = $this->dependency_map()->class_loader('EE_Messages_Template_Defaults');
 		$this->assertInstanceOf( 'Closure', $loader );
 		$Messages_Template_Defaults = $loader(
 			array(
@@ -117,8 +100,8 @@ class EE_Dependency_Map_Test extends EE_UnitTestCase {
 
 
 	public function test_register_class_loader() {
-		$this->_dependency_map->register_class_loader( 'Dummy_Class', 'load_lib' );
-		$actual_class_loader = $this->_dependency_map->class_loader( 'Dummy_Class' );
+		$this->dependency_map()->register_class_loader( 'Dummy_Class', 'load_lib' );
+		$actual_class_loader = $this->dependency_map()->class_loader( 'Dummy_Class' );
 		$this->assertNotEmpty( $actual_class_loader );
 		$this->assertEquals( 'load_lib', $actual_class_loader );
 
@@ -127,21 +110,21 @@ class EE_Dependency_Map_Test extends EE_UnitTestCase {
 			'"dummy_loader" is not a valid loader method on EE_Registry.'
 		);
 
-		$this->_dependency_map->register_class_loader( 'Dummy_Class', 'dummy_loader' );
+		$this->dependency_map()->register_class_loader( 'Dummy_Class', 'dummy_loader' );
 	}
 
 
 
 	public function test_register_dependency() {
 		//test a successful registration.
-		$registered = $this->_dependency_map->register_dependencies( 'Dummy_Class', array( 'EE_Something', 'EE_Something_Else' ) );
+		$registered = $this->dependency_map()->register_dependencies( 'Dummy_Class', array( 'EE_Something', 'EE_Something_Else' ) );
 		$this->assertTrue( $registered );
-		$actual_dependency_map = $this->_dependency_map->dependency_map();
+		$actual_dependency_map = $this->dependency_map()->dependency_map();
 		$this->assertTrue( isset( $actual_dependency_map['Dummy_Class'] ) );
 		$this->assertEquals( array( 'EE_Something', 'EE_Something_Else' ), $actual_dependency_map['Dummy_Class'] );
 
 		//test a unsuccessful registration (cannot override an existing dependency.
-		$registered = $this->_dependency_map->register_dependencies( 'Dummy_Class', array() );
+		$registered = $this->dependency_map()->register_dependencies( 'Dummy_Class', array() );
 		$this->assertFalse( $registered );
 	}
 
