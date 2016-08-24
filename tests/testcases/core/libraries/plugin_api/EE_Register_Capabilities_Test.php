@@ -65,6 +65,7 @@ class EE_Register_Capabilities_Test extends EE_UnitTestCase {
 	 * @return void
 	 */
 	private function setupUser() {
+		$this->load_factories();
 		//create a user for checking caps on.
 		$user_id = $this->factory->user->create();
 		$this->_user = $this->factory->user->get_object_by_id( $user_id );
