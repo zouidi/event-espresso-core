@@ -208,7 +208,7 @@ class Registrations_Admin_Page_Test extends EE_UnitTestCase {
 
 		//verify registration got changed to not approved.
 		/** @var EE_Registration $actual_registration */
-		$actual_registration = EEM_Registration::reset()->instance()->get_one_by_ID( $testing_registration->ID() );
+		$actual_registration = EEM_Registration::instance()->refresh_entity_map_from_db( $testing_registration->ID() );
 		$this->assertEquals( EEM_Registration::status_id_not_approved, $actual_registration->status_ID() );
 	}
 
@@ -237,9 +237,10 @@ class Registrations_Admin_Page_Test extends EE_UnitTestCase {
 		$this->assertArrayHasKey( 'REG_ID', $success );
 		$this->assertCount( 3, $success['REG_ID'] );
 		$this->assertEquals( $expected_ids, $success['REG_ID'] );
-
+		// clear out cached registrations
+		$this->assertTrue( EEM_Registration::instance()->clear_entity_map() );
 		//verify registrations got changed to approved (or stayed there).
-		$registrations = EEM_Registration::reset()->instance()->get_all( array( array( 'STS_ID' => EEM_Registration::status_id_not_approved ) ) );
+		$registrations = EEM_Registration::instance()->get_all( array( array( 'STS_ID' => EEM_Registration::status_id_not_approved ) ) );
 		$this->assertCount( 3, $registrations );
 		$this->assertEquals( $expected_ids, array_keys( $registrations ) );
 
