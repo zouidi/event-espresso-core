@@ -20,6 +20,7 @@ class EEM_Datetime_Test extends EE_UnitTestCase {
 		//set timezone string.  NOTE, this is purposely a high positive timezone string because it works better for testing expiry times.
 		update_option( 'timezone_string', 'Australia/Sydney' );
 		parent::setUp();
+		$this->load_factories();
 	}
 
 
