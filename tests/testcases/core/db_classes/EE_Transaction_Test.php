@@ -68,6 +68,7 @@ class EE_Transaction_Test extends EE_UnitTestCase {
 	 * @throws \EE_Error
 	 */
 	public function test_datetime() {
+		$this->load_factories();
 		$now = new DateTime( "now", new DateTimeZone( 'America/Vancouver' ) );
 		$DateTimeZoneAbbr = $now->format( 'T' );
 		// Now get the transaction's time
@@ -111,6 +112,7 @@ class EE_Transaction_Test extends EE_UnitTestCase {
 	 * @throws \EE_Error
 	 */
 	public function test_is_locked() {
+		$this->load_factories();
 		/** @type EE_Transaction $transaction */
 		$transaction = $this->factory->transaction->create();
 		// initial state should be unlocked
@@ -133,6 +135,7 @@ class EE_Transaction_Test extends EE_UnitTestCase {
 
 
 	public function test_lock() {
+		$this->load_factories();
 		/** @type EE_Transaction $transaction */
 		$transaction = $this->factory->transaction->create();
 		// initial state should be unlocked
@@ -160,6 +163,7 @@ class EE_Transaction_Test extends EE_UnitTestCase {
 	 * @throws \EE_Error
 	 */
 	public function test_unlock() {
+		$this->load_factories();
 		/** @type EE_Transaction $transaction */
 		$transaction = $this->factory->transaction->create();
 		// initial state should be unlocked
