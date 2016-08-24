@@ -126,6 +126,7 @@ class EE_Datetime_Test extends EE_UnitTestCase{
 	 * @since 4.6.0
 	 */
 	public function test_ticket_types_available_for_purchase() {
+		$this->load_factories();
 		//@todo remove once test fixed.
 		$this->markTestSkipped(
 			'See https://events.codebasehq.com/projects/event-espresso/tickets/9635'
@@ -186,6 +187,7 @@ class EE_Datetime_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	public function test_time_range() {
+		$this->load_factories();
 		//setup a datetime for testing
 		$start_date = new DateTime( 'now' );
 		$end_date = new DateTime( 'now + 3 hours' );
@@ -210,6 +212,7 @@ class EE_Datetime_Test extends EE_UnitTestCase{
 	 * @group 8861
 	 */
 	public function test_tickets_remaining() {
+		$this->load_scenarios();
 		$scenarios = $this->scenarios->get_scenarios_by_type( 'datetime' );
 		foreach ( $scenarios as $scenario ) {
 			/* @type EE_Datetime $datetime */
