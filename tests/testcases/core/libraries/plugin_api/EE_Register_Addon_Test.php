@@ -185,6 +185,7 @@ class EE_Register_Addon_Test extends EE_UnitTestCase{
 
 		//check that the caps maps were registered properly too
 		$this->_pretend_capabilities_registered();
+		$this->load_factories();
 		$current_user = $this->factory->user->create_and_get();
 		$other_user = $this->factory->user->create_and_get();
 		//give user administrator role for test!
