@@ -301,6 +301,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	function test_get_formats_for_with_valid_field() {
+		$this->load_factories();
 		//first test default field setup
 		$formats = EEM_Datetime::instance()->get_formats_for( 'DTT_EVT_start' );
 		$this->assertContains('F j, Y', $formats);
@@ -320,6 +321,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	function test_current_time_for_query() {
+		$this->load_factories();
 		//baseline DateTime object for testing
 		$now = new DateTime( "now" );
 		$DateTimeZone = new DateTimeZone( 'America/Vancouver' );
@@ -348,6 +350,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	function test_convert_datetime_for_query() {
+		$this->load_factories();
 		//baselines for testing with
 		//baseline DateTime object for testing
 		$now = new DateTime( "now" );
@@ -424,6 +427,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 
 	public function test_alter_query_params_to_only_include_mine__logged_in() {
 		global $current_user;
+		$this->load_factories();
 		//setup our user and set as current user.
 		/** @var WP_User $user */
 		$user = $this->factory->user->create_and_get();
@@ -643,6 +647,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	 */
 	protected function _ensure_current_user_set() {
 		global $current_user;
+		$this->load_factories();
 		if( ! $current_user instanceof WP_User || ( $current_user instanceof WP_User && $current_user->ID == 0 ) ) {
 			$current_user = $this->factory->user->create_and_get();
 		}
@@ -706,6 +711,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	function test_next_x() {
+		$this->load_factories();
 		//create 5 events for testing with.
 		$events = $this->factory->event->create_many( 5 );
 
@@ -733,6 +739,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	function test_previous_x() {
+		$this->load_factories();
 		//create 5 events for testing with.
 		$events = $this->factory->event->create_many( 5 );
 
@@ -760,6 +767,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	function test_next() {
+		$this->load_factories();
 		//create 5 events for testing with.
 		$events = $this->factory->event->create_many( 5 );
 
@@ -786,6 +794,7 @@ class EEM_Base_Test extends EE_UnitTestCase{
 	 * @since 4.6.x
 	 */
 	function test_previous() {
+		$this->load_factories();
 		//create 5 events for testing with.
 		$events = $this->factory->event->create_many( 5 );
 
