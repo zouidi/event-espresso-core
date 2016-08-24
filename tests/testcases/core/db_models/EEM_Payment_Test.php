@@ -40,6 +40,7 @@ class EEM_Payment_Test extends EE_UnitTestCase {
 	 * @param \DateTimeZone $timezone
 	 */
 	public function _setup_payments( DateTime $now = null, DateTimeZone $timezone = null  ) {
+		$this->load_factories();
 		// setup DateTimeZone
 		$timezone = $timezone instanceof DateTimeZone ? $timezone : new DateTimeZone( 'America/Toronto' );
 		// and base DateTime for now
