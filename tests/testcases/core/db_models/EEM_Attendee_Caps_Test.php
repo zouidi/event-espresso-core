@@ -24,6 +24,7 @@ class EEM_Attendee_Caps_Test extends EE_UnitTestCase{
 	 */
 	function test_get_all__caps(){
 		global $current_user;
+		$this->load_factories();
 		$user = $this->factory->user->create_and_get();
 		$att = $this->new_model_obj_with_dependencies( 'Attendee' );
 		$this->assertEquals( 0, EEM_Attendee::instance()->count( array( 'caps' => EEM_Base::caps_read ) ) );
