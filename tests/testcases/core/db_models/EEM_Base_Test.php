@@ -19,6 +19,12 @@ if (!defined('EVENT_ESPRESSO_VERSION'))
  * ------------------------------------------------------------------------
  */
 class EEM_Base_Test extends EE_UnitTestCase{
+
+	public function setUp() {
+		parent::setUp();
+		EEM_Datetime::instance()->reset();
+	}
+
 	public function test_models_defined_ok(){
 		foreach(EE_Registry::instance()->non_abstract_db_models as $model){
 			$model_instance = EE_Registry::instance()->load_model($model);
