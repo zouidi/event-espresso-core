@@ -2380,12 +2380,20 @@ class EE_Registration_Config extends EE_Config_Base {
 			array( $this, 'set_default_reg_status_on_EEM_Event' ),
 			10, 2
 		);
+		add_action(
+			'AHEE__EE_Config___load_core_config__end',
+			array( $this, 'set_default_reg_STS_ID' )
+		);
 	}
 
 
 
 	/**
-	 * @param mixed                $default_value
+	 * Callback for the 'FHEE__EE_Model_Field_Base___construct_finalize___default_value' filter,
+	 * that specifically checks that the field being instantiated is 'EVT_default_registration_status',
+	 * then sets the default registrations status on the field.
+	 *
+	 * @param mixed $default_value
 	 * @param \EE_Model_Field_Base $field
 	 * @return string
 	 */
@@ -2394,6 +2402,42 @@ class EE_Registration_Config extends EE_Config_Base {
 			$default_value = $this->default_STS_ID;
 		}
 		return $default_value;
+	}
+
+
+
+	/**
+	 * Setter for the default_STS_ID property
+	 * triggers the 'AHEE__EE_Registration_Config__set_default_reg_STS_ID__new_default_reg_STS_ID' action
+	 * which can then be hooked into to provide a notification whenever the default reg status changes.
+	 * This is currently done by the EEM_Event Model so that the 'EVT_default_registration_status'
+	 * can be updated if this value changes
+	 *
+	 * @param string $default_reg_STS_ID
+	 * @throws \Exception
+	 */
+	public function set_default_reg_STS_ID( $default_reg_STS_ID = '' ) {
+		$default_reg_STS_ID = ! empty( $default_reg_STS_ID ) && is_string( $default_reg_STS_ID )
+			? $default_reg_STS_ID
+			: $this->default_STS_ID;
+		$reg_status_array = \EEM_Registration::reg_status_array();
+		if ( ! isset( $reg_status_array[ $default_reg_STS_ID ] ) ) {
+			throw new Exception(
+				sprintf(
+					esc_html__(
+						'The supplied registration status "%1$s" is invalid. Acceptable values are: %2$s',
+						'event_espresso'
+					),
+					'<br />' . implode( ', ', array_keys( $reg_status_array ))
+				)
+			);
+		}
+		do_action(
+			'AHEE__EE_Registration_Config__set_default_reg_STS_ID__new_default_reg_STS_ID',
+			$default_reg_STS_ID,
+			$this
+		);
+		$this->default_STS_ID = $default_reg_STS_ID;
 	}
 
 
