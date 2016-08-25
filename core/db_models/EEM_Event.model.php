@@ -72,8 +72,6 @@ class EEM_Event  extends EEM_CPT_Base{
 	 */
 	protected function __construct($timezone = null){
 
-		EE_Registry::instance()->load_model( 'Registration' );
-
 		$this->singular_item = __('Event','event_espresso');
 		$this->plural_item = __('Events','event_espresso');
 
@@ -102,8 +100,6 @@ class EEM_Event  extends EEM_CPT_Base{
 			)
 		);
 
-		self::$_default_reg_status = empty( self::$_default_reg_status ) ? EEM_Registration::status_id_pending_payment : self::$_default_reg_status;
-
 		$this->_tables = array(
 			'Event_CPT'=>new EE_Primary_Table( 'posts','ID' ),
 			'Event_Meta'=> new EE_Secondary_Table( 'esp_event_meta', 'EVTM_ID', 'EVT_ID' )
@@ -131,8 +127,7 @@ class EEM_Event  extends EEM_CPT_Base{
 				'EVT_display_ticket_selector'=>new EE_Boolean_Field( 'EVT_display_ticket_selector', __( 'Display Ticket Selector Flag', 'event_espresso' ), FALSE, 1 ),
 				'EVT_visible_on'=>new EE_Datetime_Field( 'EVT_visible_on', __( 'Event Visible Date', 'event_espresso' ), TRUE, time()),
 				'EVT_additional_limit'=>new EE_Integer_Field( 'EVT_additional_limit', __( 'Limit of Additional Registrations on Same Transaction', 'event_espresso' ), TRUE, 10 ),
-				'EVT_default_registration_status'=>new EE_Enum_Text_Field(
-					'EVT_default_registration_status', __( 'Default Registration Status on this Event', 'event_espresso' ), FALSE, EEM_Event::$_default_reg_status, array() ),
+				'EVT_default_registration_status'=>new EE_Enum_Text_Field('EVT_default_registration_status', __( 'Default Registration Status on this Event', 'event_espresso' ), FALSE, '', array() ),
 				'EVT_member_only'=>new EE_Boolean_Field( 'EVT_member_only', __( 'Member-Only Event Flag', 'event_espresso' ), FALSE, FALSE ),
 				'EVT_phone'=> new EE_Plain_Text_Field('EVT_phone', __( 'Event Phone Number', 'event_espresso' ), FALSE ),
 				'EVT_allow_overflow'=>new EE_Boolean_Field(  'EVT_allow_overflow', __( 'Allow Overflow on Event', 'event_espresso' ), FALSE, FALSE ),
@@ -155,12 +150,46 @@ class EEM_Event  extends EEM_CPT_Base{
 		//this model is generally available for reading
 		$this->_cap_restriction_generators[ EEM_Base::caps_read ] = new EE_Restriction_Generator_Public();
 		parent::__construct( $timezone );
-		// add default data when it is available
+
+		// add default data only AFTER the database has been populated with default data
+		if ( ! did_action( 'AHEE__EE_System__perform_activations_upgrades_and_migrations' ) ) {
+			add_action(
+				'AHEE__EE_System__perform_activations_upgrades_and_migrations',
+				array( $this, 'set_allowed_enum_values_for_default_registration_status' ),
+				998
+			);
+			add_action(
+				'AHEE__EE_System__perform_activations_upgrades_and_migrations',
+				array( $this, 'set_default_registration_status' ),
+				999
+			);
+		} else {
+			$this->set_allowed_enum_values_for_default_registration_status();
+			$this->set_default_registration_status();
+		}
 		add_action(
-			'AHEE__EE_System__perform_activations_upgrades_and_migrations',
-			array( $this, 'set_allowed_enum_values_for_default_registration_status' ),
-			999
+			'AHEE__EE_Registration_Config__set_default_reg_STS_ID__new_default_reg_STS_ID',
+			array( $this, 'set_default_registration_status' )
 		);
+	}
+
+
+
+	/**
+	 * @param string $default_reg_status
+	 */
+	public function set_default_registration_status( $default_reg_status = null ) {
+		// first make sure that self::$_default_reg_status isn't null
+		self::$_default_reg_status = ! empty( self::$_default_reg_status )
+			? self::$_default_reg_status
+			: EE_Registry::instance()->CFG->registration->default_STS_ID;
+		// now potentially replace with incoming value, if one exists
+		self::$_default_reg_status = ! empty( $default_reg_status )
+			? $default_reg_status
+			: self::$_default_reg_status;
+		/** @var EE_Enum_Text_Field $field_settings */
+		$field_settings = $this->field_settings_for( 'EVT_default_registration_status' );
+		$field_settings->set_default_value( self::$_default_reg_status );
 	}
 
 
@@ -185,19 +214,12 @@ class EEM_Event  extends EEM_CPT_Base{
 		EE_Error::doing_it_wrong(
 			__METHOD__,
 			__(
-				'This is no longer the recommended way to change the default reg status for an event. For a better way, please see: \EE_Registration_Config::do_hooks()',
+				'This is no longer the recommended way to change the default reg status for an event. Please use \EEM_Event::set_default_registration_status() instead.',
 				'event_espresso'
 			),
 			'4.9.10.rc.000'
 		);
-		self::$_default_reg_status = $default_reg_status;
-		//if EEM_Event has already been instantiated, then we need to reset the `EVT_default_reg_status` field to use the new default.
-		if ( self::$_instance instanceof EEM_Event ) {
-			self::$_instance->_fields['Event_Meta']['EVT_default_registration_status'] = new EE_Enum_Text_Field(
-				'EVT_default_registration_status', __( 'Default Registration Status on this Event', 'event_espresso' ), false, $default_reg_status, EEM_Registration::reg_status_array()
-			);
-			self::$_instance->_fields['Event_Meta']['EVT_default_registration_status']->_construct_finalize( 'Event_Meta', 'EVT_default_registration_status', 'EEM_Event' );
-		}
+		EEM_Event::instance()->set_default_registration_status( $default_reg_status );
 	}
 
 
