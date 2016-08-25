@@ -46,6 +46,15 @@ function bootstrap_unit_tests() {
 		'FHEE__EE_Load_Espresso_Core___load_registry__registry',
 		array( 'EE_UnitTestCase', 'load_registry' )
 	);
+	// make sure the config gets reset, because the database records get created
+	// AFTER the config gets loaded, which means that some config fields will be empty
+	add_action(
+		'AHEE__EE_System__perform_activations_upgrades_and_migrations',
+		function () {
+			\EE_UnitTestCase::get_EE_Registry()->CFG->reset();
+		},
+		999
+	);
 	// prepare to run activation for first request
 	delete_option( 'espresso_db_update' );
 	// here we go
