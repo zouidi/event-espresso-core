@@ -55,9 +55,17 @@ abstract class EE_Admin_Page extends EE_BASE {
 	//template variables (used by templates)
 	protected $_template_path;
 	protected $_column_template_path;
-	protected $_template_args;
 
-	//this will hold the list table object for a given view.
+	/**
+	 * @var array $_template_args
+	 */
+	protected $_template_args = array();
+
+	/**
+	 * this will hold the list table object for a given view.
+	 *
+	 * @var EE_Admin_List_Table $_list_table_object
+	 */
 	protected $_list_table_object;
 
 	//bools
@@ -92,7 +100,14 @@ abstract class EE_Admin_Page extends EE_BASE {
 	protected $_current_page_view_url;
 
 	//sanitized request action (and nonce)
+	/**
+	 * @var string $_req_action
+	 */
 	protected $_req_action;
+
+	/**
+	 * @var string $_req_nonce
+	 */
 	protected $_req_nonce;
 
 	//search related
@@ -142,7 +157,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 *
 	 * 		@param bool $routing indicate whether we want to just load the object and handle routing or just load the object.
 	 * 		@access public
-	 * 		@return void
 	 */
 	public function __construct( $routing = TRUE ) {
 
@@ -473,15 +487,13 @@ abstract class EE_Admin_Page extends EE_BASE {
 	final protected function _page_setup() {
 
 		//requires?
-		EE_Registry::instance()->load_helper('Template');
-
 
 		//admin_init stuff - global - we're setting this REALLY early so if EE_Admin pages have to hook into other WP pages they can.  But keep in mind, not everything is available from the EE_Admin Page object at this point.
 		add_action( 'admin_init', array( $this, 'admin_init_global' ), 5 );
 
 
 		//next verify if we need to load anything...
-		$this->_current_page = !empty( $_GET['page'] ) ? sanitize_key( $_GET['page'] ) : FALSE;
+		$this->_current_page = !empty( $_GET['page'] ) ? sanitize_key( $_GET['page'] ) : '';
 		$this->page_folder = strtolower( str_replace( '_Admin_Page', '', str_replace( 'Extend_', '', get_class($this) ) ) );
 
 		global $ee_menu_slugs;
@@ -977,7 +989,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 * 	@return string
 	 */
 	public static function add_query_args_and_nonce( $args = array(), $url = false, $sticky = false, $exclude_nonce = false ) {
-		EE_Registry::instance()->load_helper('URL');
 
 		//if there is a _wp_http_referer include the values from the request but only if sticky = true
 		if ( $sticky ) {
@@ -1207,7 +1218,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 		if ( isset( $this->_route_config['qtips'] ) ) {
 			$qtips = (array) $this->_route_config['qtips'];
 			//load qtip loader
-			EE_Registry::instance()->load_helper('Qtip_Loader', array(), TRUE);
 			$path = array(
 				$this->_get_dir() . '/qtips/',
 				EE_ADMIN_PAGES . basename($this->_get_dir()) . '/qtips/'
@@ -1426,7 +1436,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 		}
 
 		//current set timezone for timezone js
-		EE_Registry::instance()->load_helper('DTT_Helper');
 		echo '<span id="current_timezone" class="hidden">' . EEH_DTT_Helper::get_timezone() . '</span>';
 	}
 
@@ -1828,13 +1837,25 @@ abstract class EE_Admin_Page extends EE_BASE {
 	/**
 	 * _set_list_table_object
 	 * WP_List_Table objects need to be loaded fairly early so automatic stuff WP does is taken care of.
+	 *
+	 * @throws \EE_Error
 	 */
 	protected function _set_list_table_object() {
-		if ( isset($this->_route_config['list_table'] ) ) {
-			if ( !class_exists( $this->_route_config['list_table'] ) )
-				throw new EE_Error( sprintf( __('The %s class defined for the list table does not exist.  Please check the spelling of the class ref in the $_page_config property on %s.', 'event_espresso'), $this->_route_config['list_table'], get_class($this) ) );
-			$a = new ReflectionClass($this->_route_config['list_table']);
-			$this->_list_table_object = $a->newInstance($this);
+		if ( isset( $this->_route_config['list_table'] ) ) {
+			if ( ! class_exists( $this->_route_config['list_table'] ) ) {
+				throw new EE_Error(
+					sprintf(
+						__(
+							'The %s class defined for the list table does not exist.  Please check the spelling of the class ref in the $_page_config property on %s.',
+							'event_espresso'
+						),
+						$this->_route_config['list_table'],
+						get_class( $this )
+					)
+				);
+			}
+			$list_table = $this->_route_config['list_table'];
+			$this->_list_table_object = new $list_table( $this );
 		}
 	}
 
@@ -1959,17 +1980,35 @@ abstract class EE_Admin_Page extends EE_BASE {
 		do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
 		//we only add meta boxes if the page_route calls for it
-		if ( is_array($this->_route_config) && isset( $this->_route_config['metaboxes'] ) && is_array($this->_route_config['metaboxes']) ) {
-
-
-			//this simply loops through the callbacks provided and checks if there is a corresponding callback registered by the child - if there is then we go ahead and process the metabox loader.
+		if ( is_array( $this->_route_config ) && isset( $this->_route_config['metaboxes'] )
+			 && is_array(
+			 $this->_route_config['metaboxes']
+			 )
+		) {
+			// this simply loops through the callbacks provided
+			// and checks if there is a corresponding callback registered by the child
+			// if there is then we go ahead and process the metabox loader.
 			foreach ( $this->_route_config['metaboxes'] as $metabox_callback ) {
-				if ( call_user_func( array($this, &$metabox_callback) ) === FALSE ) {
+				// first check for Closures
+				if ( is_callable( $metabox_callback ) ) {
+					$result = $metabox_callback();
+				} else if ( is_array( $metabox_callback ) && isset( $metabox_callback[0], $metabox_callback[1] ) ) {
+					$result = call_user_func( array( $metabox_callback[0], $metabox_callback[1] ) );
+				} else {
+					$result = call_user_func( array( $this, &$metabox_callback ) );
+				}
+				if ( $result === FALSE ) {
 					// user error msg
-				$error_msg =  __( 'An error occurred. The  requested metabox could not be found.', 'event_espresso' );
-				// developer error msg
-				$error_msg .= '||' . sprintf( __( 'The metabox with the string "%s" could not be called. Check that the spelling for method names and actions in the "_page_config[\'metaboxes\']" array are all correct.', 'event_espresso' ), $metabox_callback );
-				throw new EE_Error( $error_msg );
+					$error_msg =  __( 'An error occurred. The  requested metabox could not be found.', 'event_espresso' );
+					// developer error msg
+					$error_msg .= '||' . sprintf(
+						__(
+							'The metabox with the string "%s" could not be called. Check that the spelling for method names and actions in the "_page_config[\'metaboxes\']" array are all correct.',
+							'event_espresso'
+						),
+						$metabox_callback
+					);
+					throw new EE_Error( $error_msg );
 				}
 			}
 		}
@@ -2041,7 +2080,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 */
 	public function espresso_ratings_request() {
 		$template_path = EE_ADMIN_TEMPLATE . 'espresso_ratings_request_content.template.php';
-		EE_Registry::instance()->load_helper( 'Template' );
 		EEH_Template::display_template( $template_path, array() );
 	}
 
@@ -2163,23 +2201,29 @@ abstract class EE_Admin_Page extends EE_BASE {
 	}
 
 
+
 	/**
 	 * Sets the _template_args arguments used by the _publish_post_box shortcut
-	 *
 	 * Note: currently there is no validation for this.  However if you want the delete button, the
 	 * save, and save and close buttons to work properly, then you will want to include a
 	 * values for the name and id arguments.
-	 *
-	 * @todo  Add in validation for name/id arguments.
-	 *
-	 * @param	string	$name		key used for the action ID (i.e. event_id)
-	 * @param	int		$id	id attached to the item published
-	 * @param	string	$delete	page route callback for the delete action
-	 * @param	string	$post_save_redirect_URL	custom URL to redirect to after Save & Close has been completed
-	 * @param	boolean	$both_btns	whether to display BOTH the "Save & Close" and "Save" buttons or just the Save button
-	 */
-	protected function _set_publish_post_box_vars( $name = NULL, $id = FALSE, $delete = FALSE, $save_close_redirect_URL = NULL, $both_btns = TRUE ) {
 
+	 *
+*@todo  Add in validation for name/id arguments.
+	 * @param    string  $name                    key used for the action ID (i.e. event_id)
+	 * @param    int     $id                      id attached to the item published
+	 * @param    string  $delete                  page route callback for the delete action
+	 * @param    string  $save_close_redirect_URL custom URL to redirect to after Save & Close has been completed
+	 * @param    boolean $both_btns               whether to display BOTH the "Save & Close" and "Save" buttons or just the Save button
+	 * @throws \EE_Error
+	 */
+	protected function _set_publish_post_box_vars(
+		$name = '',
+		$id = 0,
+		$delete = '',
+		$save_close_redirect_URL = null,
+		$both_btns = true
+	) {
 		// if Save & Close, use a custom redirect URL or default to the main page?
 		$save_close_redirect_URL = ! empty( $save_close_redirect_URL ) ? $save_close_redirect_URL : $this->_admin_base_url;
 		// create the Save & Close and Save buttons
@@ -2189,9 +2233,17 @@ abstract class EE_Admin_Page extends EE_BASE {
 
 
 		if ( $delete && ! empty( $id )  ) {
-			$delete = is_bool($delete) ? 'delete' : $delete; //make sure we have a default if just true is sent.
+			//make sure we have a default if just true is sent.
+			$delete = ! empty($delete) ? $delete : 'delete';
 			$delete_link_args = array( $name => $id );
-			$delete = $this->get_action_link_or_button( $delete, $delete, $delete_link_args, 'submitdelete deletion');
+			$delete = $this->get_action_link_or_button(
+				$delete,
+				$delete,
+				$delete_link_args,
+				'submitdelete deletion',
+				'',
+				false
+			);
 		}
 
 		$this->_template_args['publish_delete_link'] = !empty( $id ) ? $delete : '';
@@ -2409,16 +2461,14 @@ abstract class EE_Admin_Page extends EE_BASE {
 
 
 
-
-
 	/**
 	 * This is used to display caf preview pages.
 	 *
 	 * @since 4.3.2
-	 *
 	 * @param string $utm_campaign_source what is the key used for google analytics link
-	 * @param bool   $display_sidebar whether to use the sidebar template or the full template for the page.  TRUE = SHOW sidebar, FALSE = no sidebar. Default no sidebar.
+	 * @param bool   $display_sidebar     whether to use the sidebar template or the full template for the page.  TRUE = SHOW sidebar, FALSE = no sidebar. Default no sidebar.
 	 * @return void
+	 * @throws \EE_Error
 	 */
 	public function display_admin_caf_preview_page( $utm_campaign_source = '', $display_sidebar = TRUE ) {
 		//let's generate a default preview action button if there isn't one already present.
@@ -2433,9 +2483,22 @@ abstract class EE_Admin_Page extends EE_BASE {
 			),
 		'http://eventespresso.com/pricing/'
 		);
-		$this->_template_args['preview_action_button'] = ! isset( $this->_template_args['preview_action_button'] ) ? $this->get_action_link_or_button( '', 'buy_now', array(), 'button-primary button-large', $buy_now_url, true ) : $this->_template_args['preview_action_button'];
+		$this->_template_args['preview_action_button'] = ! isset( $this->_template_args['preview_action_button'] )
+			? $this->get_action_link_or_button(
+				'',
+				'buy_now',
+				array(),
+				'button-primary button-large',
+				$buy_now_url,
+				true
+			)
+			: $this->_template_args['preview_action_button'];
 		$template_path = EE_ADMIN_TEMPLATE . 'admin_caf_full_page_preview.template.php';
-		$this->_template_args['admin_page_content'] = EEH_Template::display_template( $template_path, $this->_template_args, TRUE );
+		$this->_template_args['admin_page_content'] = EEH_Template::display_template(
+			$template_path,
+			$this->_template_args,
+			true
+		);
 		$this->_display_admin_page( $display_sidebar );
 	}
 
@@ -2445,7 +2508,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 * generates HTML wrapper for an admin_page with list_table
 	 *
 	 * @access public
-	 * @return html
 	 */
 	public function display_admin_list_table_page_with_sidebar() {
 		$this->_display_admin_list_table_page(TRUE);
@@ -2456,7 +2518,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 * generates HTML wrapper for an admin_page with list_table (but with no sidebar)
 	 *
 	 * @access public
-	 * @return html
 	 */
 	public function display_admin_list_table_page_with_no_sidebar() {
 		$this->_display_admin_list_table_page();
@@ -2468,7 +2529,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 * generates html wrapper for an admin_list_table page
 	 * @access private
 	 * @param boolean $sidebar whether to display with sidebar or not.
-	 * @return html
 	 */
 	private function _display_admin_list_table_page( $sidebar = false ) {
 		//setup search attributes
@@ -2476,14 +2536,21 @@ abstract class EE_Admin_Page extends EE_BASE {
 		$this->_template_args['current_page'] = $this->_wp_page_slug;
 		$template_path = EE_ADMIN_TEMPLATE . 'admin_list_wrapper.template.php';
 
-		$this->_template_args['table_url'] = defined( 'DOING_AJAX') ? add_query_arg( array( 'noheader' => 'true', 'route' => $this->_req_action), $this->_admin_base_url ) : add_query_arg( array( 'route' => $this->_req_action), $this->_admin_base_url);
+		$this->_template_args['table_url'] = defined( 'DOING_AJAX')
+			? add_query_arg( array( 'noheader' => 'true', 'route' => $this->_req_action), $this->_admin_base_url )
+			: add_query_arg( array( 'route' => $this->_req_action), $this->_admin_base_url);
 		$this->_template_args['list_table'] = $this->_list_table_object;
 		$this->_template_args['current_route'] = $this->_req_action;
 		$this->_template_args['list_table_class'] = get_class( $this->_list_table_object );
 
 		$ajax_sorting_callback = $this->_list_table_object->get_ajax_sorting_callback();
 		if( ! empty( $ajax_sorting_callback )) {
-			$sortable_list_table_form_fields = wp_nonce_field( $ajax_sorting_callback . '_nonce', $ajax_sorting_callback . '_nonce', FALSE, FALSE );
+			$sortable_list_table_form_fields = wp_nonce_field(
+				$ajax_sorting_callback . '_nonce',
+				$ajax_sorting_callback . '_nonce',
+				FALSE,
+				FALSE
+			);
 //			$reorder_action = 'espresso_' . $ajax_sorting_callback . '_nonce';
 //			$sortable_list_table_form_fields = wp_nonce_field( $reorder_action, 'ajax_table_sort_nonce', FALSE, FALSE );
 			$sortable_list_table_form_fields .= '<input type="hidden" id="ajax_table_sort_page" name="ajax_table_sort_page" value="' . $this->page_slug .'" />';
@@ -2499,10 +2566,23 @@ abstract class EE_Admin_Page extends EE_BASE {
 		$this->_template_args['list_table_hidden_fields'] = $hidden_form_fields;
 
 		//display message about search results?
-		$this->_template_args['before_list_table'] .= apply_filters( 'FHEE__EE_Admin_Page___display_admin_list_table_page__before_list_table__template_arg', !empty( $this->_req_data['s'] ) ? '<p class="ee-search-results">' . sprintf( __('Displaying search results for the search string: <strong><em>%s</em></strong>', 'event_espresso'), trim($this->_req_data['s'], '%') ) . '</p>' : '', $this->page_slug, $this->_req_data, $this->_req_action );
-
-		$this->_template_args['admin_page_content'] = EEH_Template::display_template( $template_path, $this->_template_args, TRUE );
-
+		$this->_template_args['before_list_table'] .= apply_filters(
+			'FHEE__EE_Admin_Page___display_admin_list_table_page__before_list_table__template_arg',
+			! empty( $this->_req_data['s'] )
+				? '<p class="ee-search-results">' . sprintf(
+					__( 'Displaying search results for the search string: <strong><em>%s</em></strong>', 'event_espresso' ),
+					trim( $this->_req_data['s'], '%' )
+					) . '</p>'
+				: '',
+			$this->page_slug,
+			$this->_req_data,
+			$this->_req_action
+		);
+		$this->_template_args['admin_page_content'] = EEH_Template::display_template(
+			$template_path,
+			$this->_template_args,
+			true
+		);
 		// the final template wrapper
 		if ( $sidebar )
 			$this->display_admin_page_with_sidebar();
@@ -2528,9 +2608,9 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 * @return string        html string of legend
 	 */
 	protected function _display_legend( $items ) {
-		$template_args['items'] = apply_filters( 'FHEE__EE_Admin_Page___display_legend__items', (array) $items, $this );
+		$this->_template_args['items'] = apply_filters( 'FHEE__EE_Admin_Page___display_legend__items', (array) $items, $this );
 		$legend_template = EE_ADMIN_TEMPLATE . 'admin_details_legend.template.php';
-		return EEH_Template::display_template($legend_template, $template_args, TRUE);
+		return EEH_Template::display_template($legend_template, $this->_template_args, TRUE);
 	}
 
 
@@ -2552,9 +2632,9 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 *
 	 * The json object is populated by whatever is set in the $_template_args property.
 	 *
-	 * @return json object
+	 * @return string json object
 	 */
-	protected function _return_json( $sticky_notices = FALSE ) {
+	protected function _return_json( $sticky_notices = false ) {
 
 		//make sure any EE_Error notices have been handled.
 		$this->_process_notices( array(), true, $sticky_notices );
@@ -2563,8 +2643,10 @@ abstract class EE_Admin_Page extends EE_BASE {
 		$data = isset( $this->_template_args['data'] ) ? $this->_template_args['data'] : array();
 		unset($this->_template_args['data']);
 		$json = array(
-			'error' => isset( $this->_template_args['error'] ) ? $this->_template_args['error'] : FALSE,
-			'success' => isset( $this->_template_args['success'] ) ? $this->_template_args['success'] : FALSE,
+			'error' => isset( $this->_template_args['error'] ) ? $this->_template_args['error'] : false,
+			'success' => isset( $this->_template_args['success'] ) ? $this->_template_args['success'] : false,
+			'errors' => isset( $this->_template_args['errors'] ) ? $this->_template_args['errors'] : false,
+			'attention' => isset( $this->_template_args['attention'] ) ? $this->_template_args['attention'] : false,
 			'notices' => EE_Error::get_notices(),
 			'content' => isset( $this->_template_args['admin_page_content'] ) ? $this->_template_args['admin_page_content'] : '',
 			'data' => array_merge( $data, array('template_args' => $this->_template_args ) ),
@@ -2664,7 +2746,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 */
 	protected function _get_main_nav_tabs() {
 		//let's generate the html using the EEH_Tabbed_Content helper.  We do this here so that it's possible for child classes to add in nav tabs dynamically at the last minute (rather than setting in the page_routes array)
-		EE_Registry::instance()->load_helper( 'Tabbed_Content' );
 		return EEH_Tabbed_Content::display_admin_nav_tabs($this->_nav_tabs);
 	}
 
@@ -2702,7 +2783,6 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 * 	@uses EEH_Form_Fields::get_form_fields_array (/helper/EEH_Form_Fields.helper.php)
 	 */
 	protected function _generate_admin_form_fields( $input_vars = array(), $generator = 'string', $id = FALSE ) {
-		EE_Registry::instance()->load_helper( 'Form_Fields' );
 		$content = $generator == 'string' ? EEH_Form_Fields::get_form_fields($input_vars, $id) : EEH_Form_Fields::get_form_fields_array($input_vars);
 		return $content;
 	}
@@ -2816,16 +2896,17 @@ abstract class EE_Admin_Page extends EE_BASE {
 
 
 	/**
-	 * 	_redirect_after_action
-	 *	@param int 		$success 	- whether success was for two or more records, or just one, or none
+	 *    _redirect_after_action
+	 *
+	 * @param int $success - whether success was for two or more records, or just one, or none
 	 *	@param string 	$what 		- what the action was performed on
 	 *	@param string 	$action_desc 	- what was done ie: updated, deleted, etc
-	 *	@param int 		$query_args		- an array of query_args to be added to the URL to redirect to after the admin action is completed
+	 *	@param array 	$query_args		- an array of query_args to be added to the URL to redirect to after the admin action is completed
 	 *	@param BOOL     $override_overwrite by default all EE_Error::success messages are overwritten, this allows you to override this so that they show.
 	 *	@access protected
 	 *	@return void
 	 */
-	protected function _redirect_after_action( $success = FALSE, $what = 'item', $action_desc = 'processed', $query_args = array(), $override_overwrite = FALSE ) {
+	protected function _redirect_after_action( $success = 0, $what = 'item', $action_desc = 'processed', $query_args = array(), $override_overwrite = FALSE ) {
 
 		do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
 
@@ -2955,6 +3036,22 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 */
 	protected function _process_notices( $query_args = array(), $skip_route_verify = FALSE , $sticky_notices = TRUE ) {
 
+		//first let's set individual error properties if doing_ajax and the properties aren't already set.
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+			$notices = EE_Error::get_notices( false );
+			if ( empty( $this->_template_args['success'] ) ) {
+				$this->_template_args['success'] = isset( $notices['success'] ) ? $notices['success'] : false;
+			}
+
+			if ( empty( $this->_template_args['errors'] ) ) {
+				$this->_template_args['errors'] = isset( $notices['errors'] ) ? $notices['errors'] : false;
+			}
+
+			if ( empty( $this->_template_args['attention'] ) ) {
+				$this->_template_args['attention'] = isset( $notices['attention'] ) ? $notices['attention'] : false;
+			}
+		}
+
 		$this->_template_args['notices'] = EE_Error::get_notices();
 
 		//IF this isn't ajax we need to create a transient for the notices using the route (however, overridden if $sticky_notices == true)
@@ -2966,54 +3063,68 @@ abstract class EE_Admin_Page extends EE_BASE {
 
 
 
-
 	/**
 	 * get_action_link_or_button
 	 * returns the button html for adding, editing, or deleting an item (depending on given type)
 	 *
-	 * @param string $action use this to indicate which action the url is generated with.
-	 * @param string $type accepted strings must be defined in the $_labels['button'] array(as the key) property.
-	 * @param array $extra_request if the button requires extra params you can include them in $key=>$value pairs.
-	 * @param string $class Use this to give the class for the button. Defaults to 'button-primary'
-	 * @param string $base_url If this is not provided the _admin_base_url will be used as the default for the button base_url.  Otherwise this value will be used.
+	 * @param string $action        use this to indicate which action the url is generated with.
+	 * @param string $type          accepted strings must be defined in the $_labels['button'] array(as the key) property.
+	 * @param array  $extra_request if the button requires extra params you can include them in $key=>$value pairs.
+	 * @param string $class         Use this to give the class for the button. Defaults to 'button-primary'
+	 * @param string $base_url      If this is not provided
+	 *                              the _admin_base_url will be used as the default for the button base_url.
+	 *                              Otherwise this value will be used.
 	 * @param bool   $exclude_nonce If true then no nonce will be in the generated button link.
-	 *
-	 * @throws EE_Error
-	 *
-	 * @return string html for button
+	 * @return string
+	 * @throws \EE_Error
 	 */
-	public function get_action_link_or_button($action, $type = 'add', $extra_request = array(), $class = 'button-primary', $base_url = FALSE, $exclude_nonce = false ) {
+	public function get_action_link_or_button(
+		$action,
+		$type = 'add',
+		$extra_request = array(),
+		$class = 'button-primary',
+		$base_url = '',
+		$exclude_nonce = false
+	) {
 		//first let's validate the action (if $base_url is FALSE otherwise validation will happen further along)
-		if ( !isset($this->_page_routes[$action]) && !$base_url )
-			throw new EE_Error( sprintf( __('There is no page route for given action for the button.  This action was given: %s', 'event_espresso'), $action) );
-
-		if ( !isset( $this->_labels['buttons'][$type] ) )
-			throw new EE_Error( sprintf( __('There is no label for the given button type (%s). Labels are set in the <code>_page_config</code> property.', 'event_espresso'), $type) );
-
+		if ( empty( $base_url ) && ! isset( $this->_page_routes[ $action ] ) ) {
+			throw new EE_Error(
+				sprintf(
+					__(
+						'There is no page route for given action for the button.  This action was given: %s',
+						'event_espresso'
+					),
+					$action
+				)
+			);
+		}
+		if ( ! isset( $this->_labels['buttons'][ $type ] ) ) {
+			throw new EE_Error(
+				sprintf(
+					__(
+						'There is no label for the given button type (%s). Labels are set in the <code>_page_config</code> property.',
+						'event_espresso'
+					),
+					$type
+				)
+			);
+		}
 		//finally check user access for this button.
-		$has_access = $this->check_user_access( $action, TRUE );
+		$has_access = $this->check_user_access( $action, true );
 		if ( ! $has_access ) {
 			return '';
 		}
-
-		$_base_url = !$base_url ? $this->_admin_base_url : $base_url;
-
+		$_base_url = ! $base_url ? $this->_admin_base_url : $base_url;
 		$query_args = array(
-			'action' => $action  );
-
+			'action' => $action
+		);
 		//merge extra_request args but make sure our original action takes precedence and doesn't get overwritten.
-		if ( !empty($extra_request) )
+		if ( ! empty( $extra_request ) ) {
 			$query_args = array_merge( $extra_request, $query_args );
-
+		}
 		$url = self::add_query_args_and_nonce( $query_args, $_base_url, false, $exclude_nonce );
-
-		$button = EEH_Template::get_button_or_link( $url, $this->_labels['buttons'][$type], $class );
-
-		return $button;
+		return EEH_Template::get_button_or_link( $url, $this->_labels['buttons'][ $type ], $class );
 	}
-
-
-
 
 
 
@@ -3098,8 +3209,8 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 * This makes available the WP transient system for temporarily moving data between routes
 	 *
 	 * @access protected
-	 * @param route $route the route that should receive the transient
-	 * @param data $data  the data that gets sent
+	 * @param string $route the route that should receive the transient
+	 * @param array $data  the data that gets sent
 	 * @param bool $notices If this is for notices then we use this to indicate so, otherwise its just a normal route transient.
 	 * @param bool $skip_route_verify Used to indicate we want to skip route verification.  This is usually ONLY used when we are adding a transient before page_routes have been defined.
 	 * @return void
@@ -3288,6 +3399,32 @@ abstract class EE_Admin_Page extends EE_BASE {
 
 
 
+	/**
+	 * @return mixed
+	 */
+	public function default_espresso_metaboxes() {
+		return $this->_default_espresso_metaboxes;
+	}
+
+
+
+	/**
+	 * @return mixed
+	 */
+	public function admin_base_url() {
+		return $this->_admin_base_url;
+	}
+
+
+
+	/**
+	 * @return mixed
+	 */
+	public function wp_page_slug() {
+		return $this->_wp_page_slug;
+	}
+
+
 
 	/**
 	 * updates  espresso configuration settings
@@ -3402,9 +3539,9 @@ abstract class EE_Admin_Page extends EE_BASE {
 	 */
 	protected function _process_payment_notification( EE_Payment $payment ) {
 		add_filter( 'FHEE__EE_Payment_Processor__process_registration_payments__display_notifications', '__return_true' );
-		$success = apply_filters( 'FHEE__EE_Admin_Page___process_admin_payment_notification__success', FALSE, $payment );
-		$this->_template_args['success'] = $success;
-		return $success;
+		do_action( 'AHEE__EE_Admin_Page___process_admin_payment_notification', $payment );
+		$this->_template_args['success'] = apply_filters( 'FHEE__EE_Admin_Page___process_admin_payment_notification__success', false, $payment );
+		return $this->_template_args[ 'success' ];
 	}
 
 

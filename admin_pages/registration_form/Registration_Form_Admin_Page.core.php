@@ -28,31 +28,41 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 	/**
 	 * _question
 	 * holds the specific question object for the question details screen
-	 * @var object
+	 *
+	 * @var EE_Question $_question
 	 */
 	protected $_question;
 
 	/**
 	 * _question_group
 	 * holds the specific question group object for the question group details screen
-	 * @var object
+	 *
+	 * @var EE_Question_Group $_question_group
 	 */
 	protected $_question_group;
 
 	/**
 	 *_question_model EEM_Question model instance (for queries)
-	 * @var EEM_Question
-	 */
+	 *
+	 * @var EEM_Question $_question_model;
+ */
 	protected $_question_model;
 
 	/**
 	 * _question_group_model EEM_Question_group instance (for queries)
-	 * @var EEM_Question_Group
+	 *
+	 * @var EEM_Question_Group $_question_group_model
 	 */
 	protected $_question_group_model;
 
 
 
+	/**
+	 * 		@Constructor
+	 *
+	 * 		@param bool $routing indicate whether we want to just load the object and handle routing or just load the object.
+	 * 		@access public
+	 */
 	public function __construct( $routing = TRUE ) {
 		require_once( EE_MODELS . 'EEM_Question.model.php' );
 		require_once( EE_MODELS . 'EEM_Question_Group.model.php' );
@@ -85,7 +95,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 
 	protected function _init_page_props() {
 		$this->page_slug = REGISTRATION_FORM_PG_SLUG;
-		$this->page_label = __('Registration Form', 'event_espresso');
+		$this->page_label = esc_html__('Registration Form', 'event_espresso');
 		$this->_admin_base_url = REGISTRATION_FORM_ADMIN_URL;
 		$this->_admin_base_path = REGISTRATION_FORM_ADMIN;
 	}
@@ -100,17 +110,19 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 
 
 	protected function _define_page_props() {
-		$this->_admin_page_title = __('Registration Form', 'event_espresso');
+		$this->_admin_page_title = esc_html__('Registration Form', 'event_espresso');
 		$this->_labels = array(
 			'buttons' => array(
-				'edit_question' => __('Edit Question', 'event_espresso')
+				'edit_question' => esc_html__('Edit Question', 'event_espresso')
 			)
 		);
 	}
 
 
 
-
+	/**
+	 *_set_page_routes
+	 */
 	protected function _set_page_routes() {
 		$qsg_id = ! empty( $this->_req_data['QSG_ID'] ) ? $this->_req_data['QSG_ID'] : 1;
 		$this->_page_routes = array(
@@ -161,22 +173,22 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 
 			'default' => array(
 				'nav' => array(
-					'label' => __('Form Sections'),
+					'label' => esc_html__('Form Sections'),
 					'order' => 10
 				),
 				//'list_table' => 'Registration_Form_Admin_List_Table',
 				'metaboxes' => array(),
                 'help_tabs' => array(
 					'registration_form_questions_overview_help_tab' => array(
-						'title' => __('Questions Overview', 'event_espresso'),
+						'title' => esc_html__('Questions Overview', 'event_espresso'),
 						'filename' => 'registration_form_questions_overview'
 					),
 					'registration_form_questions_overview_table_column_headings_help_tab' => array(
-						'title' => __('Questions Overview Table Column Headings', 'event_espresso'),
+						'title' => esc_html__('Questions Overview Table Column Headings', 'event_espresso'),
 						'filename' => 'registration_form_questions_overview_table_column_headings'
 					),
 					'registration_form_questions_overview_views_bulk_actions_search_help_tab' => array(
-						'title' => __('Question Overview Views & Bulk Actions & Search', 'event_espresso'),
+						'title' => esc_html__('Question Overview Views & Bulk Actions & Search', 'event_espresso'),
 						'filename' => 'registration_form_questions_overview_views_bulk_actions_search'
 					)
 				),
@@ -189,13 +201,13 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 
 			'question_groups' => array(
 				'nav' => array(
-					'label' => __('Question Groups'),
+					'label' => esc_html__('Question Groups', 'event_espresso'),
 					'order' => 20
 				),
 				'metaboxes' => $this->_default_espresso_metaboxes,
 				'help_tabs' => array(
 					'registration_form_question_groups_help_tab' => array(
-						'title' => __('Question Groups', 'event_espresso'),
+						'title' => esc_html__('Question Groups', 'event_espresso'),
 						'filename' => 'registration_form_question_groups'
 					),
 				),
@@ -205,7 +217,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 
 			'edit_question' => array(
 				'nav' => array(
-					'label' => __('Edit Question', 'event_espresso'),
+					'label' => esc_html__('Edit Question', 'event_espresso'),
 					'order' => 15,
 					'persistent' => FALSE,
 					'url' => isset( $this->_req_data['question_id'] )
@@ -218,7 +230,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 				'metaboxes' => array_merge( $this->_default_espresso_metaboxes, array('_publish_post_box' ) ),
 				'help_tabs' => array(
 					'registration_form_edit_question_group_help_tab' => array(
-						'title' => __('Edit Question', 'event_espresso'),
+						'title' => esc_html__('Edit Question', 'event_espresso'),
 						'filename' => 'registration_form_edit_question'
 					),
 				),
@@ -326,10 +338,10 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 		$this->_views = array(
 			'all' => array(
 				'slug' => 'all',
-				'label' => __('View All Questions', 'event_espresso'),
+				'label' => esc_html__('View All Questions', 'event_espresso'),
 				'count' => 0,
 //				'bulk_action' => array(
-//					'trash_questions' => __('Trash', 'event_espresso'),
+//					'trash_questions' => esc_html__('Trash', 'event_espresso'),
 //					)
 				)
 		);
@@ -337,11 +349,11 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 		if ( EE_Registry::instance()->CAP->current_user_can( 'ee_delete_questions', 'espresso_registration_form_trash_questions' ) ) {
 			$this->_views['trash'] = array(
 				'slug' => 'trash',
-				'label' => __('Trash', 'event_espresso'),
+				'label' => esc_html__('Trash', 'event_espresso'),
 				'count' => 0,
 //				'bulk_action' => array(
-//					'delete_questions' => __('Delete Permanently', 'event_espresso'),
-//					'restore_questions' => __('Restore', 'event_espresso'),
+//					'delete_questions' => esc_html__('Delete Permanently', 'event_espresso'),
+//					'restore_questions' => esc_html__('Restore', 'event_espresso'),
 				);
 		}
 	}

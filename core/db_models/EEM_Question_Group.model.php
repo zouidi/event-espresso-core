@@ -33,7 +33,7 @@ class EEM_Question_Group extends EEM_Soft_Delete_Base {
 				'QSG_ID'=>new EE_Primary_Key_Int_Field('QSG_ID', __('Question Group ID','event_espresso')),
 				'QSG_name'=>new EE_Plain_Text_Field('QSG_name', __('Question Group Name','event_espresso'), false, ''),
 				'QSG_identifier'=>new EE_Plain_Text_Field('QSG_identifier', __('Text ID for question Group','event_espresso'), false, ''),
-				'QSG_desc'=>new EE_Full_HTML_Field('QSG_desc', __('Description of Question Group','event_espresso'), true, ''),
+				'QSG_desc'=>new EE_Post_Content_Field('QSG_desc', __('Description of Question Group','event_espresso'), true, ''),
 				'QSG_parent' => new EE_Integer_Field('QSG_parent',__('The Question Group that this is a child of.','event_espresso'),true,null),
 				'QSG_html_name' => new EE_Plain_Text_Field('QSG_html_name',__('Form Section Name','event_espresso'),true,null),
 				'QSG_html_id' => new EE_Plain_Text_Field('QSG_html_id',__('HTML CSS id for question Group','event_espresso'),true,null),
@@ -47,7 +47,7 @@ class EEM_Question_Group extends EEM_Soft_Delete_Base {
 		);
 
 		$this->_model_relations = array(
-			'Question'=>new EE_Has_Many_Relation(),
+			'Question'=>new EE_HABTM_Relation('Question_Group_Question'),
 			'Event'=>new EE_HABTM_Relation('Event_Question_Group'),
 			'Event_Question_Group'=>new EE_Has_Many_Relation(),
 			'WP_User' => new EE_Belongs_To_Relation(),

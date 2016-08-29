@@ -7,7 +7,18 @@ namespace EventEspresso\core\libraries\rest_api\controllers\rpc;
  * and open the template in the editor.
  */
 class Checkin_Test extends \EE_UnitTestCase {
-	
+
+
+	public function setUp() {
+		parent::setUp();
+		if ( ! class_exists( 'WP_Rest_Request' ) ) {
+			$this->markTestSkipped(
+				'Test being run on a version of WP that does not have the REST framework installed'
+			);
+		}
+	}
+
+
 	/*
 	 * we're doing stuff that we know will add error notices, so we don't care
 	 * if there are errors (that's part of these tests)
@@ -62,7 +73,7 @@ class Checkin_Test extends \EE_UnitTestCase {
 		$this->assertDateWithinOneMinute( 
 			mysql_to_rfc3339(date( 'c' ) ),
 			$data[ 'CHK_timestamp' ],
-			'Y-m-d\TH:m:i' 
+			'Y-m-d\TH:m:i+' 
 		);
 	}	
 	

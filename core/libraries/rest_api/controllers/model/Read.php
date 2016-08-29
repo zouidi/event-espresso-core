@@ -31,9 +31,13 @@ class Read extends Base {
 	 */
 	protected $_fields_calculator;
 
+
+
+	/**
+	 * Read constructor.
+	 */
 	public function __construct() {
 		parent::__construct();
-		\EE_Registry::instance()->load_helper( 'Inflector' );
 		$this->_fields_calculator = new Calculated_Model_Fields();
 	}
 
@@ -77,10 +81,10 @@ class Read extends Base {
 	/**
 	 * Gets a single entity related to the model indicated in the path and its id
 	 *
-	 * @param \WP_Rest_Request $request
+	 * @param \WP_REST_Request $request
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public static function handle_request_get_one( \WP_Rest_Request $request ) {
+	public static function handle_request_get_one( \WP_REST_Request $request ) {
 		$controller = new Read();
 		try{
 			$matches = $controller->parse_route(
@@ -178,7 +182,7 @@ class Read extends Base {
 	 *
 	 * @param \EEM_Base $model
 	 * @param \WP_REST_Request $request
-	 * @return array
+	 * @return array|\WP_Error
 	 */
 	public function get_entities_from_model( $model, $request) {
 		$query_params = $this->create_model_query_params( $model, $request->get_params() );
@@ -194,8 +198,9 @@ class Read extends Base {
 				array( 'status' => 403 )
 			);
 		}
-
-		$this->_set_headers_from_query_params( $model, $query_params );
+		if( ! $request->get_header( 'no_rest_headers' ) ) {
+			$this->_set_headers_from_query_params( $model, $query_params );
+		}
 		/** @type array $results */
 		$results = $model->get_all_wpdb_results( $query_params );
 		$nice_results = array( );
@@ -211,7 +216,6 @@ class Read extends Base {
 
 	/**
 	 * Gets the collection for given relation object
-	 *
 	 * The same as Read::get_entities_from_model(), except if the relation
 	 * is a HABTM relation, in which case it merges any non-foreign-key fields from
 	 * the join-model-object into the results
@@ -219,7 +223,7 @@ class Read extends Base {
 	 * @param string $id the ID of the thing we are fetching related stuff from
 	 * @param \EE_Model_Relation_Base $relation
 	 * @param \WP_REST_Request $request
-	 * @return array
+	 * @return array|\WP_Error
 	 */
 	public function get_entities_from_relation( $id,  $relation, $request ) {
 		$context = $this->validate_context( $request->get_param( 'caps' ));
@@ -266,7 +270,9 @@ class Read extends Base {
 		$query_params[0][ $relation->get_this_model()->get_this_model_name() . '.' . $relation->get_this_model()->primary_key_name() ] = $id;
 		$query_params[ 'default_where_conditions' ] = 'none';
 		$query_params[ 'caps' ] = $context;
-		$this->_set_headers_from_query_params( $relation->get_other_model(), $query_params );
+		if( ! $request->get_header( 'no_rest_headers' ) ) {
+			$this->_set_headers_from_query_params( $relation->get_other_model(), $query_params );
+		}
 		/** @type array $results */
 		$results = $relation->get_other_model()->get_all_wpdb_results( $query_params );
 		$nice_results = array();
@@ -302,7 +308,8 @@ class Read extends Base {
 
 	/**
 	 * Sets the headers that are based on the model and query params,
-	 * like the total records
+	 * like the total records. This should only be called on the original request
+	 * from the client, not on subsequent internal
 	 * @param \EEM_Base $model
 	 * @param array $query_params
 	 * @return void
@@ -324,9 +331,7 @@ class Read extends Base {
 		}
 		//remove the group by and having parts of the query, as those will
 		//make the sql query return an array of values, instead of just a single value
-		unset( $query_params[ 'group_by' ] );
-		unset( $query_params[ 'having' ] );
-		unset( $query_params[ 'limit' ] );
+		unset( $query_params[ 'group_by' ], $query_params[ 'having' ], $query_params[ 'limit' ] );
 		$count = $model->count( $query_params, null, true );
 
 		$pages = $count / $limit_parts[ 1 ];
@@ -420,11 +425,22 @@ class Read extends Base {
 					'pretty' => $field_obj->prepare_for_pretty_echoing( $field_value )
 				);
 			} elseif ( $field_obj instanceof \EE_Datetime_Field ) {
-				$result[ $field_name ] = Model_Data_Translator::prepare_field_value_for_json(
-					$field_obj,
-					$field_value,
-					$this->get_model_version_info()->requested_version()
-				);
+				if( $field_value instanceof \DateTime ) {
+					$timezone = $field_value->getTimezone();
+					$field_value->setTimezone( new \DateTimeZone( 'UTC' ) );
+					$result[ $field_name . '_gmt' ] = Model_Data_Translator::prepare_field_value_for_json(
+						$field_obj,
+						$field_value,
+						$this->get_model_version_info()->requested_version()
+					);
+					$field_value->setTimezone( $timezone );
+					$result[ $field_name ] = Model_Data_Translator::prepare_field_value_for_json(
+						$field_obj,
+						$field_value,
+						$this->get_model_version_info()->requested_version()
+					);
+				}
+
 			} else {
 				$result[ $field_name ] = Model_Data_Translator::prepare_field_value_for_json(
 					$field_obj,
@@ -453,7 +469,7 @@ class Read extends Base {
 	/**
 	 * Gets links we want to add to the response
 	 *
-*@global \WP_REST_Server $wp_rest_server
+	 * @global \WP_REST_Server $wp_rest_server
 	 * @param \EEM_Base $model
 	 * @param array $db_row
 	 * @param array $entity_array
@@ -493,7 +509,7 @@ class Read extends Base {
 
 		//add links to related models
 		foreach( $this->get_model_version_info()->relation_settings( $model ) as $relation_name => $relation_obj ) {
-			$related_model_part = $this->get_related_entity_name( $relation_name, $relation_obj );
+			$related_model_part = Read::get_related_entity_name( $relation_name, $relation_obj );
 			$links[ \EED_Core_Rest_Api::ee_api_link_namespace . $related_model_part ] = array(
 				array(
 					'href' => $this->get_versioned_link_to(
@@ -551,19 +567,22 @@ class Read extends Base {
 						'calculate' => $related_fields_to_calculate,
 					)
 				);
+				$pretend_related_request->add_header( 'no_rest_headers', true );
 				$related_results = $this->get_entities_from_relation(
 					$entity_array[ $model->primary_key_name() ],
 					$relation_obj,
 					$pretend_related_request
 				);
-				$entity_array[ $this->get_related_entity_name( $relation_name, $relation_obj ) ] = $related_results instanceof \WP_Error ? null : $related_results;
+				$entity_array[ Read::get_related_entity_name( $relation_name, $relation_obj ) ] = $related_results instanceof \WP_Error
+					? null
+					: $related_results;
 			}
 		}
 		return $entity_array;
 	}
-	
+
 	/**
-	 * Returns a new array with all the names of models removed. Eg 
+	 * Returns a new array with all the names of models removed. Eg
 	 * array( 'Event', 'Datetime.*', 'foobar' ) would become array( 'Datetime.*', 'foobar' )
 	 * @param array $arr
 	 * @return array
@@ -574,10 +593,10 @@ class Read extends Base {
 	/**
 	 * Gets the calculated fields for the response
 	 *
-	 * @param \EEM_Base        $model
+	 * @param \EEM_Base $model
 	 * @param array            $wpdb_row
 	 * @param \WP_REST_Request $rest_request
-	 * @return array the _calculations item in the entity
+	 * @return \stdClass the _calculations item in the entity
 	 */
 	protected function _get_entity_calculations( $model, $wpdb_row, $rest_request ) {
 		$calculated_fields = $this->explode_and_get_items_prefixed_with(
@@ -585,10 +604,10 @@ class Read extends Base {
 			''
 		);
 		//note: setting calculate=* doesn't do anything
-		$calculated_fields_to_return = array();
+		$calculated_fields_to_return = new \stdClass();
 		foreach( $calculated_fields as $field_to_calculate ) {
 			try{
-				$calculated_fields_to_return[ $field_to_calculate ] = Model_Data_Translator::prepare_field_value_for_json(
+				$calculated_fields_to_return->$field_to_calculate = Model_Data_Translator::prepare_field_value_for_json(
 					null,
 					$this->_fields_calculator->retrieve_calculated_field_value(
 						$model,
@@ -640,14 +659,14 @@ class Read extends Base {
 		}
 	}
 
-//	public function
 
 
 	/**
 	 * Gets the one model object with the specified id for the specified model
+	 *
 	 * @param \EEM_Base $model
 	 * @param \WP_REST_Request $request
-	 * @return array
+	 * @return array|\WP_Error
 	 */
 	public function get_entity_from_model( $model, $request ) {
 		$query_params = array( array( $model->primary_key_name() => $request->get_param( 'id' ) ),'limit' => 1);
@@ -741,6 +760,12 @@ class Read extends Base {
 			$order_by = null;
 		}
 		if( $order_by !== null ){
+			if( is_array( $order_by ) ) {
+				$order_by = Model_Data_Translator::prepare_field_names_in_array_keys_from_json( $order_by );
+			} else {
+				//it's a single item
+				$order_by = Model_Data_Translator::prepare_field_name_from_json( $order_by );
+			}
 			$model_query_params[ 'order_by' ] =  $order_by;
 		}
 		if ( isset( $query_parameters[ 'group_by' ] ) ) {
@@ -748,7 +773,11 @@ class Read extends Base {
 		} elseif ( isset( $query_parameters[ 'groupby' ] ) ) {
 			$group_by = $query_parameters[ 'groupby' ];
 		}else{
-			$group_by = null;
+			$group_by = array_keys( $model->get_combined_primary_key_fields() );
+		}
+		//make sure they're all real names
+		if( is_array( $group_by ) ) {
+			$group_by = Model_Data_Translator::prepare_field_names_from_json( $group_by );
 		}
 		if( $group_by !== null ){
 			$model_query_params[ 'group_by' ] = $group_by;
@@ -783,7 +812,7 @@ class Read extends Base {
 						)
 					);
 				}
-				$sanitized_limit[] = intval( $limit_part );
+				$sanitized_limit[] = (int)$limit_part;
 			}
 			$model_query_params[ 'limit' ] = implode( ',', $sanitized_limit );
 		}else{

@@ -22,7 +22,12 @@ class EE_Text_Validation_Strategy extends EE_Validation_Strategy_Base{
 
 
 
-	public function __construct( $validation_error_message = NULL, $regex = null ) {
+	/**
+	 * 
+	 * @param string $validation_error_message
+	 * @param string $regex a PHP regex; the javascript regex will be derived from this
+	 */
+public function __construct( $validation_error_message = NULL, $regex = null ) {
 		$this->_regex = $regex;
 		parent::__construct( $validation_error_message );
 	}
