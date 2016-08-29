@@ -1,4 +1,9 @@
 <?php if ( ! defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
+require_once( EE_MODELS . 'EEM_Soft_Delete_Base.model.php' );
+require_once( EE_CLASSES . 'EE_Question_Group.class.php' );
+
+
+
 /**
  * Question Group Model
  *
@@ -8,8 +13,6 @@
  *
  * ------------------------------------------------------------------------
  */
-require_once ( EE_MODELS . 'EEM_Soft_Delete_Base.model.php' );
-require_once( EE_CLASSES . 'EE_Question_Group.class.php');
 class EEM_Question_Group extends EEM_Soft_Delete_Base {
 
 	const system_personal = 1;
@@ -19,6 +22,10 @@ class EEM_Question_Group extends EEM_Soft_Delete_Base {
 	protected static $_instance = NULL;
 
 
+
+	/**
+	 * @param null $timezone
+	 */
 	protected function __construct( $timezone = NULL ) {
 
 		$this->singular_item = __('Question Group','event_espresso');
@@ -47,7 +54,7 @@ class EEM_Question_Group extends EEM_Soft_Delete_Base {
 		);
 
 		$this->_model_relations = array(
-			'Question'=>new EE_HABTM_Relation('Question_Group_Question'),
+			'Question'=>new EE_Has_Many_Relation(),
 			'Event'=>new EE_HABTM_Relation('Event_Question_Group'),
 			'Event_Question_Group'=>new EE_Has_Many_Relation(),
 			'WP_User' => new EE_Belongs_To_Relation(),
