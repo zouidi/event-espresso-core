@@ -64,6 +64,9 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 	// constant used to indicate that the question type is a multi-select
 	const QST_type_multi_select = 'MULTI_SELECT';
 
+	// constant used to indicate that the question type is an ajax-select
+	const QST_type_ajax_select = 'AJAX_SELECT';
+
 	/**
 	 * Question types that are interchangeable, even after answers have been provided for them.
 	 * Top-level keys are category slugs, next level is an array of question types. If question types
@@ -122,7 +125,8 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 				EEM_Question::QST_type_int => __( 'Whole Number', 'event_espresso' ),
 				EEM_Question::QST_type_url => __( 'URL', 'event_espresso' ),
 				EEM_Question::QST_type_year => __( 'Year', 'event_espresso' ),
-				EEM_Question::QST_type_multi_select => __( 'Multi Select', 'event_espresso' )
+				EEM_Question::QST_type_multi_select => __( 'Multi Select', 'event_espresso' ),
+				EEM_Question::QST_type_ajax_select => __( 'AJAX Select', 'event_espresso' ),
 			)
 		);
 		$this->_question_descriptions = apply_filters(
@@ -143,12 +147,13 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 				EEM_Question::QST_type_int           => __( 'A text field that only allows whole numbers (no decimals)', 'event_espresso' ),
 				EEM_Question::QST_type_url           => __( 'A text field that must contain a valid URL', 'event_espresso' ),
 				EEM_Question::QST_type_year          => __( 'A dropdown that lists the last 100 years', 'event_espresso' ),
-				EEM_Question::QST_type_multi_select  => __( 'A dropdown that allows multiple selections', 'event_espresso' )
+				EEM_Question::QST_type_multi_select  => __( 'A dropdown that allows multiple selections', 'event_espresso' ),
+				EEM_Question::QST_type_ajax_select   => __( 'A dropdown that populates it\'s options dynamically via AJAX', 'event_espresso' ),
 			)
 		);
 		$this->_question_type_categories = (array)apply_filters(
-				'FHEE__EEM_Question__construct__question_type_categories',
-				array(
+			'FHEE__EEM_Question__construct__question_type_categories',
+			array(
 				'text' => array(
 					EEM_Question::QST_type_text,
 					EEM_Question::QST_type_textarea,
@@ -158,15 +163,16 @@ class EEM_Question extends EEM_Soft_Delete_Base {
 					EEM_Question::QST_type_int,
 					EEM_Question::QST_type_decimal,
 					EEM_Question::QST_type_url,
-					),
+				),
 				'single-answer-enum' => array(
 					EEM_Question::QST_type_radio,
-					EEM_Question::QST_type_dropdown
+					EEM_Question::QST_type_dropdown,
 				),
 				'multi-answer-enum' => array(
 					EEM_Question::QST_type_checkbox,
-					EEM_Question::QST_type_multi_select
-				)
+					EEM_Question::QST_type_multi_select,
+					EEM_Question::QST_type_ajax_select,
+				),
 			)
 		);
 
