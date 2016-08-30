@@ -203,7 +203,7 @@ class RegistrationFormEditorForm {
 	/**
 	 * @param string $form_input
 	 * @param array  $options
-	 * @return \EE_Form_Section_Proper
+	 * @return array
 	 */
 	public function getInputOptions( $form_input, $options ) {
 		//if ( $form_input == 'checkbox_multi' ) {
@@ -392,7 +392,7 @@ class RegistrationFormEditorForm {
 
 
 	/**
-	 * @return \EE_Text_Input
+	 * @return \EE_Text_Area_Input
 	 */
 	protected function getFailedValidationMessage() {
 		return new \EE_Text_Area_Input(
