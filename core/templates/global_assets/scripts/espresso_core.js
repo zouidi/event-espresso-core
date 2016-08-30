@@ -388,9 +388,11 @@ function console_log( item_name, value, spacer ) {
  * @param  {string} obj_name
  * @param  {object} obj
  * @param  {number} depth
+ * @param  {number} max_depth
  */
-function console_log_object( obj_name, obj, depth ) {
-	depth      = typeof depth !== 'undefined' ? depth : 0;
+function console_log_object( obj_name, obj, depth, max_depth ) {
+	depth = typeof depth !== 'undefined' ? depth : 0;
+	max_depth = typeof max_depth !== 'undefined' ? max_depth : 3;
 	var spacer = '';
 	for ( var i = 0; i < depth; i++ ) {
 		spacer = spacer + '    ';
@@ -406,9 +408,9 @@ function console_log_object( obj_name, obj, depth ) {
 		}
 		jQuery.each(
 			obj, function ( index, value ) {
-				if ( typeof value === 'object' && depth < 6 ) {
+				if ( typeof value === 'object' && depth < max_depth ) {
 					depth++;
-					console_log_object( index, value, depth );
+					console_log_object( index, value, depth, max_depth );
 				} else {
 					console.log( spacer + index + ' = ' + value );
 				}
