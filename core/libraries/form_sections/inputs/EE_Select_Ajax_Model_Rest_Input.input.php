@@ -56,7 +56,7 @@ class EE_Select_Ajax_Model_Rest_Input extends EE_Form_Input_With_Options_Base{
 		$this->_model_name = EEH_Array::is_set(
 			$input_settings,
 			'model_name',
-			null
+			'Event'
 		);
 		$model = $this->_get_model();
 		$query_params = EEH_Array::is_set(
@@ -176,11 +176,19 @@ class EE_Select_Ajax_Model_Rest_Input extends EE_Form_Input_With_Options_Base{
 	 * @throws EE_Error
 	 */
 	protected function _get_model() {
+		if ( empty( $this->_model_name ) ) {
+			throw new EE_Error(
+				__(
+					'A model name is required when constructing an EE_Select_Ajax_Model_Rest_Input object. Please provide a model name in the "model_name" form input argument',
+					'event_espresso'
+				)
+			);
+		}
 		if( ! EE_Registry::instance()->is_model_name(  $this->_model_name ) ) {
 			throw new EE_Error(
 				sprintf(
 					__(
-						'%1$s is not a proper model name. Please provide a model name in the "model_name" form input argument',
+						'"%1$s" is not a proper model name. Please provide a valid model name in the "model_name" form input argument',
 						'event_espresso'
 					),
 					$this->_model_name
