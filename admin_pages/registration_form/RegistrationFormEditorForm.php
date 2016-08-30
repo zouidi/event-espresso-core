@@ -219,7 +219,7 @@ class RegistrationFormEditorForm {
 					'html_id'    => "input-options-{$form_input}-clone-{$order}-value",
 					'html_class' => "ee-reg-form-option-label-text-js",
 					'default'    => $key,
-					'html_other_attributes' => 'data-target="reg-form-clone-'
+					'other_html_attributes' => 'data-target="reg-form-clone-'
 					                           . str_replace( '_', '-', $form_input ) . '-'
 					                           . sanitize_key( $key ) . '-option-lbl"',
 				)
@@ -286,7 +286,7 @@ class RegistrationFormEditorForm {
 					array(
 						'html_label_text'       => __( 'Label Text', 'event_espresso' ),
 						'html_class'            => 'ee-reg-form-label-text-js',
-						'html_other_attributes' => 'data-target="reg-form-clone-' . str_replace( '_', '-', $form_input ) . '-lbl"',
+						'other_html_attributes' => 'data-target="reg-form-clone-' . str_replace( '_', '-', $form_input ) . '-lbl"',
 					)
 				);
 
