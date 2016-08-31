@@ -128,35 +128,36 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 		$this->_page_routes = array(
 
 			'default' => array(
-				'func' => '_edit_form',
-				'capability' => 'ee_edit_question',
+				'func' => 'form_sections_list_table',
+				'capability' => 'ee_read_question_groups',
 				'obj_id' => $qsg_id,
-				'args' => array('edit')
+				'args' => array('edit'),
 			),
 
-			//'question_groups' => array(
-			//	'func' => '_form_sections_preview',
-			//	'capability' => 'ee_read_question_groups'
-			//),
-
-			'update_question' => array(
-				'func' => '_insert_or_update_question',
-				'args' => array('new_question' => FALSE ),
-				'capability' => 'ee_edit_question',
+			'add_edit_form_section' => array(
+				'func' => 'add_edit_form_section',
+				'capability' => 'ee_read_question_groups',
 				'obj_id' => $qsg_id,
-				'noheader' => TRUE,
+				'args' => array( 'edit' ),
 			),
 
-			'insert_question_group' => array(
-				'func'       => '_insert_or_update_question_group',
-				'args'       => array( 'new_question_group' => true ),
+			'form_section_preview' => array(
+				'func' => '_form_section_preview',
+				'capability' => 'ee_read_question_groups',
+				'obj_id' => $qsg_id,
+				'args' => array( 'edit' ),
+			),
+
+			'insert_form_section' => array(
+				'func'       => '_insert_or_update_form_section',
+				'args'       => array( 'new_form_section' => true ),
 				'capability' => 'ee_edit_question_groups',
-				'noheader'   => true
+				'noheader'   => true,
 			),
 
-			'update_question_group' => array(
-				'func'       => '_insert_or_update_question_group',
-				'args'       => array( 'new_question_group' => false ),
+			'update_form_section' => array(
+				'func'       => '_insert_or_update_form_section',
+				'args'       => array( 'new_form_section' => false ),
 				'capability' => 'ee_edit_question_group',
 				'obj_id'     => $qsg_id,
 				'noheader'   => true,
@@ -179,63 +180,42 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 				//'list_table' => 'Registration_Form_Admin_List_Table',
 				'metaboxes' => array(),
                 'help_tabs' => array(
-					'registration_form_questions_overview_help_tab' => array(
-						'title' => esc_html__('Questions Overview', 'event_espresso'),
-						'filename' => 'registration_form_questions_overview'
-					),
-					'registration_form_questions_overview_table_column_headings_help_tab' => array(
-						'title' => esc_html__('Questions Overview Table Column Headings', 'event_espresso'),
-						'filename' => 'registration_form_questions_overview_table_column_headings'
-					),
-					'registration_form_questions_overview_views_bulk_actions_search_help_tab' => array(
-						'title' => esc_html__('Question Overview Views & Bulk Actions & Search', 'event_espresso'),
-						'filename' => 'registration_form_questions_overview_views_bulk_actions_search'
-					)
+					// 'registration_form_questions_overview_help_tab' => array(
+					// 	'title' => esc_html__('Questions Overview', 'event_espresso'),
+					// 	'filename' => 'registration_form_questions_overview'
+					// ),
+					// 'registration_form_questions_overview_table_column_headings_help_tab' => array(
+					// 	'title' => esc_html__('Questions Overview Table Column Headings', 'event_espresso'),
+					// 	'filename' => 'registration_form_questions_overview_table_column_headings'
+					// ),
+					// 'registration_form_questions_overview_views_bulk_actions_search_help_tab' => array(
+					// 	'title' => esc_html__('Question Overview Views & Bulk Actions & Search', 'event_espresso'),
+					// 	'filename' => 'registration_form_questions_overview_views_bulk_actions_search'
+					// )
 				),
-				'help_tour' => array( 'Registration_Form_Questions_Overview_Help_Tour'),
-				'require_nonce' => FALSE,
-				'qtips' => array(
-					'EE_Registration_Form_Tips'
-				)
+				// 'help_tour' => array( 'Registration_Form_Questions_Overview_Help_Tour'),
+				'require_nonce' => false,
+				// 'qtips' => array(
+				// 	'EE_Registration_Form_Tips'
+				// )
 			),
 
-			'question_groups' => array(
+			'edit_form_section' => array(
 				'nav' => array(
-					'label' => esc_html__('Question Groups', 'event_espresso'),
-					'order' => 20
-				),
-				'metaboxes' => $this->_default_espresso_metaboxes,
-				'help_tabs' => array(
-					'registration_form_question_groups_help_tab' => array(
-						'title' => esc_html__('Question Groups', 'event_espresso'),
-						'filename' => 'registration_form_question_groups'
-					),
-				),
-				'help_tour' => array( 'Registration_Form_Question_Groups_Help_Tour'),
-				'require_nonce' => FALSE
-			),
-
-			'edit_question' => array(
-				'nav' => array(
-					'label' => esc_html__('Edit Question', 'event_espresso'),
+					'label' => esc_html__('Add/Edit Form Section', 'event_espresso'),
 					'order' => 15,
-					'persistent' => FALSE,
-					'url' => isset( $this->_req_data['question_id'] )
+					'persistent' => false,
+					'url' => isset( $this->_req_data['QSG_ID'] )
 						? add_query_arg(
-							array('question_id' => $this->_req_data['question_id'] ),
+							array('QSG_ID' => $this->_req_data['QSG_ID'] ),
 							$this->_current_page_view_url
 						)
 						: $this->_admin_base_url
 				),
 				'metaboxes' => array_merge( $this->_default_espresso_metaboxes, array('_publish_post_box' ) ),
-				'help_tabs' => array(
-					'registration_form_edit_question_group_help_tab' => array(
-						'title' => esc_html__('Edit Question', 'event_espresso'),
-						'filename' => 'registration_form_edit_question'
-					),
-				),
-                'help_tour' => array( 'Registration_Form_Edit_Question_Help_Tour'),
-				'require_nonce' => FALSE
+				'help_tabs' => array(),
+                'help_tour' => array(),
+				'require_nonce' => false
 			),
 		);
 	}
