@@ -594,18 +594,29 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 	 * Note, we do not store the exact original value sent in the user's request because
 	 * it may have malicious content, and we MIGHT want to store the form input in a transient or something...
 	 * in which case, we would have stored the malicious content to our database.
-	 * @return string
+	 * Also note, this value can be a string or an array
+	 * @return string|array
 	 */
 	public function raw_value(){
 		return $this->_raw_value;
 	}
 	/**
 	 * Returns a string safe to usage in form inputs when displaying, because
-	 * it escapes all html entities
-	 * @return string
+	 * it escapes all html entities. Because the form input's raw value could be
+	 * a string or an array, this return value can also be a string or an array
+	 * @return string|array
 	 */
 	public function raw_value_in_form(){
-		return htmlentities($this->raw_value(),ENT_QUOTES, 'UTF-8');
+		$raw_values = $this->raw_value();
+		if( is_array( $raw_values ) ) {
+			$raw_values_for_form = array();
+			foreach( $raw_values as $key => $raw_value ) {
+				$raw_values_for_form[ $key ] = htmlentities( $raw_value, ENT_QUOTES, 'UTF-8');
+			}
+			return $raw_values_for_form;
+		} else {
+			return htmlentities($this->raw_value(),ENT_QUOTES, 'UTF-8');
+		}
 	}
 	/**
 	 * returns the value after it's been sanitized, and then converted into it's proper type
