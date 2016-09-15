@@ -248,7 +248,6 @@ final class EE_Front_Controller {
 	 */
 	public function _initialize_shortcodes( WP $WP ) {
 		do_action( 'AHEE__EE_Front_Controller__initialize_shortcodes__begin', $WP, $this );
-		$this->Request_Handler->set_request_vars( $WP );
 		// grab post_name from request
 		$current_post = apply_filters( 'FHEE__EE_Front_Controller__initialize_shortcodes__current_post_name', $this->Request_Handler->get( 'post_name' ));
 		$show_on_front = get_option( 'show_on_front' );
