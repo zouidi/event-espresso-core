@@ -79,7 +79,10 @@ class PostShortcodeTracking {
 			return;
 		}
 		// default post types
-		$post_types = array( 'post' => 0, 'page' => 1 );
+		$post_types = (array) apply_filters(
+			'FHEE__EventEspresso_core_admin_PostShortcodeTracking__parse_post_content_on_save__default_post_types',
+			array( 'post' => 0, 'page' => 1 )
+		);
 		// add CPTs
 		$CPTs = \EE_Register_CPTs::get_CPTs();
 		$post_types = array_merge( $post_types, $CPTs );

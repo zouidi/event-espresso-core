@@ -230,15 +230,20 @@ final class EE_Request_Handler {
 		}
 		// load espresso CPT endpoints
 		$espresso_CPT_endpoints = $EE_CPT_Strategy->get_CPT_endpoints();
-		$post_type_CPT_endpoints = array_flip( $espresso_CPT_endpoints );
-		$post_types = (array)$this->get( 'post_type' );
+		$post_type_CPT_endpoints = (array) apply_filters(
+			'FHEE__EE_Request_Handler__test_for_espresso_page__post_type_CPT_endpoints',
+			array_flip( $espresso_CPT_endpoints )
+		);
+		$post_types = (array) $this->get( 'post_type' );
 		foreach ( $post_types as $post_type ) {
 			// was a post name passed ?
 			if ( isset( $post_type_CPT_endpoints[ $post_type ] ) ) {
 				// kk we know this is an espresso page, but is it a specific post ?
 				if ( ! $this->get( 'post_name' ) ) {
 					// there's no specific post name set, so maybe it's one of our endpoints like www.domain.com/events
-					$post_name = isset( $post_type_CPT_endpoints[ $this->get( 'post_type' ) ] ) ? $post_type_CPT_endpoints[ $this->get( 'post_type' ) ] : null;
+					$post_name = isset( $post_type_CPT_endpoints[ $this->get( 'post_type' ) ] )
+						? $post_type_CPT_endpoints[ $this->get( 'post_type' ) ]
+						: null;
 					// if the post type matches on of our then set the endpoint
 					if ( $post_name ) {
 						$this->set( 'post_name', $post_name );
