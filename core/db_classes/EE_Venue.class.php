@@ -130,7 +130,7 @@ class EE_Venue extends EE_CPT_Base implements EEI_Address {
 	 * @return string
 	 */
 	public function state_abbrev() {
-		return $this->state_obj() instanceof EE_State ? $this->state_obj()->abbrev() : __( 'Unknown', 'event_espresso' );
+		return $this->state_obj() instanceof EE_State ? $this->state_obj()->abbrev() : '';
 	}
 
 
@@ -139,7 +139,7 @@ class EE_Venue extends EE_CPT_Base implements EEI_Address {
 	 * @return string
 	 */
 	public function state_name() {
-		return $this->state_obj() instanceof EE_State ? $this->state_obj()->name() :  __( 'Unknown', 'event_espresso' );
+		return $this->state_obj() instanceof EE_State ? $this->state_obj()->name() :  '';
 	}
 
 
@@ -184,7 +184,7 @@ class EE_Venue extends EE_CPT_Base implements EEI_Address {
 	 * @return string
 	 */
 	public function country_name() {
-		return $this->country_obj() instanceof EE_Country ? $this->country_obj()->name() :  __( 'Unknown', 'event_espresso' );
+		return $this->country_obj() instanceof EE_Country ? $this->country_obj()->name() :  '';
 	}
 
 
