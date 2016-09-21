@@ -4,28 +4,17 @@
  * mostly just
  * -adds QSO_order to the Question_Option table;
  */
-//make sure we have all the stages loaded too
-//unfortunately, this needs to be done upon INCLUSION of this file,
-//instead of construction, because it only gets constructed on first page load
-//(all other times it gets resurrected from a wordpress option)
-$stages = glob(EE_CORE.'data_migration_scripts/4_3_0_stages/*');
-$class_to_filepath = array();
-if ( ! empty( $stages ) ) {
-	foreach($stages as $filepath){
-		$matches = array();
-		preg_match('~4_3_0_stages/(.*).dmsstage.php~',$filepath,$matches);
-		$class_to_filepath[$matches[1]] = $filepath;
-	}
-}
-//give addons a chance to autoload their stages too
-$class_to_filepath = apply_filters('FHEE__EE_DMS_4_3_0__autoloaded_stages',$class_to_filepath);
-EEH_Autoloader::register_autoloader($class_to_filepath);
-
 class EE_DMS_Core_4_3_0 extends EE_Data_Migration_Script_Base{
 
 
 
+	/**
+	 * EE_DMS_Core_4_3_0 constructor.
+	 *
+	 * @throws \EE_Error
+	 */
 	public function __construct() {
+		$this->_load_script_stages();
 		$this->_pretty_name = __("Data Migration to Event Espresso 4.3.0.P", "event_espresso");
 		$this->_priority = 10;
 		$this->_migration_stages = array(
@@ -35,6 +24,9 @@ class EE_DMS_Core_4_3_0 extends EE_Data_Migration_Script_Base{
 		);
 		parent::__construct();
 	}
+
+
+
 	public function can_migrate_from_version($version_array) {
 		$version_string = $version_array['Core'];
 		if($version_string <= '4.3.0' && $version_string >= '4.2.0' ){
