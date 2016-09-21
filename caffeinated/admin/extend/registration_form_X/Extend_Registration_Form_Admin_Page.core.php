@@ -467,17 +467,6 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 			$count,
 			$trashed
 		);
-=======
-	protected function _question_groups_overview_list_table() {
-		$this->_search_btn_label = esc_html__('Question Groups', 'event_espresso');
-		$this->_admin_page_title .= ' ' . $this->get_action_link_or_button(
-		    'add_question_group',
-            'add_question_group',
-            array(),
-            'add-new-h2'
-        );
-		$this->display_admin_list_table_page_with_sidebar();
->>>>>>> github/master:caffeinated/admin/extend/registration_form/Extend_Registration_Form_Admin_Page.core.php
 	}
 
 
@@ -908,9 +897,12 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 	}
 
 
+
 	/**
 	 * method for performing updates to question order
+	 *
 	 * @return array results array
+	 * @throws \EE_Error
 	 */
 	public function update_question_group_order() {
 
@@ -930,19 +922,15 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 		if ( ! empty( $row_ids ) ) {
 			//figure out where we start the row_id count at for the current page.
-			$qsgcount = empty( $curpage ) ? 0 : ($curpage - 1 ) * $perpage;
-
-			$row_count = count( $row_ids );
-			for( $i = 0; $i < $row_count; $i++ ) {
+			$qsg_count = empty( $curpage ) ? 0 : ($curpage - 1 ) * $perpage;
+			foreach ( $row_ids as $row_id ) {
 				//Update the questions when re-ordering
 				$updated = EEM_Question_Group::instance()->update(
-					array( 'QSG_order' => $qsgcount ),
-					array( array( 'QSG_ID' => $row_ids[ $i ] ) )
+					array( 'QSG_order' => $qsg_count ),
+					array( array( 'QSG_ID' => $row_id ) )
 				);
-				if ( $updated === false ) {
-					$success = false;
-				}
-				$qsgcount++;
+				$success = $updated === false ? false : $success;
+				$qsg_count++;
 			}
 		} else {
 			$success = false;
@@ -1007,31 +995,12 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 
 
 
-	protected function _update_reg_form_settings() {
-		EE_Registry::instance()->CFG->registration = apply_filters(
-			'FHEE__Extend_Registration_Form_Admin_Page___update_reg_form_settings__CFG_registration',
-			EE_Registry::instance()->CFG->registration
-		);
-		$success = $this->_update_espresso_configuration(
-			__('Registration Form Options', 'event_espresso'),
-			EE_Registry::instance()->CFG,
-			__FILE__, __FUNCTION__, __LINE__
-		);
-		$this->_redirect_after_action(
-			$success,
-			__('Registration Form Options', 'event_espresso'),
-			'updated',
-			array( 'action' => 'view_reg_form_settings' )
-		);
-	}
-
-
-
-		/**
+	/**
 	 * email_validation_settings_form
 	 *
 	 * @access    public
 	 * @return    void
+	 * @throws \EE_Error
 	 */
 	public function email_validation_settings_form() {
 		echo $this->_email_validation_settings_form()->get_html();
@@ -1044,6 +1013,7 @@ class Extend_Registration_Form_Admin_Page extends Registration_Form_Admin_Page {
 	 *
 	 * @access protected
 	 * @return EE_Form_Section_Proper
+	 * @throws \EE_Error
 	 */
 	protected function _email_validation_settings_form() {
         return new EE_Form_Section_Proper(
