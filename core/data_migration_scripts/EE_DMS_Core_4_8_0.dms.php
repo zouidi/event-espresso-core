@@ -1,46 +1,27 @@
 <?php
 /**
+ * Class EE_DMS_Core_4_8_0
  * meant to convert DBs from 4.6 (OR 4.7, which basically supports MER and wasn't clear if it was
  * going to be released before this version) to 4.8 (which basically supports promotions)
  * mostly just
  * -refactors line item trees, so that there are subtotals for EACH event purchased,
  * which is especially convenient for applying event-wide promotions
  * -does NOT actually make any database schema changes
- */
-//make sure we have all the stages loaded too
-//unfortunately, this needs to be done upon INCLUSION of this file,
-//instead of construction, because it only gets constructed on first page load
-//(all other times it gets resurrected from a wordpress option)
-$stages = glob(EE_CORE.'data_migration_scripts/4_8_0_stages/*');
-$class_to_filepath = array();
-foreach($stages as $filepath){
-	$matches = array();
-	preg_match('~4_8_0_stages/(.*).dmsstage.php~',$filepath,$matches);
-	$class_to_filepath[$matches[1]] = $filepath;
-}
-//give addons a chance to autoload their stages too
-$class_to_filepath = apply_filters('FHEE__EE_DMS_4_8_0__autoloaded_stages',$class_to_filepath);
-EEH_Autoloader::register_autoloader($class_to_filepath);
-
-
-
-
-
-/**
- * Class EE_DMS_Core_4_8_0
  *
- * @package            Event Espresso
- * @subpackage    core
- * @author                Mike Nelson
- * @since                4.6.0
- *
+ * @package    Event Espresso
+ * @subpackage core
+ * @author     Mike Nelson
+ * @since      4.6.0
  */
 class EE_DMS_Core_4_8_0 extends EE_Data_Migration_Script_Base{
 
 	/**
 	 * return EE_DMS_Core_4_8_0
+	 *
+	 * @throws \EE_Error
 	 */
 	public function __construct() {
+		$this->_load_script_stages();
 		$this->_pretty_name = __("Data Migration to Event Espresso 4.8.0.P (for promotions)", "event_espresso");
 		$this->_priority = 10;
 		$this->_migration_stages = array(
@@ -664,7 +645,7 @@ class EE_DMS_Core_4_8_0 extends EE_Data_Migration_Script_Base{
 	public function migration_page_hooks(){
 
 	}
-	
+
 	/**
 	 * verifies each of the new countries exists that somehow we missed in 4.1
 	 */
