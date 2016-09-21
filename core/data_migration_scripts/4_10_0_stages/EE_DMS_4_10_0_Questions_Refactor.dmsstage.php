@@ -65,7 +65,9 @@ class EE_DMS_4_10_0_Questions_Refactor extends EE_Data_Migration_Script_Stage_Ta
 				// where
 				array( 'QST_ID' => $question['QST_ID'] ),
 				// data format
-				array( '%s' ),
+				array(
+					'%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s',
+				),
 				// where format
 				array( '%d' )
 			);
