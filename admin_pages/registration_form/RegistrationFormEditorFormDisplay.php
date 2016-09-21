@@ -51,12 +51,13 @@ class RegistrationFormEditorFormDisplay {
 
 
 	/**
-	 * @param string $form_input
-	 * @param string $form_input_class_name
+	 * @param string       $form_input
+	 * @param string       $form_input_class_name
+	 * @param \EE_Question $question
 	 * @return string
 	 * @throws \EE_Error
 	 */
-	public function formHTML( $form_input, $form_input_class_name ) {
+	public function formHTML( $form_input, $form_input_class_name, \EE_Question $question = null ) {
 		if ( ! is_subclass_of( $form_input_class_name, 'EE_Form_Input_Base' ) ) {
 			throw new \EE_Error(
 				sprintf(
@@ -65,21 +66,22 @@ class RegistrationFormEditorFormDisplay {
 				)
 			);
 		}
-		$this->form_input = $this->reg_form_editor_form->formInput( $form_input, $form_input_class_name );
+		$identifier = $question instanceof \EE_Question ? $question->identifier() : 'clone';
+		$this->form_input = $this->reg_form_editor_form->formInput( $form_input, $form_input_class_name, $question );
 		$this->input_has_options = $this->form_input instanceof \EE_Form_Input_With_Options_Base ? true :false;
 		$html = \EEH_HTML::div( '', '', 'ee-reg-form-editor-form-new-input-form' );
-		$html .= $this->reg_form_editor_form->formInputForm( $form_input )->get_html();
+		$html .= $this->reg_form_editor_form->formInputForm( $form_input, $identifier )->get_html();
 		$html .= \EEH_HTML::div( '', '', 'ee-new-form-input-settings-dv' );
-		$html .= $this->getTabs( $form_input );
+		$html .= $this->getTabs( $form_input, $identifier );
 		if ( $this->input_has_options ) {
 			// form input settings
 			$html .= \EEH_HTML::div(
 				'',
-				'ee-reg-form-input-settings-tab-panel-0-clone-' . $form_input,
+				"ee-reg-form-input-settings-tab-panel-0-{$identifier}-{$form_input}",
 				'ee-reg-form-input-settings-tab-panel-dv'
 			);
 			$html .= $this->getInputOptionsFormHeader();
-			$html .= $this->getInputOptionsForm( $form_input );
+			$html .= $this->getInputOptionsForm( $form_input, $identifier );
 			//$html .= $this->reg_form_editor_form->getInputOptions( $form_input )->get_html();
 			$html .= $this->getInputOptionsFormFooter();
 
@@ -88,18 +90,20 @@ class RegistrationFormEditorFormDisplay {
 		// form input settings
 		$html .= \EEH_HTML::div(
 			'',
-			'ee-reg-form-input-settings-tab-panel-1-clone-' . $form_input,
+			"ee-reg-form-input-settings-tab-panel-1-{$identifier}-{$form_input}",
 			'ee-reg-form-input-settings-tab-panel-dv'
 		);
-		$html .= $this->reg_form_editor_form->getBasicSettings( $form_input )->get_html();
+		$html .= $this->reg_form_editor_form->getBasicSettings( $form_input, $identifier, $question )->get_html();
 		$html .= \EEH_HTML::divx(); // end 'ee-reg-form-input-settings-tab-panel-dv'
 		// validation settings
 		$html .= \EEH_HTML::div(
 			'',
-			'ee-reg-form-input-settings-tab-panel-2-clone-' . $form_input,
+			"ee-reg-form-input-settings-tab-panel-2-{$identifier}-{$form_input}",
 			'ee-reg-form-input-settings-tab-panel-dv'
 		);
-		$html .= $this->reg_form_editor_form->getValidationSettings( $form_input, $form_input_class_name )->get_html();
+		$html .= $this->reg_form_editor_form
+			->getValidationSettings( $form_input, $identifier, $form_input_class_name, $question )
+			->get_html();
 		$html .= \EEH_HTML::divx(); // end 'ee-reg-form-input-settings-tab-panel-dv'
 		$html .= \EEH_HTML::divx(); // end 'ee-new-form-input-settings-dv'
 		$html .= \EEH_HTML::divx(); // end 'ee-reg-form-editor-form-new-input-form'
@@ -110,9 +114,10 @@ class RegistrationFormEditorFormDisplay {
 
 	/**
 	 * @param  string $form_input
+	 * @param string  $identifier
 	 * @return string
 	 */
-	public function getTabs( $form_input ) {
+	public function getTabs( $form_input, $identifier = 'clone' ) {
 		$tabs = array(
 			0 => 'Input Options',
 			1 => 'Basic Settings',
@@ -124,14 +129,14 @@ class RegistrationFormEditorFormDisplay {
 		$html = \EEH_HTML::ul( '', 'ee-reg-form-input-settings-tab-ul');
 		$order = 1;
 		foreach ( $tabs as $panel => $tab_label ) {
-			$active = $order == 1 ? ' ee-reg-form-input-settings-tab-active' : '';
+			$active = $order === 1 ? ' ee-reg-form-input-settings-tab-active' : '';
 			$html .= \EEH_HTML::li(
 				\EEH_HTML::link(
-					'#ee-reg-form-input-settings-tab-panel-' . $panel . '-clone-' . $form_input,
+					"#ee-reg-form-input-settings-tab-panel-{$panel}-{$identifier}-{$form_input}",
 					$tab_label,
 					'',
 					'',
-					'ee-reg-form-input-settings-tab-js ee-reg-form-input-settings-tab-li' . $active
+					"ee-reg-form-input-settings-tab-js ee-reg-form-input-settings-tab-li{$active}"
 				)
 			);
 			$order++;
@@ -143,13 +148,15 @@ class RegistrationFormEditorFormDisplay {
 
 
 	/**
-	 * @param $form_input
+	 * @param string $form_input
+	 * @param string $identifier
 	 * @return string
+	 * @throws \EE_Error
 	 */
-	public function getInputOptionsForm( $form_input ) {
+	public function getInputOptionsForm( $form_input, $identifier = 'clone' ) {
 		$html = '';
-		if ( $this->input_has_options ) {
-			$options = $this->reg_form_editor_form->getInputOptions( $form_input, $this->form_input->options() );
+		if ( $this->form_input instanceof \EE_Form_Input_With_Options_Base ) {
+			$options = $this->reg_form_editor_form->getInputOptions( $form_input, $this->form_input->options(), $identifier );
 			$order = 2;
 			foreach( (array)$options as $key => $input ) {
 				if ( $input instanceof \EE_Form_Input_Base ) {
@@ -159,7 +166,7 @@ class RegistrationFormEditorFormDisplay {
 			}
 			$order = floor( $order /2 );
 			$hidden = $order > 2 ? true : false;
-			$html .= $this->addEmptyInputOptionsInputs( $form_input, 0, $hidden );
+			$html .= $this->addEmptyInputOptionsInputs( $form_input, $identifier, 0, $hidden );
 			//if ( $order <= 2 ) {
 			//	$html .= $this->addEmptyInputOptionsInputs( $form_input, 0, true );
 			//}
@@ -175,6 +182,7 @@ class RegistrationFormEditorFormDisplay {
 	 * @param \EE_Form_Input_Base $input
 	 * @param bool                $hidden
 	 * @return array
+	 * @throws \EE_Error
 	 */
 	protected function getInputOptionsInputs( $key, \EE_Form_Input_Base $input, $hidden = false ) {
 		$html = '';
@@ -231,19 +239,21 @@ class RegistrationFormEditorFormDisplay {
 
 
 	/**
-	 * @param      $form_input
-	 * @param int  $order
-	 * @param bool $hidden
+	 * @param            $form_input
+	 * @param string     $identifier
+	 * @param int|string $order
+	 * @param bool       $hidden
 	 * @return string
+	 * @throws \EE_Error
 	 */
-	protected function addEmptyInputOptionsInputs( $form_input, $order = 0, $hidden = true ) {
+	protected function addEmptyInputOptionsInputs( $form_input, $identifier = 'clone', $order = 0, $hidden = true ) {
 		$order = $order !== 0 ? $order : 'order';
 		$html = $this->getInputOptionsInputs(
 			'value',
 			new \EE_Text_Input(
 				array(
-					'html_name' => "input_options[clone][{$order}][value]",
-					'html_id'   => "input-options-{$form_input}-clone-{$order}-value",
+					'html_name' => "input_options[{$identifier}][{$order}][value]",
+					'html_id'   => "input-options-{$form_input}-{$identifier}-{$order}-value",
 					'default'   => ''
 				)
 			),
@@ -253,8 +263,8 @@ class RegistrationFormEditorFormDisplay {
 			'desc',
 			new \EE_Text_Input(
 				array(
-					'html_name' => "input_options[clone][{$order}][desc]",
-					'html_id'   => "input-options-{$form_input}-clone-{$order}-desc",
+					'html_name' => "input_options[{$identifier}][{$order}][desc]",
+					'html_id'   => "input-options-{$form_input}-{$identifier}-{$order}-desc",
 					'default'   => ''
 				)
 			),
@@ -268,6 +278,7 @@ class RegistrationFormEditorFormDisplay {
 	/**
 	 * @param int $order
 	 * @return string
+	 * @throws \EE_Error
 	 */
 	public function getNewInputOptionOrderInput( $order ) {
 		$order_input = new \EE_Hidden_Input(
