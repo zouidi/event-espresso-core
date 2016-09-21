@@ -68,17 +68,25 @@ class EEM_Question_Group extends EEM_Soft_Delete_Base {
 		parent::__construct( $timezone );
 
 	}
+
+
+
 	/**
 	 * searches the db for the question group with the latest question order and returns that value.
+	 *
 	 * @access public
 	 * @return int
+	 * @throws \EE_Error
 	 */
 	public function get_latest_question_group_order() {
-		$columns_to_select = array(
-			'max_order' => array("MAX(QSG_order)","%d")
-			);
-		$max = $this->_get_all_wpdb_results(array(), ARRAY_A, $columns_to_select );
-		return $max[0]['max_order'];
+		$max = $this->_get_all_wpdb_results(
+			array(),
+			ARRAY_A,
+			array(
+				'max_order' => array( "MAX(QSG_order)", "%d" ),
+			)
+		);
+		return is_array( $max ) && isset( $max[0], $max[0]['max_order'] ) ? $max[0]['max_order'] : 0;
 	}
 
 
