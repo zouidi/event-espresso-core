@@ -2,7 +2,10 @@
 use EventEspresso\admin_pages\registration_form\RegistrationFormEditor;
 use EventEspresso\admin_pages\registration_form\RegistrationFormEditorForm;
 use EventEspresso\admin_pages\registration_form\RegistrationFormEditorFormDisplay;
+use EventEspresso\core\exceptions\InvalidEntityException;
+use EventEspresso\core\exceptions\InvalidFormSubmissionException;
 use EventEspresso\core\libraries\form_sections\inputs\FormInputsLoader;
+
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'NO direct script access allowed' );
@@ -113,7 +116,8 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 		$this->_admin_page_title = esc_html__('Registration Form', 'event_espresso');
 		$this->_labels = array(
 			'buttons' => array(
-				'edit_question' => esc_html__('Edit Question', 'event_espresso')
+				'add_edit_form_section' => esc_html__( 'Add New Form Section', 'event_espresso' ),
+				'edit_question' => esc_html__('Edit Question', 'event_espresso'),
 			)
 		);
 	}
@@ -128,15 +132,13 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 		$this->_page_routes = array(
 
 			'default' => array(
-				'func' => 'form_sections_list_table',
+				'func' => '_form_sections_overview_list_table',
 				'capability' => 'ee_read_question_groups',
-				'obj_id' => $qsg_id,
-				'args' => array('edit'),
 			),
 
 			'add_edit_form_section' => array(
 				'func' => 'add_edit_form_section',
-				'capability' => 'ee_read_question_groups',
+				'capability' => 'ee_edit_question_groups',
 				'obj_id' => $qsg_id,
 				'args' => array( 'edit' ),
 			),
@@ -177,7 +179,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 					'label' => esc_html__('Form Sections'),
 					'order' => 10
 				),
-				//'list_table' => 'Registration_Form_Admin_List_Table',
+				'list_table' => '\EventEspresso\admin_pages\registration_form\FormSectionListTable',
 				'metaboxes' => array(),
                 'help_tabs' => array(
 					// 'registration_form_questions_overview_help_tab' => array(
@@ -200,7 +202,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 				// )
 			),
 
-			'edit_form_section' => array(
+			'add_edit_form_section' => array(
 				'nav' => array(
 					'label' => esc_html__('Add/Edit Form Section', 'event_espresso'),
 					'order' => 15,
@@ -212,7 +214,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 						)
 						: $this->_admin_base_url
 				),
-				'metaboxes' => array_merge( $this->_default_espresso_metaboxes, array('_publish_post_box' ) ),
+				'metaboxes' => array_merge( array('_publish_post_box' ) ),
 				'help_tabs' => array(),
                 'help_tour' => array(),
 				'require_nonce' => false
@@ -234,8 +236,14 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 
 	//none of the below group are currently used for Event Categories
 	protected function _add_feature_pointers() {}
+
 	public function load_scripts_styles() {
-		wp_register_style( 'espresso_registration', REGISTRATION_FORM_ASSETS_URL . 'espresso_registration_form_admin.css', array( 'dashicons' ), EVENT_ESPRESSO_VERSION );
+		wp_register_style(
+			'espresso_registration',
+			REGISTRATION_FORM_ASSETS_URL . 'espresso_registration_form_admin.css',
+			array( 'dashicons' ),
+			EVENT_ESPRESSO_VERSION
+		);
 		wp_enqueue_style('espresso_registration');
 	}
 	public function admin_init() {}
@@ -259,11 +267,15 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 
 
 
-	public function load_scripts_styles_add_question() {
-	}
-	public function load_scripts_styles_edit_question() {
+	public function load_scripts_styles_add_edit_form_section() {
 		$this->load_scripts_styles_forms();
-		wp_register_script( 'espresso_registration_form_single', REGISTRATION_FORM_ASSETS_URL . 'espresso_registration_form_admin.js', array('jquery-ui-sortable'), EVENT_ESPRESSO_VERSION, TRUE );
+		wp_register_script(
+			'espresso_registration_form_single',
+			REGISTRATION_FORM_ASSETS_URL . 'espresso_registration_form_admin.js',
+			array( 'jquery-ui-sortable', 'jquery-ui-draggable', 'jquery-ui-droppable' ),
+			EVENT_ESPRESSO_VERSION . time(),
+			true
+		);
 		wp_enqueue_script( 'espresso_registration_form_single' );
 	}
 
@@ -288,6 +300,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 
 
 
+	/**************************  LIST TABLE **************************/
 
 
 
@@ -295,7 +308,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 		$this->_views = array(
 			'all' => array(
 				'slug' => 'all',
-				'label' => __('View All Forms', 'event_espresso'),
+				'label' => __('View All Form Sections', 'event_espresso'),
 				'count' => 0,
 			)
 		);
@@ -318,7 +331,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 		$this->_views = array(
 			'all' => array(
 				'slug' => 'all',
-				'label' => esc_html__('View All Questions', 'event_espresso'),
+				'label' => esc_html__('View All Form Sections', 'event_espresso'),
 				'count' => 0,
 //				'bulk_action' => array(
 //					'trash_questions' => esc_html__('Trash', 'event_espresso'),
@@ -338,34 +351,154 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 		}
 	}
 
+
+
+	protected function _form_sections_overview_list_table() {
+		$this->_search_btn_label = __( 'Form Sections', 'event_espresso' );
+		$this->_admin_page_title .= ' ' . $this->get_action_link_or_button(
+				'add_edit_form_section',
+				'add_edit_form_section',
+				array(),
+				'add-new-h2'
+			);
+		$this->display_admin_list_table_page_with_sidebar();
+	}
+
+
+
+	/***********/
+	/* QUERIES */
 	/**
-	 * This just previews the question groups tab that comes in caffeinated.
-	 * @return string html
+	 * For internal use in getting all the query parameters
+	 * (because it's pretty well the same between question, question groups,
+	 * and for both when searching for trashed and untrashed ones)
+	 *
+	 * @param EEM_Base $model either EEM_Question or EEM_Question_Group
+	 * @param int      $per_page
+	 * @param int      $current_page
+	 * @return array lik EEM_Base::get_all's $query_params parameter
 	 */
-	//protected function _form_sections_preview() {
-	//	$this->_admin_page_title = __('Form Sections (Preview)', 'event_espresso');
-	//	$this->_template_args['preview_img'] = '<img src="' . REGISTRATION_FORM_ASSETS_URL . 'caf_reg_form_preview.jpg" alt="' . esc_attr__( 'Preview Question Groups Overview List Table screenshot', 'event_espresso' ) . '" />';
-	//	$this->_template_args['preview_text'] = '<strong>'.__( 'Form Sections is a feature that is only available in the Caffeinated version of Event Espresso.  With the Form Sections feature you are able to create completely new registration forms that can be assigned to different events making it easier than ever to perfect your event registrant\'s experience.', 'event_espresso' ).'</strong>';
-	//	$this->display_admin_caf_preview_page( 'question_groups_tab' );
-	//}
-
-
-
+	protected function get_query_params( $model, $per_page = 10, $current_page = 10 ) {
+		$query_params = array();
+		$offset = ( $current_page - 1 ) * $per_page;
+		$query_params['limit'] = array( $offset, $per_page );
+		$order = ( isset( $this->_req_data['order'] ) && ! empty( $this->_req_data['order'] ) )
+			? $this->_req_data['order'] : 'ASC';
+		$orderby_field = $model instanceof EEM_Question ? 'QST_ID' : 'QSG_order';
+		$field_to_order_by = empty( $this->_req_data['orderby'] ) ? $orderby_field : $this->_req_data['orderby'];
+		$query_params['order_by'] = array( $field_to_order_by => $order );
+		$search_string = array_key_exists( 's', $this->_req_data ) ? $this->_req_data['s'] : null;
+		if ( ! empty( $search_string ) ) {
+			if ( $model instanceof EEM_Question_Group ) {
+				$query_params[0] = array(
+					'OR' => array(
+						'QSG_name' => array( 'LIKE', "%$search_string%" ),
+						'QSG_desc' => array( 'LIKE', "%$search_string%" )
+					)
+				);
+			} else {
+				$query_params[0] = array(
+					'QST_display_text' => array( 'LIKE', "%$search_string%" )
+				);
+			}
+		}
+		//capability checks (just leaving this commented out for reference because it illustrates some complicated query params that could be useful when fully implemented)
+		/*if ( $model instanceof EEM_Question_Group ) {
+			if ( ! EE_Registry::instance()->CAP->current_user_can( 'edit_others_question_groups', 'espresso_registration_form_edit_question_group' ) ) {
+				$query_params[0] = array(
+					'AND' => array(
+						'OR' => array(
+							'QSG_system' => array( '>', 0 ),
+							'AND' => array(
+								'QSG_system' => array( '<', 1 ),
+								'QSG_wp_user' => get_current_user_id()
+								)
+							)
+						)
+					);
+			}
+		} else {
+			if ( ! EE_Registry::instance()->CAP->current_user_can( 'edit_others_questions', 'espresso_registration_form_edit_question' ) ) {
+				$query_params[0] = array(
+					'AND' => array(
+						'OR' => array(
+							'QST_system' => array( '!=', '' ),
+							'AND' => array(
+								'QST_system' => '',
+								'QST_wp_user' => get_current_user_id()
+								)
+							)
+						)
+					);
+			}
+		}/**/
+		return $query_params;
+	}
 
 
 
 	/**
-	 * _edit_form
+	 * @param            $per_page
+	 * @param int        $current_page
+	 * @param bool|false $count
+	 * @return \EE_Soft_Delete_Base_Class[]
+	 * @throws \EE_Error
 	 */
-	protected function _edit_form() {
+	public function get_form_sections( $per_page, $current_page = 1, $count = false ) {
+		$questionGroupModel = EEM_Question_Group::instance();
+		$query_params = $this->get_query_params( $questionGroupModel, $per_page, $current_page );
+		if ( $count ) {
+			$where = isset( $query_params[0] ) ? array( $query_params[0] ) : array();
+			$results = $questionGroupModel->count( $where );
+		} else {
+			$results = $questionGroupModel->get_all( $query_params );
+		}
+		return $results;
+	}
+
+
+
+	/**
+	 * @param      $per_page
+	 * @param int  $current_page
+	 * @param bool $count
+	 * @return \EE_Soft_Delete_Base_Class[]|int
+	 */
+	public function get_trashed_form_sections( $per_page, $current_page = 1, $count = false ) {
+		$questionGroupModel = EEM_Question_Group::instance();
+		$query_params = $this->get_query_params( $questionGroupModel, $per_page, $current_page );
+		if ( $count ) {
+			$where = isset( $query_params[0] ) ? array( $query_params[0] ) : array();
+			$query_params['limit'] = null;
+			$results = $questionGroupModel->count_deleted( $where );
+		} else {
+			$results = $questionGroupModel->get_all_deleted( $query_params );
+		}
+		return $results;
+	}
+
+
+	/************************** Add Edit Form Section **************************/
+
+
+
+	/**
+	 * add_edit_form_section
+	 *
+	 * @throws \EE_Error
+	 * @throws \EventEspresso\core\exceptions\InvalidEntityException
+	 */
+	protected function add_edit_form_section() {
 		do_action( 'AHEE_log', __FILE__, __FUNCTION__, '' );
+		// are we editing an existing Question Group or creating a new one ?
 		$reg_form_editor = new RegistrationFormEditor(
 			$this,
 			new RegistrationFormEditorFormDisplay(
 				new RegistrationFormEditorForm(
 					$this->_question_model
 				)
-			)
+			),
+			$this->getFormSection()
 		);
 		// tweak page title
 		$this->_admin_page_title = $reg_form_editor->getAdminPageTitle();
@@ -384,7 +517,36 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 
 
 	/**
+	 * @return \EE_Question_Group
+	 * @throws \EventEspresso\core\exceptions\InvalidEntityException
+	 * @throws \EE_Error
+	 */
+	public function getFormSection() {
+		// get copy of EE_Request
+		$request_data = $this->get_request_data();
+		$QSG_ID = isset( $request_data['QSG_ID'] ) && ! empty( $request_data['QSG_ID'] )
+			? absint( $request_data['QSG_ID'] )
+			: 0;
+		// find question group if applicable
+		if ( $QSG_ID ) {
+			/** @var \EEM_Question_Group $question_group_model */
+			$question_group_model = $this->question_group_model();
+			$question_group = $question_group_model->get_one_by_ID( $QSG_ID );
+		} else {
+			$question_group = \EE_Question_Group::new_instance();
+			$question_group->set_order_to_latest();
+		}
+		if ( ! $question_group instanceof \EE_Question_Group ) {
+			throw new InvalidEntityException( $question_group, 'EE_Question_Group' );
+		}
+		return $question_group;
+	}
+
+
+
+	/**
 	 * @return array
+	 * @throws \EE_Error
 	 */
 	public function getAvailableFormInputs() {
 		$exclude = array(
@@ -400,33 +562,89 @@ class Registration_Form_Admin_Page extends EE_Admin_Page {
 		return FormInputsLoader::get( $exclude );
 	}
 
-	protected function _insert_or_update_question_group( $new_question_group = true ) {
-		//$reg_form_editor_form = new RegistrationFormEditorForm(
-		//	$this->_question_model
-		//);
-		//$form = $reg_form_editor_form->rawForm( $this->getAvailableFormInputs() );
-		unset( $_REQUEST['reg_form']['clone'] );
-		unset( $_REQUEST['settings']['clone'] );
-		$reg_form_input_list = explode( ',', sanitize_text_field( $_REQUEST['reg_form_input_list'] ) );
-		\EEH_Debug_Tools::printr( $reg_form_input_list, '$reg_form_input_list', __FILE__, __LINE__ );
-		foreach ( $reg_form_input_list as $reg_form_input ) {
-			$reg_form_input = explode( '-', $reg_form_input );
-			if ( isset( $reg_form_input[1], $_REQUEST['settings'][ $reg_form_input[1] ] ) ) {
-				$input_type = $reg_form_input[0];
-				$input_settings = $_REQUEST['settings'][ $reg_form_input[1] ];
-				\EEH_Debug_Tools::printr( $input_type, '$input_type', __FILE__, __LINE__ );
-				\EEH_Debug_Tools::printr( $input_settings, '$input_settings', __FILE__, __LINE__ );
-				if ( isset( $_REQUEST['input_options'][ $reg_form_input[1] ] ) ) {
-					$input_options = $_REQUEST['input_options'][ $reg_form_input[1] ];
-					\EEH_Debug_Tools::printr( $input_options, '$input_options', __FILE__, __LINE__ );
+
+
+	/**
+	 * @param bool $new_question_group
+	 * @throws \EventEspresso\core\exceptions\InvalidFormSubmissionException
+	 * @throws \EE_Error
+	 */
+	protected function _insert_or_update_form_section( $new_question_group = true ) {
+		$success = true;
+		// $reg_form_editor_form = new RegistrationFormEditorForm(
+		// 	$this->_question_model
+		// );
+		// $form = $reg_form_editor_form->rawForm( $this->getAvailableFormInputs() );
+		if ( ! ( isset( $_REQUEST['settings'] ) && is_array( $_REQUEST['settings'] ) ) ) {
+			throw new InvalidFormSubmissionException(
+				__( 'Form Section settings are missing or invalid.', 'event_espresso' )
+			);
+		}
+		$field_settings = $this->_question_model->field_settings();
+		// \EEH_Debug_Tools::printr( $field_settings, '$field_settings', __FILE__, __LINE__ );
+		unset( $_REQUEST['reg_form']['clone'], $_REQUEST['settings']['clone'], $_REQUEST['input_options'] );
+		// \EEH_Debug_Tools::printr( $_REQUEST, '$_REQUEST', __FILE__, __LINE__ );
+		// $reg_form_input_list = explode( ',', sanitize_text_field( $_REQUEST['reg_form_input_list'] ) );
+		// \EEH_Debug_Tools::printr( $reg_form_input_list, '$reg_form_input_list', __FILE__, __LINE__ );
+		foreach ( (array) $_REQUEST['settings'] as $identifier => $form_input_fields ) {
+			// \EEH_Debug_Tools::printr( $identifier, '$identifier', __FILE__, __LINE__ );
+			// \EEH_Debug_Tools::printr( $form_input_fields, '$form_input_fields', __FILE__, __LINE__ );
+			if ( ! isset( $form_input_fields['identifier'] ) ) {
+				throw new InvalidFormSubmissionException(
+					__( 'Form Section input identifier is missing or invalid.', 'event_espresso' )
+				);
+			}
+			$properties_and_values = array();
+			foreach ( (array) $form_input_fields as $field_name => $value ) {
+				$field_name = strpos( $field_name, 'QST_' ) !== 0 ? "QST_{$field_name}" : $field_name;
+				// \EEH_Debug_Tools::printr( $field_name, '$field_name', __FILE__, __LINE__ );
+				if ( isset( $field_settings[ $field_name ] ) ) {
+					$properties_and_values[ $field_name ] = $value;
 				}
 			}
+			// \EEH_Debug_Tools::printr( $properties_and_values, '$properties_and_values', __FILE__, __LINE__ );
+			if ( $form_input_fields['identifier'] === $identifier ) {
+				// update existing question
+				$result = EEM_Question::instance()->update(
+					$properties_and_values,
+					array( array( 'QST_identifier' => $identifier ) )
+				);
+			} else {
+				// insert new question
+				$question = \EE_Question::new_instance( $properties_and_values );
+				$result = $question->save();
+			}
+			$success = $result ? $success : false;
+			// $reg_form_input = explode( '-', $reg_form_input );
+			// if ( isset( $reg_form_input[1], $_REQUEST['settings'][ $reg_form_input[1] ] ) ) {
+			// 	$input_type = $reg_form_input[0];
+			// 	$input_settings = $_REQUEST['settings'][ $reg_form_input[1] ];
+			// 	\EEH_Debug_Tools::printr( $input_type, '$input_type', __FILE__, __LINE__ );
+			// 	\EEH_Debug_Tools::printr( $input_settings, '$input_settings', __FILE__, __LINE__ );
+			// 	if ( isset( $_REQUEST['input_options'][ $reg_form_input[1] ] ) ) {
+			// 		$input_options = $_REQUEST['input_options'][ $reg_form_input[1] ];
+			// 		\EEH_Debug_Tools::printr( $input_options, '$input_options', __FILE__, __LINE__ );
+			// 	}
+			// }
 		}
 
-		//\EEH_Debug_Tools::printr( $_REQUEST['reg_form'], '$_REQUEST[reg_form]', __FILE__, __LINE__ );
-		//\EEH_Debug_Tools::printr( $_REQUEST['settings'], '$_REQUEST[settings]', __FILE__, __LINE__ );
+		// \EEH_Debug_Tools::printr( $_REQUEST['reg_form'], '$_REQUEST[reg_form]', __FILE__, __LINE__ );
+		// \EEH_Debug_Tools::printr( $_REQUEST['settings'], '$_REQUEST[settings]', __FILE__, __LINE__ );
 		//\EEH_Debug_Tools::printr( $form, '$form', __FILE__, __LINE__ );
-		die();
+		// die();
+		if ( $success !== FALSE ) {
+			EE_Error::add_success(
+				$new_question_group
+					? esc_html__( 'The Form Section has been created', 'event_espresso' )
+					: esc_html__( 'The Form Section has been updated', 'event_espresso' )
+			);
+		}
+		$this->_redirect_after_action(
+			$success,
+			esc_html__( 'Form Section', 'event_espresso' ),
+			$new_question_group ? esc_html__( 'created', 'event_espresso' ) : esc_html__( 'updated', 'event_espresso' ),
+			array( 'action' => 'default', /*'QSG_ID' => $ID*/ )
+		);
 	}
 
 
