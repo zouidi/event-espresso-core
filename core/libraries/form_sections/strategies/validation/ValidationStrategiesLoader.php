@@ -39,6 +39,7 @@ class ValidationStrategiesLoader {
 	 * @param bool  $include if set to true, this will only include elements from the above list,
 	 *                       instead of excluding them, IF they are available
 	 * @return array
+	 * @throws \EE_Error
 	 */
 	public static function get( $exclude = array(), $include = false ) {
 		if ( empty( ValidationStrategiesLoader::$_loaded ) ) {
