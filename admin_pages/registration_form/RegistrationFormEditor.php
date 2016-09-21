@@ -1,8 +1,6 @@
 <?php
 namespace EventEspresso\admin_pages\registration_form;
 
-use EventEspresso\core\libraries\form_sections\inputs\FormInputsLoader;
-
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
 }
@@ -57,30 +55,19 @@ class RegistrationFormEditor {
 	 *
 	 * @param \Registration_Form_Admin_Page     $Registration_Form_Admin_Page
 	 * @param RegistrationFormEditorFormDisplay $RegistrationFormEditorFormInputForm
+	 * @param \EE_Question_Group                $question_group
+	 * @throws \EE_Error
 	 */
 	public function __construct(
 		\Registration_Form_Admin_Page $Registration_Form_Admin_Page,
-		RegistrationFormEditorFormDisplay $RegistrationFormEditorFormInputForm
+		RegistrationFormEditorFormDisplay $RegistrationFormEditorFormInputForm,
+		\EE_Question_Group $question_group
 	) {
 		// set reg admin page
 		$this->reg_form_admin_page = $Registration_Form_Admin_Page;
 		$this->input_form_generator = $RegistrationFormEditorFormInputForm;
 		$this->available_form_inputs = $this->reg_form_admin_page->getAvailableFormInputs();
-		// get copy of EE_Request
-		$request_data = $this->reg_form_admin_page->get_request_data();
-		// are we editing an existing Question Group or creating a new one ?
-		$QSG_ID = isset( $request_data[ 'QST_ID' ] ) && ! empty( $request_data[ 'QSG_ID' ] )
-			? absint( $request_data[ 'QSG_ID' ] )
-			: 0;
-		// find question group if applicable
-		if ( $QSG_ID ) {
-			/** @var \EEM_Question_Group $question_group_model */
-			$question_group_model = $this->reg_form_admin_page->question_group_model();
-			$this->question_group = $question_group_model->get_one_by_ID( $QSG_ID );
-		} else {
-			$this->question_group = \EE_Question_Group::new_instance();
-			$this->question_group->set_order_to_latest();
-		}
+		$this->question_group = $question_group;
 	}
 
 
@@ -89,6 +76,7 @@ class RegistrationFormEditor {
 	 * tweak page title
 	 *
 	 * @return string
+	 * @throws \EE_Error
 	 */
 	public function getAdminPageTitle() {
 		$page_title = ucwords( str_replace( '_', ' ', $this->reg_form_admin_page->get_req_action() ) );
@@ -101,7 +89,9 @@ class RegistrationFormEditor {
 
 	/**
 	 * tells the admin page which question group we are editing
+	 *
 	 * @return string
+	 * @throws \EE_Error
 	 */
 	public function getAdditionalHiddenFields() {
 		if ( $this->question_group->ID() ) {
@@ -115,15 +105,17 @@ class RegistrationFormEditor {
 
 	/**
 	 * @return string
+	 * @throws \EE_Error
 	 */
 	public function getRoute() {
-		return $this->question_group->ID() ? 'update_question_group' : 'insert_question_group';
+		return $this->question_group->ID() ? 'update_form_section' : 'insert_form_section';
 	}
 
 
 
 	/**
 	 * @return string
+	 * @throws \EE_Error
 	 */
 	public function getQuestionGroupID() {
 		return $this->question_group->ID();
@@ -135,6 +127,7 @@ class RegistrationFormEditor {
 	 * getAdminPageContent - HTML for main meta box
 	 *
 	 * @return string
+	 * @throws \EE_Error
 	 */
 	public function getAdminPageContent() {
 		\EE_Registry::instance()->load_helper( 'EEH_HTML' );
@@ -145,10 +138,23 @@ class RegistrationFormEditor {
 				'ee-reg-form-editor-form-inputs-wrapper-dv'
 			);
 				$html .= \EEH_HTML::ul( 'ee-reg-form-editor-active-form-ul', 'sortable' );
-				// empty list for now
+		// foreach ( $this->available_form_inputs as $form_input => $form_input_class_name ) {
+		// 	\EEH_Debug_Tools::printr( $form_input, '$form_input', __FILE__, __LINE__ );
+		// 	\EEH_Debug_Tools::printr( $form_input_class_name, '$form_input_class_name', __FILE__, __LINE__ );
+		// }
+				if ( $this->question_group->ID() ) {
+					foreach ( $this->question_group->questions() as $question ) {
+						$html .= $this->formatInputListItem(
+							$question->identifier(),
+							$question->get_form_input_class_name(),
+							true,
+							$question
+						);
+					}
+				}
 				$html .= \EEH_HTML::ulx();
 				$html .= \EEH_HTML::div( '', '', 'ee-reg-form-editor-form-new-input-dv droppable' );
-					$html .= \EEH_HTML::h2( 'drag and drop form inputs to add', '', 'ee-reg-form-editor-form-new-input-hdr' );
+				$html .= \EEH_HTML::h2( 'drag and drop form inputs to add', '', 'ee-reg-form-editor-form-new-input-hdr' );
 				$html .= \EEH_HTML::divx();
 			$html .= \EEH_HTML::divx();
 		$html .= \EEH_HTML::divx();
@@ -168,7 +174,7 @@ class RegistrationFormEditor {
 	/**
 	 * formLayoutMetaBox - HTML for Form Inputs meta box
 	 *
-	 * @return string
+	 * @return void
 	 */
 	public function formLayoutMetaBox() {
 		$html = \EEH_HTML::div(
@@ -225,7 +231,8 @@ class RegistrationFormEditor {
 	/**
 	 * formInputsMetaBox - HTML for Form Inputs meta box
 	 *
-	 * @return string
+	 * @return void
+	 * @throws \EE_Error
 	 */
 	public function formInputsMetaBox() {
 		$html = \EEH_HTML::div(
@@ -247,50 +254,72 @@ class RegistrationFormEditor {
 				'',
 				'data-form_input="ee-reg-form-editor-active-form-li-' . $form_input . '"'
 			);
-			$html .= \EEH_HTML::li(
-				'',
-				'ee-reg-form-editor-active-form-li-' . $form_input,
-				'ee-reg-form-editor-active-form-li',
-				'display:none;'
-			);
-			$html .= \EEH_HTML::div( '', '', 'ee-reg-form-editor-active-form-controls-dv' );
-			$html .= \EEH_HTML::span(
-				'',
-				'',
-				'ee-form-input-control-config ee-config-form-input dashicons dashicons-admin-generic',
-				'',
-				'title="' . __( 'Click to Edit Settings', 'event_espresso' ) . '"'
-			);
-			$html .= \EEH_HTML::span(
-				'',
-				'',
-				'ee-form-input-control-delete ee-delete-form-input dashicons dashicons-trash',
-				'',
-				'title="' . __( 'Click to Delete', 'event_espresso' ) . '"'
-			);
-			$html .= \EEH_HTML::span(
-				'',
-				'',
-				'ee-form-input-control-sort dashicons dashicons-arrow-up-alt2',
-				'',
-				'title="' . __( 'Drag to Sort', 'event_espresso' ) . '"'
-			);
-			$html .= \EEH_HTML::span(
-				'',
-				'',
-				'ee-form-input-control-sort dashicons dashicons-arrow-down-alt2', //list-view
-				'',
-				'title="' . __( 'Drag to Sort', 'event_espresso' ) . '"'
-			);
-			$html .= \EEH_HTML::divx(); // end 'ee-reg-form-editor-active-form-controls-dv'
-			$html .= $this->input_form_generator->formHTML( $form_input, $form_input_class_name );
-			$html .= \EEH_HTML::lix(); // end 'ee-reg-form-editor-active-form-li'
+			$html .= $this->formatInputListItem( $form_input, $form_input_class_name );
 			$html .= \EEH_HTML::lix(); // end 'ee-reg-form-editor-form-input-li'
 		}
 		$html .= \EEH_HTML::ulx();
 		$html .= \EEH_HTML::divx();
 		echo $html;
 		do_action( 'AHEE__EE_Admin_Page__reg_form_editor_form_sections_meta_box__after_content' );
+	}
+
+
+
+	/**
+	 * formatInputListItem
+	 *
+	 * @param string       $form_input
+	 * @param string       $form_input_class_name
+	 * @param bool         $display
+	 * @param \EE_Question $question
+	 * @return string
+	 * @throws \EE_Error
+	 */
+	protected function formatInputListItem(
+		$form_input,
+		$form_input_class_name,
+		$display = false,
+		\EE_Question $question = null
+	) {
+		$html = \EEH_HTML::li(
+			'',
+			'ee-reg-form-editor-active-form-li-' . $form_input,
+			'ee-reg-form-editor-active-form-li',
+			! $display ? 'display:none;' : ''
+		);
+		$html .= \EEH_HTML::div( '', '', 'ee-reg-form-editor-active-form-controls-dv' );
+		$html .= \EEH_HTML::span(
+			'',
+			'',
+			'ee-form-input-control-config ee-config-form-input dashicons dashicons-admin-generic',
+			'',
+			'title="' . __( 'Click to Edit Settings', 'event_espresso' ) . '"'
+		);
+		$html .= \EEH_HTML::span(
+			'',
+			'',
+			'ee-form-input-control-delete ee-delete-form-input dashicons dashicons-trash',
+			'',
+			'title="' . __( 'Click to Delete', 'event_espresso' ) . '"'
+		);
+		$html .= \EEH_HTML::span(
+			'',
+			'',
+			'ee-form-input-control-sort dashicons dashicons-arrow-up-alt2',
+			'',
+			'title="' . __( 'Drag to Sort', 'event_espresso' ) . '"'
+		);
+		$html .= \EEH_HTML::span(
+			'',
+			'',
+			'ee-form-input-control-sort dashicons dashicons-arrow-down-alt2', //list-view
+			'',
+			'title="' . __( 'Drag to Sort', 'event_espresso' ) . '"'
+		);
+		$html .= \EEH_HTML::divx(); // end 'ee-reg-form-editor-active-form-controls-dv'
+		$html .= $this->input_form_generator->formHTML( $form_input, $form_input_class_name, $question );
+		$html .= \EEH_HTML::lix(); // end 'ee-reg-form-editor-active-form-li'
+		return $html;
 	}
 
 
