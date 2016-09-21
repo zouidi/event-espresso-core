@@ -201,7 +201,7 @@ class EE_Question_Group extends EE_Soft_Delete_Base_Class {
 	 * @return EE_Question[]
 	 */
 	public function questions( $query_params = array() ) {
-		$query_params = ! empty( $query_params ) ? $query_params : array( 'order_by' => array( 'Question_Group_Question.QGQ_order' => 'ASC' ) );
+		// $query_params = ! empty( $query_params ) ? $query_params : array( 'order_by' => array( 'Question_Group_Question.QGQ_order' => 'ASC' ) );
 		return $this->ID() ? $this->get_many_related( 'Question', $query_params ) : array();
 	}
 
@@ -289,6 +289,7 @@ class EE_Question_Group extends EE_Soft_Delete_Base_Class {
 	 *
 	 * @access public
 	 * @return void
+	 * @throws \EE_Error
 	 */
 	public function set_order_to_latest() {
 		$latest_order = $this->get_model()->get_latest_question_group_order();
@@ -303,7 +304,7 @@ class EE_Question_Group extends EE_Soft_Delete_Base_Class {
 	 *
 	 * @deprecated 4.10.0
 	 * @access public
-	 * @return boolean
+	 * @return string
 	 */
 	public function show_group_name() {
 		return '';
@@ -317,10 +318,11 @@ class EE_Question_Group extends EE_Soft_Delete_Base_Class {
 	 *
 	 * @deprecated 4.10.0
 	 * @access public
-	 * @return boolean
+	 * @return string
 	 */
 	public function show_group_desc() {
 		return '';
 	}
+
 
 }
