@@ -1,41 +1,22 @@
 <?php
 /**
- * Meant to add the new ee_message table to the database.
- */
-//make sure we have all the stages loaded too
-//unfortunately, this needs to be done upon INCLUSION of this file,
-//instead of construction, because it only gets constructed on first page load
-//(all other times it gets resurrected from a wordpress option)
-$stages = glob(EE_CORE.'data_migration_scripts/4_9_0_stages/*');
-$class_to_filepath = array();
-foreach($stages as $filepath){
-	$matches = array();
-	preg_match('~4_9_0_stages/(.*).dmsstage.php~',$filepath,$matches);
-	$class_to_filepath[$matches[1]] = $filepath;
-}
-//give addons a chance to autoload their stages too
-$class_to_filepath = apply_filters('FHEE__EE_DMS_4_9_0__autoloaded_stages',$class_to_filepath);
-EEH_Autoloader::register_autoloader($class_to_filepath);
-
-
-
-
-
-/**
  * Class EE_DMS_Core_4_9_0
+ * Meant to add the new ee_message table to the database.
  *
- * @package            Event Espresso
+ * @package       Event Espresso
  * @subpackage    core
- * @author                Mike Nelson
- * @since                4.6.0
- *
+ * @author        Mike Nelson
+ * @since         4.6.0
  */
 class EE_DMS_Core_4_9_0 extends EE_Data_Migration_Script_Base{
 
 	/**
 	 * return EE_DMS_Core_4_9_0
+	 *
+	 * @throws \EE_Error
 	 */
 	public function __construct() {
+		$this->_load_script_stages();
 		$this->_pretty_name = __("Data Migration to Event Espresso 4.9.0.P", "event_espresso");
 		$this->_priority = 10;
 		$this->_migration_stages = array(
@@ -182,7 +163,7 @@ class EE_DMS_Core_4_9_0 extends EE_Data_Migration_Script_Base{
 				KEY EVT_ID (EVT_ID),
 				KEY DTT_is_primary (DTT_is_primary)";
 		$this->_table_has_not_changed_since_previous($table_name, $sql, 'ENGINE=InnoDB' );
-		
+
 		$table_name = "esp_datetime_ticket";
 		$sql = "DTK_ID int(10) unsigned NOT NULL AUTO_INCREMENT,
 				DTT_ID int(10) unsigned NOT NULL,
@@ -191,7 +172,7 @@ class EE_DMS_Core_4_9_0 extends EE_Data_Migration_Script_Base{
 				KEY DTT_ID (DTT_ID),
 				KEY TKT_ID (TKT_ID)";
 		$this->_table_has_not_changed_since_previous($table_name, $sql, 'ENGINE=InnoDB');
-		
+
 		$table_name = 'esp_event_message_template';
 		$sql = "EMT_ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				EVT_ID bigint(20) unsigned NOT NULL DEFAULT 0,
@@ -328,7 +309,7 @@ class EE_DMS_Core_4_9_0 extends EE_Data_Migration_Script_Base{
 				KEY MSG_created (MSG_created),
 				KEY MSG_modified (MSG_modified)";
 		$this->_table_is_new_in_this_version($table_name, $sql, 'ENGINE=InnoDB' );
-		
+
 		$table_name = 'esp_message_template';
 		$sql = "MTP_ID int(10) unsigned NOT NULL AUTO_INCREMENT,
 				GRP_ID int(10) unsigned NOT NULL,
@@ -633,7 +614,7 @@ class EE_DMS_Core_4_9_0 extends EE_Data_Migration_Script_Base{
 		$script_4_6_defaults = EE_Registry::instance()->load_dms('Core_4_6_0');
 		$script_4_6_defaults->add_default_admin_only_payments();
 		$script_4_6_defaults->insert_default_currencies();
-		
+
 		/** @var EE_DMS_Core_4_8_0 $script_4_8_defaults */
 		$script_4_8_defaults = EE_Registry::instance()->load_dms('Core_4_8_0');
 		$script_4_8_defaults->verify_new_countries();
