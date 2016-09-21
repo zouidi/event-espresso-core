@@ -214,9 +214,9 @@ class EEH_Activation {
 		 *      ...
 		 */
 		$ee_cron_tasks_to_remove = EEH_Activation::get_cron_tasks( $cron_tasks_to_remove );
-		foreach ( $crons as $timestamp => $hooks_to_fire_at_time ) {
+		foreach ( (array) $crons as $timestamp => $hooks_to_fire_at_time ) {
 			if ( is_array( $hooks_to_fire_at_time ) ) {
-				foreach ( $hooks_to_fire_at_time as $hook_name => $hook_actions ) {
+				foreach ( (array) $hooks_to_fire_at_time as $hook_name => $hook_actions ) {
 					if ( isset( $ee_cron_tasks_to_remove[ $hook_name ] )
 					     && is_array( $ee_cron_tasks_to_remove[ $hook_name ] )
 					) {
@@ -272,7 +272,7 @@ class EEH_Activation {
 	 *    load_calendar_config
 	 *
 	 * @access    public
-	 * @return    stdClass
+	 * @return    void
 	 */
 	public static function load_calendar_config() {
 		// grab array of all plugin folders and loop thru it
@@ -320,7 +320,7 @@ class EEH_Activation {
 			// convert existing settings to an object
 			$config_array = $settings;
 			$settings = new stdClass();
-			foreach ( $config_array as $key => $value ){
+			foreach ( (array) $config_array as $key => $value ){
 				if ( $key === 'calendar' && class_exists( 'EE_Calendar_Config' )) {
 					$EE_Config->set_config( 'addons', 'EE_Calendar', 'EE_Calendar_Config', $value );
 				} else {
@@ -713,7 +713,7 @@ class EEH_Activation {
 	 * 	@access public
 	 * 	@static
 	 * 	@param string $table_name, without prefixed $wpdb->prefix
-	 * 	@return array of database column names
+	 * 	@return array|boolean of database column names
 	 */
 	public static function get_fields_on_table( $table_name = NULL ) {
 		global $wpdb;
@@ -722,7 +722,7 @@ class EEH_Activation {
 			$columns = $wpdb->get_results("SHOW COLUMNS FROM $table_name ");
 			if ($columns !== FALSE) {
 				$field_array = array();
-				foreach($columns as $column ){
+				foreach( (array) $columns as $column ){
 					$field_array[] = $column->Field;
 				}
 				return $field_array;
@@ -977,11 +977,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s given name',
 							'QST_html_name'        => 'fname-' . $timestamp,
 							'QST_html_id'          => 'fname-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'fname',
 							'QST_html_label_id'    => 'fname-' . $timestamp . '-lbl',
-							'QST_html_label_class' => '',
+							'QST_html_label_class' => 'fname-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array( 'required' => '' ),
+							'QST_validation_strategies' => array( 'required' => '' ),
+							'QST_validation_message' => '',
 							'QST_order'            => 1,
 							'QST_admin_only'       => 0,
 							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
@@ -1005,11 +1006,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s family name',
 							'QST_html_name'        => 'lname-' . $timestamp,
 							'QST_html_id'          => 'lname-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'lname',
 							'QST_html_label_id'    => 'lname-' . $timestamp . '-lbl',
-							'QST_html_label_class' => '',
+							'QST_html_label_class' => 'lname-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array(),
+							'QST_validation_strategies' => array(),
+							'QST_validation_message' => '',
 							'QST_order'            => 2,
 							'QST_admin_only'       => 0,
 							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
@@ -1033,11 +1035,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s email address',
 							'QST_html_name'        => 'email-' . $timestamp,
 							'QST_html_id'          => 'email-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'email',
 							'QST_html_label_id'    => 'email-' . $timestamp . '-lbl',
-							'QST_html_label_class' => 'email',
+							'QST_html_label_class' => 'email-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array( 'required' => '', 'email' => '', ),
+							'QST_validation_strategies' => array( 'required' => '', 'email' => '', ),
+							'QST_validation_message' => '',
 							'QST_order'            => 3,
 							'QST_admin_only'       => 0,
 							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
@@ -1061,11 +1064,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s street address',
 							'QST_html_name'        => 'address-' . $timestamp,
 							'QST_html_id'          => 'address-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'address',
 							'QST_html_label_id'    => 'address-' . $timestamp . '-lbl',
-							'QST_html_label_class' => '',
+							'QST_html_label_class' => 'address-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array( 'required' => '' ),
+							'QST_validation_strategies' => array( 'required' => '' ),
+							'QST_validation_message' => '',
 							'QST_order'            => 4,
 							'QST_admin_only'       => 0,
 							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
@@ -1089,11 +1093,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s street address (additional info)',
 							'QST_html_name'        => 'address2-' . $timestamp,
 							'QST_html_id'          => 'address2-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'address2',
 							'QST_html_label_id'    => 'address2-' . $timestamp . '-lbl',
-							'QST_html_label_class' => '',
+							'QST_html_label_class' => 'address2-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array( 'required' => '' ),
+							'QST_validation_strategies' => array( 'required' => '' ),
+							'QST_validation_message' => '',
 							'QST_order'            => 5,
 							'QST_admin_only'       => 0,
 							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
@@ -1117,11 +1122,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s city',
 							'QST_html_name'        => 'city-' . $timestamp,
 							'QST_html_id'          => 'city-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'city',
 							'QST_html_label_id'    => 'city-' . $timestamp . '-lbl',
-							'QST_html_label_class' => '',
+							'QST_html_label_class' => 'city-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array( 'required' => '' ),
+							'QST_validation_strategies' => array( 'required' => '' ),
+							'QST_validation_message' => '',
 							'QST_order'            => 6,
 							'QST_admin_only'       => 0,
 							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
@@ -1145,11 +1151,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s state/province',
 							'QST_html_name'        => 'state-' . $timestamp,
 							'QST_html_id'          => 'state-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'state',
 							'QST_html_label_id'    => 'state-' . $timestamp . '-lbl',
-							'QST_html_label_class' => '',
+							'QST_html_label_class' => 'state-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array( 'required' => '' ),
+							'QST_validation_strategies' => array( 'required' => '' ),
+							'QST_validation_message' => '',
 							'QST_order'            => 7,
 							'QST_admin_only'       => 0,
 							'QST_wp_user'          => self::get_default_creator_id(),
@@ -1170,11 +1177,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s country',
 							'QST_html_name'        => 'country-' . $timestamp,
 							'QST_html_id'          => 'country-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'country',
 							'QST_html_label_id'    => 'country-' . $timestamp . '-lbl',
-							'QST_html_label_class' => '',
+							'QST_html_label_class' => 'country-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array( 'required' => '' ),
+							'QST_validation_strategies' => array( 'required' => '' ),
+							'QST_validation_message' => '',
 							'QST_order'            => 8,
 							'QST_admin_only'       => 0,
 							'QST_wp_user'          => self::get_default_creator_id(),
@@ -1195,11 +1203,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s zip/postal code',
 							'QST_html_name'        => 'zip-' . $timestamp,
 							'QST_html_id'          => 'zip-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'zip',
 							'QST_html_label_id'    => 'zip-' . $timestamp . '-lbl',
-							'QST_html_label_class' => '',
+							'QST_html_label_class' => 'zip-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array( 'required' => '' ),
+							'QST_validation_strategies' => array( 'required' => '' ),
+							'QST_validation_message' => '',
 							'QST_order'            => 9,
 							'QST_admin_only'       => 0,
 							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
@@ -1223,11 +1232,12 @@ class EEH_Activation {
 							'QST_desc'             => 'The registrant\'s phone number',
 							'QST_html_name'        => 'phone-' . $timestamp,
 							'QST_html_id'          => 'phone-' . $timestamp,
-							'QST_html_class'       => '',
+							'QST_html_class'       => 'phone',
 							'QST_html_label_id'    => 'phone-' . $timestamp . '-lbl',
-							'QST_html_label_class' => '',
+							'QST_html_label_class' => 'phone-lbl',
 							'QST_default_value'    => '',
-							'QST_validation'       => array( 'required' => '' ),
+							'QST_validation_strategies' => array( 'required' => '' ),
+							'QST_validation_message' => '',
 							'QST_order'            => 10,
 							'QST_admin_only'       => 0,
 							'QST_max'              => EEM_Question::instance()->absolute_max_for_system_question(
@@ -1768,7 +1778,7 @@ class EEH_Activation {
                 //also, let's make sure the "ee_config_option_names" wp option stays out by removing the action that adds it
                 remove_action( 'shutdown', array( EE_Config::instance(), 'shutdown' ), 10 );
 
-		if ( $remove_all && $espresso_db_update = get_option( 'espresso_db_update' )) {
+		if ( $remove_all && $espresso_db_update = (array) get_option( 'espresso_db_update' )) {
 			$db_update_sans_ee4 = array();
 			foreach($espresso_db_update as $version => $times_activated){
 				if( (string)$version[0] === '3'){//if its NON EE4
