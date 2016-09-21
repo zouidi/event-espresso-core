@@ -1,5 +1,6 @@
 <?php
 /**
+ * Class EE_DMS_Core_4_7_0
  * converts DBs to 4.7
  * Adds the esp_registration_payment table (indicating which registrations payments are for),
  * adds fields esp_registration.REG_paid field,
@@ -7,41 +8,20 @@
  * for that registration (before this it was just the ticket's price, NOT including
  * taxes or other price modifiers)
  *
- */
-// make sure we have all the stages loaded too
-// unfortunately, this needs to be done upon INCLUSION of this file,
-// instead of construction, because it only gets constructed on first page load
-// (all other times it gets resurrected from a wordpress option)
-$stages = glob(EE_CORE.'data_migration_scripts/4_7_0_stages/*');
-$class_to_filepath = array();
-foreach($stages as $filepath){
-	$matches = array();
-	preg_match('~4_7_0_stages/(.*).dmsstage.php~',$filepath,$matches);
-	$class_to_filepath[$matches[1]] = $filepath;
-}
-//give addons a chance to autoload their stages too
-$class_to_filepath = apply_filters('FHEE__EE_DMS_4_7_0__autoloaded_stages',$class_to_filepath);
-EEH_Autoloader::register_autoloader($class_to_filepath);
-
-
-
-
-
-/**
- * Class EE_DMS_Core_4_7_0
- *
- * @package 			Event Espresso
+ * @package     Event Espresso
  * @subpackage 	core
- * @author 				Mike Nelson, Brent Christensen
- * @since                4.7.0
- *
+ * @author 		Mike Nelson, Brent Christensen
+ * @since       4.7.0
  */
 class EE_DMS_Core_4_7_0 extends EE_Data_Migration_Script_Base{
 
 	/**
 	 * return EE_DMS_Core_4_7_0
+	 *
+	 * @throws \EE_Error
 	 */
 	public function __construct() {
+		$this->_load_script_stages();
 		$this->_pretty_name = __("Data Migration to Event Espresso 4.7.0.p", "event_espresso");
 		$this->_priority = 10;
 		$this->_migration_stages = array(
