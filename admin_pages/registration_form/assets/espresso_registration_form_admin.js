@@ -352,6 +352,9 @@ jQuery(document).ready(function($) {
 		 * @param {number} timestamp
 		 */
 		editInputAttributes : function( $formInput, timestamp ) {
+			if ( $formInput.hasClass( 'ee-reg-form-hidden-form_input-js' ) ) {
+				$formInput.val( $formInput.val().replace( 'clone', timestamp ) );
+			}
 			// and add timestamp to names and IDs in place of "clone"
 			$formInput.attr( 'id', $formInput.attr( 'id' ).replace( 'clone', timestamp ) );
 			if ( $formInput.attr( 'name' ) ) {
