@@ -37,12 +37,6 @@ class RegistrationFormEditorForm {
 	 */
 	protected $form_input_config_fields;
 
-	/**
-	 * true if the input type is an instance of \EE_Form_Input_With_Options_Base
-	 *
-	 * @var boolean $input_has_options
-	 */
-	protected $input_has_options;
 
 
 
@@ -60,6 +54,7 @@ class RegistrationFormEditorForm {
 	/**
 	 * @param array $available_form_inputs
 	 * @return \EE_Form_Section_Proper
+	 * @throws \EE_Error
 	 */
 	public function rawForm( array $available_form_inputs ) {
 		$subsections = array();
@@ -80,10 +75,11 @@ class RegistrationFormEditorForm {
 	/**
 	 * @param string $form_input
 	 * @param string $form_input_class_name
+	 * @param string $identifier
 	 * @return string
 	 * @throws \EE_Error
 	 */
-	public function rawFormInput( $form_input, $form_input_class_name ) {
+	public function rawFormInput( $form_input, $form_input_class_name, $identifier = 'clone' ) {
 		if ( ! is_subclass_of( $form_input_class_name, 'EE_Form_Input_Base' ) ) {
 			throw new \EE_Error(
 				sprintf(
@@ -93,11 +89,9 @@ class RegistrationFormEditorForm {
 			);
 		}
 		$this->form_input = $this->formInput( $form_input, $form_input_class_name );
-		$this->input_has_options = $this->form_input instanceof \EE_Form_Input_With_Options_Base ? true :false;
-		if ( $this->input_has_options ) {
+		$subsections = array();
+		if ( $this->form_input instanceof \EE_Form_Input_With_Options_Base ) {
 			$subsections = $this->getInputOptions( $form_input, $this->form_input->options() );
-		} else {
-			$subsections = array();
 		}
 		$subsections = array_merge(
 			$subsections,
@@ -106,8 +100,8 @@ class RegistrationFormEditorForm {
 		);
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'            => "reg_form[clone]",
-				'html_id'         => "reg-form-clone",
+				'name'            => "reg_form[{$identifier}]",
+				'html_id'         => "reg-form-{$identifier}",
 				'layout_strategy' => new \EE_Div_Per_Section_Layout(),
 				'subsections'     => $subsections
 			)
@@ -118,13 +112,15 @@ class RegistrationFormEditorForm {
 
 	/**
 	 * @param string $form_input
+	 * @param string $identifier
 	 * @return \EE_Form_Section_Proper (
+	 * @throws \EE_Error
 	 */
-	public function formInputForm( $form_input ) {
+	public function formInputForm( $form_input, $identifier = 'clone' ) {
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'            => "reg_form[clone]",
-				'html_id'         => "reg-form-clone",
+				'name'            => "reg_form[{$identifier}]",
+				'html_id'         => "reg-form-{$identifier}",
 				'html_class'      => "ee-new-form-input-dv",
 				'layout_strategy' => new \EE_Div_Per_Section_Layout(),
 				'subsections'     => array(
@@ -137,12 +133,14 @@ class RegistrationFormEditorForm {
 
 
 	/**
-	 * @param string $form_input
-	 * @param string $form_input_class_name
-	 * @param array  $options
+	 * @param string       $form_input
+	 * @param string       $form_input_class_name
+	 * @param \EE_Question $question
+	 * @param array        $options
 	 * @return \EE_Form_Input_Base
 	 */
-	public function formInput( $form_input, $form_input_class_name, $options = array() ) {
+	public function formInput( $form_input, $form_input_class_name, \EE_Question $question = null, $options = array() ) {
+		$is_question = $question instanceof \EE_Question;
 		if ( is_subclass_of( $form_input_class_name, 'EE_Form_Input_With_Options_Base' ) ) {
 			$options = ! empty( $options )
 				? $options
@@ -153,13 +151,15 @@ class RegistrationFormEditorForm {
 			$this->form_input = new $form_input_class_name(
 				$options,
 				array(
-					'name' => $form_input,
+					'name' => $is_question ? $question->html_name() : $form_input,
+					'html_label_text' => $is_question ? $question->display_text() : $form_input,
 				)
 			);
 		} else {
 			$this->form_input = new $form_input_class_name(
 				array(
-					'name' => $form_input,
+					'name' => $is_question ? $question->html_name() : $form_input,
+					'html_label_text' => $is_question ? $question->display_text() : $form_input,
 				)
 			);
 		}
@@ -169,14 +169,13 @@ class RegistrationFormEditorForm {
 
 
 
-
-
 	/**
 	 * @param string $form_input
+	 * @param string $identifier
 	 * @return \EE_Form_Section_Proper
 	 * @throws \EE_Error
 	 */
-	public function getInputOptionsForm( $form_input ) {
+	public function getInputOptionsForm( $form_input, $identifier = 'clone' ) {
 		if ( ! $this->form_input instanceof \EE_Form_Input_With_Options_Base ) {
 			throw new \EE_Error(
 				sprintf(
@@ -190,8 +189,8 @@ class RegistrationFormEditorForm {
 		}
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'            => 'input_options[clone]',
-				'html_id'         => 'input-options-clone',
+				'name'            => "input_options[{$identifier}]",
+				'html_id'         => "input-options-{$identifier}",
 				'layout_strategy' => new \EE_Admin_Two_Column_Layout(), // EE_Div_Per_Section_Layout
 				'subsections'     => $this->getInputOptions( $form_input, $this->form_input->options() )
 			)
@@ -202,10 +201,11 @@ class RegistrationFormEditorForm {
 
 	/**
 	 * @param string $form_input
+	 * @param string $identifier
 	 * @param array  $options
 	 * @return array
 	 */
-	public function getInputOptions( $form_input, $options ) {
+	public function getInputOptions( $form_input, $options, $identifier = 'clone' ) {
 		//if ( $form_input == 'checkbox_multi' ) {
 		//	\EEH_Debug_Tools::printr( $options, '$options', __FILE__, __LINE__ );
 		//}
@@ -215,19 +215,19 @@ class RegistrationFormEditorForm {
 			$order++;
 			$subsections[ 'value-' . $key ] = new \EE_Text_Input(
 				array(
-					'html_name'  => "input_options[clone][{$order}][value]",
-					'html_id'    => "input-options-{$form_input}-clone-{$order}-value",
+					'html_name'  => "input_options[{$identifier}][{$order}][value]",
+					'html_id'    => "input-options-{$form_input}-{$identifier}-{$order}-value",
 					'html_class' => "ee-reg-form-option-label-text-js",
 					'default'    => $key,
-					'other_html_attributes' => 'data-target="reg-form-clone-'
+					'other_html_attributes' => "data-target=\"reg-form-{$identifier}-"
 					                           . str_replace( '_', '-', $form_input ) . '-'
 					                           . sanitize_key( $key ) . '-option-lbl"',
 				)
 			);
 			$subsections[ 'desc-' . $key ] = new \EE_Text_Input(
 				array(
-					'html_name' => "input_options[clone][{$order}][desc]",
-					'html_id'   => "input-options-{$form_input}-clone-{$order}-desc",
+					'html_name' => "input_options[{$identifier}][{$order}][desc]",
+					'html_id'   => "input-options-{$form_input}-{$identifier}-{$order}-desc",
 					'default'   => $value
 				)
 			);
@@ -238,16 +238,19 @@ class RegistrationFormEditorForm {
 
 
 	/**
-	 * @param string $form_input
+	 * @param string       $form_input
+	 * @param string       $identifier
+	 * @param \EE_Question $question
 	 * @return \EE_Form_Section_Proper
+	 * @throws \EE_Error
 	 */
-	public function getBasicSettings( $form_input ) {
+	public function getBasicSettings( $form_input, $identifier = 'clone', \EE_Question $question = null ) {
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'            => "settings[clone]",
-				'html_id'         => "settings-clone",
+				'name'            => "settings[{$identifier}]",
+				'html_id'         => "settings-{$identifier}",
 				'layout_strategy' => new \EE_Admin_Two_Column_Layout(),
-				'subsections'     => $this->getBasicSettingsSubsections( $form_input )
+				'subsections'     => $this->getBasicSettingsSubsections( $form_input, $identifier, $question )
 			)
 		);
 	}
@@ -255,15 +258,24 @@ class RegistrationFormEditorForm {
 
 
 	/**
-	 * @param string $form_input
+	 * @param string       $form_input
+	 * @param string       $identifier
+	 * @param \EE_Question $question
 	 * @return array
 	 */
-	protected function getBasicSettingsSubsections( $form_input ) {
-		$subsections = array();
+	protected function getBasicSettingsSubsections( $form_input, $identifier = 'clone', \EE_Question $question = null ) {
+		$subsections = array(
+			'identifier' => new \EE_Fixed_Hidden_Input(
+				array(
+					'default'    => $question instanceof \EE_Question ? $identifier : "{$form_input}-{$identifier}",
+					'html_class' => 'ee-reg-form-hidden-form_input-js',
+				)
+			)
+		);
 		foreach ( $this->form_input_config_fields as $field_name => $form_input_config_field ) {
-			$config_input = $this->getBasicConfigInput( $form_input, $field_name );
+			$config_input = $this->getBasicConfigInput( $form_input, $identifier, $field_name, $question );
 			if ( $config_input instanceof \EE_Form_Input_Base ) {
-				$field_name = str_replace( 'QST_', '', $field_name );
+				$field_name = (string) str_replace( 'QST_', '', $field_name );
 				$subsections[ $field_name ] = $config_input;
 			}
 		}
@@ -273,11 +285,18 @@ class RegistrationFormEditorForm {
 
 
 	/**
-	 * @param string $form_input
-	 * @param string $field_name
+	 * @param string       $form_input
+	 * @param string       $identifier
+	 * @param string       $field_name
+	 * @param \EE_Question $question
 	 * @return \EE_Form_Input_Base|null
 	 */
-	protected function getBasicConfigInput( $form_input, $field_name ) {
+	protected function getBasicConfigInput(
+		$form_input,
+		$identifier = 'clone',
+		$field_name,
+		\EE_Question $question = null
+	) {
 		// what kind of field is it ?
 		switch ( $field_name ) {
 
@@ -286,7 +305,8 @@ class RegistrationFormEditorForm {
 					array(
 						'html_label_text'       => __( 'Label Text', 'event_espresso' ),
 						'html_class'            => 'ee-reg-form-label-text-js',
-						'other_html_attributes' => 'data-target="reg-form-clone-' . str_replace( '_', '-', $form_input ) . '-lbl"',
+						'other_html_attributes' => "data-target=\"reg-form-{$identifier}-" . str_replace( '_', '-', $form_input ) . '-lbl"',
+						'default'               => $question instanceof \EE_Question ? $question->display_text() : ''
 					)
 				);
 
@@ -294,6 +314,7 @@ class RegistrationFormEditorForm {
 				return new \EE_Text_Area_Input(
 					array(
 						'html_label_text' => __( 'Description', 'event_espresso' ),
+						'default'         => $question instanceof \EE_Question ? $question->desc() : "",
 					)
 				);
 
@@ -301,6 +322,7 @@ class RegistrationFormEditorForm {
 				return new \EE_Text_Input(
 					array(
 						'html_label_text' => __( 'Input CSS Classes', 'event_espresso' ),
+						'default'         => $question instanceof \EE_Question ? $question->html_class() : "{$form_input}",
 					)
 				);
 
@@ -308,6 +330,7 @@ class RegistrationFormEditorForm {
 				return new \EE_Text_Input(
 					array(
 						'html_label_text' => __( 'Label CSS Classes', 'event_espresso' ),
+						'default'         => $question instanceof \EE_Question ? $question->html_label_class() : "{$form_input}-lbl",
 					)
 				);
 
@@ -318,17 +341,25 @@ class RegistrationFormEditorForm {
 
 
 	/**
-	 * @param string $form_input
-	 * @param string $form_input_class_name
+	 * @param string       $form_input
+	 * @param string       $identifier
+	 * @param string       $form_input_class_name
+	 * @param \EE_Question $question
 	 * @return \EE_Form_Section_Proper
+	 * @throws \EE_Error
 	 */
-	public function getValidationSettings( $form_input, $form_input_class_name ) {
+	public function getValidationSettings(
+		$form_input,
+		$identifier = 'clone',
+		$form_input_class_name,
+		\EE_Question $question = null
+	) {
 		return new \EE_Form_Section_Proper(
 			array(
-				'name'    => "settings[clone]",
-				'html_id' => "settings-clone",
+				'name'    => "settings[{$identifier}]",
+				'html_id' => "settings-{$identifier}",
 				'layout_strategy' => new \EE_Admin_Two_Column_Layout(),
-				'subsections'     => $this->getValidationStrategies( $form_input, $form_input_class_name ),
+				'subsections'     => $this->getValidationStrategies( $form_input, $form_input_class_name, $question ),
 			)
 		);
 	}
@@ -336,11 +367,12 @@ class RegistrationFormEditorForm {
 
 
 	/**
-	 * @param string $form_input
-	 * @param string $form_input_class_name
+	 * @param string       $form_input
+	 * @param string       $form_input_class_name
+	 * @param \EE_Question $question
 	 * @return array
 	 */
-	protected function getValidationStrategies( $form_input, $form_input_class_name ) {
+	protected function getValidationStrategies( $form_input, $form_input_class_name, \EE_Question $question = null ) {
 		// get validations strategies but only include those that are optional
 		$validation_strategies = ValidationStrategiesLoader::get(
 			/** @var \EE_Form_Input_Base $form_input_class_name */
@@ -359,10 +391,11 @@ class RegistrationFormEditorForm {
 			}
 			$validation_strategies[ ucwords( str_replace( '_', ' ', $validation_key ) ) ] = $validation_strategy;
 		}
-		$subsections[ $form_input . '_validation_strategies' ] = $this->getValidationStrategiesInput(
-			$validation_strategies
+		$subsections['validation_strategies' ] = $this->getValidationStrategiesInput(
+			$validation_strategies,
+			$question
 		);
-		$subsections[ $form_input . '_validation_message' ] = $this->getFailedValidationMessage();
+		$subsections['validation_message' ] = $this->getFailedValidationMessage();
 		// convert underscores in labels to spaces
 		//$validation_strategies = array_map(
 		//	function( $value ) {
@@ -377,14 +410,16 @@ class RegistrationFormEditorForm {
 
 
 	/**
-	 * @param array $validation_strategies
+	 * @param array        $validation_strategies
+	 * @param \EE_Question $question
 	 * @return \EE_Checkbox_Multi_Input
 	 */
-	protected function getValidationStrategiesInput( array $validation_strategies ) {
+	protected function getValidationStrategiesInput( array $validation_strategies, \EE_Question $question = null ) {
 		return new \EE_Checkbox_Multi_Input(
 			array_flip( $validation_strategies ),
 			array(
 				'html_label_text' =>  __( 'Apply Validation Rules', 'event_espresso' ),
+				'default' => $question instanceof \EE_Question ? $question->validation_strategies() : '',
 			)
 		);
 	}
