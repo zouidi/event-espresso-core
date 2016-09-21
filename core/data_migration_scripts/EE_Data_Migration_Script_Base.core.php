@@ -114,10 +114,16 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 
 
 	/**
-	 * All children of this must call parent::__construct() at the end of their constructor or suffer the consequences!
+	 * All children of this must call parent::__construct()
+	 * at the end of their constructor or suffer the consequences!
+	 *
+	 * @throws \EE_Error
 	 */
 	public function __construct() {
-		$this->_migration_stages = apply_filters('FHEE__'.get_class($this).'__construct__migration_stages',$this->_migration_stages);
+		$this->_migration_stages = (array) apply_filters(
+			'FHEE__'.get_class($this).'__construct__migration_stages',
+			$this->_migration_stages
+		);
 		foreach($this->_migration_stages as $migration_stage){
 			if ( $migration_stage instanceof EE_Data_Migration_Script_Stage ) {
 				$migration_stage->_construct_finalize($this);
@@ -127,6 +133,36 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 	}
 
 
+
+	/**
+	 * make sure we have all the stages loaded
+	 * called during construction and from __wakeup()
+	 *
+	 * @throws \EE_Error
+	 */
+	protected function _load_script_stages() {
+		static $script_stages_loaded = array();
+		$stage = str_replace( 'EE_DMS_Core_', '', get_class( $this ) );
+		if ( isset( $script_stages_loaded[ $stage ] ) ) {
+			return;
+		}
+		$stages = glob( EE_CORE . "data_migration_scripts/{$stage}_stages/*.dmsstage.php" );
+		$class_to_filepath = array();
+		foreach ( $stages as $filepath ) {
+			$matches = array();
+			if ( preg_match( "~{$stage}_stages/(.*).dmsstage.php~", $filepath, $matches ) ) {
+				$class_to_filepath[ $matches[1] ] = $filepath;
+			}
+		}
+		//give addons a chance to autoload their stages too
+		$class_to_filepath = (array) apply_filters(
+			"FHEE__EE_DMS_{$stage}__autoloaded_stages",
+			$class_to_filepath
+		);
+		EEH_Autoloader::register_autoloader( $class_to_filepath );
+		$script_stages_loaded[ $stage ] = true;
+
+	}
 
 	/**
 	 * Place to add hooks and filters for tweaking the migrations page, in order
@@ -764,6 +800,24 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 			}
 		}
 	}
+
+
+
+	/**
+	 * unserialize() checks for the presence of a function with the magic name __wakeup.
+	 * If present, this function can reconstruct any resources that the object may have.
+	 * The intended use of __wakeup is to reestablish any database connections that may have been lost during
+	 * serialization and perform other reinitialization tasks.
+	 *
+	 * @return void
+	 * @throws \EE_Error
+	 */
+	public function __wakeup() {
+		$this->_load_script_stages();
+	}
+
+
+
 }
 
 

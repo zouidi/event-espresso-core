@@ -1,44 +1,33 @@
 <?php
 /**
  * meant to convert DBs between 3.1.26 and 4.0.0 to 4.1.0
- */
-//make sure we have all the stages loaded too
-//unfortunately, this needs to be done upon INCLUSION of this file,
-//instead of construction, because it only gets constructed on first page load
-//(all other times it gets resurrected from a wordpress option)
-$stages = glob(EE_CORE.'data_migration_scripts/4_1_0_stages/*');
-$class_to_filepath = array();
-if ( ! empty( $stages ) ) {
-	foreach($stages as $filepath){
-		$matches = array();
-		preg_match('~4_1_0_stages/(.*).dmsstage.php~',$filepath,$matches);
-		$class_to_filepath[$matches[1]] = $filepath;
-	}
-}
-//give addons a chance to autoload their stages too
-$class_to_filepath = apply_filters('FHEE__EE_DMS_4_1_0__autoloaded_stages',$class_to_filepath);
-EEH_Autoloader::register_autoloader($class_to_filepath);
-
-/**
  * Organizes all the various stages of the migration from 3.1 (but only versions above 3.1.26,
  * lower versions need to eb upgraded to 3.1.26 normally) to 4.1.0.P.
  * It adds the database tables on some of the first migration_steps, then migrates the data within
  * each stage.
- *
  * External Dependencies:
  * -function EEH_Activation::create_table($table_name,$table_sql,$engine)
  * -class EE_Config with attributes and function:
  * --static function instance() which returns the instance of EE_Config
- * --that the instance of EE_Config have an property named 'gateway' which is a class with properties '-'payment_settings' and 'active_gateways'
+ * --that the instance of EE_Config have an property named 'gateway'
+ * --which is a class with properties '-'payment_settings' and 'active_gateways'
  *	 which are both arrays
  * --a function named update_espresso_config() which saves the EE_Config object to the database
- * --...and all its subclasses... really, you're best off copying the whole thin gwhen 4.1 is released into this file and wrapping its declaration in if( ! class_exists()){...}
+ * --...and all its subclasses...
+ * really, you're best off copying the whole thing when 4.1 is released into this file
+ * and wrapping its declaration in if( ! class_exists()){...}
  */
 class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 
 
 
+	/**
+	 * EE_DMS_Core_4_1_0 constructor.
+	 *
+	 * @throws \EE_Error
+	 */
 	public function __construct() {
+		$this->_load_script_stages();
 		$this->_pretty_name = __("Data Migration to Event Espresso 4.1.0P", "event_espresso");
 		$this->_priority = 10;
 		$this->_migration_stages = array(
@@ -62,6 +51,9 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 		);
 		parent::__construct();
 	}
+
+
+
 	/**
 	 * Checks if this 3.1 Check-in table exists. If it doesn't we can't migrate Check-ins
 	 * @global type $wpdb
