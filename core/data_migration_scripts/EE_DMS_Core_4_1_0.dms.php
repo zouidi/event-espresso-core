@@ -1,4 +1,7 @@
 <?php
+use EventEspresso\core\services\database\TableAnalysis;
+use EventEspresso\core\services\database\TableManager;
+
 /**
  * meant to convert DBs between 3.1.26 and 4.0.0 to 4.1.0
  * Organizes all the various stages of the migration from 3.1 (but only versions above 3.1.26,
@@ -24,9 +27,11 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 	/**
 	 * EE_DMS_Core_4_1_0 constructor.
 	 *
+	 * @param TableManager  $table_manager
+	 * @param TableAnalysis $table_analysis
 	 * @throws \EE_Error
 	 */
-	public function __construct() {
+	public function __construct( TableManager $table_manager = null, TableAnalysis $table_analysis = null ) {
 		$this->_load_script_stages();
 		$this->_pretty_name = __("Data Migration to Event Espresso 4.1.0P", "event_espresso");
 		$this->_priority = 10;
@@ -49,14 +54,15 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 			new EE_DMS_4_1_0_answers(),
 			new EE_DMS_4_1_0_checkins(),
 		);
-		parent::__construct();
+		parent::__construct( $table_manager, $table_analysis );
 	}
 
 
 
 	/**
 	 * Checks if this 3.1 Check-in table exists. If it doesn't we can't migrate Check-ins
-	 * @global type $wpdb
+	 *
+	 * @global wpdb $wpdb
 	 * @return boolean
 	 */
 	private function _checkin_table_exists(){
@@ -68,6 +74,7 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 			return false;
 		}
 	}
+
 	public function can_migrate_from_version($version_array) {
 		$version_string = $version_array['Core'];
 		if($version_string < '4.0.0' && $version_string > '3.1.26' ){
@@ -374,7 +381,7 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 					PRIMARY KEY  (QST_ID)';
 		$this->_table_is_new_in_this_version($table_name,$sql, 'ENGINE=InnoDB');
 
-		EEH_Activation::drop_index( 'esp_question_group', 'QSG_identifier_UNIQUE' );
+		$this->_get_table_manager()->dropIndex( 'esp_question_group', 'QSG_identifier_UNIQUE' );
 
 		$table_name = 'esp_question_group';
 		$sql='QSG_ID INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -549,7 +556,7 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 
 		global $wpdb;
 		$state_table = $wpdb->prefix."esp_state";
-		if ( EEH_Activation::table_exists( $state_table ) ) {
+		if ( $this->_get_table_analysis()->tableExists( $state_table ) ) {
 
 			$SQL = "SELECT COUNT('STA_ID') FROM " . $state_table;
 			$states = $wpdb->get_var($SQL);
@@ -641,7 +648,7 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 
 		global $wpdb;
 		$country_table = $wpdb->prefix."esp_country";
-		if ( EEH_Activation::table_exists( $country_table ) ) {
+		if ( $this->_get_table_analysis()->tableExists( $country_table ) ) {
 
 			$SQL = "SELECT COUNT('CNT_ISO') FROM " . $country_table;
 			$countries = $wpdb->get_var($SQL);
@@ -893,7 +900,7 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 		global $wpdb;
 		$price_type_table = $wpdb->prefix."esp_price_type";
 
-		if ( EEH_Activation::table_exists( $price_type_table ) ) {
+		if ( $this->_get_table_analysis()->tableExists( $price_type_table ) ) {
 
 			$SQL = 'SELECT COUNT(PRT_ID) FROM ' . $price_type_table;
 			$price_types_exist = $wpdb->get_var( $SQL );
@@ -926,7 +933,7 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 		global $wpdb;
 		$price_table = $wpdb->prefix."esp_price";
 
-		if ( EEH_Activation::table_exists(  $price_table ) ) {
+		if ( $this->_get_table_analysis()->tableExists(  $price_table ) ) {
 
 			$SQL = 'SELECT COUNT(PRC_ID) FROM ' .$price_table;
 			$prices_exist = $wpdb->get_var( $SQL );
@@ -952,7 +959,7 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 
 		global $wpdb;
 		$ticket_table = $wpdb->prefix."esp_ticket";
-		if ( EEH_Activation::table_exists( $ticket_table ) ) {
+		if ( $this->_get_table_analysis()->tableExists( $ticket_table ) ) {
 
 			$SQL = 'SELECT COUNT(TKT_ID) FROM ' . $ticket_table;
 			$tickets_exist = $wpdb->get_var($SQL);
@@ -967,7 +974,7 @@ class EE_DMS_Core_4_1_0 extends EE_Data_Migration_Script_Base{
 		}
 		$ticket_price_table = $wpdb->prefix."esp_ticket_price";
 
-		if ( EEH_Activation::table_exists( $ticket_price_table ) ) {
+		if ( $this->_get_table_analysis()->tableExists( $ticket_price_table ) ) {
 
 			$SQL = 'SELECT COUNT(TKP_ID) FROM ' . $ticket_price_table;
 			$ticket_prc_exist = $wpdb->get_var($SQL);
