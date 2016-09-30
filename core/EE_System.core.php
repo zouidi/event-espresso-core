@@ -1,4 +1,7 @@
-<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
+<?php use EventEspresso\core\domain\services\capabilities\CapabilitiesChecker;
+use EventEspresso\core\services\action_items\ActionItemManager;
+
+if ( ! defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
 /**
  *
  * EE_System
@@ -778,10 +781,16 @@ final class EE_System {
 		// let's get it started
 		if ( ! is_admin() && ! EE_Maintenance_Mode::instance()->level() ) {
 			do_action( 'AHEE__EE_System__load_controllers__load_front_controllers' );
-			$this->registry->load_core( 'Front_Controller', array(), false, true );
+			$this->registry->load_core( 'Front_Controller' );
 		} else if ( ! EE_FRONT_AJAX ) {
 			do_action( 'AHEE__EE_System__load_controllers__load_admin_controllers' );
 			EE_Registry::instance()->load_core( 'Admin' );
+            $action_item_manager = new ActionItemManager(
+                new CapabilitiesChecker(
+                    EE_Registry::instance()->load_core( 'Capabilities' )
+                )
+            );
+            $action_item_manager->setConditionCheckHooks();
 		}
 		do_action( 'AHEE__EE_System__load_controllers__complete' );
 	}
