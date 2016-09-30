@@ -99,6 +99,8 @@ class CapabilitiesChecker
      * @param string $context    - what the user is attempting to do, like: 'Edit Registration'
      * @param int    $ID         - (optional) ID for item where current_user_can is being called from
      * @return bool
+     * @throws InvalidClassException
+     * @throws InsufficientPermissionsException
      */
     public function process($capability, $context, $ID = 0)
     {
