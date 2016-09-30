@@ -2,6 +2,8 @@
 namespace EventEspresso\core\services\commands\middleware;
 
 use EventEspresso\core\domain\services\capabilities\CapabilitiesChecker;
+use EventEspresso\core\exceptions\InsufficientPermissionsException;
+use EventEspresso\core\exceptions\InvalidClassException;
 use EventEspresso\core\services\commands\CommandInterface;
 use EventEspresso\core\services\commands\CommandRequiresCapCheckInterface;
 
@@ -49,6 +51,8 @@ class CapChecker implements CommandBusMiddlewareInterface
      * @param CommandInterface $command
      * @param \Closure         $next
      * @return mixed
+     * @throws InvalidClassException
+     * @throws InsufficientPermissionsException
      */
     public function handle(CommandInterface $command, \Closure $next)
     {
