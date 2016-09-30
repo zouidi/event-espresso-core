@@ -1,8 +1,7 @@
 <?php
 namespace EventEspresso\core\services\locators;
 
-use  EventEspresso\core\exceptions\InvalidDataTypeException;
-use FilesystemIterator;
+use EventEspresso\core\exceptions\InvalidDataTypeException;
 use GlobIterator;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
