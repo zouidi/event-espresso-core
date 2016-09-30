@@ -1841,13 +1841,25 @@ class Transactions_Admin_Page extends EE_Admin_Page {
 		}
 
 		//failed transactions
-		$failed = ( ! empty( $this->_req_data['status'] ) && $this->_req_data['status'] == 'failed' && ! $count ) || ( $count && $view == 'failed' ) ? TRUE: FALSE;
-		$abandoned = ( ! empty( $this->_req_data['status'] ) && $this->_req_data['status'] == 'abandoned' && ! $count ) || ( $count && $view == 'abandoned' ) ? TRUE: FALSE;
+		$failed = ( ! empty( $this->_req_data['status'] ) && $this->_req_data['status'] == 'failed' && ! $count )
+                  || ( $count && $view == 'failed' )
+            ? TRUE
+            : FALSE;
+		$abandoned = ( ! empty( $this->_req_data['status'] ) && $this->_req_data['status'] == 'abandoned' && ! $count )
+                || ( $count && $view == 'abandoned' )
+            ? TRUE
+            : FALSE;
+		$overpaid = ( ! empty( $this->_req_data['status'] ) && $this->_req_data['status'] == 'overpaid' && ! $count )
+                || ( $count && $view == 'overpaid' )
+            ? TRUE
+            : FALSE;
 
 		if ( $failed ) {
 			$_where[ 'STS_ID' ] = EEM_Transaction::failed_status_code;
 		} else if ( $abandoned ) {
 				$_where['STS_ID'] = EEM_Transaction::abandoned_status_code;
+		} else if ( $overpaid ) {
+				$_where['STS_ID'] = EEM_Transaction::overpaid_status_code;
 		} else {
 				$_where['STS_ID'] = array( '!=', EEM_Transaction::failed_status_code );
 				$_where['STS_ID*'] = array( '!=', EEM_Transaction::abandoned_status_code );
