@@ -29,7 +29,7 @@ class PostShortcodeTracking {
 		add_action(
 			'save_post',
 			array( 'EventEspresso\core\admin\PostShortcodeTracking', 'parse_post_content_on_save' ),
-			100,
+			10,
 			2
 		);
 		add_action(
