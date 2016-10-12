@@ -1184,7 +1184,6 @@ class EE_Registry {
 		$instance->CFG = EE_Config::reset( $hard, $reinstantiate );
 		$instance->CART = null;
 		$instance->MRM = null;
-		$instance->LIB = new stdClass();
 
 		//messages reset
 		EED_Messages::reset();
@@ -1194,6 +1193,8 @@ class EE_Registry {
 				$instance->reset_model( $model_name );
 			}
 		}
+
+		$instance->LIB = new stdClass();
 
 		return $instance;
 	}
