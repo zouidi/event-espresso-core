@@ -127,7 +127,7 @@ class EE_Message_Factory {
 	protected function _create( $props_n_values = array() ) {
 		return $this->_set_messenger_and_message_type(
 			EE_Message::new_instance( $props_n_values ),
-			! empty( $props_n_values['MSG_ID'] )
+			empty( $props_n_values['MSG_ID'] )
 		);
 	}
 
