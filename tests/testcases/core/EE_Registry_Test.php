@@ -282,29 +282,6 @@ class EE_Registry_Test extends EE_UnitTestCase{
 
 
 
-
-	/**
-	 * this tests that EE model object classes can be instantiated correctly
-	 *
-	 * @group                8284
-	 * @author                Brent Christensen
-	 */
-	// public function test_create_object_new_instance_from_db() {
-	// 	// let's attempt to load an instantiate an EE_Question object with ID=1
-	// 	require_once( EE_CLASSES . 'EE_Question.class.php' );
-	// 	$this->assertEquals( true, class_exists( 'EE_Question' ) );
-	// 	// now attempt instantiation
-	// 	$class_object = EE_Registry_Mock::instance()->create_object(
-	// 		'EE_Question',
-	// 		array( array( 'QST_ID' => 1 ) ),
-	// 		'class'
-	// 	);
-	// 	$this->assertEquals( true, $class_object instanceof EE_Question );
-	// 	$this->assertEquals( 1, $class_object->ID() );
-	// }
-
-
-
 	/**
 	 * this tests that EE model object classes can be instantiated correctly
 	 *
