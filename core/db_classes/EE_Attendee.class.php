@@ -10,7 +10,6 @@
  * @ license            {@link http://eventespresso.com/support/terms-conditions/}   * see Plugin Licensing *
  * @ link                    {@link http://www.eventespresso.com}
  * @ since                4.0
-
  */
 
 
@@ -527,7 +526,7 @@ class EE_Attendee extends EE_CPT_Base implements EEI_Contact, EEI_Address, EEI_A
      */
     public function get_most_recent_registration()
     {
-        return $this->get_first_related('Registration', array('order_by' => array('REG_date' => 'DESC'))); //null, 'REG_date', 'DESC', '=', 'OBJECT_K');
+        return $this->get_first_related('Registration', array('order_by' => array('REG_date' => 'DESC'))); 
     }
 
 
@@ -540,7 +539,11 @@ class EE_Attendee extends EE_CPT_Base implements EEI_Contact, EEI_Address, EEI_A
      */
     public function get_most_recent_registration_for_event($event_id)
     {
-        return $this->get_first_related('Registration', array(array('EVT_ID' => $event_id), 'order_by' => array('REG_date' => 'DESC')));//, '=', 'OBJECT_K' );
+        return $this->get_first_related(
+            'Registration',
+            array(array('EVT_ID' => $event_id), 'order_by' => array('REG_date' => 'DESC'))
+        );
+        
     }
 
 
@@ -559,10 +562,11 @@ class EE_Attendee extends EE_CPT_Base implements EEI_Contact, EEI_Address, EEI_A
 
     /**
      * Gets the billing info array where keys match espresso_reg_page_billing_inputs(),
-     * and keys are their cleaned values. @see EE_Attendee::save_and_clean_billing_info_for_payment_method() which was used to save the billing info
+     * and keys are their cleaned values. @see EE_Attendee::save_and_clean_billing_info_for_payment_method() which was
+     * used to save the billing info
      *
      * @param EE_Payment_Method $payment_method the _gateway_name property on the gateway class
-     * @return EE_Form_Section_Proper
+     * @return EE_Form_Section_Proper|null
      */
     public function billing_info_for_payment_method($payment_method)
     {
@@ -575,7 +579,9 @@ class EE_Attendee extends EE_CPT_Base implements EEI_Contact, EEI_Address, EEI_A
             return null;
         }
         $billing_form = $pm_type->billing_form();
-        $billing_form->receive_form_submission(array($billing_form->name() => $billing_info), false);
+        if ($billing_form instanceof EE_Form_Section_Proper) {
+            $billing_form->receive_form_submission(array($billing_form->name() => $billing_info), false);
+        }
         return $billing_form;
     }
 
@@ -600,7 +606,8 @@ class EE_Attendee extends EE_CPT_Base implements EEI_Contact, EEI_Address, EEI_A
 
 
     /**
-     * Saves the billing info to the attendee. @see EE_Attendee::billing_info_for_payment_method() which is used to retrieve it
+     * Saves the billing info to the attendee. @see EE_Attendee::billing_info_for_payment_method() which is used to
+     * retrieve it
      *
      * @param EE_Billing_Attendee_Info_Form $billing_form
      * @param EE_Payment_Method             $payment_method
@@ -613,7 +620,11 @@ class EE_Attendee extends EE_CPT_Base implements EEI_Contact, EEI_Address, EEI_A
             return false;
         }
         $billing_form->clean_sensitive_data();
-        return update_post_meta($this->ID(), $this->get_billing_info_postmeta_name($payment_method), $billing_form->input_values(true));
+        return update_post_meta(
+            $this->ID(),
+            $this->get_billing_info_postmeta_name($payment_method),
+            $billing_form->input_values(true)
+        );
     }
 
 

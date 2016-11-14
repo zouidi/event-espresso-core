@@ -47,22 +47,20 @@ abstract class EE_Base_Class
 
 
     /**
-     *    date format
-     *    pattern or format for displaying dates
+     * date format
+     * pattern or format for displaying dates
      *
-     * @access    protected
-     * @var string
+     * @var string $_dt_frmt
      */
     protected $_dt_frmt;
 
 
 
     /**
-     *    time format
-     *    pattern or format for displaying time
+     * time format
+     * pattern or format for displaying time
      *
-     * @access    protected
-     * @var string
+     * @var string $_tm_frmt
      */
     protected $_tm_frmt;
 
@@ -73,16 +71,16 @@ abstract class EE_Base_Class
      * The purpose of this is for setting a cache on properties that may have calculated values after a prepare_for_get.  That way the cache can be checked first and the calculated property returned instead of having to recalculate.
      * Used by _set_cached_property() and _get_cached_property() methods.
      *
-     * @access protected
-     * @type array
+     * @var array
      */
     protected $_cached_properties = array();
 
     /**
-     * An array containing keys of the related model, and values are either an array of related mode objects or a single related model object. see the model's _model_relations. The keys should match those specified. And if the relation is
-     * of type EE_Belongs_To (or one of its children), then there should only be ONE related model object, all others have an array)
+     * An array containing keys of the related model, and values are either an array of related mode objects or a single
+     * related model object. see the model's _model_relations. The keys should match those specified. And if the relation
+     * is of type EE_Belongs_To (or one of its children), then there should only be ONE related model object, all others have an array)
      *
-     * @type array EE_Base_Class[]
+     * @var array
      */
     protected $_model_relations = array();
 
@@ -90,7 +88,7 @@ abstract class EE_Base_Class
      * Array where keys are field names (see the model's _fields property) and values are their values. To see what
      * their types should be, look at what that field object returns on its prepare_for_get and prepare_for_set methods)
      *
-     * @type array EE_Model_Field_Base[]
+     * @var array
      */
     protected $_fields = array();
 
@@ -110,8 +108,14 @@ abstract class EE_Base_Class
      * @param array  $date_formats
      * @param bool   $bydb
      * @return \EE_Base_Class
+     * @throws \EE_Error
      */
-    public static function new_instance($fieldValues = array(), $timezone = '', $date_formats = array(), $bydb = false)
+    public static function new_instance(
+        array $fieldValues = array(),
+        $timezone = '',
+        array $date_formats = array(),
+        $bydb = false
+    )
     {
         $className = get_called_class();
         if ( ! $bydb) {
@@ -131,30 +135,24 @@ abstract class EE_Base_Class
      * @param string $timezone
      * @param array  $date_formats
      * @return \EE_Base_Class
+     * @throws \EE_Error
      */
-    public static function new_instance_from_db($fieldValues = array(), $timezone = '', $date_formats = array())
+    public static function new_instance_from_db(array $fieldValues = array(), $timezone = '', array $date_formats = array())
     {
         return static::new_instance($fieldValues, $timezone, $date_formats, true);
     }
 
 
-
     /**
-     * basic constructor for Event Espresso classes
-     * performs any necessary initialization, and verifies it's children play nice
+     * basic constructor for Event Espresso classes, performs any necessary initialization, and verifies it's children play nice
      *
-     * @param array   $fieldValues  where each key is a field
-     *                              (ie, array key in the 2nd layer of the model's _fields array,
-     *                              (eg, EVT_ID, TXN_amount, QST_name, etc) and values are their values
-     * @param boolean $bydb         a flag for setting if the class is instantiated
-     *                              by the corresponding db model or not.
-     * @param string  $timezone     indicate what timezone you want any datetime fields
-     *                              to be in when instantiating a EE_Base_Class object.
-     * @param array   $date_formats An array of date formats to set on construct where first
-     *                              value is the date_format and second value is the time
-     *                              format.
-     * @throws \EE_Error
-     * @throws \Exception
+     * @param array   $fieldValues                             where each key is a field (ie, array key in the 2nd layer of the model's _fields array, (eg, EVT_ID, TXN_amount, QST_name, etc) and values are their values
+     * @param boolean $bydb                                    a flag for setting if the class is instantiated by the corresponding db model or not.
+     * @param string  $timezone                                indicate what timezone you want any datetime fields to be in when instantiating a EE_Base_Class object.
+     * @param array   $date_formats                            An array of date formats to set on construct where first
+     *                                                         value is the date_format and second value is the time
+     *                                                         format.
+     * @throws EE_Error
      */
     protected function __construct($fieldValues = array(), $bydb = false, $timezone = '', $date_formats = array())
     {
@@ -164,6 +162,7 @@ abstract class EE_Base_Class
         $model_fields = $model->field_settings(false);
         // ensure $fieldValues is an array
         $fieldValues = is_array($fieldValues) ? $fieldValues : array($fieldValues);
+        // EEH_Debug_Tools::printr( $fieldValues, '$fieldValues  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span>', 'auto' );
         // verify client code has not passed any invalid field names
         foreach ($fieldValues as $field_name => $field_value) {
             if ( ! isset($model_fields[$field_name])) {
@@ -173,12 +172,11 @@ abstract class EE_Base_Class
         // EEH_Debug_Tools::printr( $model_fields, '$model_fields  <br /><span style="font-size:10px;font-weight:normal;">' . __FILE__ . '<br />line no: ' . __LINE__ . '</span>', 'auto' );
         $this->_timezone = EEH_DTT_Helper::get_valid_timezone_string($timezone);
         if ( ! empty($date_formats) && is_array($date_formats)) {
-            $this->_dt_frmt = $date_formats[0];
-            $this->_tm_frmt = $date_formats[1];
+            list($this->_dt_frmt, $this->_tm_frmt) = $date_formats;
         } else {
             //set default formats for date and time
-            $this->_dt_frmt = get_option('date_format');
-            $this->_tm_frmt = get_option('time_format');
+            $this->_dt_frmt = (string)get_option('date_format', 'Y-m-d');
+            $this->_tm_frmt = (string)get_option('time_format', 'g:i a');
         }
         //if db model is instantiating
         if ($bydb) {
@@ -1104,18 +1102,22 @@ abstract class EE_Base_Class
 
     /**
      * This simply returns the datetime for the given field name
-     * Note: this protected function is called by the wrapper get_date or get_time or get_datetime functions (and the equivalent e_date, e_time, e_datetime).
+     * Note: this protected function is called by the wrapper get_date or get_time or get_datetime functions
+     * (and the equivalent e_date, e_time, e_datetime).
      *
      * @access   protected
-     * @param  string  $field_name   Field on the instantiated EE_Base_Class child object
-     * @param null     $dt_frmt      valid datetime format used for date (if '' then we just use the default on the field, if NULL we use the last-used format)
-     * @param null     $tm_frmt      Same as above except this is for time format
+     * @param string   $field_name   Field on the instantiated EE_Base_Class child object
+     * @param string   $dt_frmt      valid datetime format used for date
+     *                               (if '' then we just use the default on the field,
+     *                               if NULL we use the last-used format)
+     * @param string   $tm_frmt      Same as above except this is for time format
      * @param string   $date_or_time if NULL then both are returned, otherwise "D" = only date and "T" = only time.
      * @param  boolean $echo         Whether the dtt is echoing using pretty echoing or just returned using vanilla get
-     * @return void | string | bool | EE_Error string on success, FALSE on fail, or EE_Error Exception is thrown if field is not a valid dtt field, or void if echoing
+     * @return void|string|bool|EE_Error string on success, FALSE on fail, or EE_Error Exception is thrown
+     *                               if field is not a valid dtt field, or void if echoing
      * @throws \EE_Error
      */
-    protected function _get_datetime($field_name, $dt_frmt = null, $tm_frmt = null, $date_or_time = null, $echo = false)
+    protected function _get_datetime($field_name, $dt_frmt = '', $tm_frmt = '', $date_or_time = '', $echo = false)
     {
         $in_dt_frmt = empty($dt_frmt) ? $this->_dt_frmt : $dt_frmt;
         $in_tm_frmt = empty($tm_frmt) ? $this->_tm_frmt : $tm_frmt;
@@ -1751,8 +1753,7 @@ abstract class EE_Base_Class
         $existing = null;
         if (self::_get_model($classname)->has_primary_key_field()) {
             $primary_id_ref = self::_get_primary_key_name($classname);
-            if (
-                array_key_exists($primary_id_ref, $props_n_values)
+            if (array_key_exists($primary_id_ref, $props_n_values)
                 && ! empty($props_n_values[$primary_id_ref])
             ) {
                 $existing = self::_get_model($classname, $timezone)->get_one_by_ID(
@@ -2592,14 +2593,29 @@ abstract class EE_Base_Class
         foreach ($this->get_model()->relation_settings() as $relation_name => $relation_obj) {
             if ($relation_obj instanceof EE_Belongs_To_Relation) {
                 $classname = 'EE_' . $this->get_model()->get_this_model_name();
-                if ($this->get_one_from_cache($relation_name) instanceof $classname
+                if (
+                    $this->get_one_from_cache($relation_name) instanceof $classname
                     && $this->get_one_from_cache($relation_name)->ID()
                 ) {
                     $this->clear_cache($relation_name, $this->get_one_from_cache($relation_name)->ID());
                 }
             }
         }
+        $this->_props_n_values_provided_in_constructor = array();
         return array_keys(get_object_vars($this));
+    }
+
+
+
+    /**
+     * restore _props_n_values_provided_in_constructor
+     * PLZ NOTE: this will reset the array to whatever fields values were present prior to serialization,
+     * and therefore should NOT be used to determine if state change has occurred since initial construction.
+     * At best, you would only be able to detect if state change has occurred during THIS request.
+     */
+    public function __wakeup()
+    {
+        $this->_props_n_values_provided_in_constructor = $this->_fields;
     }
 
 
