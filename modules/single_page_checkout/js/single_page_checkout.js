@@ -264,7 +264,8 @@ jQuery(document).ready( function($) {
 		 *	@function display_validation_errors
 		 */
 		display_validation_errors : function() {
-			//remove duplicates
+            // console.log(JSON.stringify('**display_validation_errors**', null, 4));
+            //remove duplicates
 			SPCO.require_values = _.unique( SPCO.require_values );
 			// no empty or invalid fields that need values ?
 			if ( SPCO.require_values.length > 0 ) {
@@ -387,25 +388,29 @@ jQuery(document).ready( function($) {
 		 * submit registration form - submit form and proceed to next step
 		 */
 		set_listener_for_process_next_reg_step_button : function() {
-			//console.log( JSON.stringify( '**set_listener_for_process_next_reg_step_button**', null, 4 ) );
+			// console.log( JSON.stringify( '**set_listener_for_process_next_reg_step_button**', null, 4 ) );
 			SPCO.main_container.on( 'click', '.spco-next-step-btn', function( e ) {
-				//console.log( JSON.stringify( 'SPCO spco-next-step-btn  >CLICK <', null, 4 ) );
+                // console.log(JSON.stringify('SPCO spco-next-step-btn  >CLICK <', null, 4));
+                // not disabled? you are NOW!!!
+                SPCO.disable_submit_buttons();
 				SPCO.current_form_to_validate = $(this).parents('form:first');
 				SPCO.form_is_valid = SPCO.current_form_to_validate.valid();
 				SPCO.main_container.trigger( 'process_next_step_button_click', [ $( this ) ] );
-				//console.log( JSON.stringify( 'SPCO FINISHED "process_next_step_button_click" event', null, 4 ) );
-				//console.log( JSON.stringify( 'SPCO.form_is_valid: ' + SPCO.form_is_valid, null, 4 ) );
-				//console.log( JSON.stringify( 'SPCO eei18n.ajax_submit: ' + eei18n.ajax_submit, null, 4 ) );
+				// console.log( JSON.stringify( 'SPCO FINISHED "process_next_step_button_click" event', null, 4 ) );
+				// console.log( JSON.stringify( 'SPCO.form_is_valid: ' + SPCO.form_is_valid, null, 4 ) );
+				// console.log( JSON.stringify( 'SPCO eei18n.ajax_submit: ' + eei18n.ajax_submit, null, 4 ) );
 				if ( ! SPCO.form_is_valid ){
-					SPCO.display_validation_errors();
+                    SPCO.display_validation_errors();
 				} else if ( eei18n.ajax_submit ) {
-					SPCO.process_next_step( this );
+				    // prevent any notices from re-enabling submit button
+                    SPCO.allow_enable_submit_buttons = false;
+                    SPCO.process_next_step( this );
 				}
-				if ( eei18n.ajax_submit ) {
-					e.preventDefault();
-					e.stopPropagation();
-				}
-			});
+                if (eei18n.ajax_submit) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            });
 			// set additional_post_data as empty string
 			SPCO.additional_post_data = '';
 		},
@@ -701,9 +706,14 @@ jQuery(document).ready( function($) {
 		 * @function enable_submit_buttons
 		 */
 		enable_submit_buttons : function() {
-			//console.log( JSON.stringify( '**enable_submit_buttons**', null, 4 ) );
+            if (! SPCO.allow_enable_submit_buttons) {
+                // console.log(JSON.stringify('** enable_submit_buttons NOT ALLOWED!!! **', null, 4));
+                return;
+            }
+            // console.log( JSON.stringify( '**enable_submit_buttons**', null, 4 ) );
 			$('.spco-next-step-btn').each( function() {
-				$(this).prop( 'disabled', false ).removeClass( 'disabled spco-disabled-submit-btn' );
+				$(this).prop('disabled', false).removeClass( 'disabled spco-disabled-submit-btn' );
+				// .css({'background': 'green'})
 			});
 		},
 
@@ -713,9 +723,10 @@ jQuery(document).ready( function($) {
 		 * @function disable_submit_buttons
 		 */
 		disable_submit_buttons : function() {
-			//console.log( JSON.stringify( '**disable_submit_buttons**', null, 4 ) );
+			// console.log( JSON.stringify( '**disable_submit_buttons**', null, 4 ) );
 			$('.spco-next-step-btn').each( function() {
-				$(this).prop( 'disabled', true ).addClass('disabled spco-disabled-submit-btn');
+				$(this).addClass('disabled spco-disabled-submit-btn').prop('disabled', true);
+				// .css({'background': 'red !important'})
 			});
 		},
 
@@ -727,18 +738,18 @@ jQuery(document).ready( function($) {
 		 *  @param {object} next_step_btn
 		 */
 		process_next_step : function( next_step_btn ) {
-			//console.log( JSON.stringify( '**SPCO.process_next_step()**', null, 4 ) );
+			// console.log( JSON.stringify( '**SPCO.process_next_step()**', null, 4 ) );
 			var step = $(next_step_btn).attr('rel');
 			// add trigger point so other JS can join the party
 			SPCO.main_container.trigger( 'process_next_step', [ step ] );
-			if ( typeof step !== 'undefined' && step !== '' && ! $(next_step_btn).hasClass('disabled') ) {
+			if ( typeof step !== 'undefined' && step !== '' ) {
 				var next_step = SPCO.get_next_step_slug( step );
-				//SPCO.console_log( 'process_next_step : step', step, true );
-				//SPCO.console_log( 'process_next_step : next_step', next_step, false );
+				// SPCO.console_log( 'process_next_step : step', step, true );
+				// SPCO.console_log( 'process_next_step : next_step', next_step, false );
 				// which form is being processed ?
 				var form_to_check = '#ee-spco-'+step+'-reg-step-form';
 				// not disabled? you are NOW!!!
-				SPCO.disable_submit_buttons();
+				// SPCO.disable_submit_buttons();
 				SPCO.submit_reg_form ( step, next_step, form_to_check );
 				return true;
 			}
@@ -768,16 +779,16 @@ jQuery(document).ready( function($) {
 		 */
 		submit_reg_form : function( step, next_step, form_to_check ) {
 
-			//console.log( JSON.stringify( '**SPCO.submit_reg_form()**', null, 4 ) );
-			//console.log( JSON.stringify( 'SPCO.allow_submit_reg_form: ' + SPCO.allow_submit_reg_form, null, 4 ) );
+			// console.log( JSON.stringify( '**SPCO.submit_reg_form()**', null, 4 ) );
+			// console.log( JSON.stringify( 'SPCO.allow_submit_reg_form: ' + SPCO.allow_submit_reg_form, null, 4 ) );
 			if ( ! ( eei18n.ajax_submit && SPCO.allow_submit_reg_form )) {
-				//console.log( JSON.stringify( 'NONE SHALL PASS !!!: ' + SPCO.allow_submit_reg_form, null, 4 ) );
+				// console.log( JSON.stringify( 'NONE SHALL PASS !!!: ' + SPCO.allow_submit_reg_form, null, 4 ) );
 				return;
 			}
 
-			//console.log( JSON.stringify( 'SPCO step: ' + step, null, 4 ) );
-			//console.log( JSON.stringify( 'next_step: ' + next_step, null, 4 ) );
-			//console.log( JSON.stringify( 'form_to_check: ' + form_to_check, null, 4 ) );
+			// console.log( JSON.stringify( 'SPCO step: ' + step, null, 4 ) );
+			// console.log( JSON.stringify( 'next_step: ' + next_step, null, 4 ) );
+			// console.log( JSON.stringify( 'form_to_check: ' + form_to_check, null, 4 ) );
 			var form_data = $( form_to_check ).serialize();
 			form_data += '&process_form_submission=1';
 			form_data += '&ee_front_ajax=1';
@@ -789,8 +800,7 @@ jQuery(document).ready( function($) {
 			form_data += '&e_reg_url_link=' + eei18n.e_reg_url_link;
 			form_data += SPCO.additional_post_data;
 
-
-			//console.log( '**SPCO SUBMIT REG FORM !!! ** form_data:' );
+			// console.log( '**SPCO SUBMIT REG FORM !!! ** form_data:' );
 		// alert( 'ajax_url = ' + eei18n.ajax_url + '\n' + 'step = ' + step + '\n' + 'next_step = ' + next_step + '\n' + 'form_data = ' + form_data );
 			// send form via AJAX POST
 			$.ajax({
@@ -809,14 +819,18 @@ jQuery(document).ready( function($) {
 				},
 
 				success: function( response ){
-					//SPCO.console_log( 'submit_reg_form : step', step, true );
+                    SPCO.allow_enable_submit_buttons = true;
+                    SPCO.enable_submit_buttons();
+                    //SPCO.console_log( 'submit_reg_form : step', step, true );
 					//SPCO.console_log( 'submit_reg_form : next_step', next_step, false );
 					//SPCO.console_log_object( 'submit_reg_form : response', response, 0 );
 					SPCO.process_response( next_step, response );
 				},
 
 				error: function() {
-					SPCO.submit_reg_form_server_error();
+                    SPCO.allow_enable_submit_buttons = true;
+                    SPCO.enable_submit_buttons();
+                    SPCO.submit_reg_form_server_error();
 				}
 
 			});
@@ -860,6 +874,8 @@ jQuery(document).ready( function($) {
 				},
 
 				success: function( response ){
+                    SPCO.allow_enable_submit_buttons = true;
+                    SPCO.enable_submit_buttons();
 //					SPCO.console_log( 'get_next_reg_step : next_step', next_step, true );
 //					SPCO.console_log_object( 'get_next_reg_step : response', response );
                     if ( typeof prev_response.success !== 'undefined' ) {
@@ -872,7 +888,9 @@ jQuery(document).ready( function($) {
 				},
 
 				error: function() {
-					return SPCO.submit_reg_form_server_error();
+                    SPCO.allow_enable_submit_buttons = true;
+                    SPCO.enable_submit_buttons();
+                    return SPCO.submit_reg_form_server_error();
 				}
 
 			});
@@ -922,7 +940,9 @@ jQuery(document).ready( function($) {
 				},
 
 				success: function( response ){
-					//SPCO.console_log_object( 'display_payment_method : response', response );
+                    SPCO.allow_enable_submit_buttons = true;
+                    SPCO.enable_submit_buttons();
+                    //SPCO.console_log_object( 'display_payment_method : response', response );
 					if ( typeof response !== 'undefined' && typeof response === 'object' ) {
 						if ( typeof response.return_data === 'undefined' || typeof response.return_data !== 'object' ) {
 							response.return_data = {};
@@ -936,7 +956,9 @@ jQuery(document).ready( function($) {
 				},
 
 				error: function() {
-					return SPCO.submit_reg_form_server_error();
+                    SPCO.allow_enable_submit_buttons = true;
+                    SPCO.enable_submit_buttons();
+                    return SPCO.submit_reg_form_server_error();
 				}
 
 			});
@@ -951,8 +973,8 @@ jQuery(document).ready( function($) {
 		 * @param  {object} response
 		 */
 		process_response : function( next_step, response ) {
-			SPCO.allow_enable_submit_buttons = true;
-			//clear additional_post_data
+            // SPCO.console_log( 'response', response, true );
+            //clear additional_post_data
 			SPCO.additional_post_data = '';
 			// alert( 'next_step = ' + next_step );
 			if ( typeof response === 'object' ) {
@@ -1017,6 +1039,7 @@ jQuery(document).ready( function($) {
 				SPCO.scroll_to_top_and_display_messages( SPCO.main_container, msg, true  );
 			}
 			$( '.hide-if-no-js' ).removeClass( 'hide-if-no-js' );
+
 		},
 
 
@@ -1171,7 +1194,8 @@ jQuery(document).ready( function($) {
 		 * @param  {boolean} end_ajax
 		 */
 		scroll_to_top_and_display_messages : function( item, msg, end_ajax ) {
-			//SPCO.console_log_object( 'scroll_to_top_and_display_messages msg', msg.success, 0 );
+            // console.log(JSON.stringify('**scroll_to_top_and_display_messages**', null, 4));
+            //SPCO.console_log_object( 'scroll_to_top_and_display_messages msg', msg.success, 0 );
 			// is message display being overridden by some other JS ?
 			if ( SPCO.override_messages ) {
 				return;
@@ -1202,7 +1226,7 @@ jQuery(document).ready( function($) {
 		 * @param  {boolean} end_ajax
 		 */
 		display_messages : function( msg, end_ajax ){
-//			SPCO.console_log_object( 'display_messages : msg' + ' = ', msg );
+			// SPCO.console_log_object( 'display_messages : msg' + ' = ', msg );
             if ( typeof msg.return_data !== 'undefined' && typeof msg.return_data.success !== 'undefined' && msg.return_data.success ) {
                 msg.success = typeof msg.success !== 'undefined' && msg.success ? msg.return_data.success + '<br />' + msg.success : msg.return_data.success;
             }
@@ -1225,7 +1249,8 @@ jQuery(document).ready( function($) {
 		 * @param  {boolean} end_ajax
 		 */
 		show_event_queue_ajax_msg : function( type, msg, fadeOut, end_ajax ) {
-			// does an actual message exist ?
+            // console.log(JSON.stringify('**scroll_to_top_and_display_messages**', null, 4));
+            // does an actual message exist ?
 			if ( typeof msg !== 'undefined' && msg !== '' ) {
 				// ensure message type is set
 				var msg_type = typeof type !== 'undefined' && type !== '' ? type : 'error';
@@ -1247,9 +1272,7 @@ jQuery(document).ready( function($) {
 				// bye bye spinner
 				SPCO.end_ajax();
 			}
-			if ( SPCO.allow_enable_submit_buttons ) {
-				SPCO.enable_submit_buttons();
-			}
+            SPCO.enable_submit_buttons();
 		},
 
 
