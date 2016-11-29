@@ -191,6 +191,7 @@ jQuery(document).ready( function($) {
                     SPCO.form_is_valid = true;
                     SPCO.set_listener_for_display_payment_method();
                     SPCO.set_listener_for_payment_amount_change();
+                    SPCO.set_listener_for_successful_payment_notification();
                 }
                 SPCO.initialize_form(current_step, reinit);
                 SPCO.initialized_reg_steps[SPCO.current_step] = true;
@@ -572,12 +573,25 @@ jQuery(document).ready( function($) {
          * @function set_listener_for_payment_amount_change
          */
         set_listener_for_payment_amount_change: function () {
-            //console.log( JSON.stringify( '**SPCO.set_listener_for_payment_amount_change**', null, 4 ) );
+            console.log( JSON.stringify( '**SPCO.set_listener_for_payment_amount_change**', null, 4 ) );
             SPCO.main_container.on('spco_payment_amount', function (event, payment_amount) {
-                // console.log( JSON.stringify( 'payment_amount: ' + payment_amount, null, 4 ) );
+                console.log( JSON.stringify( 'payment_amount: ' + payment_amount, null, 4 ) );
                 if (parseInt(payment_amount) === 0) {
                     SPCO.remove_billing_forms();
                 }
+            });
+        },
+
+
+        /**
+         * @function set_listener_for_successful_payment_notification
+         */
+        set_listener_for_successful_payment_notification: function () {
+            // console.log('**SPCO.set_listener_for_successful_payment_notification**');
+            SPCO.main_container.on('successful_payment_notification', function (event) {
+                console.log('successful_payment_notification');
+                SPCO.allow_enable_submit_buttons = true;
+                SPCO.enable_submit_buttons('successful_payment_notification');
             });
         },
 
@@ -1114,7 +1128,7 @@ jQuery(document).ready( function($) {
                 } else if ( typeof response.redirect_url !== 'undefined' && response.redirect_url !== '' ) {
 					$( '#espresso-ajax-loading' ).show();
 					// redirect browser
-                    alert('window.location = ' + response.redirect_url);
+                    // alert('window.location = ' + response.redirect_url);
                     window.location.replace( response.redirect_url );
                 } else if ( typeof response.attention !== 'undefined' ) {
                     // Achtung Baby!!!
