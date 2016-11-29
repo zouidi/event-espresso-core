@@ -549,8 +549,6 @@ jQuery(document).ready( function($) {
             // console.log(JSON.stringify('SPCO form_is_valid: ' + SPCO.form_is_valid, null, 4));
             if (SPCO.form_is_valid) {
                 SPCO.enable_submit_buttons('validate_form');
-            } else {
-                SPCO.disable_submit_buttons();
             }
             SPCO.form_validation_in_progress = false;
             // console.log('***** END FORM VALIDATION *****');
