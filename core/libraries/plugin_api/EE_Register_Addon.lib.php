@@ -47,6 +47,11 @@ class EE_Register_Addon implements EEI_Plugin_API {
 	 */
 	protected static $_incompatible_addons = array(
 		'Promotions' => '1.0.0.rc.084',
+		'Stripe_Gateway' => '1.0.15.rc.000',
+		'Braintree_Gateway' => '1.0.4.rc.000',
+		'Vanco_Payment_Method' => '1.0.5.rc.000',
+		'PayFort' => '1.0.0.rc.000',
+		'QuickBooks_Gateway' => '1.0.1.rc.001',
 	);
 
 
