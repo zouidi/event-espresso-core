@@ -1263,6 +1263,7 @@ class EED_Single_Page_Checkout extends EED_Module
      */
     public function translate_js_strings()
     {
+        EE_Registry::$i18n_js_strings['current_step'] = $this->checkout->current_step->slug();
         EE_Registry::$i18n_js_strings['revisit'] = $this->checkout->revisit;
         EE_Registry::$i18n_js_strings['e_reg_url_link'] = $this->checkout->reg_url_link;
         EE_Registry::$i18n_js_strings['server_error'] = __('An unknown error occurred on the server while attempting to process your request. Please refresh the page and try again or contact support.', 'event_espresso');
