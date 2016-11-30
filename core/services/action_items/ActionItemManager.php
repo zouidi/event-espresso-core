@@ -52,7 +52,7 @@ class ActionItemManager
 
 
     /**
-     * @return Collection|null
+     * @return Collection
      * @throws \EventEspresso\core\exceptions\InvalidIdentifierException
      * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
      * @throws \EventEspresso\core\exceptions\InvalidFilePathException
