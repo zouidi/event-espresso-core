@@ -207,7 +207,7 @@ jQuery(document).ready( function($) {
         initialize_form : function(current_step, reinit) {
             // console.log('**initialize_form**');
             if (reinit) {
-                SPCO.form_inputs.off('blur');
+                SPCO.form_inputs.off('input');
                 SPCO.main_container.off('change', 'select');
             }
             var form_to_check = '#ee-spco-' + current_step + '-reg-step-form';
@@ -507,7 +507,7 @@ jQuery(document).ready( function($) {
 		 */
 		set_listener_for_input_validation_value_change : function() {
             // console.log( JSON.stringify( '**set_listener_for_input_validation_value_change**', null, 4 ) );
-            SPCO.form_inputs.on('blur', function() {
+            SPCO.form_inputs.on('input', function() {
                 // SPCO.console_log( ' > validate input', $(this ).attr('id'), false );
                 $(this).val( $.trim( $(this).val() ) );
                 if ( $(this).valid() ) {
@@ -523,7 +523,7 @@ jQuery(document).ready( function($) {
 		 */
 		set_listener_for_datepicker_change : function() {
             // console.log(JSON.stringify('**set_listener_for_datepicker_change**', null, 4));
-            SPCO.main_container.on('change', '.datepicker', function () {
+            SPCO.main_container.on('input', '.datepicker', function () {
                 SPCO.console_log(' > validate input', $(this).attr('id'), false);
                 if ( $(this).valid() ) {
                     SPCO.validate_form($(this));
