@@ -72,7 +72,12 @@ jQuery(document).ready(function($) {
 					eei18n.ajax_submit = true;
 					SPCO.override_messages = false;
 					SPCO.reset_offset_from_top_modifier();
-					EE_RECAPTCHA.display_error( SPCO.tag_message_for_debugging( 'EE_RECAPTCHA.process_next_step_button_click() error', eei18n.recaptcha_fail ) );
+					EE_RECAPTCHA.display_error(
+					    SPCO.tag_message_for_debugging(
+					        'EE_RECAPTCHA.process_next_step_button_click() error',
+                            eei18n.recaptcha_fail
+                        )
+                    );
 				} else {
 					eei18n.ajax_submit = EE_RECAPTCHA.not_a_robot;
 				}
@@ -181,6 +186,7 @@ var espresso_recaptcha_verification = function( response ) {
 				}
 			).appendTo( SPCO.main_container.find('form') );
 			EE_RECAPTCHA.submitted = true;
+            SPCO.enable_submit_buttons('recaptcha');
 		}
 	});
 };
