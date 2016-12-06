@@ -129,6 +129,8 @@ jQuery(document).ready( function($) {
 		display_debug : eei18n.wp_debug,
 		// allow submit buttons to be enabled?
 		allow_enable_submit_buttons : true,
+		// are the submit buttons currently enabled?
+		submit_buttons_enabled : true,
 		// allow reg form to be submitted?
 		allow_submit_reg_form : true,
 		// whether entire form or individual inputs are being validated
@@ -222,10 +224,7 @@ jQuery(document).ready( function($) {
             SPCO.set_listener_for_datepicker_change();
             if (SPCO.form_is_valid) {
                 SPCO.enable_submit_buttons('initialize_form');
-            } else {
-                SPCO.disable_submit_buttons();
             }
-
         },
 
 
@@ -461,18 +460,17 @@ jQuery(document).ready( function($) {
                 // console.log('SPCO spco-next-step-btn  > CLICK <');
                 // not disabled? you are NOW!!!
                 SPCO.disable_submit_buttons();
+                // prevent any notices from re-enabling submit button
                 SPCO.allow_enable_submit_buttons = false;
                 SPCO.validate_form($(this));
-                SPCO.allow_enable_submit_buttons = true;
                 SPCO.main_container.trigger( 'process_next_step_button_click', [ $(this) ] );
 				// console.log( JSON.stringify( 'SPCO FINISHED "process_next_step_button_click" event', null, 4 ) );
 				// console.log('SPCO.form_is_valid: ' + SPCO.form_is_valid);
 				// console.log( JSON.stringify( 'SPCO eei18n.ajax_submit: ' + eei18n.ajax_submit, null, 4 ) );
 				if ( ! SPCO.form_is_valid ){
+                    SPCO.allow_enable_submit_buttons = true;
                     SPCO.display_validation_errors();
 				} else if ( eei18n.ajax_submit ) {
-				    // prevent any notices from re-enabling submit button
-                    SPCO.allow_enable_submit_buttons = false;
                     // console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!! allow_enable_submit_buttons DISABLED !!!!!!!!!!!!!!!!!!!!!!!!!!!!');
                     SPCO.process_next_step( this );
 				}
@@ -510,7 +508,7 @@ jQuery(document).ready( function($) {
             SPCO.form_inputs.on('input', function() {
                 // SPCO.console_log( ' > validate input', $(this ).attr('id'), false );
                 $(this).val( $.trim( $(this).val() ) );
-                if ( $(this).valid() ) {
+                if ( $(this).valid() && SPCO.submit_buttons_enabled === false ) {
                     SPCO.validate_form($(this));
                 }
             });
@@ -525,7 +523,7 @@ jQuery(document).ready( function($) {
             // console.log(JSON.stringify('**set_listener_for_datepicker_change**', null, 4));
             SPCO.main_container.on('input', '.datepicker', function () {
                 SPCO.console_log(' > validate input', $(this).attr('id'), false);
-                if ( $(this).valid() ) {
+                if ( $(this).valid() && SPCO.submit_buttons_enabled === false ) {
                     SPCO.validate_form($(this));
                 }
             });
@@ -850,7 +848,8 @@ jQuery(document).ready( function($) {
 			$('.spco-next-step-btn').each( function() {
 				$(this).prop('disabled', false).removeClass( 'disabled spco-disabled-submit-btn' ).css({'background': 'green'});
 				// .css({'background': 'green'})
-			});
+                SPCO.submit_buttons_enabled = true;
+            });
 		},
 
 
@@ -863,6 +862,7 @@ jQuery(document).ready( function($) {
 			$('.spco-next-step-btn').each( function() {
 				$(this).addClass('disabled spco-disabled-submit-btn').prop('disabled', true).css({'background': 'red !important'});
 				// .css({'background': 'red !important'})
+                SPCO.submit_buttons_enabled = false;
 			});
 		},
 
