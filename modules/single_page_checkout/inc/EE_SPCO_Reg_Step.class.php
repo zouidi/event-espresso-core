@@ -508,7 +508,11 @@ abstract class EE_SPCO_Reg_Step {
 			'default'							=> $this->submit_button_text()
 		));
 		$sbmt_btn->set_button_css_attributes( TRUE, 'large' );
-		$sbmt_btn_html = $sbmt_btn->get_html_for_input();
+		$sbmt_btn_html = EEH_HTML::p(
+		    __('Please correct form validation errors before proceeding', 'event_espresso'),
+            '', 'spco-invalid-form-notice-spn important-notice', 'display:none;'
+        );
+		$sbmt_btn_html .= $sbmt_btn->get_html_for_input();
 		$html .= EEH_HTML::div(
 			apply_filters( 'FHEE__EE_SPCO_Reg_Step__reg_step_submit_button__sbmt_btn_html', $sbmt_btn_html, $this ),
 			'spco-' . $this->slug() . '-whats-next-buttons-dv',
