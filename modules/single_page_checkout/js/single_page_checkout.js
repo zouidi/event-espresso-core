@@ -64,6 +64,9 @@ jQuery(document).ready( function($) {
 	*     registration_expiration_notice: string,
 	*     ajax_submit: bool,
 	*     current_step: string
+	*     empty_cart: boolean,
+	*     session_extension: number,
+	*     session_expiration: number,
 	*  }}
 	* @namespace response
 	* @type {{
@@ -143,15 +146,20 @@ jQuery(document).ready( function($) {
 		form_is_valid : false,
         // amount to be paid during this TXN
 		payment_amount : 0,
+		// container for displaying how much time is left to complete registration
+		registration_time_limit : $( '#spco-registration-time-limit-spn' ),
+		// timestamp for when the session expires
+		//registration_session_expiration : new Date( Date.parse( $( '#spco-registration-expiration-spn' ).html() ) ),
+		registration_session_expiration : new Date( Date.parse( eei18n.session_expiration ) ),
 		// AJAX notice fadeout times
 		notice_fadeout_success : 6000,
-		notice_fadeout_attention : 10000,
-		notice_fadeout_errors : 10000,
+		notice_fadeout_attention : 18000,
+		notice_fadeout_errors : 12000,
 		notice_fadeout_min : 4000,
 
 
 
-		/********** INITIAL SETUP **********/
+	/********** INITIAL SETUP **********/
 
 
 
@@ -626,26 +634,16 @@ jQuery(document).ready( function($) {
 
 
 		/**
-		 * @function display_registration_expiration_notice
-		 */
-		display_registration_expiration_notice : function() {
-			SPCO.main_container.slideUp().html( eei18n.registration_expiration_notice ).slideDown();
-		},
-
-
-
-		/**
 		 * @function start_registration_time_limit_countdown
 		 */
 		start_registration_time_limit_countdown : function() {
-			var $registration_time_limit = $('#spco-registration-time-limit-spn');
-			if ( $registration_time_limit.length > 0 ) {
-				var expiration = new Date(Date.parse( $('#spco-registration-expiration-spn').html() ));
-				var layout = (( new Date() ) - expiration ) < ( 60 * 60 * 1000 )
-                    ? '{m<}{mnn}{sep}{m>}{s<}{snn}{s>} {ml}'
-                    : '{h<}{hnn}{sep}{h>}{m<}{mnn}{sep}{m>}{s<}{snn}{s>} {hl}';
-				//alert( '$registration_time_limit = ' + $registration_time_limit.html() + '\n' + 'expiration = ' + expiration );
-				$registration_time_limit.countdown({
+			if ( SPCO.registration_time_limit.length > 0 && parseInt( eei18n.empty_cart ) !== 1 && parseInt( eei18n.revisit ) !== 1 ) {
+				$( '#spco-registration-time-limit-pg' ).show();
+				//SPCO.registration_session_expiration = new Date(Date.parse( $('#spco-registration-expiration-spn').html() ));
+				var layout = (( new Date() ) - SPCO.registration_session_expiration ) < ( 60 * 60 * 1000 )
+					? '{m<}{mnn}{sep}{m>}{s<}{snn}{s>} {ml}'
+					: '{h<}{hnn}{sep}{h>}{m<}{mnn}{sep}{m>}{s<}{snn}{s>} {hl}';
+				SPCO.registration_time_limit.countdown({
 					labels: [
 					    eei18n.timer_years,
                         eei18n.timer_months,
@@ -664,12 +662,19 @@ jQuery(document).ready( function($) {
                         eei18n.timer_minute,
                         eei18n.timer_second
                     ],
-					until: expiration,
+					until: SPCO.registration_session_expiration,
 					layout: layout,
-					onExpiry: SPCO.display_registration_expiration_notice()
+					onExpiry: function() {
+						if ( SPCO.registration_session_expiration < new Date() ) {
+							SPCO.main_container.slideUp( function() {
+								SPCO.main_container.html( eei18n.registration_expiration_notice ).slideDown();
+							} );
+						}
+					}
 				});
 			}
 		},
+
 
 
 
@@ -898,7 +903,13 @@ jQuery(document).ready( function($) {
 			var step = $(next_step_btn).attr('rel');
             // add trigger point so other JS can join the party
 			SPCO.main_container.trigger( 'process_next_step', [ step ] );
-			if ( typeof step !== 'undefined' && step !== '' ) {
+			if ( typeof step !== 'undefined' && step !== '' && ! $(next_step_btn).hasClass('disabled') ) {
+				if ( step === 'payment_options' ) {
+					// add time to session expiration (defaults to +10 minutes)
+					SPCO.registration_session_expiration = SPCO.registration_session_expiration.setTime(
+						SPCO.registration_session_expiration.getTime() + ( parseInt( eei18n.session_extension ) * 1000 )
+					);
+				}
 				var next_step = SPCO.get_next_step_slug( step );
                 // SPCO.console_log( 'process_next_step : step', step, true );
 				// SPCO.console_log( 'process_next_step : next_step', next_step, false );
