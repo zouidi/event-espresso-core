@@ -469,6 +469,7 @@ jQuery(document).ready( function($) {
 				// console.log( JSON.stringify( 'SPCO eei18n.ajax_submit: ' + eei18n.ajax_submit, null, 4 ) );
 				if ( ! SPCO.form_is_valid ){
                     SPCO.allow_enable_submit_buttons = true;
+                    SPCO.display_invalid_form_notice();
                     SPCO.display_validation_errors();
 				} else if ( eei18n.ajax_submit ) {
                     // console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!! allow_enable_submit_buttons DISABLED !!!!!!!!!!!!!!!!!!!!!!!!!!!!');
@@ -481,6 +482,24 @@ jQuery(document).ready( function($) {
             });
 			// set additional_post_data as empty string
 			SPCO.additional_post_data = '';
+		},
+
+
+
+		/**
+		 * @function display_invalid_form_notice
+		 */
+		display_invalid_form_notice : function() {
+		    $('.spco-invalid-form-notice-spn').slideDown();
+		},
+
+
+
+		/**
+		 * @function hide_invalid_form_notice
+		 */
+        hide_invalid_form_notice : function() {
+		    $('.spco-invalid-form-notice-spn').slideUp();
 		},
 
 
@@ -546,6 +565,7 @@ jQuery(document).ready( function($) {
             SPCO.form_is_valid = SPCO.current_form_to_validate.valid();
             // console.log(JSON.stringify('SPCO form_is_valid: ' + SPCO.form_is_valid, null, 4));
             if (SPCO.form_is_valid) {
+                SPCO.hide_invalid_form_notice();
                 SPCO.enable_submit_buttons('validate_form');
             }
             SPCO.form_validation_in_progress = false;
