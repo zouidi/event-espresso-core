@@ -174,6 +174,7 @@ jQuery(document).ready( function($) {
                 // console.log('current_step: ' + current_step);
                 reinit = typeof reinit !== 'undefined' ? reinit : false;
                 if( ! reinit) {
+                    // console.log('**initialize validation**');
                     SPCO.disable_caching();
                     SPCO.set_validation_defaults();
                     SPCO.initialize_form_validation();
@@ -181,7 +182,6 @@ jQuery(document).ready( function($) {
                     SPCO.set_listener_for_process_next_reg_step_button();
                     SPCO.auto_submit_gateway_form();
                     SPCO.start_registration_time_limit_countdown();
-
                 }
                 if (
                     SPCO.current_step === 'attendee_information'
@@ -480,7 +480,7 @@ jQuery(document).ready( function($) {
                     SPCO.display_invalid_form_notice();
                     SPCO.display_validation_errors();
 				} else if ( eei18n.ajax_submit ) {
-                    // console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!! allow_enable_submit_buttons DISABLED !!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+                    // console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!! PROCESS_NEXT_STEP !!!!!!!!!!!!!!!!!!!!!!!!!!!!');
                     SPCO.process_next_step( this );
 				}
                 if (eei18n.ajax_submit) {
@@ -549,7 +549,7 @@ jQuery(document).ready( function($) {
 		set_listener_for_datepicker_change : function() {
             // console.log(JSON.stringify('**set_listener_for_datepicker_change**', null, 4));
             SPCO.main_container.on('input', '.datepicker', function () {
-                SPCO.console_log(' > validate input', $(this).attr('id'), false);
+                // SPCO.console_log(' > validate input', $(this).attr('id'), false);
                 if ( $(this).valid() && SPCO.submit_buttons_enabled === false ) {
                     SPCO.validate_form($(this));
                 }
@@ -597,9 +597,9 @@ jQuery(document).ready( function($) {
          * @function set_listener_for_payment_amount_change
          */
         set_listener_for_payment_amount_change: function () {
-            console.log( JSON.stringify( '**SPCO.set_listener_for_payment_amount_change**', null, 4 ) );
+            // console.log( JSON.stringify( '**SPCO.set_listener_for_payment_amount_change**', null, 4 ) );
             SPCO.main_container.on('spco_payment_amount', function (event, payment_amount) {
-                console.log( JSON.stringify( 'payment_amount: ' + payment_amount, null, 4 ) );
+                // console.log( JSON.stringify( 'payment_amount: ' + payment_amount, null, 4 ) );
                 if (parseInt(payment_amount) === 0) {
                     SPCO.remove_billing_forms();
                 }
@@ -613,7 +613,7 @@ jQuery(document).ready( function($) {
         set_listener_for_successful_payment_notification: function () {
             // console.log('**SPCO.set_listener_for_successful_payment_notification**');
             SPCO.main_container.on('successful_payment_notification', function (event) {
-                console.log('successful_payment_notification');
+                // console.log('successful_payment_notification');
                 SPCO.allow_enable_submit_buttons = true;
                 SPCO.enable_submit_buttons('successful_payment_notification');
             });
@@ -901,9 +901,11 @@ jQuery(document).ready( function($) {
 		process_next_step : function( next_step_btn ) {
 			// console.log( JSON.stringify( '**SPCO.process_next_step()**', null, 4 ) );
 			var step = $(next_step_btn).attr('rel');
+            // SPCO.console_log('process_next_step : step', step, true);
+            // SPCO.console_log('process_next_step : $(next_step_btn).hasClass(disabled)', $(next_step_btn).hasClass('disabled'), false);
             // add trigger point so other JS can join the party
 			SPCO.main_container.trigger( 'process_next_step', [ step ] );
-			if ( typeof step !== 'undefined' && step !== '' && ! $(next_step_btn).hasClass('disabled') ) {
+			if ( typeof step !== 'undefined' && step !== '' ) {
 				if ( step === 'payment_options' ) {
 					// add time to session expiration (defaults to +10 minutes)
 					SPCO.registration_session_expiration = SPCO.registration_session_expiration.setTime(
@@ -911,7 +913,6 @@ jQuery(document).ready( function($) {
 					);
 				}
 				var next_step = SPCO.get_next_step_slug( step );
-                // SPCO.console_log( 'process_next_step : step', step, true );
 				// SPCO.console_log( 'process_next_step : next_step', next_step, false );
 				SPCO.submit_reg_form ( step, next_step );
 				return true;
