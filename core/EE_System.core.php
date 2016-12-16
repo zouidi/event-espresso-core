@@ -905,9 +905,15 @@ final class EE_System
      *
      * @access public
      * @return void
+     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
      */
     public function core_loaded_and_ready()
     {
+        new \EventEspresso\core\services\automated_actions\AutomatedActionManager(
+            new \EventEspresso\core\domain\services\capabilities\CapabilitiesChecker(
+                $this->registry->CAP
+            )
+        );
         do_action('AHEE__EE_System__core_loaded_and_ready');
         do_action('AHEE__EE_System__set_hooks_for_shortcodes_modules_and_addons');
         $this->registry->load_core('Session');
