@@ -3,7 +3,7 @@ namespace EventEspresso\core\services\automated_actions;
 
 use DomainException;
 use EventEspresso\core\exceptions\InvalidInterfaceException;
-use EventEspresso\core\services\conditional_logic\rules\QueryGenerator;
+use EventEspresso\core\services\conditional_logic\rules\QueryParamGenerator;
 
 defined('ABSPATH') || exit;
 
@@ -26,7 +26,7 @@ class AutomatedActionFactory
     protected static $cron_manager;
 
     /**
-     * @var QueryGenerator $query_generator
+     * @var QueryParamGenerator $query_generator
      */
     protected static $query_generator;
 
@@ -47,13 +47,13 @@ class AutomatedActionFactory
 
 
     /**
-     * @return QueryGenerator
+     * @return QueryParamGenerator
      * @throws InvalidInterfaceException
      */
     public static function getQueryGenerator()
     {
-        if (! AutomatedActionFactory::$query_generator instanceof QueryGenerator) {
-            AutomatedActionFactory::$query_generator = new QueryGenerator();
+        if (! AutomatedActionFactory::$query_generator instanceof QueryParamGenerator) {
+            AutomatedActionFactory::$query_generator = new QueryParamGenerator();
         }
         return AutomatedActionFactory::$query_generator;
     }

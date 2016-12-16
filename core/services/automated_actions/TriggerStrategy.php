@@ -5,7 +5,7 @@ use EventEspresso\core\exceptions\InvalidEntityException;
 use EventEspresso\core\exceptions\InvalidInterfaceException;
 use EventEspresso\core\services\Benchmark;
 use EventEspresso\core\services\collections\Collection;
-use EventEspresso\core\services\conditional_logic\rules\QueryGenerator;
+use EventEspresso\core\services\conditional_logic\rules\QueryParamGenerator;
 use EventEspresso\core\services\conditional_logic\rules\Rule;
 
 defined('ABSPATH') || exit;
@@ -24,7 +24,7 @@ abstract class TriggerStrategy
 {
 
     /**
-     * @var QueryGenerator $query_generator
+     * @var QueryParamGenerator $query_generator
      */
     private $query_generator;
 
@@ -52,11 +52,12 @@ abstract class TriggerStrategy
 
     /**
      * TriggerStrategy constructor
+
      *
-     * @param QueryGenerator $query_generator
+*@param QueryParamGenerator $query_generator
      * @throws InvalidInterfaceException
      */
-    public function __construct(QueryGenerator $query_generator)
+    public function __construct(QueryParamGenerator $query_generator)
     {
         Benchmark::startTimer(__METHOD__);
         $this->query_generator = $query_generator;
