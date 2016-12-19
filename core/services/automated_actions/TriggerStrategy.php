@@ -1,12 +1,12 @@
 <?php
 namespace EventEspresso\core\services\automated_actions;
 
+use DomainException;
 use EventEspresso\core\exceptions\InvalidEntityException;
 use EventEspresso\core\exceptions\InvalidInterfaceException;
-use EventEspresso\core\services\Benchmark;
 use EventEspresso\core\services\collections\Collection;
-use EventEspresso\core\services\conditional_logic\rules\QueryParamGenerator;
-use EventEspresso\core\services\conditional_logic\rules\Rule;
+use EventEspresso\core\services\conditional_logic\rules\RuleManager;
+use InvalidArgumentException;
 
 defined('ABSPATH') || exit;
 
@@ -24,9 +24,9 @@ abstract class TriggerStrategy
 {
 
     /**
-     * @var QueryParamGenerator $query_generator
+     * @var RuleManager $rule_manager
      */
-    private $query_generator;
+    private $rule_manager;
 
     /**
      * @var AutomatedActionInterface $automated_action
@@ -51,19 +51,16 @@ abstract class TriggerStrategy
 
 
     /**
-     * TriggerStrategy constructor
-
+     * TriggerStrategy constructor.
      *
-*@param QueryParamGenerator $query_generator
-     * @throws InvalidInterfaceException
+     * @param RuleManager $rule_manager
      */
-    public function __construct(QueryParamGenerator $query_generator)
+    public function __construct(RuleManager $rule_manager)
     {
-        Benchmark::startTimer(__METHOD__);
-        $this->query_generator = $query_generator;
-        $this->rules = new Collection('EventEspresso\core\services\conditional_logic\rules\Rule');
-        Benchmark::stopTimer(__METHOD__);
+        $this->rule_manager = $rule_manager;
     }
+
+
 
     /**
      * @return AutomatedActionInterface
@@ -127,10 +124,34 @@ abstract class TriggerStrategy
 
     /**
      * @return Collection
+     * @throws InvalidArgumentException
+     * @throws InvalidInterfaceException
+     * @throws InvalidEntityException
+     * @throws DomainException
      */
     public function getRules()
     {
+        if ($this->rules === null) {
+            $this->setRules();
+        }
         return $this->rules;
+    }
+
+
+
+    /**
+     * @return void
+     * @throws InvalidArgumentException
+     * @throws InvalidInterfaceException
+     * @throws InvalidEntityException
+     * @throws DomainException
+     */
+    private function setRules()
+    {
+        $this->rules = $this->rule_manager->retrieveRulesForObject(
+            'Automated Action',
+            $this->automated_action->getID()
+        );
     }
 
 
@@ -146,7 +167,6 @@ abstract class TriggerStrategy
     public function set(AutomatedActionInterface $automated_action)
     {
         $this->automated_action = $automated_action;
-        // \EEH_Debug_Tools::printr($this->automated_action, '$this->automated_action', __FILE__, __LINE__);
     }
 
 
@@ -164,69 +184,36 @@ abstract class TriggerStrategy
      * By default, logic processing will occur during "shutdown",
      * but can be overridden by an AutomatedActionStrategy class
      *
+     * @throws InvalidArgumentException
+     * @throws InvalidInterfaceException
      * @throws InvalidEntityException
-     * @throws \InvalidArgumentException
+     * @throws DomainException
      */
     public function triggerCallback() {
+        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
         $this->setCallbackArgs(func_get_args());
-        $this->generateRuleObjects(
-            $this->retrieveRules()
+        $this->execute(
+            $this->getQueryParamsForRules()
         );
-        $this->generateRulesQuery();
-        $this->execute();
-    }
-
-
-
-    protected function retrieveRules() {
-        Benchmark::startTimer(__METHOD__);
-        global $wpdb;
-        $results = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM {$wpdb->prefix}esp_object_rule AS object_rule
-                 JOIN {$wpdb->prefix}esp_rule AS rule
-                 ON object_rule.RUL_ID = rule.RUL_ID
-                 WHERE object_rule.ORL_OBJ_name = 'Automated Action'
-                 AND object_rule.ORL_OBJ_ID = %d
-                 ORDER BY object_rule.ORL_order",
-                $this->automated_action->getID()
-            )
-        );
-        if ($results instanceof \WP_Error) {
-            throw new \DomainException(
-                $results->get_error_message()
-            );
-        }
-        $results = is_array($results) ? $results : array($results);
-        Benchmark::stopTimer(__METHOD__);
-        return $results;
     }
 
 
 
     /**
-     * @param \stdClass[] $results
-     * @return void
-     * @throws \InvalidArgumentException
+     * @return array
+     * @throws InvalidArgumentException
+     * @throws InvalidInterfaceException
      * @throws InvalidEntityException
+     * @throws DomainException
      */
-    protected function generateRuleObjects(array $results)
+    public function getQueryParamsForRules()
     {
-        Benchmark::startTimer(__METHOD__);
-        foreach ($results as $result) {
-            $this->rules->add(new Rule($result));
-        }
-        Benchmark::stopTimer(__METHOD__);
+        return $this->rule_manager->getQueryParamsForRules(
+            $this->getRules()
+        );
     }
 
 
-
-    protected function generateRulesQuery()
-    {
-        $this->query_generator->addRules($this->rules);
-        $SQL = $this->query_generator->getSql();
-        \EEH_Debug_Tools::printr($SQL, '$SQL', __FILE__, __LINE__);
-    }
 
     /**
      * when a trigger has been "pulled",
@@ -234,8 +221,11 @@ abstract class TriggerStrategy
      * this is the TriggerStrategy method that will run
      * to continue processing the trigger.
      * This will typically mean retrieving objects from the db
+     *
+     * @param array $query_params
+     * @return boolean
      */
-    abstract public function execute();
+    abstract public function execute(array $query_params);
 
 
 }
