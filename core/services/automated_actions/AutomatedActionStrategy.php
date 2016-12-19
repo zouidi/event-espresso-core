@@ -75,7 +75,6 @@ abstract class AutomatedActionStrategy
     public function callback(array $params)
     {
         \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
-        \EEH_Debug_Tools::printr($params, '$params', __FILE__, __LINE__);
         $this->params = $params;
         $this->execute();
     }
