@@ -155,7 +155,7 @@ class Rule
      */
     protected function setParent(\stdClass $result)
     {
-        $this->parent = isset($result->ORL_parent) ? sanitize_text_field($result->ORL_parent) : '';
+        $this->parent = isset($result->ORL_parent) ? sanitize_text_field($result->ORL_parent) : 0;
     }
 
 
@@ -198,9 +198,9 @@ class Rule
     protected function setType(\stdClass $result)
     {
         $this->type = isset($result->RUL_type) ? sanitize_text_field($result->RUL_type) : '';
-        if ( ! $this->type) {
-            throw new InvalidArgumentException();
-        }
+        // if ( ! $this->type) {
+        //     throw new InvalidArgumentException();
+        // }
     }
 
 
@@ -222,9 +222,9 @@ class Rule
     protected function setStrategy(\stdClass $result)
     {
         $this->strategy = isset($result->RUL_strategy) ? sanitize_text_field($result->RUL_strategy) : '';
-        if ( ! $this->strategy) {
-            throw new InvalidArgumentException();
-        }
+        // if ( ! $this->strategy) {
+        //     throw new InvalidArgumentException();
+        // }
     }
 
 
@@ -246,9 +246,9 @@ class Rule
     protected function setTarget(\stdClass $result)
     {
         $this->target = isset($result->RUL_target) ? sanitize_text_field($result->RUL_target) : '';
-        if ( ! $this->target) {
-            throw new InvalidArgumentException();
-        }
+        // if ( ! $this->target) {
+        //     throw new InvalidArgumentException();
+        // }
     }
 
 
@@ -271,9 +271,9 @@ class Rule
     protected function setComparison(\stdClass $result)
     {
         $this->comparison = isset($result->RUL_comparison) ? sanitize_text_field($result->RUL_comparison) : '';
-        if ( ! $this->comparison) {
-            throw new InvalidArgumentException();
-        }
+        // if ( ! $this->comparison) {
+        //     throw new InvalidArgumentException();
+        // }
     }
 
 
@@ -296,9 +296,9 @@ class Rule
     protected function setValue(\stdClass $result)
     {
         $this->value = isset($result->RUL_value) ? sanitize_text_field($result->RUL_value) : '';
-        if ( ! $this->value) {
-            throw new InvalidArgumentException();
-        }
+        // if ( ! $this->value) {
+        //     throw new InvalidArgumentException();
+        // }
     }
 
 
