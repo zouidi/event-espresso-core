@@ -229,6 +229,13 @@ class AutomatedAction implements AutomatedActionInterface
     }
 
 
+
+    /**
+     * not to be confused with being a setter for the $trigger property,
+     * but instead informs the trigger to set hooks or similar initialization
+     *
+     * @return void
+     */
     public function setTrigger()
     {
         $this->trigger->set($this);
