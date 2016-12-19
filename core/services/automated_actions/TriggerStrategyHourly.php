@@ -25,7 +25,7 @@ class TriggerStrategyHourly extends TriggerStrategyCron
      * to actually execute the logic
      * for the automated action
      */
-    public function execute()
+    public function execute(array $query_params)
     {
         // TODO: Implement execute() method.
     }
