@@ -2332,7 +2332,7 @@ abstract class EE_Admin_Page extends EE_Base
     public function display_admin_caf_preview_page($utm_campaign_source = '', $display_sidebar = true)
     {
         //let's generate a default preview action button if there isn't one already present.
-        $this->_labels['buttons']['buy_now'] = __('Upgrade Now', 'event_espresso');
+        $this->_labels['buttons']['buy_now'] = __('Upgrade to Event Espresso Right Now', 'event_espresso');
         $buy_now_url = add_query_arg(
                 array(
                         'ee_ver'       => 'ee4',
@@ -2341,7 +2341,7 @@ abstract class EE_Admin_Page extends EE_Base
                         'utm_campaign' => $utm_campaign_source,
                         'utm_content'  => 'buy_now_button',
                 ),
-                'http://eventespresso.com/pricing/'
+                'https://eventespresso.com/pricing/'
         );
         $this->_template_args['preview_action_button'] = ! isset($this->_template_args['preview_action_button'])
                 ? $this->get_action_link_or_button(
