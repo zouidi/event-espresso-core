@@ -4,6 +4,7 @@ namespace EventEspresso\core\services\automated_actions;
 use DomainException;
 use EventEspresso\core\exceptions\InvalidInterfaceException;
 use EventEspresso\core\services\conditional_logic\rules\QueryParamGenerator;
+use EventEspresso\core\services\conditional_logic\rules\RuleManager;
 
 defined('ABSPATH') || exit;
 
@@ -29,6 +30,11 @@ class AutomatedActionFactory
      * @var QueryParamGenerator $query_generator
      */
     protected static $query_generator;
+
+    /**
+     * @var RuleManager $rule_manager
+     */
+    protected static $rule_manager;
 
 
 
@@ -56,6 +62,22 @@ class AutomatedActionFactory
             AutomatedActionFactory::$query_generator = new QueryParamGenerator();
         }
         return AutomatedActionFactory::$query_generator;
+    }
+
+
+
+    /**
+     * @return RuleManager
+     * @throws InvalidInterfaceException
+     */
+    public static function getRuleManager()
+    {
+        if (! AutomatedActionFactory::$rule_manager instanceof RuleManager) {
+            AutomatedActionFactory::$rule_manager = new RuleManager(
+                AutomatedActionFactory::getQueryGenerator()
+            );
+        }
+        return AutomatedActionFactory::$rule_manager;
     }
 
 
@@ -94,24 +116,24 @@ class AutomatedActionFactory
         switch ($args->AMA_trigger) {
             case 'hook' :
                 $trigger = new TriggerStrategyHook(
-                    AutomatedActionFactory::getQueryGenerator()
+                    AutomatedActionFactory::getRuleManager()
                 );
                 break;
             case 'daily' :
                 $trigger = new TriggerStrategyDaily(
-                    AutomatedActionFactory::getQueryGenerator(),
+                    AutomatedActionFactory::getRuleManager(),
                     AutomatedActionFactory::getCronManager()
                 );
                 break;
             case 'hourly' :
                 $trigger = new TriggerStrategyHourly(
-                    AutomatedActionFactory::getQueryGenerator(),
+                    AutomatedActionFactory::getRuleManager(),
                     AutomatedActionFactory::getCronManager()
                 );
                 break;
             case 'date' :
                 $trigger = new TriggerStrategyDate(
-                    AutomatedActionFactory::getQueryGenerator(),
+                    AutomatedActionFactory::getRuleManager(),
                     AutomatedActionFactory::getCronManager()
                 );
                 break;
