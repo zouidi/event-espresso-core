@@ -223,9 +223,14 @@ abstract class TriggerStrategy
      * This will typically mean retrieving objects from the db
      *
      * @param array $query_params
-     * @return boolean
+     * @return void
      */
-    abstract public function execute(array $query_params);
+    public function execute(array $query_params)
+    {
+        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
+        \EEH_Debug_Tools::printr($query_params, '$query_params', __FILE__, __LINE__);
+        $this->setPulled();
+    }
 
 
 }
