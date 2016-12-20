@@ -40,23 +40,7 @@ class TriggerStrategyHook extends TriggerStrategy
 
 
 
-    /**
-     * when a trigger has been "pulled",
-     * either by a do_action or scheduled cron,
-     * this is the TriggerStrategy method that will run
-     * to continue processing the trigger.
-     * This will typically mean retrieving objects from the db
-     */
-    public function execute(array $query_params)
-    {
-        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
-        // foreach($this->getRules() as $rule) {
-        //     \EEH_Debug_Tools::printr($rule, '$rule', __FILE__, __LINE__);
-        // }
-        \EEH_Debug_Tools::printr($query_params, '$query_params', __FILE__, __LINE__);
-        $this->setPulled();
 
-    }
 
 }
 // End of file TriggerStrategyHook.php
