@@ -44,12 +44,15 @@ class QueryParamGenerator
 
 
 
-    private function getRulesAsArray()
+    private function getRulesAsArray($type = '')
     {
         \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
         $rules_array = array();
         foreach ($this->rules as $rule) {
             /** @var Rule $rule */
+            if ($type && $rule->getType() !== $type){
+                continue;
+            }
             $rules_array = $this->addRuleToArray($rules_array, $rule);
         }
         return $rules_array;
@@ -106,14 +109,11 @@ class QueryParamGenerator
     {
         \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
         $query_params = array();
-        $rules = $this->getRulesAsArray();
-        \EEH_Debug_Tools::printr($rules, 'Rules As Array', __FILE__, __LINE__);
+        $rules = $this->getRulesAsArray($type);
+        // \EEH_Debug_Tools::printr($rules, 'Rules As Array', __FILE__, __LINE__);
         foreach($rules as $key => $value){
-            \EEH_Debug_Tools::printr((string)$key, '1) $key', __FILE__, __LINE__);
-            \EEH_Debug_Tools::printr($value, '1) $value', __FILE__, __LINE__);
-            // if ($type && $rule->getType() !== $type) {
-            //     continue;
-            // }
+            // \EEH_Debug_Tools::printr((string)$key, '1) $key', __FILE__, __LINE__);
+            // \EEH_Debug_Tools::printr($value, '1) $value', __FILE__, __LINE__);
             $query_params = $this->addQueryParamForRule($value, $query_params);
             // $SQL .= $rule->getOperator();
             // $SQL .= $rule->getStrategy();
@@ -131,17 +131,17 @@ class QueryParamGenerator
     public function addQueryParamForRule($rule, array $query_params)
     {
         \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
-        \EEH_Debug_Tools::printr($rule, '$rule', __FILE__, __LINE__);
+        // \EEH_Debug_Tools::printr($rule, '$rule', __FILE__, __LINE__);
         if (is_array($rule)) {
             foreach ($rule as $key => $value) {
-                \EEH_Debug_Tools::printr((string)$key, '2) $key', __FILE__, __LINE__);
-                \EEH_Debug_Tools::printr($value, '2) $value', __FILE__, __LINE__);
+                // \EEH_Debug_Tools::printr((string)$key, '2) $key', __FILE__, __LINE__);
+                // \EEH_Debug_Tools::printr($value, '2) $value', __FILE__, __LINE__);
                 $query_params = $this->addQueryParamForRule($value, $query_params);
             }
             return $query_params;
         }
         /** @var Rule $rule */
-        \EEH_Debug_Tools::printr($rule, 'getQueryParamForRule', __FILE__, __LINE__);
+        // \EEH_Debug_Tools::printr($rule, 'getQueryParamForRule', __FILE__, __LINE__);
         $operator = $rule->getOperator();
         switch ($operator) {
             case '  ';
@@ -159,6 +159,8 @@ class QueryParamGenerator
             case ' OR ( ';
                 $query_params['OR'][] = $this->getQueryParamForRule($rule);
                 return $query_params;
+            case ' ) ';
+                return $query_params;
 
         }
         return $query_params;
@@ -168,18 +170,22 @@ class QueryParamGenerator
 
     protected function getQueryParamForRule(Rule $rule)
     {
-        $SQL = '';
-        if ($rule->getOperator() === ' ) ') {
-            return $SQL;
-        }
+        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
         $strategy = $rule->getStrategy();
-        $strategy_bits = explode('\\', $strategy);
-        $SQL .= end($strategy_bits);
-        $SQL .= '.';
-        $SQL .= $rule->getTarget();
-        $SQL .= $rule->getComparison();
-        $SQL .= $rule->getValue();
-        return $SQL;
+        if (
+            ! class_exists($strategy)
+            || ! is_subclass_of($strategy, '\EventEspresso\core\services\conditional_logic\rules\RuleStrategy')
+        ){
+            throw new \DomainException(
+                sprintf(
+                    esc_html__('The "%1$s" class is either missing or not a valid Rule Strategy.', 'event_espresso'),
+                    $strategy
+                )
+            );
+        }
+        /** @var RuleStrategy $strategy */
+        $strategy = new $strategy();
+        return $strategy->getQueryParamForRule($rule);
     }
 
 }
