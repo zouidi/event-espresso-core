@@ -229,7 +229,6 @@ jQuery(document).ready( function($) {
             }
             SPCO.form_inputs = SPCO.current_form_to_validate.find(':input').not('.spco-payment-method');
             SPCO.set_listener_for_input_validation_value_change();
-            SPCO.set_listener_for_datepicker_change();
             if (SPCO.form_is_valid) {
                 SPCO.enable_submit_buttons('initialize_form');
             }
@@ -253,8 +252,8 @@ jQuery(document).ready( function($) {
 		 *	@function set_validation_defaults
 		 */
 		set_validation_defaults : function() {
-
-			// jQuery validation object
+            // console.log(JSON.stringify('**set_validation_defaults**', null, 4));
+            // jQuery validation object
 			$.validator.setDefaults({
 
 				debug: false,
@@ -265,7 +264,7 @@ jQuery(document).ready( function($) {
 				errorPlacement: function( error, element ) {
 					$(element).before( error );
 					SPCO.invalid_input_errors.push( error.text() );
-					SPCO.track_validation_error( element.attr('id') );
+					SPCO.track_validation_error( element.attr('id'), '' );
 				},
 
 				highlight: function( element ) {
@@ -303,14 +302,21 @@ jQuery(document).ready( function($) {
 		/**
 		 *	@function track_validation_error
 		 * @param {string} invalid_input_id
+		 * @param {string} invalid_input_label
 		 */
-		track_validation_error : function( invalid_input_id ) {
+		track_validation_error : function( invalid_input_id, invalid_input_label ) {
+            // console.log(JSON.stringify('**track_validation_error**', null, 4));
+            // SPCO.console_log(' > invalid_input_id', invalid_input_id, false);
 			// convert to jQuery object
 			var invalid_input = $( '#' + invalid_input_id );
-			var invalid_input_label = $( '#' + invalid_input_id + '-lbl' );
-			SPCO.invalid_input_to_scroll_to = SPCO.invalid_input_to_scroll_to === null ? $( invalid_input_label ) : SPCO.invalid_input_to_scroll_to;
+			invalid_input_label = typeof invalid_input_label !== 'undefined' && invalid_input_label !== ''
+                ? $('#' + invalid_input_label )
+                : $( '#' + invalid_input_id + '-lbl' );
+			SPCO.invalid_input_to_scroll_to = SPCO.invalid_input_to_scroll_to === null
+                ? invalid_input_label
+                : SPCO.invalid_input_to_scroll_to;
 			// grab input label && remove "required" asterisk
-			var input_label_text = $( invalid_input_label ).text().replace( '*', '' );
+			var input_label_text = invalid_input_label.text().replace( '*', '' );
 			// add to invalid input array
 			SPCO.require_values.push( input_label_text );
 			// add to list of validation errors
@@ -436,7 +442,7 @@ jQuery(document).ready( function($) {
 			var primary_reg_questions = SPCO.get_primary_reg_questions();
 			$( primary_reg_questions ).each( function() {
 				if( ! $(this).valid() ) {
-					SPCO.track_validation_error( $(this ).attr('id') );
+					SPCO.track_validation_error( $(this ).attr('id'), '' );
 				}
 			});
 			return primary_reg_questions;
@@ -477,6 +483,7 @@ jQuery(document).ready( function($) {
 				// console.log( JSON.stringify( 'SPCO eei18n.ajax_submit: ' + eei18n.ajax_submit, null, 4 ) );
 				if ( ! SPCO.form_is_valid ){
                     SPCO.allow_enable_submit_buttons = true;
+                    SPCO.get_invalid_input_ids();
                     SPCO.display_invalid_form_notice();
                     SPCO.display_validation_errors();
 				} else if ( eei18n.ajax_submit ) {
@@ -491,6 +498,34 @@ jQuery(document).ready( function($) {
 			// set additional_post_data as empty string
 			SPCO.additional_post_data = '';
 		},
+
+
+
+		/**
+		 * @function display_invalid_form_notice
+		 */
+		get_invalid_input_ids : function() {
+            SPCO.form_inputs.each(function () {
+                var type = $(this).attr('type');
+                var input_id = '';
+                if (type === 'hidden' || type === 'submit' || type === '') {
+                    return;
+                }
+                if (type === 'checkbox' || type === 'radio') {
+                    input_id = $(this).parents('.ee-reg-qstn').attr('id');
+                    var input_label = $(this).parent().siblings('.ee-required-label').attr('id');
+                    // SPCO.console_log(' > invalid input_id', input_id, false);
+                    // SPCO.console_log(' > invalid input_label', input_label, false);
+                    if (!$(this).valid()) {
+                        SPCO.track_validation_error(input_id, input_label);
+                    }
+                } else {
+                    if (!$(this).valid()) {
+                        SPCO.track_validation_error($(this).attr('id'), '');
+                    }
+                }
+            });
+        },
 
 
 
@@ -532,29 +567,30 @@ jQuery(document).ready( function($) {
 		 */
 		set_listener_for_input_validation_value_change : function() {
             // console.log( JSON.stringify( '**set_listener_for_input_validation_value_change**', null, 4 ) );
-            SPCO.form_inputs.on('input', function() {
-                // SPCO.console_log( ' > validate input', $(this ).attr('id'), false );
-                $(this).val( $.trim( $(this).val() ) );
-                if ( $(this).valid() && SPCO.submit_buttons_enabled === false ) {
-                    SPCO.validate_form($(this));
+            SPCO.form_inputs.each(function () {
+                var type = $(this).attr('type');
+                if ( type === 'hidden' || type === 'submit' || type === '' ) {
+                    return;
+                }
+                if (typeof type === 'undefined' || type === 'checkbox' || type === 'radio' || $(this).hasClass('datepicker')) {
+                    $(this).on('change', function () {
+                        // SPCO.console_log(' > validate input', $(this).attr('id'), false);
+                        if ($(this).valid() && SPCO.submit_buttons_enabled === false) {
+                            SPCO.validate_form($(this));
+                        }
+                    });
+                } else {
+                    $(this).on('input propertychange', function () {
+                        // SPCO.console_log( ' > validate input', $(this ).attr('id'), false );
+                        $(this).val($.trim($(this).val()));
+                        if ($(this).valid() && SPCO.submit_buttons_enabled === false) {
+                            SPCO.validate_form($(this));
+                        }
+                    });
                 }
             });
 		},
 
-
-
-		/**
-		 * @function set_listener_for_datepicker_change
-		 */
-		set_listener_for_datepicker_change : function() {
-            // console.log(JSON.stringify('**set_listener_for_datepicker_change**', null, 4));
-            SPCO.main_container.on('input', '.datepicker', function () {
-                // SPCO.console_log(' > validate input', $(this).attr('id'), false);
-                if ( $(this).valid() && SPCO.submit_buttons_enabled === false ) {
-                    SPCO.validate_form($(this));
-                }
-            });
-		},
 
 
 
@@ -563,7 +599,7 @@ jQuery(document).ready( function($) {
 		 */
         validate_form : function(input) {
             if (SPCO.form_validation_in_progress === true) {
-                // SPCO.console_log('validate_form', 'SKIP', false);
+                SPCO.console_log('validate_form', 'SKIP', false);
                 return;
             }
             // console.log('***** VALIDATING FORM *****');
