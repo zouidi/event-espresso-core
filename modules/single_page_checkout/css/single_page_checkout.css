@@ -324,6 +324,9 @@
 	font-weight:bold;
 	color:#E34064 !important;
 }
+#ee-single-page-checkout-dv label label.ee-required-text {
+    margin: .5em .5em 0 .5em;
+}
 #ee-single-page-checkout-dv .ee-asterisk {
 	margin: 0 .5em;
 }
