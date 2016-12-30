@@ -50,6 +50,9 @@ class EE_Payment_Processor extends EE_Processor_Base
     {
         do_action('AHEE__EE_Payment_Processor__construct');
         add_action('http_api_curl', array($this, '_curl_requests_to_paypal_use_tls'), 10, 3);
+        //filter order descriptions. We could do this in the gateways themselves, but ideally we wanted the gateways
+        //to be agnostic to EE-specific things (eg ideally it would work just as well for non-event-registration applications)
+        add_filter('FHEE__EE_Gateway___order_description', array($this,'improve_order_descriptions'), 5, 3);
     }
 
 
@@ -748,5 +751,32 @@ class EE_Payment_Processor extends EE_Processor_Base
             //instead of the constant because it might not be defined
             curl_setopt($handle, CURLOPT_SSLVERSION, 1);
         }
+    }
+
+
+
+    /**
+     * Change the gateway's description to also mention attendee names
+     * @param             $description
+     * @param \EE_Gateway $gateway_class
+     * @param \EE_Payment $payment
+     */
+    public function improve_order_descriptions($description, EE_Gateway $gateway_class, EE_Payment $payment)
+    {
+        $attendees = EEM_Attendee::instance()->get_all(
+            array(
+                array(
+                    'Registration.TXN_ID' => $payment->get('TXN_ID'),
+                ),
+            )
+        );
+        $attendee_names = array();
+        foreach ($attendees as $attendee) {
+            if ($attendee instanceof EE_Attendee) {
+                $attendee_names[] = $attendee->full_name();
+            }
+        }
+        return $description . '. ' . sprintf(esc_html__('Attendees: %1$s', 'event_espresso'),
+            implode(', ', $attendee_names));
     }
 }
