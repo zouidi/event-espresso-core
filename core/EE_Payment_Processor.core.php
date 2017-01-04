@@ -736,17 +736,30 @@ class EE_Payment_Processor extends EE_Processor_Base
 
     /**
      * Force posts to PayPal to use TLS v1.2. See:
-     * https://core.trac.wordpress.org/ticket/36320
-     * https://core.trac.wordpress.org/ticket/34924#comment:15
-     * https://www.paypal-knowledge.com/infocenter/index?page=content&widgetview=true&id=FAQ1914&viewlocale=en_US
+     * @link https://core.trac.wordpress.org/ticket/36320
+     * @link https://core.trac.wordpress.org/ticket/34924#comment:15
+     * @link https://www.paypal-knowledge.com/infocenter/index?page=content&widgetview=true&id=FAQ1914&viewlocale=en_US
+     * @link https://github.com/woocommerce/woocommerce-gateway-stripe/pull/67/commits/877dcabf5c60ef6e41f770ecf654274fa1fc0ce5
      * This will affect paypal standard, pro, express, and payflow.
      */
     public static function _curl_requests_to_paypal_use_tls($handle, $r, $url)
     {
-        if (strstr($url, 'https://') && strstr($url, '.paypal.com')) {
-            //Use the value of the constant CURL_SSLVERSION_TLSv1 = 1
-            //instead of the constant because it might not be defined
-            curl_setopt($handle, CURLOPT_SSLVERSION, 1);
+        if (! $handle ) {
+            return;
+        }
+        if (OPENSSL_VERSION_NUMBER >= 0x1000100f) {
+            if (! defined('CURL_SSLVERSION_TLSv1_2')) {
+                // Note the value 6 comes from its position in the enum that
+                // defines it in cURL's source code.
+                define('CURL_SSLVERSION_TLSv1_2', 6); // constant not defined in PHP < 5.5
+            }
+
+            curl_setopt($handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+        } else {
+            if (! defined('CURL_SSLVERSION_TLSv1')) {
+                define('CURL_SSLVERSION_TLSv1', 1); // constant not defined in PHP < 5.5
+            }
+            curl_setopt($handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);
         }
     }
 }
