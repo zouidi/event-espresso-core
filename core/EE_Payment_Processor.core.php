@@ -744,27 +744,24 @@ class EE_Payment_Processor extends EE_Processor_Base
      */
     public static function _curl_requests_to_paypal_use_tls($handle, $r, $url)
     {
-        if (! $handle) {
+        if (! $handle ) {
             return;
         }
+        if (strstr($url, 'https://') && strstr($url, '.paypal.com')) {
+            if (OPENSSL_VERSION_NUMBER >= 0x1000100f) {
+                if (! defined('CURL_SSLVERSION_TLSv1_2')) {
+                    // Note the value 6 comes from its position in the enum that
+                    // defines it in cURL's source code.
+                    define('CURL_SSLVERSION_TLSv1_2', 6); // constant not defined in PHP < 5.5
+                }
 
-        if (OPENSSL_VERSION_NUMBER >= 0x1000100f
-            &&
-            strstr($url, 'https://')
-            && strstr($url, '.paypal.com')
-        ) {
-            if (! defined('CURL_SSLVERSION_TLSv1_2')) {
-                // Note the value 6 comes from its position in the enum that
-                // defines it in cURL's source code.
-                define('CURL_SSLVERSION_TLSv1_2', 6); // constant not defined in PHP < 5.5
+                curl_setopt($handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+            } else {
+                if (! defined('CURL_SSLVERSION_TLSv1')) {
+                    define('CURL_SSLVERSION_TLSv1', 1); // constant not defined in PHP < 5.5
+                }
+                curl_setopt($handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);
             }
-
-            curl_setopt($handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
-        } else {
-            if (! defined('CURL_SSLVERSION_TLSv1')) {
-                define('CURL_SSLVERSION_TLSv1', 1); // constant not defined in PHP < 5.5
-            }
-            curl_setopt($handle, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1);
         }
     }
 }
