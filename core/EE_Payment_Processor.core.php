@@ -744,10 +744,15 @@ class EE_Payment_Processor extends EE_Processor_Base
      */
     public static function _curl_requests_to_paypal_use_tls($handle, $r, $url)
     {
-        if (! $handle ) {
+        if (! $handle) {
             return;
         }
-        if (OPENSSL_VERSION_NUMBER >= 0x1000100f) {
+
+        if (OPENSSL_VERSION_NUMBER >= 0x1000100f
+            &&
+            strstr($url, 'https://')
+            && strstr($url, '.paypal.com')
+        ) {
             if (! defined('CURL_SSLVERSION_TLSv1_2')) {
                 // Note the value 6 comes from its position in the enum that
                 // defines it in cURL's source code.
