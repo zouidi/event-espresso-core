@@ -119,11 +119,11 @@ class EE_Registration extends EE_Soft_Delete_Base_Class implements EEI_Registrat
 		) {
 			// TO approved
 			if ( $new_STS_ID === EEM_Registration::status_id_approved ) {
-                \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
+                \EEH_Debug_Tools::printr(__FUNCTION__, 'BEFORE HOOK ' . __CLASS__, __FILE__, __LINE__, 2);
                 // reserve a space by incrementing ticket and datetime sold values
 				$this->_reserve_registration_space();
 				do_action( 'AHEE__EE_Registration__set_status__to_approved', $this, $old_STS_ID, $new_STS_ID );
-                \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
+                \EEH_Debug_Tools::printr(__FUNCTION__, 'AFTER HOOK ' . __CLASS__, __FILE__, __LINE__, 2);
 				exit();
 			// OR FROM  approved
 			} else if ( $old_STS_ID === EEM_Registration::status_id_approved ) {
