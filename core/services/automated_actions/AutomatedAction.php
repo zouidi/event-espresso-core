@@ -248,7 +248,7 @@ class AutomatedAction implements AutomatedActionInterface
      */
     public function triggerPulled()
     {
-        \EEH_Debug_Tools::printr($this->trigger->pulled(), '$this->trigger->pulled()', __FILE__, __LINE__);
+        // \EEH_Debug_Tools::printr($this->trigger->pulled(), '$this->trigger->pulled()', __FILE__, __LINE__);
         return $this->trigger->pulled();
     }
 
@@ -259,7 +259,7 @@ class AutomatedAction implements AutomatedActionInterface
      */
     public function hasRun()
     {
-        \EEH_Debug_Tools::printr($this->strategy->hasRun(), '$this->strategy->hasRun()', __FILE__, __LINE__);
+        // \EEH_Debug_Tools::printr($this->strategy->hasRun(), '$this->strategy->hasRun()', __FILE__, __LINE__);
         return $this->strategy->hasRun();
     }
 
@@ -275,7 +275,7 @@ class AutomatedAction implements AutomatedActionInterface
     public function process()
     {
         \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
-        \EEH_Debug_Tools::printr($this->description, $this->name, __FILE__, __LINE__);
+        // \EEH_Debug_Tools::printr($this->description, $this->name, __FILE__, __LINE__);
         $this->strategy->callback(
             $this->trigger->getCallbackArgs()
         );
