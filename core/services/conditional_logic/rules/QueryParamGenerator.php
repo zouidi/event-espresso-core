@@ -44,9 +44,21 @@ class QueryParamGenerator
 
 
 
-    private function getRulesAsArray($type = '')
+    public function generateQueryParams($type = '')
     {
         \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
+        $rules = $this->getRulesAsArray($type);
+        // \EEH_Debug_Tools::printr($rules, 'Rules As Array', __FILE__, __LINE__);
+        $query_params = $this->addQueryParamForRule($rules, array());
+        // \EEH_Debug_Tools::printr($query_params, '>>> $QUERY_PARAMS', __FILE__, __LINE__);
+        return $query_params;
+    }
+
+
+
+    private function getRulesAsArray($type = '')
+    {
+        // \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
         $rules_array = array();
         foreach ($this->rules as $rule) {
             /** @var Rule $rule */
@@ -105,64 +117,59 @@ class QueryParamGenerator
 
 
 
-    public function generateQueryParams($type = '')
+    public function addQueryParamForRule($rules, array $query_params, $operator = ' AND ')
     {
-        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
-        $query_params = array();
-        $rules = $this->getRulesAsArray($type);
-        // \EEH_Debug_Tools::printr($rules, 'Rules As Array', __FILE__, __LINE__);
-        foreach($rules as $key => $value){
-            // \EEH_Debug_Tools::printr((string)$key, '1) $key', __FILE__, __LINE__);
-            // \EEH_Debug_Tools::printr($value, '1) $value', __FILE__, __LINE__);
-            $query_params = $this->addQueryParamForRule($value, $query_params);
-            // $SQL .= $rule->getOperator();
-            // $SQL .= $rule->getStrategy();
-            // $SQL .= '.';
-            // $SQL .= $rule->getTarget();
-            // $SQL .= $rule->getComparison();
-            // $SQL .= $rule->getValue();
-        }
-        \EEH_Debug_Tools::printr($query_params, '>>> $QUERY_PARAMS', __FILE__, __LINE__);
-        return $query_params;
-    }
-
-
-
-    public function addQueryParamForRule($rule, array $query_params)
-    {
-        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
+        // \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
         // \EEH_Debug_Tools::printr($rule, '$rule', __FILE__, __LINE__);
-        if (is_array($rule)) {
-            foreach ($rule as $key => $value) {
-                // \EEH_Debug_Tools::printr((string)$key, '2) $key', __FILE__, __LINE__);
-                // \EEH_Debug_Tools::printr($value, '2) $value', __FILE__, __LINE__);
-                $query_params = $this->addQueryParamForRule($value, $query_params);
+        foreach ($rules as $key => $rule) {
+            // \EEH_Debug_Tools::printr((string)$key, '2) $key', __FILE__, __LINE__);
+            if (is_array($rule)) {
+                // \EEH_Debug_Tools::printr(is_array($rule), 'is_array($rule)', __FILE__, __LINE__);
+                $query_params = $this->addQueryParamForRule($rule, $query_params, $operator);
+            } else {
+                /** @var Rule $rule */
+                // \EEH_Debug_Tools::printr($rule, 'getQueryParamForRule', __FILE__, __LINE__);
+                $operator = $rule->getOperator();
+                $parent = $rule->getParent();
+                $parent = $parent ? $parent : 0;
+                if ( ! isset($query_params[$parent])) {
+                    $query_params[$parent] = array();
+                }
+                \EEH_Debug_Tools::printr($operator, '$operator', __FILE__, __LINE__);
+                \EEH_Debug_Tools::printr((string)$parent, '$parent', __FILE__, __LINE__);
+                switch ($operator) {
+                    default :
+                    case '  ';
+                    case ' AND ';
+                        $query_params[$parent] = array_merge(
+                            $query_params[$parent],
+                            $this->getQueryParamForRule($rule)
+                        );
+                        break;
+                    case ' OR ';
+                        $query_params[$parent] = array_merge(
+                            $query_params[$parent],
+                            array('OR' => $this->getQueryParamForRule($rule))
+                        );
+                        break;
+                    case ' AND ( ';
+                        $query_params[$parent] = array_merge(
+                            $query_params[$parent],
+                            array( $this->getQueryParamForRule($rule) )
+                        );
+                        break;
+                    case ' OR ( ';
+                        $query_params['OR'][$parent] = array_merge(
+                            $query_params['OR'][$parent],
+                            $this->getQueryParamForRule($rule)
+                        );
+                        break;
+                    case ' ) ';
+                        break;
+                }
             }
-            return $query_params;
         }
-        /** @var Rule $rule */
-        // \EEH_Debug_Tools::printr($rule, 'getQueryParamForRule', __FILE__, __LINE__);
-        $operator = $rule->getOperator();
-        switch ($operator) {
-            case '  ';
-                $query_params[] = $this->getQueryParamForRule($rule);
-                return $query_params;
-            case ' AND ';
-                $query_params['AND'] = $this->getQueryParamForRule($rule);
-                return $query_params;
-            case ' OR ';
-                $query_params['OR'] = $this->getQueryParamForRule($rule);
-                return $query_params;
-            case ' AND ( ';
-                $query_params['AND'][] = $this->getQueryParamForRule($rule);
-                return $query_params;
-            case ' OR ( ';
-                $query_params['OR'][] = $this->getQueryParamForRule($rule);
-                return $query_params;
-            case ' ) ';
-                return $query_params;
-
-        }
+        // \EEH_Debug_Tools::printr($query_params, '$query_params', __FILE__, __LINE__);
         return $query_params;
     }
 
@@ -170,7 +177,7 @@ class QueryParamGenerator
 
     protected function getQueryParamForRule(Rule $rule)
     {
-        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
+        // \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
         $strategy = $rule->getStrategy();
         if (
             ! class_exists($strategy)
@@ -185,7 +192,9 @@ class QueryParamGenerator
         }
         /** @var RuleStrategy $strategy */
         $strategy = new $strategy();
-        return $strategy->getQueryParamForRule($rule);
+        $query_param = $strategy->getQueryParamForRule($rule);
+        // \EEH_Debug_Tools::printr($query_param, '$query_param', __FILE__, __LINE__);
+        return $query_param;
     }
 
 }
