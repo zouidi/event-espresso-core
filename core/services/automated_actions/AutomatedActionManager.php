@@ -144,6 +144,7 @@ class AutomatedActionManager
      */
     public function processActions()
     {
+        \EEH_Debug_Tools::printr('', 'SHUTDOWN HOOK', __FILE__, __LINE__, 2);
         \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
         Benchmark::startTimer(__METHOD__);
         foreach ($this->automated_actions as $automated_action) {
