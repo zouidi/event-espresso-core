@@ -32,7 +32,10 @@ abstract class RuleStrategy
         $this->comparison = $rule->getComparison();
         $this->value      = $rule->getValue();
         $target           = $rule->getTarget();
-        return $this->{$target}();
+        // \EEH_Debug_Tools::printr($target, '$target', __FILE__, __LINE__);
+        return method_exists($this, $target)
+            ? $this->{$target}()
+            : "{$target} {$this->comparison} {$this->value}";
     }
 
 }
