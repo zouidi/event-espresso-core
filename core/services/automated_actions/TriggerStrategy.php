@@ -220,7 +220,11 @@ abstract class TriggerStrategy
      * either by a do_action or scheduled cron,
      * this is the TriggerStrategy method that will run
      * to continue processing the trigger.
-     * This will typically mean retrieving objects from the db
+     * This will typically mean retrieving objects from the db.
+     * By default, this method does nothing but set callback args
+     * to be used for querying during the 'shutdown' hook when
+     * AutomatedActionManager::processActions() runs,
+     * but can be overridden to perform querying now.
      *
      * @param array $query_params
      * @return void
@@ -228,7 +232,10 @@ abstract class TriggerStrategy
     public function execute(array $query_params)
     {
         \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
-        \EEH_Debug_Tools::printr($query_params, '$query_params', __FILE__, __LINE__);
+        $this->setCallbackArgs(
+            array_merge($this->callback_args, array('query_params' => $query_params))
+        );
+        // \EEH_Debug_Tools::printr($this->callback_args, '$this->callback_args', __FILE__, __LINE__);
         $this->setPulled();
     }
 
