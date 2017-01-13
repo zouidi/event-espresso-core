@@ -88,7 +88,7 @@ class RuleManager
                 $OBJ_ID
             )
         );
-        \EEH_Debug_Tools::printr($results, '$results', __FILE__, __LINE__);
+        // \EEH_Debug_Tools::printr($results, '$results', __FILE__, __LINE__);
         if ($results instanceof \WP_Error) {
             throw new DomainException(
                 $results->get_error_message()
@@ -130,6 +130,7 @@ class RuleManager
      */
     public function getQueryParamsForObjectRules( $OBJ_name = '', $OBJ_ID )
     {
+        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
         return $this->getQueryParamsForRules(
             $this->getRulesCollection(
                 $this->retrieveRules($OBJ_name, $OBJ_ID)
@@ -147,7 +148,7 @@ class RuleManager
     {
         $this->query_generator->addRules($rules);
         $SQL = $this->query_generator->generateQueryParams(RuleManager::RULE_TYPE_QUERY);
-        \EEH_Debug_Tools::printr($SQL, '$SQL', __FILE__, __LINE__);
+        // \EEH_Debug_Tools::printr($SQL, '$SQL', __FILE__, __LINE__);
         return $SQL;
     }
 
