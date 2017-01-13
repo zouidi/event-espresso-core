@@ -1,6 +1,8 @@
 <?php
 namespace EventEspresso\core\services\conditional_logic\rules;
 
+use EEM_Base;
+
 defined('EVENT_ESPRESSO_VERSION') || exit;
 
 
@@ -16,6 +18,11 @@ defined('EVENT_ESPRESSO_VERSION') || exit;
 abstract class RuleStrategyForQuery extends RuleStrategy
 {
 
+
+    /**
+     * @var EEM_Base $model
+     */
+    protected $model;
 
 
 }
