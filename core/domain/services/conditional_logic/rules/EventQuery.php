@@ -1,6 +1,7 @@
 <?php
 namespace EventEspresso\core\domain\services\conditional_logic\rules;
 
+use EEM_Event;
 use EventEspresso\core\services\conditional_logic\rules\RuleStrategyForQuery;
 
 defined('EVENT_ESPRESSO_VERSION') || exit;
@@ -20,12 +21,43 @@ class EventQuery extends RuleStrategyForQuery
 
 
 
-    public function category()
+    /**
+     * @return \EEM_Event
+     */
+    protected function get_model()
     {
-        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
-        \EEH_Debug_Tools::printr($this->comparison, '$this->comparison', __FILE__, __LINE__);
-        \EEH_Debug_Tools::printr($this->value, '$this->value', __FILE__, __LINE__);
-        \EEM_Event::instance();
+        if (!$this->model instanceof EEM_Event) {
+            return EEM_Event::instance();
+        }
+        return $this->model;
+    }
+
+
+
+    public function eventCategory()
+    {
+        return array(
+            'Term_Taxonomy.taxonomy' => array($this->comparison, 'espresso_event_categories' ),
+            'Term_Taxonomy.term_id' => array($this->comparison, $this->value),
+        );
+    }
+
+
+
+    public function eventStart()
+    {
+        return array(
+            'Datetime.DTT_EVT_start' => array($this->comparison, $this->value),
+        );
+    }
+
+
+
+    public function eventEnd()
+    {
+        return array(
+            'Datetime.DTT_EVT_end' => array($this->comparison, $this->value),
+        );
     }
 
 }
