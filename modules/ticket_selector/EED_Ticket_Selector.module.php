@@ -389,7 +389,7 @@ class EED_Ticket_Selector extends EED_Module
             ) . $ticket_selector
             : $ticket_selector;
         // submit button and form close tag
-        $ticket_selector .= ! is_admin() ? EED_Ticket_Selector::display_ticket_selector_submit() : '';
+        $ticket_selector .= ! is_admin() ? EED_Ticket_Selector::display_ticket_selector_submit($external_url) : '';
         // set no cache headers and constants
         EE_System::do_not_cache();
         return $ticket_selector;
@@ -409,7 +409,15 @@ class EED_Ticket_Selector extends EED_Module
     {
         // if redirecting, we don't need any anything else
         if ($external_url) {
-            $html = '<form method="GET" action="' . EEH_URL::refactor_url($external_url) . '">';
+            $html = '<form method="GET" action="' . EEH_URL::refactor_url($external_url) . '"';
+            // open link in new window ?
+            $html .= apply_filters(
+                'FHEE__EventEspresso_modules_ticket_selector_DisplayTicketSelector__formOpen__external_url_target_blank',
+                false
+            )
+                ? ' target="_blank"'
+                : '';
+            $html .= '>';
             $query_args = (array)EEH_URL::get_query_string($external_url);
             foreach ($query_args as $query_arg => $value) {
                 $html .= '
@@ -438,14 +446,13 @@ class EED_Ticket_Selector extends EED_Module
 
 
     /**
-     *    display_ticket_selector_submit
+     * display_ticket_selector_submit
      *
-     * @access        public
-     * @access        public
+     * @param        string $external_url
      * @return        string
      * @throws \EE_Error
      */
-    public static function display_ticket_selector_submit()
+    public static function display_ticket_selector_submit($external_url = '')
     {
         $html = '';
         if ( ! is_admin()) {

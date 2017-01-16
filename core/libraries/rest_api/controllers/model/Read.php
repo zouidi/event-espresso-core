@@ -5,6 +5,8 @@ use EventEspresso\core\libraries\rest_api\Capabilities;
 use EventEspresso\core\libraries\rest_api\Calculated_Model_Fields;
 use EventEspresso\core\libraries\rest_api\Rest_Exception;
 use EventEspresso\core\libraries\rest_api\Model_Data_Translator;
+use EventEspresso\core\entities\models\JsonModelSchema;
+use EE_Datetime_Field;
 
 if (! defined('EVENT_ESPRESSO_VERSION')) {
     exit('No direct script access allowed');
@@ -80,6 +82,82 @@ class Read extends Base
             );
         } catch (\Exception $e) {
             return $controller->send_response($e);
+        }
+    }
+
+
+    /**
+     * Prepares and returns schema for any OPTIONS request.
+     *
+     * @param string $model_name  Something like `Event` or `Registration`
+     * @param string $version     The API endpoint version being used.
+     * @return array
+     */
+    public static function handle_schema_request($model_name, $version)
+    {
+        $controller = new Read();
+        try {
+            $controller->set_requested_version($version);
+            if (! $controller->get_model_version_info()->is_model_name_in_this_version($model_name)) {
+                return array();
+            }
+            //get the model for this version
+            $model = $controller->get_model_version_info()->load_model($model_name);
+            $model_schema = new JsonModelSchema($model);
+            return $model_schema->getModelSchemaForRelations(
+                $controller->get_model_version_info()->relation_settings($model),
+                $controller->_add_extra_fields_to_schema(
+                    $model,
+                    $model_schema->getModelSchemaForFields(
+                        $controller->get_model_version_info()->fields_on_model_in_this_version($model),
+                        $model_schema->getInitialSchemaStructure()
+                    )
+                )
+            );
+        } catch (\Exception $e) {
+            return array();
+        }
+    }
+
+
+    /**
+     * Adds additional fields to the schema
+     * The REST API returns a GMT value field for each datetime field in the resource.  Thus the description about this
+     * needs to be added to the schema.
+     *
+     * @param \EEM_Base $model
+     * @param string    $schema
+     */
+    protected function _add_extra_fields_to_schema(\EEM_Base $model, $schema)
+    {
+        foreach ($this->get_model_version_info()->fields_on_model_in_this_version($model) as $field_name => $field) {
+            if ($field instanceof EE_Datetime_Field) {
+                $schema['properties'][$field_name . '_gmt'] = $field->getSchema();
+                //modify the description
+                $schema['properties'][$field_name . '_gmt']['description'] = sprintf(
+                    esc_html__('%s - the value for this field is in GMT.', 'event_espresso'),
+                    $field->get_nicename()
+                );
+            }
+        }
+        return $schema;
+    }
+
+
+
+
+    /**
+     * Used to figure out the route from the request when a `WP_REST_Request` object is not available
+     * @return string
+     */
+    protected function get_route_from_request() {
+        if (isset($GLOBALS['wp'])
+            && $GLOBALS['wp'] instanceof \WP
+            && isset($GLOBALS['wp']->query_vars['rest_route'] )
+        ) {
+            return $GLOBALS['wp']->query_vars['rest_route'];
+        } else {
+            return isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO'] : '/';
         }
     }
 
@@ -574,21 +652,6 @@ class Read extends Base
                 ),
             ),
         );
-        //add link to the wp core endpoint, if wp api is active
-        global $wp_rest_server;
-        if ($model instanceof \EEM_CPT_Base
-            && $wp_rest_server instanceof \WP_REST_Server
-            && $wp_rest_server->get_route_options('/wp/v2/posts')
-            && $model->has_primary_key_field()
-        ) {
-            $links[\EED_Core_Rest_Api::ee_api_link_namespace . 'self_wp_post'] = array(
-                array(
-                    'href'   => rest_url('/wp/v2/posts/' . $db_row[$model->get_primary_key_field()
-                                                                         ->get_qualified_column()]),
-                    'single' => true,
-                ),
-            );
-        }
         //add links to related models
         if ($model->has_primary_key_field()) {
             foreach ($this->get_model_version_info()->relation_settings($model) as $relation_name => $relation_obj) {
@@ -867,6 +930,37 @@ class Read extends Base
 
 
     /**
+     * Verifies the passed in value is an allowable default where conditions value.
+     *
+     * @param $default_query_params
+     * @return string
+     */
+    public function validate_default_query_params($default_query_params)
+    {
+        $valid_default_where_conditions_for_api_calls = array(
+            \EEM_Base::default_where_conditions_all,
+            \EEM_Base::default_where_conditions_minimum_all,
+            \EEM_Base::default_where_conditions_minimum_others,
+        );
+        if (! $default_query_params) {
+            $default_query_params = \EEM_Base::default_where_conditions_all;
+        }
+        if (
+        in_array(
+            $default_query_params,
+            $valid_default_where_conditions_for_api_calls,
+            true
+        )
+        ) {
+            return $default_query_params;
+        } else {
+            return \EEM_Base::default_where_conditions_all;
+        }
+    }
+
+
+
+    /**
      * Translates API filter get parameter into $query_params array used by EEM_Base::get_all().
      * Note: right now the query parameter keys for fields (and related fields)
      * can be left as-is, but it's quite possible this will change someday.
@@ -959,6 +1053,9 @@ class Read extends Base
             $model_query_params['caps'] = $this->validate_context($query_parameters['caps']);
         } else {
             $model_query_params['caps'] = \EEM_Base::caps_read;
+        }
+        if (isset($query_parameters['default_where_conditions'])) {
+            $model_query_params['default_where_conditions'] = $this->validate_default_query_params($query_parameters['default_where_conditions']);
         }
         return apply_filters('FHEE__Read__create_model_query_params', $model_query_params, $query_parameters, $model);
     }
@@ -1107,6 +1204,7 @@ class Read extends Base
         return $extracted_fields_to_include;
     }
 }
+
 
 
 // End of file Read.php
