@@ -13,11 +13,6 @@ defined('EVENT_ESPRESSO_VERSION') || exit;
  * @subpackage                core
  * @author                    Brent Christensen
  */
- *
- * @package                   Event Espresso
- * @subpackage                core
- * @author                    Brent Christensen
- */
 class EE_Registry
 {
 
