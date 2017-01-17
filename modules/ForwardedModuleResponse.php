@@ -88,7 +88,6 @@ class ForwardedModuleResponse
     /**
      * get_forward_constants
      *
-     * @access    public
      * @return    array
      */
     public static function getForwardClassConstants()
