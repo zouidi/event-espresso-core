@@ -27,8 +27,8 @@ class GatewayResponse extends ForwardedModuleResponse
      */
     public function __construct()
     {
-        // plz see the ForwardedModuleResponse::$data_map description for details regarding this
-        $this->setDataMap(
+        parent::__construct(
+            // plz see the ForwardedModuleResponse::$data_map description for details regarding this
             array(
                 'session_id'                 => array('sanitize_text_field'),
                 'transaction_id'             => array('absint'),
@@ -36,7 +36,6 @@ class GatewayResponse extends ForwardedModuleResponse
                 'selected_method_of_payment' => array('sanitize_text_field'),
             )
         );
-        parent::__construct();
     }
 
 
