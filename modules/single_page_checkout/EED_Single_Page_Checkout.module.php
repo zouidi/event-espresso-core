@@ -1,4 +1,11 @@
-<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) {exit('No direct script access allowed');}
+<?php
+
+use EventEspresso\modules\gateway_data_router\GatewayResponse;
+
+defined('EVENT_ESPRESSO_VERSION') || exit();
+
+
+
 /**
  * Single Page Checkout (SPCO)
  *
@@ -119,17 +126,19 @@ class EED_Single_Page_Checkout  extends EED_Module {
 
 
 
-	/**
-	 * process_gateway_response
-	 *
-	 * @param \EventEspresso\modules\gateway_data_router\GatewayResponse $gateway_response
-	 */
-	public function process_gateway_response(
-		EventEspresso\modules\gateway_data_router\GatewayResponse $gateway_response = null
-	) {
+    /**
+     * process_gateway_response
+     *
+     * @param GatewayResponse $gateway_response
+     * @throws \EE_Error
+     */
+	public function process_gateway_response(GatewayResponse $gateway_response) {
 		EE_Registry::instance()->REQ->set( 'step', 'payment_options' );
 		EE_Registry::instance()->REQ->set( 'action', 'process_gateway_response' );
-		EE_Registry::instance()->REQ->set( 'selected_method_of_payment', $gateway_response->get('selected_method_of_payment') );
+		EE_Registry::instance()->REQ->set(
+		    'selected_method_of_payment',
+            $gateway_response->get('selected_method_of_payment')
+        );
 		EE_Registry::instance()->REQ->set( 'spco_txn', $gateway_response->get('transaction_id') );
 		EED_Single_Page_Checkout::instance()->load_reg_steps();
 		EED_Single_Page_Checkout::instance()->_initialize();
