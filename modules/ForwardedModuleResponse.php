@@ -68,18 +68,12 @@ class ForwardedModuleResponse
     /**
      * ForwardedModuleResponse constructor.
      *
+     * @param array $data_map
      * @throws InvalidModuleResponseDataException
      */
-    public function __construct()
+    public function __construct(array $data_map)
     {
-        if (empty($this->data_map)) {
-            throw new InvalidModuleResponseDataException(
-                __(
-                    'The data map can not be empty. Please ensure it is set before constructing an instance of \EventEspresso\modules\ForwardedModuleResponse',
-                    'event_espresso'
-                )
-            );
-        }
+        $this->setDataMap($data_map);
     }
 
 
@@ -115,9 +109,18 @@ class ForwardedModuleResponse
 
     /**
      * @param array $data_map
+     * @throws InvalidModuleResponseDataException
      */
     public function setDataMap(array $data_map)
     {
+        if (empty($data_map)) {
+            throw new InvalidModuleResponseDataException(
+                __(
+                    'The data map can not be empty.',
+                    'event_espresso'
+                )
+            );
+        }
         $this->data_map = $data_map;
     }
 
