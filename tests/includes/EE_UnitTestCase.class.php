@@ -405,7 +405,10 @@ class EE_UnitTestCase extends WP_UnitTestCase
     public function loadModuleMocks($ModuleMocks = array())
     {
         foreach ($ModuleMocks as $ModuleMock) {
-            require_once EE_TESTS_DIR . 'mocks/modules/' . $ModuleMock . '_Mock.php';
+            $ModuleMock .= '_Mock';
+            require_once EE_TESTS_DIR . 'mocks/modules/' . $ModuleMock . '.php';
+            // fake register module mock
+            EE_Registry::instance()->modules->{$ModuleMock} = EE_TESTS_DIR.'mocks/modules/'.$ModuleMock.'.php';
         }
     }
 
