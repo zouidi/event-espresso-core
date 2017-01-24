@@ -1307,10 +1307,10 @@ jQuery(document).ready( function($) {
             // console.log(JSON.stringify('**switch_payment_methods**', null, 4));
             // SPCO.console_log( 'switch_payment_methods', response.return_data.payment_method, false );
             SPCO.remove_billing_forms();
-//			SPCO.console_log_object( 'switch_payment_methods : response.return_data.payment_method = ', response.return_data.payment_method );
+			// SPCO.console_log_object( 'switch_payment_methods : response.return_data.payment_method = ', response.return_data.payment_method );
 			if ( typeof response.return_data.payment_method !== 'undefined' ) {
 				var payment_method_info = $('#spco-payment-method-info-' + response.return_data.payment_method );
-				//SPCO.console_log( 'payment_method_info', payment_method_info.attr('id'), false );
+				// SPCO.console_log( 'payment_method_info', payment_method_info.attr('id'), false );
 				if ( typeof response.return_data.payment_method_info !== 'undefined' ) {
 					payment_method_info.append( response.return_data.payment_method_info );
 				}
@@ -1319,7 +1319,11 @@ jQuery(document).ready( function($) {
 						SPCO.scroll_to_top_and_display_messages( SPCO.methods_of_payment, response, true  );
 					}
                     SPCO.initialize(next_step, true);
+                    SPCO.allow_enable_submit_buttons = true;
+                    SPCO.enable_submit_buttons('spco_switch_payment_methods');
+                    SPCO.allow_enable_submit_buttons = false;
                     SPCO.main_container.trigger( 'spco_switch_payment_methods', [ response.return_data.payment_method ] );
+
                 });
 			} else {
 				var msg = SPCO.generate_message_object(
