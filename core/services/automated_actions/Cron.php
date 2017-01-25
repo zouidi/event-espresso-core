@@ -13,7 +13,7 @@ defined('ABSPATH') || exit;
  * @author        Brent Christensen
  * @since         $VID:$
  */
-class Cron
+class Cron implements JobInterface
 {
 
     /**
