@@ -47,6 +47,7 @@ class CronManager
      * @throws InvalidEntityException
      */
     public function addCron(Cron $cron) {
+        // todo add identifier so that crons are unique
         $this->crons->add($cron);
     }
 
