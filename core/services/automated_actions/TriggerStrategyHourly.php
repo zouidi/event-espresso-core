@@ -16,6 +16,17 @@ defined('ABSPATH') || exit;
 class TriggerStrategyHourly extends TriggerStrategyCron
 {
 
+    const RECURRENCE = 'hourly';
+
+
+
+    /**
+     * @return string
+     */
+    public function getRecurrence()
+    {
+        return TriggerStrategyHourly::RECURRENCE;
+    }
 
 
 
