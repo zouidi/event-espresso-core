@@ -17,7 +17,7 @@ defined('ABSPATH') || exit;
  * @author        Brent Christensen
  * @since         $VID:$
  */
-class CronManager
+class CronManager implements JobSchedulerInterface
 {
 
     /**
