@@ -17,10 +17,8 @@ class TriggerStrategyHook extends TriggerStrategy
 {
 
     /**
-     * This is required and should be overridden by all non-cron type triggers,
-     * as it allows strategies to set up whatever hooks are necessary to trigger their logic.
-     * Cron related strategies do not need to implement this method
-     * as this one will be used and do nothing but capture the incoming data
+     * This allows strategies to set up whatever hooks are necessary to trigger their logic.
+     * All overriding methods should call: $this->setAutomatedAction($automated_action)
      *
      * @param AutomatedActionInterface $automated_action
      */
