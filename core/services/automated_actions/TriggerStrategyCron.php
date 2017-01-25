@@ -21,24 +21,39 @@ abstract class TriggerStrategyCron extends TriggerStrategy
 {
 
     /**
-     * @var $cron_manager CronManager
+     * @var JobSchedulerInterface $job_scheduler
      */
-    protected $cron_manager;
+    protected $job_scheduler;
 
 
 
     /**
-     * TriggerStrategyCron constructor.
+     * TriggerStrategyCron constructor
      *
      * @param RuleManager $rule_manager
-     * @param CronManager   $cron_manager
+     * @param JobSchedulerInterface $job_scheduler
      * @throws InvalidInterfaceException
      */
-    public function __construct(RuleManager $rule_manager, CronManager $cron_manager)
+    public function __construct(RuleManager $rule_manager, JobSchedulerInterface $job_scheduler)
     {
-        $this->cron_manager = $cron_manager;
+        $this->job_scheduler = $job_scheduler;
         parent::__construct($rule_manager);
     }
+
+
+
+    /**
+     * This allows strategies to set up whatever hooks are necessary to trigger their logic.
+     * All overriding methods should call: $this->setAutomatedAction($automated_action)
+     *
+     * @param AutomatedActionInterface $automated_action
+     */
+    public function set(AutomatedActionInterface $automated_action)
+    {
+        \EEH_Debug_Tools::printr(__FUNCTION__, __CLASS__, __FILE__, __LINE__, 2);
+        $this->setAutomatedAction($automated_action);
+    }
+
 
 
 }
