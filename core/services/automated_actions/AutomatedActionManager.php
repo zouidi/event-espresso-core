@@ -9,7 +9,6 @@ use EventEspresso\core\exceptions\InvalidEntityException;
 use EventEspresso\core\exceptions\InvalidInterfaceException;
 use EventEspresso\core\services\Benchmark;
 use EventEspresso\core\services\collections\Collection;
-use stdClass;
 
 defined('EVENT_ESPRESSO_VERSION') || exit;
 
@@ -32,6 +31,12 @@ class AutomatedActionManager
      */
     private $automated_actions;
 
+
+    /**
+     * @var AutomatedActionFactory $automated_action_factory
+     */
+    private $automated_action_factory;
+
     /**
      * @type CapabilitiesChecker $capabilities_checker
      */
@@ -42,17 +47,20 @@ class AutomatedActionManager
     /**
      * AutomatedActionManager constructor
      *
-     * @param CapabilitiesChecker $capabilities_checker
-     * @param Collection          $automated_actions
+     * @param AutomatedActionFactory $automated_action_factory
+     * @param CapabilitiesChecker    $capabilities_checker
      * @throws InvalidInterfaceException
      */
-    public function __construct(CapabilitiesChecker $capabilities_checker, Collection $automated_actions = null)
-    {
+    public function __construct(
+        AutomatedActionFactory $automated_action_factory,
+        CapabilitiesChecker $capabilities_checker
+    ) {
         Benchmark::startTimer(__METHOD__);
+        $this->automated_actions = new Collection(
+            'EventEspresso\core\services\automated_actions\AutomatedActionInterface'
+        );
+        $this->automated_action_factory = $automated_action_factory;
         $this->capabilities_checker = $capabilities_checker;
-        $this->automated_actions    = $automated_actions instanceof Collection
-            ? $automated_actions
-            : new Collection('EventEspresso\core\services\automated_actions\AutomatedActionInterface');
         add_action('AHEE__EE_System__initialize', array($this, 'initialize'));
         Benchmark::stopTimer(__METHOD__);
     }
@@ -108,7 +116,7 @@ class AutomatedActionManager
         Benchmark::startTimer(__METHOD__);
         foreach ($results as $result) {
             $this->automated_actions->add(
-                AutomatedActionFactory::create($result),
+                $this->automated_action_factory->create($result),
                 $result->AMA_name
             );
         }
