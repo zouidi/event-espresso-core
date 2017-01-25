@@ -43,12 +43,27 @@ class CronManager implements JobSchedulerInterface
 
 
     /**
-     * @param Cron $cron
+     * @param string $identifier
+     * @return bool
      * @throws InvalidEntityException
      */
-    public function addCron(Cron $cron) {
-        // todo add identifier so that crons are unique
-        $this->crons->add($cron);
+    public function hasJob($identifier) {
+        return $this->crons->has($identifier);
+    }
+
+
+
+    /**
+     * @param JobInterface $cron
+     * @param string $identifier
+     * @return bool
+     * @throws InvalidEntityException
+     */
+    public function addJob(JobInterface $cron, $identifier) {
+        if ($this->crons->has($identifier)) {
+            return false;
+        }
+        return $this->crons->add($cron, $identifier);
     }
 
 
@@ -57,22 +72,36 @@ class CronManager implements JobSchedulerInterface
      * @param array $crons
      * @throws InvalidEntityException
      */
-    public function addCrons($crons = array()) {
+    public function addJobs($crons = array()) {
         $crons = is_array($crons) ? $crons : array($crons);
-        foreach ($crons as $cron) {
-            $this->crons->add($cron);
+        foreach ($crons as $identifier => $cron) {
+            $this->addJob($cron, $identifier);
         }
     }
 
 
 
     /**
-     * @param Cron $cron
+     * @param string $identifier
+     * @return Cron|null
+     */
+    public function getJob($identifier)
+    {
+        if ($this->crons->has($identifier)) {
+            return $this->crons->get($identifier);
+        }
+        return null;
+    }
+
+
+
+    /**
+     * @param JobInterface|Cron $cron
      * @return void
      */
-    public function scheduleEvent(Cron $cron)
+    public function scheduleJob(JobInterface $cron)
     {
-        if ( ! $this->nextScheduledEvent($cron)) {
+        if ( ! $this->nextScheduledJob($cron)) {
             if ($cron->getRecurrence() === '') {
                 wp_schedule_single_event(
                     $cron->getTimestamp(),
@@ -93,10 +122,10 @@ class CronManager implements JobSchedulerInterface
 
 
     /**
-     * @param Cron $cron
+     * @param JobInterface|Cron $cron
      * @return int
      */
-    public function nextScheduledEvent(Cron $cron)
+    public function nextScheduledJob(JobInterface $cron)
     {
         return wp_next_scheduled($cron->getActionHook(), $cron->getData());
     }
@@ -104,10 +133,10 @@ class CronManager implements JobSchedulerInterface
 
 
     /**
-     * @param Cron $cron
+     * @param JobInterface|Cron $cron
      * @return void
      */
-    public function clearScheduledEvent(Cron $cron)
+    public function clearScheduledJob(JobInterface $cron)
     {
         wp_clear_scheduled_hook($cron->getActionHook(), $cron->getData());
     }
@@ -115,10 +144,10 @@ class CronManager implements JobSchedulerInterface
 
 
     /**
-     * @param Cron $cron
+     * @param JobInterface|Cron $cron
      * @return void
      */
-    public function unscheduleEvent(Cron $cron)
+    public function unscheduleJob(JobInterface $cron)
     {
         wp_unschedule_event($cron->getTimestamp(), $cron->getActionHook(), $cron->getData());
     }
