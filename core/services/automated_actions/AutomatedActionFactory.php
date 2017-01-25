@@ -2,8 +2,6 @@
 namespace EventEspresso\core\services\automated_actions;
 
 use DomainException;
-use EventEspresso\core\exceptions\InvalidInterfaceException;
-use EventEspresso\core\services\conditional_logic\rules\QueryParamGenerator;
 use EventEspresso\core\services\conditional_logic\rules\RuleManager;
 
 defined('ABSPATH') || exit;
@@ -22,62 +20,26 @@ class AutomatedActionFactory
 {
 
     /**
-     * @var CronManager $cron_manager
+     * @var JobSchedulerInterface $job_scheduler
      */
-    protected static $cron_manager;
-
-    /**
-     * @var QueryParamGenerator $query_generator
-     */
-    protected static $query_generator;
+    protected $job_scheduler;
 
     /**
      * @var RuleManager $rule_manager
      */
-    protected static $rule_manager;
+    protected $rule_manager;
 
 
 
     /**
-     * @return CronManager
-     * @throws InvalidInterfaceException
+     * AutomatedActionFactory constructor
+     *
+     * @param JobSchedulerInterface $job_scheduler
+     * @param RuleManager $rule_manager
      */
-    public static function getCronManager()
-    {
-        if (! AutomatedActionFactory::$cron_manager instanceof CronManager) {
-            AutomatedActionFactory::$cron_manager = new CronManager();
-        }
-        return AutomatedActionFactory::$cron_manager;
-    }
-
-
-
-    /**
-     * @return QueryParamGenerator
-     * @throws InvalidInterfaceException
-     */
-    public static function getQueryGenerator()
-    {
-        if (! AutomatedActionFactory::$query_generator instanceof QueryParamGenerator) {
-            AutomatedActionFactory::$query_generator = new QueryParamGenerator();
-        }
-        return AutomatedActionFactory::$query_generator;
-    }
-
-
-
-    /**
-     * @return RuleManager
-     * @throws InvalidInterfaceException
-     */
-    public static function getRuleManager()
-    {
-        if (! AutomatedActionFactory::$rule_manager instanceof RuleManager) {
-            AutomatedActionFactory::$rule_manager = new RuleManager(
-                AutomatedActionFactory::getQueryGenerator()
-            );
-        }
-        return AutomatedActionFactory::$rule_manager;
+    public function __construct(JobSchedulerInterface $job_scheduler, RuleManager $rule_manager) {
+        $this->job_scheduler = $job_scheduler;
+        $this->rule_manager = $rule_manager;
     }
 
 
@@ -87,7 +49,7 @@ class AutomatedActionFactory
      * @return AutomatedAction
      * @throws \DomainException
      */
-    public static function create(\stdClass $args)
+    public function create(\stdClass $args)
     {
         if (! isset($args->AMA_strategy, $args->AMA_trigger)) {
             throw new DomainException(
@@ -116,25 +78,25 @@ class AutomatedActionFactory
         switch ($args->AMA_trigger) {
             case 'hook' :
                 $trigger = new TriggerStrategyHook(
-                    AutomatedActionFactory::getRuleManager()
+                    $this->rule_manager
                 );
                 break;
             case 'daily' :
                 $trigger = new TriggerStrategyDaily(
-                    AutomatedActionFactory::getRuleManager(),
-                    AutomatedActionFactory::getCronManager()
+                    $this->rule_manager,
+                    $this->job_scheduler
                 );
                 break;
             case 'hourly' :
                 $trigger = new TriggerStrategyHourly(
-                    AutomatedActionFactory::getRuleManager(),
-                    AutomatedActionFactory::getCronManager()
+                    $this->rule_manager,
+                    $this->job_scheduler
                 );
                 break;
             case 'date' :
                 $trigger = new TriggerStrategyDate(
-                    AutomatedActionFactory::getRuleManager(),
-                    AutomatedActionFactory::getCronManager()
+                    $this->rule_manager,
+                    $this->job_scheduler
                 );
                 break;
             default :
