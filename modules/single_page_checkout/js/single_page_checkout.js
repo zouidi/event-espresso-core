@@ -582,7 +582,6 @@ jQuery(document).ready( function($) {
                 } else {
                     $(this).on('input propertychange', function () {
                         // SPCO.console_log( ' > validate input', $(this ).attr('id'), false );
-                        $(this).val($.trim($(this).val()));
                         if ($(this).valid() && SPCO.submit_buttons_enabled === false) {
                             SPCO.validate_form($(this));
                         }
