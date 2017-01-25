@@ -1,4 +1,11 @@
-<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) {
+<?php use EventEspresso\core\domain\services\capabilities\CapabilitiesChecker;
+use EventEspresso\core\services\automated_actions\AutomatedActionFactory;
+use EventEspresso\core\services\automated_actions\AutomatedActionManager;
+use EventEspresso\core\services\automated_actions\CronManager;
+use EventEspresso\core\services\conditional_logic\rules\QueryParamGenerator;
+use EventEspresso\core\services\conditional_logic\rules\RuleManager;
+
+if ( ! defined('EVENT_ESPRESSO_VERSION')) {
     exit('No direct script access allowed');
 }
 
@@ -909,8 +916,14 @@ final class EE_System
      */
     public function core_loaded_and_ready()
     {
-        new \EventEspresso\core\services\automated_actions\AutomatedActionManager(
-            new \EventEspresso\core\domain\services\capabilities\CapabilitiesChecker(
+        new AutomatedActionManager(
+            new AutomatedActionFactory(
+                new CronManager(),
+                new RuleManager(
+                    new QueryParamGenerator()
+                )
+            ),
+            new CapabilitiesChecker(
                 $this->registry->CAP
             )
         );
