@@ -143,9 +143,14 @@ class AutomatedActionManager
         foreach ($this->automated_actions as $automated_action) {
             /** @var AutomatedActionInterface $automated_action */
             if ($automated_action instanceof RequiresCapCheckInterface) {
-                $this->capabilities_checker->processCapCheck(
-                    $automated_action->getCapCheck()
-                );
+                try {
+                    $this->capabilities_checker->processCapCheck(
+                        $automated_action->getCapCheck()
+                    );
+                } catch (\Exception $e) {
+                    // just eat the exception for now and skip to the next action
+                    continue;
+                }
             }
             $automated_action->setTrigger();
         }
