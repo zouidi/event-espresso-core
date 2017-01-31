@@ -1,5 +1,6 @@
 <?php use EventEspresso\core\domain\services\capabilities\CapabilitiesChecker;
 use EventEspresso\core\services\automated_actions\AutomatedActionFactory;
+use EventEspresso\core\services\automated_actions\AutomatedActionHandler;
 use EventEspresso\core\services\automated_actions\AutomatedActionManager;
 use EventEspresso\core\services\automated_actions\CronManager;
 use EventEspresso\core\services\conditional_logic\rules\QueryParamGenerator;
@@ -916,7 +917,9 @@ final class EE_System
      */
     public function core_loaded_and_ready()
     {
+        do_action('AHEE__EE_System__core_loaded_and_ready');
         new AutomatedActionManager(
+            new AutomatedActionHandler(),
             new AutomatedActionFactory(
                 new CronManager(),
                 new RuleManager(
@@ -927,7 +930,6 @@ final class EE_System
                 $this->registry->CAP
             )
         );
-        do_action('AHEE__EE_System__core_loaded_and_ready');
         do_action('AHEE__EE_System__set_hooks_for_shortcodes_modules_and_addons');
         $this->registry->load_core('Session');
         //		add_action( 'wp_loaded', array( $this, 'set_hooks_for_shortcodes_modules_and_addons' ), 1 );
