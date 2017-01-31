@@ -31,6 +31,10 @@ class AutomatedActionManager
      */
     private $automated_actions;
 
+    /**
+     * @var AutomatedActionHandlerInterface $automated_action_handler
+     */
+    private $automated_action_handler;
 
     /**
      * @var AutomatedActionFactory $automated_action_factory
@@ -47,11 +51,13 @@ class AutomatedActionManager
     /**
      * AutomatedActionManager constructor
      *
-     * @param AutomatedActionFactory $automated_action_factory
-     * @param CapabilitiesChecker    $capabilities_checker
+     * @param AutomatedActionHandlerInterface $automated_action_handler
+     * @param AutomatedActionFactory          $automated_action_factory
+     * @param CapabilitiesChecker             $capabilities_checker
      * @throws InvalidInterfaceException
      */
     public function __construct(
+        AutomatedActionHandlerInterface $automated_action_handler,
         AutomatedActionFactory $automated_action_factory,
         CapabilitiesChecker $capabilities_checker
     ) {
@@ -59,6 +65,7 @@ class AutomatedActionManager
         $this->automated_actions = new Collection(
             'EventEspresso\core\services\automated_actions\AutomatedActionInterface'
         );
+        $this->automated_action_handler = $automated_action_handler;
         $this->automated_action_factory = $automated_action_factory;
         $this->capabilities_checker = $capabilities_checker;
         add_action('AHEE__EE_System__initialize', array($this, 'initialize'));
@@ -160,7 +167,7 @@ class AutomatedActionManager
             if ( ! $automated_action->triggerPulled() || $automated_action->hasRun()) {
                 continue;
             }
-            $automated_action->process();
+            $this->automated_action_handler->processAction($automated_action);
         }
         Benchmark::stopTimer(__METHOD__);
         Benchmark::displayResults();
