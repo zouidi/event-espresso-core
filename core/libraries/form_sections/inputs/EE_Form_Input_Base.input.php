@@ -402,7 +402,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 	 * @throws \EE_Error
 	 */
 	public function get_html_for_input(){
-		
+
 		return  $this->_get_display_strategy()->display();
 	}
 
@@ -532,7 +532,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 	 * @return string
 	 */
 	public function html_label_id(){
-		return ! empty( $this->_html_label_id ) ? $this->_html_label_id : $this->_html_id . '-lbl';
+		return ! empty( $this->_html_label_id ) ? $this->_html_label_id : $this->html_id() . '-lbl';
 	}
 
 
@@ -671,7 +671,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 		$this->_set_normalized_value( $value );
 		$this->_set_raw_value( $value );
 	}
-	
+
 	/**
 	 * Sets the normalized value on this input
 	 * @param mixed $value
@@ -679,7 +679,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable{
 	protected function _set_normalized_value( $value ) {
 		$this->_normalized_value = $value;
 	}
-	
+
 	/**
 	 * Sets the raw value on this input (ie, exactly as the user submitted it)
 	 * @param mixed $value
