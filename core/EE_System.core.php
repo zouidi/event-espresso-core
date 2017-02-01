@@ -919,9 +919,15 @@ final class EE_System
     {
         do_action('AHEE__EE_System__core_loaded_and_ready');
         new AutomatedActionManager(
-            new AutomatedActionHandler(),
+            apply_filters(
+                'FHEE__AutomatedActionManager__JobHandler_constructor_param',
+                new AutomatedActionHandler()
+            ),
             new AutomatedActionFactory(
-                new CronManager(),
+                apply_filters(
+                    'FHEE__AutomatedActionFactory__JobScheduler_constructor_param',
+                    new CronManager()
+                ),
                 new RuleManager(
                     new QueryParamGenerator()
                 )
