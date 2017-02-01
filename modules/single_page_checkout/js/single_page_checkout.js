@@ -125,7 +125,7 @@ jQuery(document).ready( function($) {
         // pixel position from top of form to scroll to after errors
 		offset_from_top : 0,
 		// modifier for offset_from_top
-		offset_from_top_modifier : -50,
+		offset_from_top_modifier : -75,
 		// the first invalid input in a form
 		invalid_input_to_scroll_to : {},
 		// display debugging info in console?
@@ -188,7 +188,7 @@ jQuery(document).ready( function($) {
                     && typeof SPCO.initialized_reg_steps['attendee_information'] === 'undefined'
                 ) {
                     // console.log('**initialize attendee_information**');
-                    SPCO.form_is_valid = false;
+                    // SPCO.form_is_valid = false;
                     SPCO.uncheck_copy_option_inputs();
                     SPCO.set_listener_for_advanced_copy_options_checkbox();
                     SPCO.set_listener_for_copy_all_attendee_info_checkbox();
@@ -307,12 +307,13 @@ jQuery(document).ready( function($) {
 		track_validation_error : function( invalid_input_id, invalid_input_label ) {
             // console.log(JSON.stringify('**track_validation_error**', null, 4));
             // SPCO.console_log(' > invalid_input_id', invalid_input_id, false);
+            // SPCO.console_log(' > invalid_input_label', invalid_input_label, false);
 			// convert to jQuery object
 			var invalid_input = $( '#' + invalid_input_id );
 			invalid_input_label = typeof invalid_input_label !== 'undefined' && invalid_input_label !== ''
                 ? $('#' + invalid_input_label )
                 : $( '#' + invalid_input_id + '-lbl' );
-			SPCO.invalid_input_to_scroll_to = SPCO.invalid_input_to_scroll_to === null
+            SPCO.invalid_input_to_scroll_to = SPCO.invalid_input_to_scroll_to === null
                 ? invalid_input_label
                 : SPCO.invalid_input_to_scroll_to;
 			// grab input label && remove "required" asterisk
@@ -598,9 +599,10 @@ jQuery(document).ready( function($) {
 		 */
         validate_form : function(input) {
             if (SPCO.form_validation_in_progress === true) {
-                SPCO.console_log('validate_form', 'SKIP', false);
+                // SPCO.console_log('validate_form', 'SKIP', false);
                 return;
             }
+            // console.log('');
             // console.log('***** VALIDATING FORM *****');
             SPCO.form_validation_in_progress = true;
             SPCO.current_form_to_validate = input.parents('form:first');
@@ -613,6 +615,7 @@ jQuery(document).ready( function($) {
             }
             SPCO.form_validation_in_progress = false;
             // console.log('***** END FORM VALIDATION *****');
+            // console.log('');
         },
 
 
@@ -1403,7 +1406,9 @@ jQuery(document).ready( function($) {
 		 */
 		scroll_to_top_and_display_messages : function( item, msg, end_ajax ) {
             // console.log(JSON.stringify('**scroll_to_top_and_display_messages**', null, 4));
-            //SPCO.console_log_object( 'scroll_to_top_and_display_messages msg', msg.success, 0 );
+            // SPCO.console_log_object( 'scroll_to_top_and_display_messages msg', msg.success, 0 );
+            // SPCO.console_log_object( 'SPCO.offset_from_top', SPCO.offset_from_top, 0 );
+            // SPCO.console_log_object( 'SPCO.offset_from_top_modifier', SPCO.offset_from_top_modifier, 0 );
 			// is message display being overridden by some other JS ?
 			if ( SPCO.override_messages ) {
 				return;
