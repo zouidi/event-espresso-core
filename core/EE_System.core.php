@@ -918,24 +918,33 @@ final class EE_System
     public function core_loaded_and_ready()
     {
         do_action('AHEE__EE_System__core_loaded_and_ready');
-        new AutomatedActionManager(
-            apply_filters(
-                'FHEE__AutomatedActionManager__JobHandler_constructor_param',
-                new AutomatedActionHandler()
-            ),
-            new AutomatedActionFactory(
+        if (
+            // don't load AutomatedActionManager during AJAX requests
+            ! (defined('DOING_AJAX') && DOING_AJAX)
+            // or REST API requests
+            && ! (defined('REST_REQUEST ') && REST_REQUEST)
+            // or no_header requests
+            && ! isset($_REQUEST['no_header'])
+        ) {
+            new AutomatedActionManager(
                 apply_filters(
-                    'FHEE__AutomatedActionFactory__JobScheduler_constructor_param',
-                    new CronManager()
+                    'FHEE__AutomatedActionManager__JobHandler_constructor_param',
+                    new AutomatedActionHandler()
                 ),
-                new RuleManager(
-                    new QueryParamGenerator()
+                new AutomatedActionFactory(
+                    apply_filters(
+                        'FHEE__AutomatedActionFactory__JobScheduler_constructor_param',
+                        new CronManager()
+                    ),
+                    new RuleManager(
+                        new QueryParamGenerator()
+                    )
+                ),
+                new CapabilitiesChecker(
+                    $this->registry->CAP
                 )
-            ),
-            new CapabilitiesChecker(
-                $this->registry->CAP
-            )
-        );
+            );
+        }
         do_action('AHEE__EE_System__set_hooks_for_shortcodes_modules_and_addons');
         $this->registry->load_core('Session');
         //		add_action( 'wp_loaded', array( $this, 'set_hooks_for_shortcodes_modules_and_addons' ), 1 );
