@@ -147,10 +147,11 @@ jQuery(document).ready( function($) {
 		notice_fadeout_attention : 18000,
 		notice_fadeout_errors : 12000,
 		notice_fadeout_min : 4000,
+        // to prevent double clicking
+        form_submit_lock: 0,
 
 
-
-	/********** INITIAL SETUP **********/
+        /********** INITIAL SETUP **********/
 
 
 
@@ -398,7 +399,16 @@ jQuery(document).ready( function($) {
 			//console.log( JSON.stringify( '**set_listener_for_process_next_reg_step_button**', null, 4 ) );
 			SPCO.main_container.on( 'click', '.spco-next-step-btn', function( e ) {
                 //console.log( JSON.stringify( 'SPCO spco-next-step-btn  >CLICK <', null, 4 ) );
-				SPCO.current_form_to_validate = $(this).parents('form:first');
+                SPCO.disable_submit_buttons();
+                // console.log(JSON.stringify('**SET form_submit_lock**', null, 4));
+                SPCO.form_submit_lock = setTimeout(
+                    function () {
+                        // console.log(JSON.stringify('**CLEAR form_submit_lock**', null, 4));
+                        SPCO.enable_submit_buttons();
+                    },
+                    1000
+                );
+                SPCO.current_form_to_validate = $(this).parents('form:first');
 				SPCO.form_is_valid = SPCO.current_form_to_validate.valid();
 				SPCO.main_container.trigger( 'process_next_step_button_click', [ $( this ) ] );
 				//console.log( JSON.stringify( 'SPCO FINISHED "process_next_step_button_click" event', null, 4 ) );
@@ -407,8 +417,12 @@ jQuery(document).ready( function($) {
 				if ( ! SPCO.form_is_valid ){
                     SPCO.display_validation_errors();
 				} else if ( eei18n.ajax_submit ) {
-                    SPCO.process_next_step( this );
-				}
+				    // re-enable the submit button immediately
+                    SPCO.enable_submit_buttons();
+                    //clear timeout so that it doesn't re-enable on us when we don't want it to
+                    clearTimeout(SPCO.form_submit_lock);
+                    SPCO.process_next_step(this);
+                }
 				if ( eei18n.ajax_submit ) {
 					e.preventDefault();
 					e.stopPropagation();
@@ -737,6 +751,9 @@ jQuery(document).ready( function($) {
 			// add trigger point so other JS can join the party
 			SPCO.main_container.trigger( 'process_next_step', [ step ] );
             if ( typeof step !== 'undefined' && step !== '' && ! $(next_step_btn).hasClass('disabled') ) {
+                // not disabled? you are NOW!!!
+                SPCO.disable_submit_buttons();
+                SPCO.allow_enable_submit_buttons = false;
                 if ( step === 'payment_options' && SPCO.registration_session_expiration instanceof Date ) {
 					// add time to session expiration (defaults to +10 minutes)
 					SPCO.registration_session_expiration = SPCO.registration_session_expiration.setTime(
@@ -748,8 +765,6 @@ jQuery(document).ready( function($) {
 				//SPCO.console_log( 'process_next_step : next_step', next_step, false );
 				// which form is being processed ?
 				var form_to_check = '#ee-spco-'+step+'-reg-step-form';
-                // not disabled? you are NOW!!!
-                SPCO.disable_submit_buttons();
                 SPCO.submit_reg_form ( step, next_step, form_to_check );
 				return true;
 			}
