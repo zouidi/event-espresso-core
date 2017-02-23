@@ -63,9 +63,12 @@ jQuery(document).ready(function ($) {
          * @function
          */
         set_listener_for_SPCO_process_next_step_button_click: function () {
+            eei18n.ajax_submit = EE_RECAPTCHA.not_a_robot;
             // initialize if the SPCO reg step changes to "payment_options"
             SPCO.main_container.on('process_next_step_button_click', function () {
                 // SPCO.console_log('process_next_step_button_click', '>>> CLICK <<<', true);
+                // SPCO.console_log('EE_RECAPTCHA.submitted', EE_RECAPTCHA.submitted, false);
+                // SPCO.console_log('EE_RECAPTCHA.not_a_robot', EE_RECAPTCHA.not_a_robot, false);
                 if (!EE_RECAPTCHA.submitted) {
                     SPCO.form_is_valid     = false;
                     eei18n.ajax_submit     = true;
@@ -105,19 +108,23 @@ jQuery(document).ready(function ($) {
 		 * }}
          */
         process_SPCO_response: function (SPCO_response) {
-            //alert( 'process_SPCO_response' );
+            // alert('process_SPCO_response');
+            // SPCO.console_log('process_SPCO_response', '', true);
             // SPCO.console_log_object( 'SPCO_response', SPCO_response, 0 );
             if (typeof SPCO_response.recaptcha_passed !== 'undefined') {
                 // bypass recaptcha ?
                 if (SPCO_response.bypass_recaptcha) {
+                    // SPCO.console_log('SPCO_response.bypass_recaptcha', SPCO_response.bypass_recaptcha, false);
                     //  you're still a robot
                     EE_RECAPTCHA.not_a_robot = false;
                 } else if (SPCO_response.recaptcha_passed) {
+                    // SPCO.console_log('SPCO_response.recaptcha_passed', SPCO_response.recaptcha_passed, false);
                     // remove recaptcha
                     EE_RECAPTCHA.recaptcha_div.html('');
                     EE_RECAPTCHA.not_a_robot = true;
                     SPCO.get_next_step       = true;
                 } else {
+                    // SPCO.console_log('do NOT pass go', 'do NOT collect $200', false);
                     // do NOT pass go! do NOT collect $200
                     SPCO.get_next_step = false;
                     //alert( 'recaptcha failed' );
