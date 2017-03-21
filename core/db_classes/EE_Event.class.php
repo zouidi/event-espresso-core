@@ -794,12 +794,13 @@ class EE_Event extends EE_CPT_Base implements EEI_Line_Item_Object, EEI_Admin_Li
 
 
     /**
-     *    perform_sold_out_status_check
-     *    checks all of this events's datetime  reg_limit - sold values to determine if ANY datetimes have spaces
-     *    available... if NOT, then the event status will get toggled to 'sold_out'
+     * perform_sold_out_status_check
+     * checks all of this events's datetime  reg_limit - sold values to determine if ANY datetimes have spaces
+     * available... if NOT, then the event status will get toggled to 'sold_out'
      *
      * @access public
      * @return bool    return the ACTUAL sold out state.
+     * @throws \EE_Error
      */
     public function perform_sold_out_status_check()
     {
@@ -807,8 +808,8 @@ class EE_Event extends EE_CPT_Base implements EEI_Line_Item_Object, EEI_Admin_Li
         $tickets = $this->tickets(array(
             array(
                 'TKT_end_date' => array('>=', EEM_Ticket::instance()->current_time_for_query('TKT_end_date')),
-                'TKT_deleted'  => false,
             ),
+            'default_where_conditions' => 'minimum',
         ));
         // if all the tickets are just expired, then don't update the event status to sold out
         if (empty($tickets)) {
@@ -830,7 +831,7 @@ class EE_Event extends EE_CPT_Base implements EEI_Line_Item_Object, EEI_Admin_Li
         } else {
             $sold_out = false;
             // was event previously marked as sold out ?
-            if ($this->status() == EEM_Event::sold_out) {
+            if ($this->status() === EEM_Event::sold_out) {
                 // revert status to previous value, if it was set
                 $previous_event_status = $this->get_post_meta('_previous_event_status', true);
                 if ($previous_event_status) {
