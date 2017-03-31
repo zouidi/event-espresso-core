@@ -808,8 +808,8 @@ class EE_Event extends EE_CPT_Base implements EEI_Line_Item_Object, EEI_Admin_Li
         $tickets = $this->tickets(array(
             array(
                 'TKT_end_date' => array('>=', EEM_Ticket::instance()->current_time_for_query('TKT_end_date')),
+                'TKT_deleted' => false,
             ),
-            'default_where_conditions' => 'minimum',
         ));
         // if all the tickets are just expired, then don't update the event status to sold out
         if (empty($tickets)) {
