@@ -650,7 +650,10 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
                     $ticket->_remove_relation_to($saved_datetimes[$row_id], 'Datetime');
                     // Is this an existing ticket (has an ID) and does it have any sold?
                     // If so, then we need to remove it's sold from the DTT_sold.
-                    if ($ticket->ID() && $ticket->sold() > 0) {
+                    // but NOT if the ticket is being removed because it is getting archived !!!
+                    // Because in that scenario, the archived ticket is likely still a valid ticket
+                    // and needs to still have it's quantity sold to count in calculations
+                    if ($ticket->ID() && $ticket->sold() > 0 && ! $ticket->deleted()) {
                         $saved_datetimes[$row_id]->decrease_sold($ticket->sold());
                         $saved_datetimes[$row_id]->save();
                     }
@@ -690,9 +693,9 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
         // AND has the new TKT_price associated with it.
         $new_ticket = clone $ticket;
         $new_ticket->set('TKT_ID', 0);
-        $new_ticket->set('TKT_deleted', 0);
-        $new_ticket->set('TKT_price', $ticket_price);
-        $new_ticket->set('TKT_sold', 0);
+        $new_ticket->set_deleted(0);
+        $new_ticket->set_price($ticket_price);
+        $new_ticket->set_sold(0);
         // let's get a new ID for this ticket
         $new_ticket->save();
         // we also need to make sure this new ticket gets the same datetime attachments as the archived ticket
