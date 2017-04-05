@@ -381,8 +381,17 @@ class EEH_Debug_Tools{
 			return;
 		}
 		do_action( 'AHEE__EEH_Debug_Tools__doing_it_wrong_run', $function, $message, $version);
-		$version = $version === null ? '' : sprintf( __('(This message was added in version %s of Event Espresso)', 'event_espresso' ), $version );
-		$error_message = sprintf( esc_html__('%1$s was called %2$sincorrectly%3$s. %4$s %5$s','event_espresso' ), $function, '<strong>', '</strong>', $message, $version );
+		$version = $version === null
+            ? ''
+            : sprintf( __('(This message was added in version %s of Event Espresso)', 'event_espresso' ), $version);
+		$error_message = sprintf(
+		    esc_html__('%1$s was called %2$sincorrectly%3$s. %4$s %5$s','event_espresso' ),
+            $function,
+            '<strong>',
+            '</strong>',
+            $message,
+            $version
+        );
 
 		//don't trigger error if doing ajax, instead we'll add a transient EE_Error notice that in theory should show on the next request.
 		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
