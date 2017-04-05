@@ -5,6 +5,7 @@ use EventEspresso\core\domain\services\ticket\CancelTicketLineItemService;
 use EventEspresso\core\exceptions\InvalidEntityException;
 use EventEspresso\core\services\commands\CommandHandler;
 use EventEspresso\core\services\commands\CommandInterface;
+use EventEspresso\core\services\commands\registration\CancelRegistrationAndTicketLineItemCommand as DeprecatedCommand;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
     exit('No direct script access allowed');
@@ -44,13 +45,17 @@ class CancelRegistrationAndTicketLineItemCommandHandler extends CommandHandler
 
 
     /**
-     * @param \EventEspresso\core\services\commands\CommandInterface $command
+     * @param CommandInterface $command
      * @return boolean
+     * @throws InvalidEntityException
      */
     public function handle(CommandInterface $command)
     {
         /** @var CancelRegistrationAndTicketLineItemCommand $command */
-        if ( ! $command instanceof CancelRegistrationAndTicketLineItemCommand) {
+        if (
+            ! $command instanceof CancelRegistrationAndTicketLineItemCommand
+            || ! $command instanceof DeprecatedCommand
+        ) {
             throw new InvalidEntityException(get_class($command), 'CancelRegistrationAndTicketLineItemCommand');
         }
         $registration = $command->registration();

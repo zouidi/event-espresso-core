@@ -5,6 +5,7 @@ use EventEspresso\core\domain\services\registration\CopyRegistrationService;
 use EventEspresso\core\exceptions\InvalidEntityException;
 use EventEspresso\core\services\commands\CommandHandler;
 use EventEspresso\core\services\commands\CommandInterface;
+use EventEspresso\core\services\commands\registration\CopyRegistrationPaymentsCommand as DeprecatedCommand;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
     exit('No direct script access allowed');
@@ -46,13 +47,17 @@ class CopyRegistrationPaymentsCommandHandler extends CommandHandler
 
 
     /**
-     * @param \EventEspresso\core\services\commands\CommandInterface $command
+     * @param CommandInterface $command
      * @return boolean
+     * @throws InvalidEntityException
      */
     public function handle(CommandInterface $command)
     {
         /** @var CopyRegistrationPaymentsCommand $command */
-        if ( ! $command instanceof CopyRegistrationPaymentsCommand) {
+        if (
+            ! $command instanceof CopyRegistrationPaymentsCommand
+            || ! $command instanceof DeprecatedCommand
+        ) {
             throw new InvalidEntityException(get_class($command), 'CopyRegistrationPaymentsCommand');
         }
         return $this->copy_registration_service->copyPaymentDetails(

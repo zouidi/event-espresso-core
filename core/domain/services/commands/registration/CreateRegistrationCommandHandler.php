@@ -5,6 +5,7 @@ use EventEspresso\core\domain\services\registration\CreateRegistrationService;
 use EventEspresso\core\exceptions\InvalidEntityException;
 use EventEspresso\core\services\commands\CommandHandler;
 use EventEspresso\core\services\commands\CommandInterface;
+use EventEspresso\core\services\commands\registration\CreateRegistrationCommand as DeprecatedCommand;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
     exit('No direct script access allowed');
@@ -45,11 +46,15 @@ class CreateRegistrationCommandHandler extends CommandHandler
     /**
      * @param  CommandInterface $command
      * @return mixed
+     * @throws InvalidEntityException
      */
     public function handle(CommandInterface $command)
     {
         /** @var CreateRegistrationCommand $command */
-        if ( ! $command instanceof CreateRegistrationCommand) {
+        if (
+            ! $command instanceof CreateRegistrationCommand
+            || ! $command instanceof DeprecatedCommand
+        ) {
             throw new InvalidEntityException(get_class($command), 'CreateRegistrationCommand');
         }
         // now create a new registration for the ticket

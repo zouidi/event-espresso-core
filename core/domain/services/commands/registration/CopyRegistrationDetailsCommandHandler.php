@@ -55,8 +55,8 @@ class CopyRegistrationDetailsCommandHandler extends CommandHandler
     {
         /** @var \EventEspresso\core\services\commands\registration\CopyRegistrationDetailsCommand $command */
         if (
-            ! $command instanceof DeprecatedCommand
-            || ! $command instanceof CopyRegistrationDetailsCommand
+            ! $command instanceof CopyRegistrationDetailsCommand
+            || ! $command instanceof DeprecatedCommand
         ) {
             throw new InvalidEntityException(get_class($command), 'CopyRegistrationDetailsCommand');
         }

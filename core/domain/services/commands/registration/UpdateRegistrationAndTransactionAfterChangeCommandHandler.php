@@ -5,6 +5,7 @@ use EventEspresso\core\domain\services\registration\UpdateRegistrationService;
 use EventEspresso\core\exceptions\InvalidEntityException;
 use EventEspresso\core\services\commands\CommandHandler;
 use EventEspresso\core\services\commands\CommandInterface;
+use EventEspresso\core\services\commands\registration\UpdateRegistrationAndTransactionAfterChangeCommand as DeprecatedCommand;
 
 if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 	exit( 'No direct script access allowed' );
@@ -44,14 +45,18 @@ class UpdateRegistrationAndTransactionAfterChangeCommandHandler extends CommandH
 
 
 
-	/**
-	 * @param \EventEspresso\core\services\commands\CommandInterface $command
-	 * @return boolean
-	 */
+    /**
+     * @param CommandInterface $command
+     * @return boolean
+     * @throws InvalidEntityException
+     */
 	public function handle( CommandInterface $command )
 	{
 		/** @var UpdateRegistrationAndTransactionAfterChangeCommand $command */
-		if ( ! $command instanceof UpdateRegistrationAndTransactionAfterChangeCommand ) {
+		if (
+		    ! $command instanceof UpdateRegistrationAndTransactionAfterChangeCommand
+            || ! $command instanceof DeprecatedCommand
+        ) {
 			throw new InvalidEntityException(
 				get_class($command),
 				'UpdateRegistrationAndTransactionAfterChangeCommand'
