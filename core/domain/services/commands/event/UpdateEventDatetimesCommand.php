@@ -1,6 +1,6 @@
 <?php
 
-namespace EventEspresso\core\services\commands\event;
+namespace EventEspresso\core\domain\services\commands\event;
 
 use EE_Event;
 use EventEspresso\core\domain\services\capabilities\CapCheck;
