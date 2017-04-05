@@ -14,6 +14,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @package       Event Espresso
  * @author        Brent Christensen
  * @since         4.9.0
+ * @deprecated    4.9.35
  */
 class CopyRegistrationPaymentsCommand extends CopyRegistrationDetailsCommand
 {

@@ -15,10 +15,11 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @package       Event Espresso
  * @author        Brent Christensen
  * @since         4.9.0
+ * @deprecated    4.9.35
  */
 class CancelRegistrationAndTicketLineItemCommand extends SingleRegistrationCommand
 {
-	
+
 }
 // End of file CancelRegistrationAndTicketLineItemCommand.php
 // Location: /CancelRegistrationAndTicketLineItemCommand.php

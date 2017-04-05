@@ -1,8 +1,9 @@
 <?php
+
 namespace EventEspresso\core\services\commands\registration;
 
-if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
-	exit( 'No direct script access allowed' );
+if (! defined('EVENT_ESPRESSO_VERSION')) {
+    exit('No direct script access allowed');
 }
 
 
@@ -12,9 +13,9 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * DTO for passing data to a UpdateRegistrationAndTransactionAfterChangeCommandHandler
  *
  * @package       Event Espresso
-
-*@author        Brent Christensen
+ * @author        Brent Christensen
  * @since         $VID:$
+ * @deprecated    4.9.35
  */
 class UpdateRegistrationAndTransactionAfterChangeCommand extends SingleRegistrationCommand
 {

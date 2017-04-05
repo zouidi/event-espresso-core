@@ -16,6 +16,7 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @package       Event Espresso
  * @author        Brent Christensen
  * @since         4.9.0
+ * @deprecated    4.9.35
  */
 class CopyRegistrationDetailsCommand extends Command
 {
@@ -47,6 +48,28 @@ class CopyRegistrationDetailsCommand extends Command
 	) {
 		$this->target_registration = $target_registration;
 		$this->registration_to_copy = $registration_to_copy;
+		// commands have moved to different directory so this is deprecated
+        // can't use $this in Closures, so make a copy to pass in
+		$this_command = $this;
+		add_filter(
+            'FHEE__EventEspresso\core\services\commands\CommandHandlerManager__getCommandHandler__command_handler',
+            function($command_name, Command $command) use ($this_command) {
+                if ($command === $this_command) {
+                    $command_name = 'EventEspresso\core\services\commands\registration\CopyRegistrationDetailsCommandHandler';
+                }
+                return $command_name;
+            },
+            10, 2
+        );
+		\EE_Error::doing_it_wrong(
+		    'EventEspresso\core\services\commands\registration\CopyRegistrationDetailsCommand',
+            esc_html__(
+                'All Commands found in "/core/services/commands/registration/" have been moved to "/core/domain/services/commands/registration/"',
+                'event_espresso'
+            ),
+            '4.9.35',
+            '5.0.0'
+        );
 	}
 
 

@@ -20,6 +20,7 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
  * @package       Event Espresso
  * @author        Brent Christensen
  * @since         4.9.0
+ * @deprecated    4.9.35
  */
 class CreateRegistrationCommand extends Command implements CommandRequiresCapCheckInterface
 {
@@ -42,12 +43,12 @@ class CreateRegistrationCommand extends Command implements CommandRequiresCapChe
     /**
      * @var int $reg_count
      */
-    private $reg_count = 1;
+    private $reg_count;
 
     /**
      * @var int $reg_group_size
      */
-    private $reg_group_size = 0;
+    private $reg_group_size;
 
     /**
      * @var \EE_Registration $registration
@@ -63,6 +64,7 @@ class CreateRegistrationCommand extends Command implements CommandRequiresCapChe
      * @param \EE_Line_Item   $ticket_line_item
      * @param int             $reg_count
      * @param int             $reg_group_size
+     * @throws InvalidEntityException
      */
     public function __construct(
         \EE_Transaction $transaction,
@@ -77,7 +79,7 @@ class CreateRegistrationCommand extends Command implements CommandRequiresCapChe
                 is_object($this->ticket) ? get_class($this->ticket) : gettype($this->ticket),
                 'EE_Ticket',
                 sprintf(
-                    __("Line item %s did not contain a valid ticket", "event_espresso"),
+                    __('Line item %s did not contain a valid ticket', 'event_espresso'),
                     $ticket_line_item->ID()
                 )
             );
@@ -86,6 +88,28 @@ class CreateRegistrationCommand extends Command implements CommandRequiresCapChe
         $this->ticket_line_item = $ticket_line_item;
         $this->reg_count = absint($reg_count);
         $this->reg_group_size = absint($reg_group_size);
+        // commands have moved to different directory so this is deprecated
+        // can't use $this in Closures, so make a copy to pass in
+        $this_command = $this;
+        add_filter(
+            'FHEE__EventEspresso\core\services\commands\CommandHandlerManager__getCommandHandler__command_handler',
+            function ($command_name, Command $command) use ($this_command) {
+                if ($command === $this_command) {
+                    $command_name = 'EventEspresso\core\services\commands\registration\CreateRegistrationCommandHandler';
+                }
+                return $command_name;
+            },
+            10, 2
+        );
+        \EE_Error::doing_it_wrong(
+            'EventEspresso\core\services\commands\registration\CreateRegistrationCommand',
+            esc_html__(
+                'All Commands found in "/core/services/commands/registration/" have been moved to "/core/domain/services/commands/registration/"',
+                'event_espresso'
+            ),
+            '4.9.35',
+            '5.0.0'
+        );
     }
 
 
