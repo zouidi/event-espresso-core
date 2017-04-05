@@ -1,4 +1,6 @@
 <?php
+use EventEspresso\core\exceptions\ExceptionStackTraceDisplay;
+
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
     exit('NO direct script access allowed');
 }
@@ -201,136 +203,29 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
     /**
      * Handles saving everything related to Tickets (datetimes, tickets, prices)
      *
-     * @param  EE_Event $evtobj The Event object we're attaching data to
+     * @param  EE_Event $event The Event object we're attaching data to
      * @param  array    $data   The request data from the form
-     *
-     * @return bool             success or fail
+     * @return void
      */
-    public function dtt_and_tickets_caf_update($evtobj, $data)
+    public function dtt_and_tickets_caf_update($event, $data)
     {
-        //first we need to start with datetimes cause they are the "root" items attached to events.
-        $saved_dtts = $this->_update_dtts($evtobj, $data);
-        //next tackle the tickets (and prices?)
-        $this->_update_tkts($evtobj, $saved_dtts, $data);
+        try {
+            //first we need to start with datetimes cause they are the "root" items attached to events.
+            $saved_datetimes = EE_Registry::instance()->BUS->execute(
+                new \EventEspresso\core\domain\services\commands\event\UpdateEventDatetimesCommand(
+                    $event,
+                    isset($data['edit_event_datetimes']) ? $data['edit_event_datetimes'] : array(),
+                    isset($data['timezone_string']) ? $data['timezone_string'] : null,
+                    $this->_date_format_strings
+                )
+            );
+            //next tackle the tickets (and prices?)
+            $this->_update_tkts($event, $saved_datetimes, $data);
+        } catch (Exception $exception) {
+            new ExceptionStackTraceDisplay($exception);
+        }
     }
 
-
-    /**
-     * update event_datetimes
-     *
-     * @param  EE_Event $evt_obj Event being updated
-     * @param  array    $data    the request data from the form
-     *
-     * @return EE_Datetime[]
-     */
-    protected function _update_dtts($evt_obj, $data)
-    {
-        $timezone       = isset($data['timezone_string']) ? $data['timezone_string'] : null;
-        $saved_dtt_ids  = array();
-        $saved_dtt_objs = array();
-
-        foreach ($data['edit_event_datetimes'] as $row => $dtt) {
-            //trim all values to ensure any excess whitespace is removed.
-            $dtt                = array_map(
-                function ($datetime_data) {
-                    return is_array($datetime_data) ? $datetime_data : trim($datetime_data);
-                },
-                $dtt
-            );
-            $dtt['DTT_EVT_end'] = isset($dtt['DTT_EVT_end']) && ! empty($dtt['DTT_EVT_end']) ? $dtt['DTT_EVT_end'] : $dtt['DTT_EVT_start'];
-            $datetime_values    = array(
-                'DTT_ID'          => ! empty($dtt['DTT_ID']) ? $dtt['DTT_ID'] : null,
-                'DTT_name'        => ! empty($dtt['DTT_name']) ? $dtt['DTT_name'] : '',
-                'DTT_description' => ! empty($dtt['DTT_description']) ? $dtt['DTT_description'] : '',
-                'DTT_EVT_start'   => $dtt['DTT_EVT_start'],
-                'DTT_EVT_end'     => $dtt['DTT_EVT_end'],
-                'DTT_reg_limit'   => empty($dtt['DTT_reg_limit']) ? EE_INF : $dtt['DTT_reg_limit'],
-                'DTT_order'       => ! isset($dtt['DTT_order']) ? $row : $dtt['DTT_order'],
-            );
-
-            //if we have an id then let's get existing object first and then set the new values.  Otherwise we instantiate a new object for save.
-
-            if ( ! empty($dtt['DTT_ID'])) {
-                $DTM = EE_Registry::instance()->load_model('Datetime', array($timezone))->get_one_by_ID($dtt['DTT_ID']);
-
-                //set date and time format according to what is set in this class.
-                $DTM->set_date_format($this->_date_format_strings['date']);
-                $DTM->set_time_format($this->_date_format_strings['time']);
-
-                foreach ($datetime_values as $field => $value) {
-                    $DTM->set($field, $value);
-                }
-
-                // make sure the $dtt_id here is saved just in case after the add_relation_to() the autosave replaces it.
-                // We need to do this so we dont' TRASH the parent DTT.(save the ID for both key and value to avoid duplications)
-                $saved_dtt_ids[$DTM->ID()] = $DTM->ID();
-
-            } else {
-                $DTM = EE_Registry::instance()->load_class(
-                    'Datetime',
-                    array(
-                        $datetime_values,
-                        $timezone,
-                        array($this->_date_format_strings['date'], $this->_date_format_strings['time'])
-                    ),
-                    false,
-                    false
-                );
-
-                foreach ($datetime_values as $field => $value) {
-                    $DTM->set($field, $value);
-                }
-            }
-
-
-            $DTM->save();
-            $DTM = $evt_obj->_add_relation_to($DTM, 'Datetime');
-            $evt_obj->save();
-
-            //before going any further make sure our dates are setup correctly so that the end date is always equal or greater than the start date.
-            if ($DTM->get_raw('DTT_EVT_start') > $DTM->get_raw('DTT_EVT_end')) {
-                $DTM->set('DTT_EVT_end', $DTM->get('DTT_EVT_start'));
-                $DTM = EEH_DTT_Helper::date_time_add($DTM, 'DTT_EVT_end', 'days');
-                $DTM->save();
-            }
-
-            //	now we have to make sure we add the new DTT_ID to the $saved_dtt_ids array
-            // because it is possible there was a new one created for the autosave.
-            // (save the ID for both key and value to avoid duplications)
-            $saved_dtt_ids[$DTM->ID()] = $DTM->ID();
-            $saved_dtt_objs[$row]      = $DTM;
-
-            //todo if ANY of these updates fail then we want the appropriate global error message.
-        }
-
-        //now we need to REMOVE any dtts that got deleted.  Keep in mind that this process will only kick in for DTT's that don't have any DTT_sold on them. So its safe to permanently delete at this point.
-        $old_datetimes = explode(',', $data['datetime_IDs']);
-        $old_datetimes = $old_datetimes[0] == '' ? array() : $old_datetimes;
-
-        if (is_array($old_datetimes)) {
-            $dtts_to_delete = array_diff($old_datetimes, $saved_dtt_ids);
-            foreach ($dtts_to_delete as $id) {
-                $id = absint($id);
-                if (empty($id)) {
-                    continue;
-                }
-
-                $dtt_to_remove = EE_Registry::instance()->load_model('Datetime')->get_one_by_ID($id);
-
-                //remove tkt relationships.
-                $related_tickets = $dtt_to_remove->get_many_related('Ticket');
-                foreach ($related_tickets as $tkt) {
-                    $dtt_to_remove->_remove_relation_to($tkt, 'Ticket');
-                }
-
-                $evt_obj->_remove_relation_to($id, 'Datetime');
-                $dtt_to_remove->refresh_cache_of_related_objects();
-
-            }
-        }
-
-        return $saved_dtt_objs;
-    }
 
 
     /**
