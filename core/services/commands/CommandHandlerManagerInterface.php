@@ -16,17 +16,19 @@ interface CommandHandlerManagerInterface
 {
 
 	/**
-	 * @param \EventEspresso\core\services\commands\CommandHandlerInterface $command_handler
+	 * @param CommandHandlerInterface $command_handler
 	 * @return mixed
 	 */
 	public function addCommandHandler( CommandHandlerInterface $command_handler );
 
 
-	/**
-	 * @param \EventEspresso\core\services\commands\CommandInterface $command
-	 * @return mixed
-	 */
-	public function getCommandHandler( CommandInterface $command );
+
+    /**
+     * @param CommandInterface $command
+     * @param CommandBus       $command_bus
+     * @return mixed
+     */
+	public function getCommandHandler( CommandInterface $command, CommandBus $command_bus = null );
 
 }
 // End of file CommandHandlerManagerInterface.php

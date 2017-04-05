@@ -96,8 +96,10 @@ class CommandBus implements CommandBusInterface
 
 
     /**
-     * @param \EventEspresso\core\services\commands\CommandInterface $command
+     * @param CommandInterface $command
      * @return mixed
+     * @throws InvalidDataTypeException
+     * @throws InvalidCommandBusMiddlewareException
      */
     public function execute($command)
     {
@@ -119,7 +121,7 @@ class CommandBus implements CommandBusInterface
             $middleware($command, $middleware);
         }
         return $this->command_handler_manager
-            ->getCommandHandler($command)
+            ->getCommandHandler($command, $this)
             ->handle($command);
     }
 
