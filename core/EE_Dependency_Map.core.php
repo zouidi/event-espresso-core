@@ -428,10 +428,19 @@ class EE_Dependency_Map {
 				'EventEspresso\core\services\database\TableAnalysis' => EE_Dependency_Map::load_from_cache,
                 'EventEspresso\core\services\database\TableManager' => EE_Dependency_Map::load_from_cache,
 			),
-			'EventEspresso\core\services\commands\event\UpdateEventDatetimesCommandHandler' => array(
+			'EventEspresso\core\domain\services\commands\event\UpdateEventDatetimesCommandHandler' => array(
 				'EEM_Datetime' => EE_Dependency_Map::load_from_cache,
 			),
-		);
+			'EventEspresso\core\domain\services\commands\datetime\CreateDatetimeCommandHandler' => array(
+				'EEM_Datetime' => EE_Dependency_Map::load_from_cache,
+			),
+			'EventEspresso\core\domain\services\commands\datetime\DeleteDatetimeCommandHandler' => array(
+				'EEM_Datetime' => EE_Dependency_Map::load_from_cache,
+			),
+			'EventEspresso\core\domain\services\commands\datetime\UpdateDatetimeCommandHandler' => array(
+				'EEM_Datetime' => EE_Dependency_Map::load_from_cache,
+			),
+        );
 	}
 
 
@@ -540,7 +549,7 @@ class EE_Dependency_Map {
 
 	/**
 	 * This is used to reset the internal map and class_loaders to their original default state at the beginning of the request
-	 * Primarily used by unit tests.
+ * Primarily used by unit tests.
 	 */
 	public function reset() {
 		$this->_register_core_class_loaders();
