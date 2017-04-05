@@ -2,6 +2,10 @@
 
 namespace EventEspresso\core\domain\services\commands\datetime;
 
+use EE_Datetime;
+use EE_Error;
+use EEH_DTT_Helper;
+use EEM_Datetime;
 use EventEspresso\core\services\commands\CommandHandler;
 use InvalidArgumentException;
 
@@ -19,6 +23,25 @@ defined('EVENT_ESPRESSO_VERSION') || exit;
  */
 abstract class DatetimeCommandHandler extends CommandHandler
 {
+
+
+
+    /**
+     * @var EEM_Datetime $datetime_model
+     */
+    protected $datetime_model;
+
+
+
+    /**
+     * DatetimeCommandHandler constructor.
+     *
+     * @param EEM_Datetime $datetime_model
+     */
+    public function __construct(EEM_Datetime $datetime_model)
+    {
+        $this->datetime_model = $datetime_model;
+    }
 
 
 
@@ -76,6 +99,22 @@ abstract class DatetimeCommandHandler extends CommandHandler
         );
     }
 
+
+
+    /**
+     * ensures our dates are setup correctly
+     * so that the end date is always equal or greater than the start date
+     *
+     * @param EE_Datetime $datetime
+     * @throws EE_Error
+     */
+    protected function validateStartDate(EE_Datetime $datetime)
+    {
+        if ($datetime->get_raw('DTT_EVT_start') > $datetime->get_raw('DTT_EVT_end')) {
+            $datetime->set_start_date($datetime->get('DTT_EVT_start'));
+            EEH_DTT_Helper::date_time_add($datetime, 'DTT_EVT_end', 'days');
+        }
+    }
 
 }
 // End of file DatetimeCommandHandler.php
