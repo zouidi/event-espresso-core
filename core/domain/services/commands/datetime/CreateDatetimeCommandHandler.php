@@ -34,9 +34,9 @@ class CreateDatetimeCommandHandler extends DatetimeCommandHandler
      */
     public function handle(CommandInterface $command)
     {
-        /** @var UpdateDatetimeCommand $command */
-        if (! $command instanceof UpdateDatetimeCommand) {
-            throw new InvalidEntityException(get_class($command), 'UpdateDatetimeCommand');
+        /** @var CreateDatetimeCommand $command */
+        if (! $command instanceof CreateDatetimeCommand) {
+            throw new InvalidEntityException(get_class($command), 'CreateDatetimeCommand');
         }
         $datetime_data = $command->getDatetimeData();
         $timezone = $command->getTimezone();
