@@ -44,7 +44,7 @@ abstract class DatetimeCommand extends Command implements CommandRequiresCapChec
      * @param string $timezone
      * @param array  $date_and_time_formats
      */
-    public function __construct(array $datetime_data, $timezone, array $date_and_time_formats)
+    public function __construct(array $datetime_data, $timezone = '', $date_and_time_formats = array())
     {
         $this->datetime_data = $datetime_data;
         $this->timezone = $timezone;
