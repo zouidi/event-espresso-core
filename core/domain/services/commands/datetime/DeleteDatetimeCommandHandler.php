@@ -36,7 +36,7 @@ class DeleteDatetimeCommandHandler extends CommandHandler
     {
         /** @var DeleteDatetimeCommand $command */
         if (! $command instanceof DeleteDatetimeCommand) {
-            throw new InvalidEntityException(get_class($command), 'UpdateDatetimeCommand');
+            throw new InvalidEntityException(get_class($command), 'DeleteDatetimeCommand');
         }
         $datetime = $command->getDatetime();
         if ($datetime->sold()) {
