@@ -1,0 +1,91 @@
+<?php
+
+namespace EventEspresso\core\domain\services\commands;
+
+use EventEspresso\core\entities\datetime\DatetimeFormat;
+use EventEspresso\core\services\commands\Command;
+use EventEspresso\core\services\commands\CommandRequiresCapCheckInterface;
+
+defined('EVENT_ESPRESSO_VERSION') || exit;
+
+
+
+/**
+ * Class EntityCommand
+ * abstract parent DTO class for passing data to CommandHandlers that operate on EE model objects
+ *
+ * @package       Event Espresso
+ * @author        Brent Christensen
+ * @since         $VID:$
+ */
+abstract class EntityCommand extends Command implements CommandRequiresCapCheckInterface
+{
+
+
+    /**
+     * @var string $entity_class
+     */
+    private $entity_class;
+
+
+    /**
+     * @var array $entity_data
+     */
+    private $entity_data;
+
+    /**
+     * @var DatetimeFormat $datetime_format
+     */
+    private $datetime_format;
+
+
+
+    /**
+     * EntityCommand constructor.
+     *
+     * @param string         $entity_class
+     * @param array          $entity_data
+     * @param DatetimeFormat $datetime_format
+     */
+    public function __construct($entity_class, array $entity_data, DatetimeFormat $datetime_format)
+    {
+        $this->entity_class = $entity_class;
+        $this->entity_data = $entity_data;
+        $this->datetime_format = $datetime_format;
+    }
+
+
+
+    /**
+     * @return string
+     */
+    public function getEntityClass()
+    {
+        return $this->entity_class;
+    }
+
+
+
+    /**
+     * @return array
+     */
+    public function getEntityData()
+    {
+        return $this->entity_data;
+    }
+
+
+
+    /**
+     * @return DatetimeFormat
+     */
+    public function getDateTimeFormat()
+    {
+        return $this->datetime_format;
+    }
+
+
+
+}
+// End of file EntityCommand
+// Location: core/domain/services/commands/EntityCommand.php
