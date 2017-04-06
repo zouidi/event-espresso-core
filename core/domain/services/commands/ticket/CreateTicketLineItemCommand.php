@@ -1,5 +1,5 @@
 <?php
-namespace EventEspresso\core\services\commands\ticket;
+namespace EventEspresso\core\domain\services\commands\ticket;
 
 use EventEspresso\core\services\commands\Command;
 
@@ -58,29 +58,7 @@ class CreateTicketLineItemCommand extends Command
 		$this->transaction = $transaction;
 		$this->ticket = $ticket;
 		$this->quantity = $quantity;
-        // commands have moved to different directory so this is deprecated
-        // can't use $this in Closures, so make a copy to pass in
-        $this_command = $this;
-        add_filter(
-            'FHEE__EventEspresso\core\services\commands\CommandHandlerManager__getCommandHandler__command_handler',
-            function ($command_name, Command $command) use ($this_command) {
-                if ($command === $this_command) {
-                    $command_name = 'EventEspresso\core\services\commands\ticket\CreateTicketLineItemCommand';
-                }
-                return $command_name;
-            },
-            10, 2
-        );
-        \EE_Error::doing_it_wrong(
-            'EventEspresso\core\services\commands\ticket\CreateTicketLineItemCommand',
-            esc_html__(
-                'All Commands found in "/core/services/commands/ticket/" have been moved to "/core/domain/services/commands/ticket/"',
-                'event_espresso'
-            ),
-            '4.9.35',
-            '5.0.0'
-        );
-    }
+	}
 
 
 

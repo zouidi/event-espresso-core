@@ -1,8 +1,12 @@
 <?php
-namespace EventEspresso\core\services\commands\ticket;
 
+namespace EventEspresso\core\domain\services\commands\ticket;
+
+use EE_Error;
+use EE_Line_Item;
 use EventEspresso\core\domain\services\ticket\CreateTicketLineItemService;
 use EventEspresso\core\exceptions\InvalidEntityException;
+use EventEspresso\core\exceptions\UnexpectedEntityException;
 use EventEspresso\core\services\commands\CommandHandler;
 use EventEspresso\core\services\commands\CommandInterface;
 
@@ -42,10 +46,13 @@ class CreateTicketLineItemCommandHandler extends CommandHandler
 
 
 
-	/**
-	 * @param \EventEspresso\core\services\commands\CommandInterface $command
-	 * @return \EE_Line_Item
-	 */
+    /**
+     * @param CommandInterface $command
+     * @return EE_Line_Item
+     * @throws UnexpectedEntityException
+     * @throws EE_Error
+     * @throws InvalidEntityException
+     */
 	public function handle( CommandInterface $command ) {
 		/** @var CreateTicketLineItemCommand $command */
 		if ( ! $command instanceof CreateTicketLineItemCommand ) {
