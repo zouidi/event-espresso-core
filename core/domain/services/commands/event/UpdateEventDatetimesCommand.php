@@ -5,6 +5,7 @@ namespace EventEspresso\core\domain\services\commands\event;
 use EE_Event;
 use EventEspresso\core\domain\services\capabilities\CapCheck;
 use EventEspresso\core\domain\services\capabilities\CapCheckInterface;
+use EventEspresso\core\entities\datetime\DatetimeFormat;
 use EventEspresso\core\services\commands\Command;
 use EventEspresso\core\services\commands\CommandRequiresCapCheckInterface;
 
@@ -34,14 +35,9 @@ class UpdateEventDatetimesCommand extends Command implements CommandRequiresCapC
     private $datetime_data;
 
     /**
-     * @var string $timezone
+     * @var DatetimeFormat $datetime_format
      */
-    private $timezone;
-
-    /**
-     * @var array $date_and_time_formats
-     */
-    private $date_and_time_formats;
+    private $datetime_format;
 
 
 
@@ -50,15 +46,13 @@ class UpdateEventDatetimesCommand extends Command implements CommandRequiresCapC
      *
      * @param EE_Event $event
      * @param array    $datetime_data
-     * @param string   $timezone
-     * @param array    $date_and_time_formats
+     * @param DatetimeFormat $datetime_format
      */
-    public function __construct(EE_Event $event, array $datetime_data, $timezone, array $date_and_time_formats)
+    public function __construct(EE_Event $event, array $datetime_data, DatetimeFormat $datetime_format)
     {
         $this->event = $event;
         $this->datetime_data = $datetime_data;
-        $this->timezone = $timezone;
-        $this->date_and_time_formats = $date_and_time_formats;
+        $this->datetime_format = $datetime_format;
     }
 
 
@@ -97,21 +91,11 @@ class UpdateEventDatetimesCommand extends Command implements CommandRequiresCapC
 
 
     /**
-     * @return string
+     * @return DateTimeFormat
      */
-    public function timezone()
+    public function getDateTimeFormat()
     {
-        return $this->timezone;
-    }
-
-
-
-    /**
-     * @return array
-     */
-    public function dateAndTimeFormats()
-    {
-        return $this->date_and_time_formats;
+        return $this->datetime_format;
     }
 
 
