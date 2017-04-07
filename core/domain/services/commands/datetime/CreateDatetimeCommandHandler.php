@@ -38,32 +38,10 @@ class CreateDatetimeCommandHandler extends DatetimeCommandHandler
         if (! $command instanceof CreateDatetimeCommand) {
             throw new InvalidEntityException(get_class($command), 'CreateDatetimeCommand');
         }
-        $datetime_data = $command->getDatetimeData();
-        $timezone = $command->getTimezone();
-        $date_and_time_formats = $command->getDateAndTimeFormats();
-        $datetime_data = apply_filters(
-            'AFEE__EventEspresso\core\domain\services\commands\datetime\CreateDatetimeCommandHandler__handle__datetime_data',
-            $this->validateDatetimeData($datetime_data),
-            $timezone,
-            $date_and_time_formats,
-            $this
+        return $this->createEntity(
+            $command,
+            array($this, 'validateDatetimeData')
         );
-        $datetime = EE_Datetime::new_instance(
-            $datetime_data,
-            $timezone,
-            $date_and_time_formats
-        );
-        $this->validateStartDate($datetime);
-        $datetime->save();
-        do_action(
-            'AHEE__EventEspresso\core\domain\services\commands\datetime\CreateDatetimeCommandHandler__handle__new_datetime',
-            $datetime,
-            $datetime_data,
-            $timezone,
-            $date_and_time_formats,
-            $this
-        );
-        return $datetime;
     }
 
 
