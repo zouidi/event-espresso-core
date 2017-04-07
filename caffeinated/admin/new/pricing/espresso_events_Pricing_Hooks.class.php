@@ -1,4 +1,5 @@
 <?php
+use EventEspresso\core\entities\datetime\DatetimeFormat;
 use EventEspresso\core\exceptions\ExceptionStackTraceDisplay;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
@@ -215,8 +216,11 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
                 new \EventEspresso\core\domain\services\commands\event\UpdateEventDatetimesCommand(
                     $event,
                     isset($data['edit_event_datetimes']) ? $data['edit_event_datetimes'] : array(),
-                    isset($data['timezone_string']) ? $data['timezone_string'] : null,
-                    $this->_date_format_strings
+                    new DatetimeFormat(
+                        isset($data['timezone_string']) ? $data['timezone_string'] : '',
+                        $this->_date_format_strings['date'],
+                        $this->_date_format_strings['time']
+                    )
                 )
             );
             //next tackle the tickets (and prices?)
@@ -268,18 +272,21 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
                 },
                 $tkt
             );
-
-            //note we are doing conversions to floats here instead of allowing EE_Money_Field to handle because we're doing calcs prior to using the models.
-            //note incoming ['TKT_price'] value is already in standard notation (via js).
-            $ticket_price = isset($tkt['TKT_price']) ? round((float)$tkt['TKT_price'], 3) : 0;
-
             //note incoming base price needs converted from localized value.
-            $base_price = isset($tkt['TKT_base_price']) ? EEH_Money::convert_to_float_from_localized_money($tkt['TKT_base_price']) : 0;
-            //if ticket price == 0 and $base_price != 0 then ticket price == base_price
-            $ticket_price  = $ticket_price === 0 && $base_price !== 0 ? $base_price : $ticket_price;
+            $base_price = isset($tkt['TKT_base_price'])
+                ? EEH_Money::convert_to_float_from_localized_money($tkt['TKT_base_price'])
+                : 0;
             $base_price_id = isset($tkt['TKT_base_price_ID']) ? $tkt['TKT_base_price_ID'] : 0;
+            // we are doing conversions to floats here instead of allowing EE_Money_Field to handle
+            // because we're doing calculations prior to using the models.
+            // incoming ['TKT_price'] value is already in standard notation (via js).
+            $ticket_price = isset($tkt['TKT_price']) ? round((float)$tkt['TKT_price'], 3) : 0;
+            // if ticket price == 0 and $base_price != 0 then ticket price == base_price
+            $ticket_price  = $ticket_price === 0 && $base_price !== 0 ? $base_price : $ticket_price;
 
-            $price_rows = is_array($data['edit_prices']) && isset($data['edit_prices'][$row]) ? $data['edit_prices'][$row] : array();
+            $price_rows = isset($data['edit_prices'], $data['edit_prices'][$row])
+                ? $data['edit_prices'][$row]
+                : array();
 
             $now = null;
             if (empty($tkt['TKT_start_date'])) {
@@ -300,8 +307,10 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
                 'TKT_ID'          => ! empty($tkt['TKT_ID']) ? $tkt['TKT_ID'] : null,
                 'TTM_ID'          => ! empty($tkt['TTM_ID']) ? $tkt['TTM_ID'] : 0,
                 'TKT_name'        => ! empty($tkt['TKT_name']) ? $tkt['TKT_name'] : '',
-                'TKT_description' => ! empty($tkt['TKT_description']) && $tkt['TKT_description'] != __('You can modify this description',
-                    'event_espresso') ? $tkt['TKT_description'] : '',
+                'TKT_description' => ! empty($tkt['TKT_description'])
+                                     && $tkt['TKT_description'] !== __('You can modify this description', 'event_espresso')
+                    ? $tkt['TKT_description']
+                    : '',
                 'TKT_start_date'  => $tkt['TKT_start_date'],
                 'TKT_end_date'    => $tkt['TKT_end_date'],
                 'TKT_qty'         => ! isset($tkt['TKT_qty']) || $tkt['TKT_qty'] === '' ? EE_INF : $tkt['TKT_qty'],
@@ -365,8 +374,7 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
 
                     //if $create_new_TKT is false then we can safely update the existing ticket.  Otherwise we have to create a new ticket.
                     if ($create_new_TKT) {
-                        $new_tkt = $this->_duplicate_ticket($TKT, $price_rows, $ticket_price, $base_price,
-                            $base_price_id);
+                        $new_tkt = $this->_duplicate_ticket($TKT, $price_rows, $ticket_price, $base_price, $base_price_id);
                     }
                 }
 
@@ -394,11 +402,13 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
             }
 
             //let's make sure the base price is handled
-            $TKT = ! $create_new_TKT ? $this->_add_prices_to_ticket(array(), $TKT, $update_prices, $base_price,
-                $base_price_id) : $TKT;
-
+            $TKT = ! $create_new_TKT
+                ? $this->_add_prices_to_ticket(array(), $TKT, $update_prices, $base_price, $base_price_id)
+                : $TKT;
             //add/update price_modifiers
-            $TKT = ! $create_new_TKT ? $this->_add_prices_to_ticket($price_rows, $TKT, $update_prices) : $TKT;
+            $TKT = ! $create_new_TKT
+                ? $this->_add_prices_to_ticket($price_rows, $TKT, $update_prices)
+                : $TKT;
 
             //need to make sue that the TKT_price is accurate after saving the prices.
             $TKT->ensure_TKT_Price_correct();
@@ -412,13 +422,13 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
                     $new_default->set('TKT_is_default', 1);
                     $new_default->set('TKT_row', 1);
                     $new_default->set('TKT_price', $ticket_price);
-                    //remove any dtt relations cause we DON'T want dtt relations attached (note this is just removing the cached relations in the object)
+                    // remove any dtt relations cause we DON'T want dtt relations attached
+                    // (note this is just removing the cached relations in the object)
                     $new_default->_remove_relations('Datetime');
                     //todo we need to add the current attached prices as new prices to the new default ticket.
                     $new_default = $this->_add_prices_to_ticket($price_rows, $new_default, $update_prices);
                     //don't forget the base price!
-                    $new_default = $this->_add_prices_to_ticket(array(), $new_default, $update_prices, $base_price,
-                        $base_price_id);
+                    $new_default = $this->_add_prices_to_ticket(array(), $new_default, $update_prices, $base_price, $base_price_id);
                     $new_default->save();
                     do_action('AHEE__espresso_events_Pricing_Hooks___update_tkts_new_default_ticket', $new_default,
                         $row, $TKT, $data);
@@ -614,6 +624,7 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
     }
 
 
+
     /**
      * This attaches a list of given prices to a ticket.
      * Note we dont' have to worry about ever removing relationships (or archiving prices) because if there is a change
@@ -621,14 +632,13 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
      * price info and prices are automatically "archived" via the ticket.
      *
      * @access  private
-     *
      * @param array     $prices        Array of prices from the form.
      * @param EE_Ticket $ticket        EE_Ticket object that prices are being attached to.
      * @param bool      $new_prices    Whether attach existing incoming prices or create new ones.
      * @param int|bool  $base_price    if FALSE then NOT doing a base price add.
      * @param int|bool  $base_price_id if present then this is the base_price_id being updated.
-     *
      * @return EE_Ticket
+     * @throws \EE_Error
      */
     protected function _add_prices_to_ticket(
         $prices = array(),
@@ -639,7 +649,9 @@ class espresso_events_Pricing_Hooks extends EE_Admin_Hooks
     ) {
 
         //let's just get any current prices that may exist on the given ticket so we can remove any prices that got trashed in this session.
-        $current_prices_on_ticket = $base_price !== false ? $ticket->base_price(true) : $ticket->price_modifiers();
+        $current_prices_on_ticket = $base_price !== false
+            ? $ticket->base_price(true)
+            : $ticket->price_modifiers();
 
         $updated_prices = array();
 
