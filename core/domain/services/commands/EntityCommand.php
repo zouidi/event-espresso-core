@@ -12,7 +12,7 @@ defined('EVENT_ESPRESSO_VERSION') || exit;
 
 /**
  * Class EntityCommand
- * abstract parent DTO class for passing data to CommandHandlers that operate on EE model objects
+ * abstract parent DTO class for passing data to EntityCommandHandlers that operate on a single entity
  *
  * @package       Event Espresso
  * @author        Brent Christensen
@@ -26,7 +26,6 @@ abstract class EntityCommand extends Command implements CommandRequiresCapCheckI
      * @var string $entity_class
      */
     private $entity_class;
-
 
     /**
      * @var array $entity_data
