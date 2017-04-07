@@ -2,8 +2,8 @@
 
 namespace EventEspresso\core\domain\services\commands\datetime;
 
-use EventEspresso\core\services\commands\Command;
-use EventEspresso\core\services\commands\CommandRequiresCapCheckInterface;
+use EventEspresso\core\domain\services\commands\EntityCommand;
+use EventEspresso\core\entities\datetime\DatetimeFormat;
 
 defined('EVENT_ESPRESSO_VERSION') || exit;
 
@@ -11,75 +11,27 @@ defined('EVENT_ESPRESSO_VERSION') || exit;
 
 /**
  * Class DatetimeCommand
- * parent class DTO for passing data to UpdateDatetimeCommandHandler
+ * parent class DTO for passing data to DatetimeCommandHandler classes
  *
  * @package       Event Espresso
  * @author        Brent Christensen
  * @since         $VID:$
  */
-abstract class DatetimeCommand extends Command implements CommandRequiresCapCheckInterface
+abstract class DatetimeCommand extends EntityCommand
 {
-
-    /**
-     * @var array $datetime_data
-     */
-    private $datetime_data;
-
-    /**
-     * @var string $timezone
-     */
-    private $timezone;
-
-    /**
-     * @var array $date_and_time_formats
-     */
-    private $date_and_time_formats;
-
 
 
     /**
      * UpdateDatetimeCommand constructor.
      *
-     * @param array  $datetime_data
-     * @param string $timezone
-     * @param array  $date_and_time_formats
+     * @param array          $entity_data
+     * @param DatetimeFormat $datetime_format
      */
-    public function __construct(array $datetime_data, $timezone = '', $date_and_time_formats = array())
+    public function __construct(array $entity_data, DatetimeFormat $datetime_format)
     {
-        $this->datetime_data = $datetime_data;
-        $this->timezone = $timezone;
-        $this->date_and_time_formats = $date_and_time_formats;
+        parent::__construct('EE_Datetime', $entity_data, $datetime_format);
     }
 
-
-
-    /**
-     * @return array
-     */
-    public function getDatetimeData()
-    {
-        return $this->datetime_data;
-    }
-
-
-
-    /**
-     * @return string
-     */
-    public function getTimezone()
-    {
-        return $this->timezone;
-    }
-
-
-
-    /**
-     * @return array
-     */
-    public function getDateAndTimeFormats()
-    {
-        return $this->date_and_time_formats;
-    }
 
 
 
