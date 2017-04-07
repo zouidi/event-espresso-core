@@ -336,7 +336,19 @@ class EE_Datetime extends EE_Soft_Delete_Base_Class {
 
 
 
-	/**
+    /**
+     * whether or not datetime is deleted
+     *
+     * @return bool
+     */
+    public function deleted()
+    {
+        return $this->get_raw('DTT_deleted');
+    }
+
+
+
+    /**
 	 *        show date and/or time
 	 *
 	 * @access    private
