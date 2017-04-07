@@ -83,22 +83,20 @@ class UpdateEventDatetimesCommandHandler extends CompositeCommandHandler
         }
         $this->event = $command->event();
         $datetime_data_array = $command->datetimeData();
-        $timezone = $command->timezone();
-        $date_and_time_formats = $command->dateAndTimeFormats();
         foreach ($datetime_data_array as $row => $datetime_data) {
-            //if we have an id then let's get existing object first and then set the new values.  Otherwise we instantiate a new object for save.
+            // if we have an id then update the existing object, otherwise instantiate a new one
             if (! empty($datetime_data['DTT_ID'])) {
                 $datetime = $this->commandBus()->execute(
-                    new UpdateDatetimeCommand($datetime_data, $timezone, $date_and_time_formats)
+                    new UpdateDatetimeCommand($datetime_data, $command->getDateTimeFormat())
                 );
                 // make sure the $DTT_ID here is saved in case the autosave replaces it after the add_relation_to().
                 // We need to do this so we dont' TRASH the parent DTT.
                 // save the ID for both key and value to avoid duplications
                 $this->updated[$datetime->ID()] = $datetime;
             } else {
-                $date_and_time_formats['DTT_order'] = $row;
+                $datetime_data_array['DTT_order'] = $row;
                 $datetime = $this->commandBus()->execute(
-                    new CreateDatetimeCommand($datetime_data, $timezone, $date_and_time_formats)
+                    new CreateDatetimeCommand($datetime_data, $command->getDateTimeFormat())
                 );
             }
             $DTT_ID = $datetime->ID();
