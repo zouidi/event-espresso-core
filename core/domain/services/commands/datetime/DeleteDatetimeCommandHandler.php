@@ -43,12 +43,12 @@ class DeleteDatetimeCommandHandler extends CommandHandler
             return;
         }
         do_action(
-            'AHEE__EventEspresso\core\domain\services\event\EventDatetimesService__deleteDatetime__datetime',
+            'AHEE__EventEspresso\core\domain\services\commands\datetime\DeleteDatetimeCommandHandler__before_delete_datetime',
             $datetime,
             $this
         );
-        //remove tkt relationships.
-        $related_tickets = $datetime->get_many_related('Ticket');
+        // remove ticket relationships.
+        $related_tickets = $datetime->tickets();
         foreach ($related_tickets as $ticket) {
             $datetime->_remove_relation_to($ticket, 'Ticket');
         }
