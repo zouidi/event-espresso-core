@@ -291,13 +291,30 @@ class EE_Price extends EE_Soft_Delete_Base_Class {
 
 
 
-	/**
-	 * @return mixed
-	 */
+    /**
+     * @return mixed
+     * @throws EE_Error
+     */
 	public function get_price_without_currency_symbol() {
-		return str_replace( EE_Registry::instance()->CFG->currency->sign, '', $this->get_pretty( 'PRC_amount' ) );
+		return str_replace(
+		    EE_Registry::instance()->CFG->currency->sign,
+            '',
+            $this->get_pretty( 'PRC_amount' )
+        );
 	}
-}
 
+
+
+    /**
+     * @param array $query_params
+     * @return EE_Base_Class[]|EE_Ticket[]
+     * @throws EE_Error
+     */
+    public function tickets($query_params = array())
+    {
+        return $this->get_many_related('Ticket', $query_params);
+	}
+
+}
 /* End of file EE_Price.class.php */
 /* Location: /includes/classes/EE_Price.class.php */
