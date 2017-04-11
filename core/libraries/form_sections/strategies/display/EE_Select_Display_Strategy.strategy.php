@@ -36,8 +36,16 @@ class EE_Select_Display_Strategy extends EE_Display_Strategy_Base{
 		$html .= '>';
 
 		if ( EEH_Array::is_multi_dimensional_array( $this->_input->options() )) {
+		    //make sure there's a blank option
+		    $options = $this->_input->options();
+		    if( ! isset( $options[''], $options[''][''])){
+		        $options = array_merge(
+		            array(''=>array(''=>'')),
+                    $options
+                );
+            }
 			EEH_HTML::indent( 1, 'optgroup' );
-			foreach( $this->_input->options() as $opt_group_label => $opt_group ){
+			foreach( $options as $opt_group_label => $opt_group ){
 			    if ( ! empty($opt_group_label)) {
                     $html .= EEH_HTML::nl(0, 'optgroup') . '<optgroup label="' . esc_attr($opt_group_label) . '">';
                 }
@@ -50,7 +58,15 @@ class EE_Select_Display_Strategy extends EE_Display_Strategy_Base{
 			}
 			EEH_HTML::indent( -1, 'optgroup' );
 		} else {
-			$html.=$this->_display_options( $this->_input->options() );
+		    //make sure there's a blank option
+            $options = $this->_input->options();
+            if( ! isset( $options[''])){
+                $options = array_merge(
+                    array(''=>''),
+                    $options
+                );
+            }
+			$html.=$this->_display_options( $options );
 		}
 
 		$html.= EEH_HTML::nl( 0, 'select' ) . '</select>';
