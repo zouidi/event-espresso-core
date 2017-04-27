@@ -21,10 +21,9 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * abstract parent class for handling the last mile of boilerplate client code required
  * for displaying and processing a typical form.
  * allow your form to integrate with other systems that utilize the
- * \EventEspresso\core\libraries\form_sections\form_handlers\FormInterface interface
-
+ * \EventEspresso\core\libraries\form_sections\form_handlers\FormHandlerInterface interface
  *
-*@package       Event Espresso
+ * @package       Event Espresso
  * @author        Brent Christensen
  * @since         4.9.0
  */
@@ -120,17 +119,19 @@ abstract class FormHandler implements FormHandlerInterface{
 
 
 
-	/**
-	 * Form constructor.
-
-	 *
-*@param string $form_name
-	 * @param string     $admin_name
-	 * @param string     $slug
-	 * @param string     $form_action
-	 * @param string     $form_config
-	 * @param \EE_Registry $registry
-	 */
+    /**
+     * Form constructor.
+     *
+     * @param string       $form_name
+     * @param string       $admin_name
+     * @param string       $slug
+     * @param string       $form_action
+     * @param string       $form_config
+     * @param \EE_Registry $registry
+     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
+     * @throws \DomainException
+     * @throws \InvalidArgumentException
+     */
 	public function __construct(
 		$form_name,
 		$admin_name,
@@ -171,7 +172,7 @@ abstract class FormHandler implements FormHandlerInterface{
 	 * @throws \LogicException
 	 */
 	public function form( $for_display = false ) {
-		if ( ! $this->formIsValid() ) {
+        if ( ! $this->formIsValid() ) {
 			return null;
 		}
 		if ( $for_display ) {
@@ -194,11 +195,14 @@ abstract class FormHandler implements FormHandlerInterface{
 	 * @throws LogicException
 	 */
 	public function formIsValid() {
-		if ( ! $this->form instanceof \EE_Form_Section_Proper ) {
+        if ( ! $this->form instanceof \EE_Form_Section_Proper ) {
 			static $generated = false;
 			if ( ! $generated ) {
 				$generated = true;
-				$this->generate();
+				$form = $this->generate();
+                if ( $form instanceof \EE_Form_Section_Proper) {
+                    $this->setForm($form);
+                }
 			}
 			return $this->verifyForm();
 		}
@@ -333,9 +337,11 @@ abstract class FormHandler implements FormHandlerInterface{
 
 
 
-	/**
-	 * @param string $submit_btn_text
-	 */
+    /**
+     * @param string $submit_btn_text
+     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
+     * @throws \InvalidArgumentException
+     */
 	public function setSubmitBtnText( $submit_btn_text ) {
 		if ( ! is_string( $submit_btn_text ) ) {
 			throw new InvalidDataTypeException( '$submit_btn_text', $submit_btn_text, 'string' );
@@ -568,7 +574,7 @@ abstract class FormHandler implements FormHandlerInterface{
 	 * @throws \EE_Error
 	 */
 	public function display() {
-		$form_html = apply_filters(
+        $form_html = apply_filters(
 			'FHEE__EventEspresso_core_libraries_form_sections_form_handlers_FormHandler__display__before_form',
 			''
 		);
@@ -607,11 +613,11 @@ abstract class FormHandler implements FormHandlerInterface{
 	 */
 	public function process( $submitted_form_data = array() ) {
 		if ( ! $this->form()->was_submitted( $submitted_form_data ) ) {
-			throw new InvalidFormSubmissionException( $this->form_name );
+            throw new InvalidFormSubmissionException( $this->form_name );
 		}
-		$this->form( true )->receive_form_submission( $submitted_form_data );
+        $this->form( true )->receive_form_submission( $submitted_form_data );
 		if ( ! $this->form()->is_valid() ) {
-			throw new InvalidFormSubmissionException(
+            throw new InvalidFormSubmissionException(
 				$this->form_name,
 				sprintf(
 					__(

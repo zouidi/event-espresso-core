@@ -189,25 +189,28 @@ class EEG_Aim extends EE_Onsite_Gateway{
 
 			$item_num = 1;
 			$transaction = $payment->transaction();
-			$order_description = '';
+			$order_description = $this->_format_order_description( $payment );
 			$primary_registrant = $transaction->primary_registration();
 			//if we're are charging for the full amount, show the normal line items
 			//and the itemized total adds up properly
 			if( $this->_can_easily_itemize_transaction_for( $payment ) ){
 				$total_line_item = $transaction->total_line_item();
 				foreach ($total_line_item->get_items() as $line_item) {
-					//ignore line items with a quantity of 0
 					if( $line_item->quantity() == 0 ){
 						continue;
 					}
-					$this->addLineItem($item_num++, $line_item->name(), $line_item->desc(), $line_item->quantity(), $line_item->unit_price(), 'N');
+					$this->addLineItem(
+						$item_num++, 
+						$this->_format_line_item_name( $line_item, $payment ), 
+						$this->_format_line_item_desc( $line_item, $payment ), 
+						$line_item->quantity(),
+						$line_item->unit_price(), 
+						'N');
 					$order_description .= $line_item->desc().', ';
 				}
 				foreach($total_line_item->tax_descendants() as $tax_line_item){
 					$this->addLineItem($item_num++, $tax_line_item->name(), $tax_line_item->desc(), 1, $tax_line_item->total(), 'N');
 				}
-			}else{//partial payment
-				$order_description = sprintf(__("Payment of %s for %s", "event_espresso"),$payment->amount(),$primary_registrant->reg_code());
 			}
 
 
@@ -303,7 +306,6 @@ class EEG_Aim extends EE_Onsite_Gateway{
 	}
 
 
-
 	/**
 	 * Set an individual name/value pair. This will append x_ to the name
 	 * before posting.
@@ -334,16 +336,17 @@ class EEG_Aim extends EE_Onsite_Gateway{
 		$this->_x_post_fields['tran_key'] = $this->_transaction_key;
 		$x_keys = array();
 		foreach ($this->_x_post_fields as $key => $value) {
-			$x_keys[] = "x_$key=" . urlencode($value);
+			$x_keys[] = "x_$key=" . urlencode($this->_get_unsupported_character_remover()->format($value));
 		}
 		// Add line items
 		foreach ($this->_additional_line_items as $key => $value) {
-			$x_keys[] =  "x_line_item=" . urlencode($value);
+			$x_keys[] =  "x_line_item=" . urlencode($this->_get_unsupported_character_remover()->format($value));
 		}
 		$this->_log_clean_request($x_keys, $payment);
 		$post_url = $this->_get_server_url();
 		$curl_request = curl_init($post_url);
-		curl_setopt($curl_request, CURLOPT_POSTFIELDS, implode("&",$x_keys));
+        $post_body = implode("&",$x_keys);
+		curl_setopt($curl_request, CURLOPT_POSTFIELDS, $post_body);
 		curl_setopt($curl_request, CURLOPT_HEADER, 0);
 		curl_setopt($curl_request, CURLOPT_TIMEOUT, 45);
 		curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, 1);

@@ -206,7 +206,7 @@ class EEM_Line_Item extends EEM_Base {
 				LEFT JOIN ' . EEM_Transaction::instance()->table(). ' t ON li.TXN_ID = t.TXN_ID
 				WHERE t.TXN_ID IS NULL AND li.LIN_timestamp < %s',
 				// use GMT time because that's what TXN_timestamps are in
-				gmdate(  'Y-m-d H:i:s', time() - $time_to_leave_alone )
+				date(  'Y-m-d H:i:s', time() - $time_to_leave_alone )
 				);
 		return $wpdb->query( $query );
 	}
@@ -359,6 +359,65 @@ class EEM_Line_Item extends EEM_Base {
 			)
 		) );
 	}
+
+
+
+    /**
+     * @return EE_Base_Class[]|EE_Line_Item[]
+     * @throws \EE_Error
+     */
+    public function get_total_line_items_with_no_transaction()
+    {
+        return $this->get_total_line_items_for_carts();
+    }
+
+
+
+    /**
+     * @return EE_Base_Class[]|EE_Line_Item[]
+     * @throws \EE_Error
+     */
+    public function get_total_line_items_for_active_carts()
+    {
+        return $this->get_total_line_items_for_carts(false);
+    }
+
+
+
+    /**
+     * @return EE_Base_Class[]|EE_Line_Item[]
+     * @throws \EE_Error
+     */
+    public function get_total_line_items_for_expired_carts()
+    {
+        return $this->get_total_line_items_for_carts(true);
+    }
+
+
+
+    /**
+     * Returns an array of grand total line items where the TXN_ID is 0.
+     * If $expired is set to true, then only line items for expired sessions will be returned.
+     * If $expired is set to false, then only line items for active sessions will be returned.
+     *
+     * @param bool|null $expired
+     * @return EE_Base_Class[]|EE_Line_Item[]
+     * @throws \EE_Error
+     */
+    private function get_total_line_items_for_carts($expired = null)
+    {
+        $where_params = array(
+            'TXN_ID'        => 0,
+            'LIN_type'      => 'total',
+        );
+        if ($expired !== null) {
+            $where_params['LIN_timestamp'] = array(
+                $expired ? '<=' : '>',
+                time() - EE_Registry::instance()->SSN->lifespan(),
+            );
+        }
+        return $this->get_all(array($where_params));
+    }
 
 
 

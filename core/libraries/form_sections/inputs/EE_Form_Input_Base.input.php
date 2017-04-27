@@ -170,8 +170,8 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable
      * @type string                         $html_help_text   text to put in help element
      * @type string                         $html_help_style  style attribute to give to teh help element
      * @type string                         $html_help_class  class attribute to give to the help element
-     * @type string                         $default          default value NORMALIZED (eg, if providing the default for a Yes_No_Input,
-     *                                                        you should provide TRUE or FALSE, not '1' or '0')
+     * @type string                         $default          default value NORMALIZED (eg, if providing the default
+     *       for a Yes_No_Input, you should provide TRUE or FALSE, not '1' or '0')
      * @type EE_Display_Strategy_Base       $display          strategy
      * @type EE_Normalization_Strategy_Base $normalization_strategy
      * @type EE_Validation_Strategy_Base[]  $validation_strategies
@@ -251,7 +251,6 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable
     public function _construct_finalize($parent_form_section, $name)
     {
         parent::_construct_finalize($parent_form_section, $name);
-        $this->_set_default_html_name_if_empty();
         if ($this->_html_label === null && $this->_html_label_text === null) {
             $this->_html_label_text = ucwords(str_replace("_", " ", $name));
         }
@@ -268,6 +267,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable
      */
     protected function _get_display_strategy()
     {
+        $this->ensure_construct_finalized_called();
         if (! $this->_display_strategy || ! $this->_display_strategy instanceof EE_Display_Strategy_Base) {
             throw new EE_Error(
                 sprintf(
@@ -486,7 +486,12 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable
      */
     public function get_html_for_input()
     {
-        return $this->_get_display_strategy()->display();
+        return $this->_form_html_filter
+            ? $this->_form_html_filter->filterHtml(
+                $this->_get_display_strategy()->display(),
+                $this
+            )
+            : $this->_get_display_strategy()->display();
     }
 
 
@@ -629,6 +634,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable
      */
     public function html_name()
     {
+        $this->_set_default_html_name_if_empty();
         return $this->_html_name;
     }
 
@@ -639,7 +645,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable
      */
     public function html_label_id()
     {
-        return ! empty($this->_html_label_id) ? $this->_html_label_id : $this->_html_id . '-lbl';
+        return ! empty($this->_html_label_id) ? $this->_html_label_id : $this->html_id() . '-lbl';
     }
 
 
@@ -712,9 +718,14 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable
      * Note, we do not store the exact original value sent in the user's request because
      * it may have malicious content, and we MIGHT want to store the form input in a transient or something...
      * in which case, we would have stored the malicious content to our database.
+<<<<<<< HEAD
      * Also note, this value can be a string or an array
      *
      * @return string|array
+=======
+     *
+     * @return string
+>>>>>>> master
      */
     public function raw_value()
     {
@@ -877,7 +888,7 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable
         if ($required) {
             $this->_add_validation_strategy(new EE_Required_Validation_Strategy($required_text));
         } else {
-            unset($this->_validation_strategies['EE_Required_Validation_Strategy']);
+            $this->remove_validation_strategy('EE_Required_Validation_Strategy');
         }
         $this->_required = $required;
     }
@@ -914,6 +925,18 @@ abstract class EE_Form_Input_Base extends EE_Form_Section_Validatable
         return $this->_required_css_class;
     }
 
+
+
+    /**
+     * @param bool $add_required
+     * @return string
+     */
+    public function html_class($add_required = false)
+    {
+        return $add_required && $this->required()
+            ? $this->required_css_class() . ' ' . $this->_html_class
+            : $this->_html_class;
+    }
 
 
     /**

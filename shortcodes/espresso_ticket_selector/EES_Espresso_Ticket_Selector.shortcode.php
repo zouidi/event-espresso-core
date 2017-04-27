@@ -51,7 +51,9 @@ class EES_Espresso_Ticket_Selector  extends EES_Shortcode {
 	 * @param \WP $WP
 	 */
 	public function run( WP $WP ) {
+		add_filter( 'FHEE__EED_Ticket_Selector__load_tckt_slctr_assets', '__return_true' );
 	}
+
 
 	/**
 	 * 	process_shortcode - ESPRESSO_TICKET_SELECTOR
@@ -65,9 +67,9 @@ class EES_Espresso_Ticket_Selector  extends EES_Shortcode {
 		$event_id = isset( $event_id ) ? $event_id : 0;
 		$event = EE_Registry::instance()->load_model( 'Event' )->get_one_by_ID( $event_id );
 		ob_start();
-		do_action( 'AHEE_event_details_before_post', $event_id );
+		do_action( 'AHEE__EES_Espresso_Ticket_Selector__process_shortcode__begin', $event_id );
 		espresso_ticket_selector( $event );
-		do_action( 'AHEE_event_details_after_post' );
+		do_action( 'AHEE__EES_Espresso_Ticket_Selector__process_shortcode__end', $event_id );
 		return ob_get_clean();
 	}
 
