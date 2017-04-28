@@ -22,7 +22,9 @@ class EE_All_Caps_Normalization extends EE_Normalization_Strategy_Base
      */
     public function normalize($value_to_normalize)
     {
-        return strtoupper($value_to_normalize);
+        return strtoupper(
+            $this->_fix_if_array($value_to_normalize)
+        );
     }
 
 
@@ -36,7 +38,7 @@ class EE_All_Caps_Normalization extends EE_Normalization_Strategy_Base
      */
     public function unnormalize($normalized_value)
     {
-        return $normalized_value;
+        return $this->_fix_if_array($normalized_value);
     }
 
 }

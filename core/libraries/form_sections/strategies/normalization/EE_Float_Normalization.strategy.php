@@ -31,6 +31,7 @@ class EE_Float_Normalization extends EE_Normalization_Strategy_Base
      */
     public function normalize($value_to_normalize)
     {
+        $value_to_normalize = $this->_fix_if_array($value_to_normalize);
         if ($value_to_normalize === null) {
             return null;
         }
@@ -90,6 +91,7 @@ class EE_Float_Normalization extends EE_Normalization_Strategy_Base
      */
     public function unnormalize($normalized_value)
     {
+        $normalized_value = $this->_fix_if_array($normalized_value);
         if (empty($normalized_value)) {
             return '0.00';
         }

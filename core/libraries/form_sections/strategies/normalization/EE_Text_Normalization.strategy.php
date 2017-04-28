@@ -21,9 +21,7 @@ class EE_Text_Normalization extends EE_Normalization_Strategy_Base
      */
     public function normalize($value_to_normalize)
     {
-        if (is_array($value_to_normalize)) {
-            return (string)array_shift($value_to_normalize);
-        }
+        $value_to_normalize = $this->_fix_if_array($value_to_normalize);
         // consider `"null"` values to be equivalent to null.
         if ($value_to_normalize === '' || $value_to_normalize === null) {
             return null;
@@ -41,6 +39,7 @@ class EE_Text_Normalization extends EE_Normalization_Strategy_Base
      */
     public function unnormalize($normalized_value)
     {
+        $normalized_value = $this->_fix_if_array($normalized_value);
         //account for default "select here" option values
         if ($normalized_value === null) {
             return '';

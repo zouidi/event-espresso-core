@@ -21,6 +21,7 @@ class EE_Slug_Normalization extends EE_Normalization_Strategy_Base
      */
     public function normalize($value_to_normalize)
     {
+        $value_to_normalize = $this->_fix_if_array($value_to_normalize);
         return sanitize_title($value_to_normalize);
     }
 
@@ -34,6 +35,7 @@ class EE_Slug_Normalization extends EE_Normalization_Strategy_Base
      */
     public function unnormalize($normalized_value)
     {
+        $normalized_value = $this->_fix_if_array($normalized_value);
         return str_replace("-", " ", $normalized_value);
     }
 }

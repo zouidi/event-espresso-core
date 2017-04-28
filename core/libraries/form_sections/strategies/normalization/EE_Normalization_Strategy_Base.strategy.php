@@ -69,5 +69,36 @@ abstract class EE_Normalization_Strategy_Base extends EE_Form_Input_Strategy_Bas
     {
         return $this->unnormalize($individual_item_to_unnormalize);
     }
+
+
+
+    /**
+     * Verifies that $data is not an array. If it is, pops the first item from it
+     * and returns that. If WP_DEBUG is on, we also create an error message
+     * @param $data
+     * @return array|mixed
+     */
+    protected function _fix_if_array($data)
+    {
+        //if someone misnamed the input in the template, it could be an array
+        if (is_array($data)) {
+            if (WP_DEBUG){
+                trigger_error(
+                    sprintf(
+                        esc_html__(
+                            // @codingStandardsIgnoreStart
+                            'Array of data (%1$s) found for form input for field %1$s. You may have misnamed the input in the template file.',
+                            // @codingStandardsIgnoreEnd
+                            'event_espresso'
+                        ),
+                        wp_json_encode($data),
+                        $this->_input->html_name()
+                    )
+                );
+            }
+            $data = array_shift($data);
+        }
+        return $data;
+    }
 }
 // End of file EE_Normalization_Strategy_Base.strategy.php
