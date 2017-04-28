@@ -83,7 +83,7 @@ abstract class EE_Normalization_Strategy_Base extends EE_Form_Input_Strategy_Bas
         //if someone misnamed the input in the template, it could be an array
         if (is_array($data)) {
             if (WP_DEBUG){
-                trigger_error(
+                EE_Error::add_error(
                     sprintf(
                         esc_html__(
                             // @codingStandardsIgnoreStart
@@ -92,8 +92,11 @@ abstract class EE_Normalization_Strategy_Base extends EE_Form_Input_Strategy_Bas
                             'event_espresso'
                         ),
                         wp_json_encode($data),
-                        $this->_input->html_name()
-                    )
+                        $this->_input->name()
+                    ),
+                    __FILE__,
+                    __FUNCTION__,
+                    __LINE__
                 );
             }
             $data = array_shift($data);

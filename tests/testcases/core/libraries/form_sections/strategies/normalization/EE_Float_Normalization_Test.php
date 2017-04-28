@@ -78,7 +78,6 @@ class EE_Float_Normalization_Test extends EE_UnitTestCase{
      */
     public function bad_float_inputs(){
         return array(
-            array(array()),
             array(new stdClass()),
         );
     }

@@ -79,7 +79,6 @@ class EE_Int_Normalization_Test extends EE_UnitTestCase{
      */
     public function bad_int_inputs(){
         return array(
-            array(array()),
             array(new stdClass()),
             array('10.01'),
             array('10.')
