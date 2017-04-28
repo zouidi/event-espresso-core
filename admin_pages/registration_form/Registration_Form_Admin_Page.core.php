@@ -396,7 +396,7 @@ class Registration_Form_Admin_Page extends EE_Admin_Page
     protected function _questions_overview_list_table()
     {
         $this->_search_btn_label = esc_html__('Questions', 'event_espresso');
-        $this->display_admin_list_table_page_with_sidebar();
+        $this->display_admin_list_table_page_with_no_sidebar();
     }
 
 
