@@ -198,25 +198,26 @@ jQuery(document).ready( function($) {
 		 */
 		set_validation_defaults : function() {
 
-			// jQuery validation object
+            // jQuery validation object
 			$.validator.setDefaults({
 
-				debug: false,
+                debug: false,
 				ignore: '.ee-do-not-validate',
 				validClass: '',
 				errorClass: 'ee-required-text',
 
 				errorPlacement: function( error, element ) {
-					$(element).before( error );
+                    error.appendTo(element.parent("div"));
 					SPCO.invalid_input_errors.push( error.text() );
 					SPCO.track_validation_error( element.attr('id') );
 				},
 
 				highlight: function( element ) {
-					if ( ! $(element ).hasClass('spco-next-step-btn') ) {
+                    if ( ! $(element ).hasClass('spco-next-step-btn') ) {
 						$( element ).addClass( 'ee-needs-value' ).removeClass( 'ee-has-value' );
 					}
 				},
+
 				unhighlight: function( element ) {
 					if ( ! $(element ).hasClass('spco-next-step-btn') ) {
 						$(element).removeClass('ee-needs-value').addClass('ee-has-value');
@@ -249,7 +250,7 @@ jQuery(document).ready( function($) {
 		 * @param {string} invalid_input_id
 		 */
 		track_validation_error : function( invalid_input_id ) {
-			// convert to jQuery object
+            // convert to jQuery object
 			var invalid_input = $( '#' + invalid_input_id );
 			var invalid_input_label = $( '#' + invalid_input_id + '-lbl' );
 			SPCO.invalid_input_to_scroll_to = SPCO.invalid_input_to_scroll_to === null ? $( invalid_input_label ) : SPCO.invalid_input_to_scroll_to;
@@ -273,7 +274,7 @@ jQuery(document).ready( function($) {
 		 *	@function
 		 */
 		display_validation_errors : function() {
-			//remove duplicates
+            //remove duplicates
 			SPCO.require_values = _.unique( SPCO.require_values );
 			// no empty or invalid fields that need values ?
 			if ( SPCO.require_values.length > 0 ) {
@@ -455,7 +456,7 @@ jQuery(document).ready( function($) {
 		 */
 		set_listener_for_input_validation_value_change : function() {
 			SPCO.form_inputs.focusout( function() {
-				$(this).val( $.trim( $(this).val() ) );
+                $(this).val( $.trim( $(this).val() ) );
 				$(this).valid();
             });
 		},
