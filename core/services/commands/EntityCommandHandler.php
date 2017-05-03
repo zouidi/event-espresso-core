@@ -1,11 +1,10 @@
 <?php
-namespace EventEspresso\core\domain\services\commands;
+namespace EventEspresso\core\services\commands;
 
 use DomainException;
 use EE_Error;
 use EEM_Base;
 use EventEspresso\core\exceptions\InvalidEntityException;
-use EventEspresso\core\services\commands\CommandHandler;
 
 if ( ! defined('EVENT_ESPRESSO_VERSION')) {
     exit('No direct script access allowed');
@@ -144,4 +143,4 @@ abstract class EntityCommandHandler extends CommandHandler
 
 }
 // End of file EntityCommandHandler.php
-// Location: core/domain/services/commands/EntityCommandHandler.php
+// Location: core/services/commands/EntityCommandHandler.php

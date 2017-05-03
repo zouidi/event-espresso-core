@@ -4,7 +4,7 @@ namespace EventEspresso\core\domain\services\commands\price;
 
 use EE_Price;
 use EEM_Price;
-use EventEspresso\core\domain\services\commands\EntityCommandHandler;
+use EventEspresso\core\services\commands\EntityCommandHandler;
 use InvalidArgumentException;
 
 defined('EVENT_ESPRESSO_VERSION') || exit;

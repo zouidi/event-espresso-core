@@ -1,10 +1,8 @@
 <?php
 
-namespace EventEspresso\core\domain\services\commands;
+namespace EventEspresso\core\services\commands;
 
 use EventEspresso\core\entities\datetime\DatetimeFormat;
-use EventEspresso\core\services\commands\Command;
-use EventEspresso\core\services\commands\CommandRequiresCapCheckInterface;
 
 defined('EVENT_ESPRESSO_VERSION') || exit;
 
@@ -87,4 +85,4 @@ abstract class EntityCommand extends Command implements CommandRequiresCapCheckI
 
 }
 // End of file EntityCommand
-// Location: core/domain/services/commands/EntityCommand.php
+// Location: core/services/commands/EntityCommand.php

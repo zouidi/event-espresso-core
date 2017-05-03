@@ -2,7 +2,7 @@
 
 namespace EventEspresso\core\domain\services\commands\datetime;
 
-use EventEspresso\core\domain\services\commands\EntityCommand;
+use EventEspresso\core\services\commands\EntityCommand;
 use EventEspresso\core\entities\datetime\DatetimeFormat;
 
 defined('EVENT_ESPRESSO_VERSION') || exit;
