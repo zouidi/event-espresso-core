@@ -1,10 +1,12 @@
 <?php
+
 namespace EventEspresso\core\services\commands;
 
+use DomainException;
 use EE_Registry;
 
-if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
-	exit( 'No direct script access allowed' );
+if (! defined('EVENT_ESPRESSO_VERSION')) {
+    exit('No direct script access allowed');
 }
 
 
@@ -22,26 +24,27 @@ if ( ! defined( 'EVENT_ESPRESSO_VERSION' ) ) {
 class CommandHandlerManager implements CommandHandlerManagerInterface
 {
 
-	/**
-	 * @var CommandHandlerInterface[] $commandHandlers
-	 */
-	private $commandHandlers;
+    /**
+     * @var CommandHandlerInterface[] $command_handlers
+     */
+    protected $command_handlers;
 
-	/**
-	 * @type EE_Registry $registry
-	 */
-	private $registry;
+    /**
+     * @type EE_Registry $registry
+     */
+    private $registry;
 
 
 
-	/**
-	 * CommandHandlerManager constructor
-	 *
-	 * @param EE_Registry $registry
-	 */
-	public function __construct( EE_Registry $registry ) {
-		$this->registry = $registry;
-	}
+    /**
+     * CommandHandlerManager constructor
+     *
+     * @param EE_Registry $registry
+     */
+    public function __construct(EE_Registry $registry)
+    {
+        $this->registry = $registry;
+    }
 
 
 
@@ -71,49 +74,58 @@ class CommandHandlerManager implements CommandHandlerManagerInterface
      * @return void
      * @throws InvalidCommandHandlerException
      */
-	public function addCommandHandler( CommandHandlerInterface $command_handler, $fqcn_for_command = '' )
-	{
-		$command = ! empty( $fqcn_for_command )
-			? $fqcn_for_command
-			: str_replace( 'CommandHandler', 'Command', get_class( $command_handler ) );
-		if ( empty( $command ) ) {
-			throw new InvalidCommandHandlerException( $command );
-		}
-		$this->commandHandlers[ $command ] = $command_handler;
-	}
+    public function addCommandHandler(CommandHandlerInterface $command_handler, $fqcn_for_command = '')
+    {
+        $command = ! empty($fqcn_for_command)
+            ? $fqcn_for_command
+            : str_replace('CommandHandler', 'Command', get_class($command_handler));
+        if (empty($command)) {
+            throw new InvalidCommandHandlerException($command);
+        }
+        $this->command_handlers[$command] = $command_handler;
+    }
 
 
 
     /**
      * @param CommandInterface $command
-     * @param CommandBus       $command_bus
+     * @param CommandBusInterface       $command_bus
      * @return mixed
+     * @throws DomainException
      * @throws CommandHandlerNotFoundException
      */
-	public function getCommandHandler( CommandInterface $command, CommandBus $command_bus = null )
-	{
-		$command_name = get_class( $command );
-		$command_handler = apply_filters(
-		    'FHEE__EventEspresso\core\services\commands\CommandHandlerManager__getCommandHandler__command_handler',
+    public function getCommandHandler(CommandInterface $command, CommandBusInterface $command_bus = null)
+    {
+        $command_name = get_class($command);
+        $command_handler = apply_filters(
+            'FHEE__EventEspresso_core_services_commands_CommandHandlerManager__getCommandHandler__command_handler',
             str_replace('Command', 'CommandHandler', $command_name),
             $command
         );
         $handler = null;
-		// has a command handler already been set for this class ?
-		// if not, can we find one via the FQCN ?
-		if ( isset( $this->commandHandlers[ $command_name ] ) ) {
-			$handler = $this->commandHandlers[ $command_name ];
-		} else if ( class_exists( $command_handler ) ) {
-            $handler = $this->registry->create( $command_handler );
-		}
-		if ($handler instanceof CompositeCommandHandler && $command_bus instanceof CommandBus) {
+        // has a command handler already been set for this class ?
+        // if not, can we find one via the FQCN ?
+        if (isset($this->command_handlers[$command_name])) {
+            $handler = $this->command_handlers[$command_name];
+        } else if (class_exists($command_handler)) {
+            $handler = $this->registry->create($command_handler);
+        }
+        if ($handler instanceof CompositeCommandHandler) {
+            if (! $command_bus instanceof CommandBusInterface) {
+                throw new DomainException(
+                    esc_html__(
+                        'CompositeCommandHandler classes require an instance of the CommandBus.',
+                        'event_espresso'
+                    )
+                );
+            }
             $handler->setCommandBus($command_bus);
         }
-		if ($handler instanceof CommandHandlerInterface) {
+        if ($handler instanceof CommandHandlerInterface) {
             return $handler;
         }
-		throw new CommandHandlerNotFoundException( $command_handler );
-	}
+        throw new CommandHandlerNotFoundException($command_handler);
+    }
 
 
 }

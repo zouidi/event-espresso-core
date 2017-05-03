@@ -1,7 +1,8 @@
 <?php
+
 namespace EventEspresso\core\services\commands;
 
-if ( ! defined('EVENT_ESPRESSO_VERSION')) {
+if (! defined('EVENT_ESPRESSO_VERSION')) {
     exit('No direct script access allowed');
 }
 
@@ -15,37 +16,35 @@ if ( ! defined('EVENT_ESPRESSO_VERSION')) {
  *
  * @package       Event Espresso
  * @author        Brent Christensen
- * @since         4.9.35
+ * @since         4.9.38
  */
 abstract class CompositeCommandHandler extends CommandHandler
 {
 
     /**
-     * @type CommandBus $command_bus
+     * @type CommandBusInterface $command_bus
      */
     private $command_bus;
 
 
 
     /**
-     * @param CommandBus $command_bus
+     * @param CommandBusInterface $command_bus
      */
-    public function setCommandBus(CommandBus $command_bus)
+    public function setCommandBus(CommandBusInterface $command_bus)
     {
         $this->command_bus = $command_bus;
     }
 
 
 
-
     /**
-     * @return CommandBus
+     * @return CommandBusInterface
      */
     public function commandBus()
     {
         return $this->command_bus;
     }
-
 
 
 
