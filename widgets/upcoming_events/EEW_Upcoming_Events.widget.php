@@ -1,4 +1,6 @@
-<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
+<?php use EventEspresso\widgets\EspressoWidget;
+
+if ( ! defined('EVENT_ESPRESSO_VERSION')) exit('No direct script access allowed');
 /**
  * Event Espresso
  *
@@ -21,22 +23,16 @@
  *
  * ------------------------------------------------------------------------
  */
-class EEW_Upcoming_Events  extends WP_Widget {
+class EEW_Upcoming_Events extends EspressoWidget {
 
 
 	/**
 	 * Register widget with WordPress.
 	 */
-	function __construct() {
+	public function __construct() {
 		parent::__construct(
-			'ee-upcoming-events-widget',
 			__( 'Event Espresso Upcoming Events', 'event_espresso' ),
-			 array( 'description' => __( 'A widget to display your upcoming events.', 'event_espresso' )),
-			array(
-				'width' => 300,
-				'height' => 350,
-				'id_base' => 'ee-upcoming-events-widget'
-			)
+			 array( 'description' => __( 'A widget to display your upcoming events.', 'event_espresso' ))
 		);
 	}
 
@@ -51,7 +47,6 @@ class EEW_Upcoming_Events  extends WP_Widget {
 	 */
 	public function form( $instance ) {
 
-		EE_Registry::instance()->load_helper( 'Form_Fields' );
 		EE_Registry::instance()->load_class( 'Question_Option', array(), FALSE, FALSE, TRUE );
 		// Set up some default widget settings.
 		$defaults = array(
@@ -273,9 +268,8 @@ class EEW_Upcoming_Events  extends WP_Widget {
 			$after_widget = '';
 			// but NOT an events archives page, cuz that would be like two event lists on the same page
 			$show_everywhere = isset( $instance['show_everywhere'] ) ? (bool) absint( $instance['show_everywhere'] ) : TRUE;
-			if ( $show_everywhere || ! ( $post->post_type == 'espresso_events' && is_archive() )) {	
+			if ( $show_everywhere || ! ( $post->post_type == 'espresso_events' && is_archive() )) {
 				// let's use some of the event helper functions'
-				EE_Registry::instance()->load_helper( 'Event_View' );
 				// make separate vars out of attributes
 
 
@@ -307,7 +301,7 @@ class EEW_Upcoming_Events  extends WP_Widget {
 				// start to build our where clause
 				$where = array(
 //					'Datetime.DTT_is_primary' => 1,
-					'status' => 'publish'
+					'status' => array( 'IN', array( 'publish', 'sold_out' ) )
 				);
 				// add category
 				if ( $category ) {
@@ -318,6 +312,8 @@ class EEW_Upcoming_Events  extends WP_Widget {
 				if ( ! $show_expired ) {
 					$where['Datetime.DTT_EVT_end'] = array( '>=', EEM_Datetime::instance()->current_time_for_query( 'DTT_EVT_end' ) );
 				}
+				// allow $where to be filtered
+				$where = apply_filters( 'FHEE__EEW_Upcoming_Events__widget__where', $where, $category, $show_expired );
 				// run the query
 				$events = EE_Registry::instance()->load_model( 'Event' )->get_all( array(
 					$where,
@@ -345,24 +341,30 @@ class EEW_Upcoming_Events  extends WP_Widget {
 								default :
 									$len_class =  ' one-line';
 							}
-							echo '<h5 class="ee-upcoming-events-widget-title-h5"><a class="ee-widget-event-name-a' . $len_class . '" href="' . get_permalink( $event->ID() ) . '">' . $event->name() . '</a></h5>';
-							if ( has_post_thumbnail( $event->ID() ) && $image_size != 'none' ) {
-								echo '<div class="ee-upcoming-events-widget-img-dv"><a class="ee-upcoming-events-widget-img" href="' . get_permalink( $event->ID() ) . '">' . get_the_post_thumbnail( $event->ID(), $image_size ) . '</a></div>';
-							}
-							$desc = $event->short_description( 25 );
-							if ( $show_dates ) {
-								$date_format = apply_filters( 'FHEE__espresso_event_date_range__date_format', get_option( 'date_format' ));
-								$time_format = apply_filters( 'FHEE__espresso_event_date_range__time_format', get_option( 'time_format' ));
-								$single_date_format = apply_filters( 'FHEE__espresso_event_date_range__single_date_format', get_option( 'date_format' ));
-								$single_time_format = apply_filters( 'FHEE__espresso_event_date_range__single_time_format', get_option( 'time_format' ));
-								if ( $date_range == TRUE ) {
-									echo espresso_event_date_range( $date_format, $time_format, $single_date_format, $single_time_format, $event->ID() );
-								}else{
-									echo espresso_list_of_event_dates( $event->ID(), $date_format, $time_format, FALSE, NULL, TRUE, TRUE, $date_limit );
+							$event_url = apply_filters( 'FHEE_EEW_Upcoming_Events__widget__event_url', $event->get_permalink(), $event );
+							echo '<h5 class="ee-upcoming-events-widget-title-h5"><a class="ee-widget-event-name-a' . $len_class . '" href="' . $event_url . '">' . $event->name() . '</a></h5>';
+							if ( post_password_required( $event->ID() ) ) {
+								$pswd_form = apply_filters( 'FHEE_EEW_Upcoming_Events__widget__password_form', get_the_password_form( $event->ID() ), $event );
+								echo $pswd_form;
+							} else {
+								if ( has_post_thumbnail( $event->ID() ) && $image_size != 'none' ) {
+									echo '<div class="ee-upcoming-events-widget-img-dv"><a class="ee-upcoming-events-widget-img" href="' . $event_url . '">' . get_the_post_thumbnail( $event->ID(), $image_size ) . '</a></div>';
 								}
-							}
-							if ( $show_desc && $desc ) {
-								echo '<p style="margin-top: .5em">' . $desc . '</p>';
+								$desc = $event->short_description( 25 );
+								if ( $show_dates ) {
+									$date_format = apply_filters( 'FHEE__espresso_event_date_range__date_format', get_option( 'date_format' ));
+									$time_format = apply_filters( 'FHEE__espresso_event_date_range__time_format', get_option( 'time_format' ));
+									$single_date_format = apply_filters( 'FHEE__espresso_event_date_range__single_date_format', get_option( 'date_format' ));
+									$single_time_format = apply_filters( 'FHEE__espresso_event_date_range__single_time_format', get_option( 'time_format' ));
+									if ( $date_range == TRUE ) {
+										echo espresso_event_date_range( $date_format, $time_format, $single_date_format, $single_time_format, $event->ID() );
+									}else{
+										echo espresso_list_of_event_dates( $event->ID(), $date_format, $time_format, FALSE, NULL, TRUE, TRUE, $date_limit );
+									}
+								}
+								if ( $show_desc && $desc ) {
+									echo '<p style="margin-top: .5em">' . $desc . '</p>';
+								}
 							}
 							echo '</li>';
 						}

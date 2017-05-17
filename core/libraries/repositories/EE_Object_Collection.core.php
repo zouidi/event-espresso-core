@@ -132,10 +132,11 @@ class EE_Object_Collection extends \SplObjectStorage implements EEI_Collection {
 	 *
 	 * @access public
 	 * @param $object
-	 * @return void
+	 * @return bool
 	 */
 	public function remove( $object ) {
 		$this->detach( $object );
+		return true;
 	}
 
 

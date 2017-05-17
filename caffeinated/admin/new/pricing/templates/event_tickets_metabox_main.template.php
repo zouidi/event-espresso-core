@@ -1,5 +1,5 @@
 <div id="event-and-ticket-form-content">
-	<h4 class="event-tickets-datetimes-title"><span data-target=".event-datetimes-container" class="clickable ee-collapsible<?php echo $ee_collapsible_status; ?>"><span class="dashicons dashicons-clock ee-icon-size-20"></span><?php _e('Event Datetimes', 'event_espresso'); ?></span></h4><?php echo $event_datetime_help_link; ?>
+	<h3 class="event-tickets-datetimes-title"><span data-target=".event-datetimes-container" class="clickable ee-collapsible<?php echo $ee_collapsible_status; ?>"><span class="dashicons dashicons-clock ee-icon-size-20"></span><?php _e('Event Datetimes', 'event_espresso'); ?></span></h3><?php echo $event_datetime_help_link; ?>
 	<div class="event-datetimes-container">
 		<div class="save-cancel-button-container">
 			<button class="button-secondary ee-create-button datetime-create-button" data-context="datetime">
@@ -19,7 +19,10 @@
 					<td><span class="DTT_EVT_end_label"><?php _e('Event End', 'event_espresso'); ?></span></td>
 					<td><span class="DTT_reg_limit_label"><?php _e('Limit', 'event_espresso'); ?></span></td>
 					<td><span class="DTT_sold_label"><?php _e('Sold', 'event_espresso'); ?></span></td>
-					<td></td>
+                    <?php if (apply_filters('FHEE__event_tickets_metabox__dtt_reserved', true)): ?>
+                        <td><span class="DTT_reserved_label"><?php _e('Rsrvd', 'event_espresso'); ?></span></td>
+                    <?php endif; ?>
+                    <td></td>
 				</tr>
 			</thead>
 			<tbody class="datetime-editing-dtts-tbody">
@@ -29,7 +32,7 @@
 		<div style="clear:both"></div>
 	</div> <!-- end .event-datetimes-container -->
 	<div id="add-event-datetime" class="event-datetime-row add-dtt-row" style="display:none;">
-		<h5 class="datetime-tickets-heading"><?php _e('Add New Datetime', 'event_espresso'); ?></h5><?php echo $add_new_dtt_help_link; ?>
+		<h4 class="datetime-tickets-heading"><?php _e('Add New Datetime', 'event_espresso'); ?></h4><?php echo $add_new_dtt_help_link; ?>
 		<div>
 			<table id="add-new-event-datetime-table" class="datetime-edit-table">
 				<tr>
@@ -63,9 +66,9 @@
 		</div>
 	</div> <!-- end #add-event-datetime -->
 	<div style="clear:both"></div>
-	
+
 	<div class="available-tickets-container">
-		<h4 class="event-tickets-datetimes-title"><span data-target=".event-tickets-container" class="clickable ee-collapsible<?php echo $ee_collapsible_status; ?>"><span class="ee-icon ee-icon-tickets ee-icon-size-20"></span><?php _e('Available Tickets', 'event_espresso'); ?></span></h4>
+		<h3 class="event-tickets-datetimes-title"><span data-target=".event-tickets-container" class="clickable ee-collapsible<?php echo $ee_collapsible_status; ?>"><span class="ee-icon ee-icon-tickets ee-icon-size-20"></span><?php _e('Available Tickets', 'event_espresso'); ?></span></h3>
 		<div class="event-tickets-container ee-create-ticket-button"<?php echo $show_tickets_container; ?>>
 			<button class="ee-create-ticket-button button-secondary ee-create-button" data-context="ticket"><?php _e('Create Ticket', 'event_espresso'); ?></button>
 		</div>
@@ -79,9 +82,11 @@
 						<td><span class="TKT_sell_until_label"><?php _e('Sell Until', 'event_espresso'); ?></span></td>
 						<td><span class="TKT_price_label"><?php _e('Price', 'event_espresso'); ?></span></td>
 						<td><span class="TKT_qty_label"><?php _e('Qty', 'event_espresso'); ?></span></td>
-						<!--<td><?php _e('Total', 'event_espresso'); ?></td>-->
 						<td><span class="TKT_sold_label"><?php _e('Sold', 'event_espresso'); ?></span></td>
-						<td colspan="2"><span class="TKT_regs_label"><?php _e('Regs', 'event_espresso'); ?></span></td>
+                        <?php if (apply_filters('FHEE__event_tickets_metabox__tkt_reserved', true)): ?>
+                            <td><span class="TKT_reserved_label"><?php _e('Rsrvd', 'event_espresso'); ?></span></td>
+                        <?php endif; ?>
+                        <td colspan="2"><span class="TKT_regs_label"><?php _e('Regs', 'event_espresso'); ?></span></td>
 					</tr>
 				</thead>
 				<tbody>

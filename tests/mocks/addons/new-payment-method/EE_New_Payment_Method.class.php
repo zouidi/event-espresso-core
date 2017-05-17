@@ -1,4 +1,10 @@
 <?php if ( ! defined( 'EVENT_ESPRESSO_VERSION' )) { exit(); }
+
+// define the plugin directory path and URL
+define( 'EE_NEW_PAYMENT_METHOD_BASENAME', plugin_basename( EE_NEW_PAYMENT_METHOD_PLUGIN_FILE ));
+define( 'EE_NEW_PAYMENT_METHOD_PATH', plugin_dir_path( __FILE__ ));
+define( 'EE_NEW_PAYMENT_METHOD_URL', plugin_dir_url( __FILE__ ));
+
 /**
  * ------------------------------------------------------------------------
  *
@@ -11,10 +17,6 @@
  *
  * ------------------------------------------------------------------------
  */
-// define the plugin directory path and URL
-define( 'EE_NEW_PAYMENT_METHOD_BASENAME', plugin_basename( EE_NEW_PAYMENT_METHOD_PLUGIN_FILE ));
-define( 'EE_NEW_PAYMENT_METHOD_PATH', plugin_dir_path( __FILE__ ));
-define( 'EE_NEW_PAYMENT_METHOD_URL', plugin_dir_url( __FILE__ ));
 Class  EE_New_Payment_Method extends EE_Addon {
 
 	/**
@@ -31,6 +33,7 @@ Class  EE_New_Payment_Method extends EE_Addon {
 				'version' 					=> EE_NEW_PAYMENT_METHOD_VERSION,
 				'min_core_version' => '4.6.0.dev.000',
 				'main_file_path' 				=> EE_NEW_PAYMENT_METHOD_PLUGIN_FILE,
+				'admin_callback' => 'additional_admin_hooks',
 				// if plugin update engine is being used for auto-updates. not needed if PUE is not being used.
 				'pue_options'			=> array(
 					'pue_plugin_slug' => 'espresso_new_payment_method',
@@ -73,7 +76,7 @@ Class  EE_New_Payment_Method extends EE_Addon {
 	public function plugin_actions( $links, $file ) {
 		if ( $file == EE_NEW_PAYMENT_METHOD_BASENAME ) {
 			// before other links
-			array_unshift( $links, '<a href="admin.php?page=espresso_payments">' . __('Settings') . '</a>' );
+			array_unshift( $links, '<a href="admin.php?page=espresso_payment_settings">' . __('Settings') . '</a>' );
 		}
 		return $links;
 	}

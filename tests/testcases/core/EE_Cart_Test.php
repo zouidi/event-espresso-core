@@ -26,7 +26,7 @@ class EE_Cart_Test extends EE_UnitTestCase{
 
 	public function setUp(){
 		parent::setUp();
-		require_once EE_TESTS_DIR . 'mocks' . DS . 'core' . DS . 'EE_Session_Mock.php';
+		require_once EE_TESTS_DIR . 'mocks' . DS . 'core' . DS . 'EE_Session_Mock.core.php';
 		$this->_session = EE_Session_Mock::instance();
 		EE_Cart::reset( null, $this->_session );
 	}
@@ -99,7 +99,7 @@ class EE_Cart_Test extends EE_UnitTestCase{
 		// reset cart
 		$cart = EE_Cart::reset( null, $this->_session );
 		$cart->add_ticket_to_cart( $ticket, $quantity_purchased );
-		$total_line_item = EE_Cart::instance( null, $this->_session )->get_grand_total();
+		$total_line_item = $cart->get_grand_total();
 		$subtotals = $total_line_item->children();
 		$this->assertNotEmpty( $subtotals );
 		$items_purchased = $total_line_item->get_items();
@@ -118,7 +118,7 @@ class EE_Cart_Test extends EE_UnitTestCase{
 		$percent_surcharge_sli = array_shift( $sub_line_items );
 		$this->assertEquals( $percent_surcharge->amount(), $percent_surcharge_sli->percent() );
 		$this->assertEquals( ($base_price->amount()  + $dollar_surcharge->amount() )* $percent_surcharge->amount() / 100 * $quantity_purchased, $percent_surcharge_sli->total() );
-		$this->assertEquals($ticket->price() * $quantity_purchased, EE_Cart::instance( null, $this->_session )->get_cart_grand_total() );
+		$this->assertEquals($ticket->price() * $quantity_purchased, $cart->get_cart_grand_total() );
 
 	}
 

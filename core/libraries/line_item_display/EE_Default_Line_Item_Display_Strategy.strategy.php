@@ -59,9 +59,6 @@ class EE_Default_Line_Item_Display_Strategy implements EEI_Line_Item_Display {
 	 */
 	public function display_line_item( EE_Line_Item $line_item, $options = array() ) {
 
-		EE_Registry::instance()->load_helper( 'Template' );
-		EE_Registry::instance()->load_helper( 'HTML' );
-
 		$html = '';
 		// set some default options and merge with incoming
 		$default_options = array(
@@ -153,12 +150,23 @@ class EE_Default_Line_Item_Display_Strategy implements EEI_Line_Item_Display {
 			$line_item,
 			$options
 		);
-		$name_and_desc .= $line_item->is_taxable() ? '<span class="smaller-text lt-grey-text" style="margin:0 0 0 2em;">' . __( ' * taxable item', 'event_espresso' ) . '</span>' : '';
+		if ( $line_item->is_taxable() ) {
+			$ticket_price_includes_taxes = EE_Registry::instance()->CFG->tax_settings->prices_displayed_including_taxes
+				? __( '* price includes taxes', 'event_espresso' )
+				: __( '* price does not include taxes', 'event_espresso' );
+			$name_and_desc .= '<span class="smaller-text lt-grey-text" style="margin:0 0 0 2em;">'
+				  . $ticket_price_includes_taxes
+				  . '</span>';
+		}
+
 		// name td
-		$html .= EEH_HTML::td( /*__FUNCTION__ .*/ $name_and_desc, '',  'item_l' );
+		$html .= EEH_HTML::td( $name_and_desc, '',  'item_l' );
 		// quantity td
 		$html .= EEH_HTML::td( $line_item->quantity(), '',  'item_l jst-rght' );
-		$tax_rate = $line_item->is_taxable() ? 1 + ( $this->_tax_rate / 100 ) : 1;
+		$tax_rate = $line_item->is_taxable()
+		            && EE_Registry::instance()->CFG->tax_settings->prices_displayed_including_taxes
+			? 1 + ( $this->_tax_rate / 100 )
+			: 1;
 		// price td
 		$unit_price = EEH_Template::format_currency( $line_item->unit_price() * $tax_rate, false, false );
 		$html .= EEH_HTML::td( $unit_price, '',  'item_c jst-rght' );

@@ -14,6 +14,7 @@
  * @since 		4.3.0
  * @package 		Event Espresso
  * @subpackage 	tests
+ * @group admin
  */
 class EE_Admin_Tests extends EE_UnitTestCase {
 
@@ -53,7 +54,6 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 		$this->assertTrue( defined('EE_ADMIN_TEMPLATE') );
 		$this->assertTrue( defined('WP_ADMIN_PATH' ) );
 		$this->assertTrue( defined('WP_AJAX_URL') );
-		$this->assertTrue( defined('JQPLOT_URL') );
 	}
 
 
@@ -130,12 +130,11 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 		$this->setMaintenanceMode(2);
 		$admin->init();
 		$this->assertFalse( has_action('wp_ajax_dismiss_ee_nag_notice', array( $admin, 'dismiss_ee_nag_notice_callback' ) ) );
-		$this->assertFalse( has_action('save_post', array( 'EE_Admin', 'parse_post_content_on_save' ) ) );
-		$this->assertFalse( has_filter('content_save_pre', array( $admin, 'its_eSpresso' ) ) );
 		$this->assertFalse( has_action('admin_notices', array( $admin, 'get_persistent_admin_notices' ) ) );
 		$this->assertFalse( has_action('dashboard_glance_items', array( $admin, 'dashboard_glance_items' ) ) );
 		$this->assertFalse( has_filter( 'get_edit_post_link', array( $admin, 'modify_edit_post_link') ) );
 		//should happen with both conditions
+		$this->assertEquals( has_filter( 'content_save_pre', array( $admin, 'its_eSpresso' ) ), 10 );
 		$this->assertEquals( has_action('admin_head', array( $admin, 'enable_hidden_ee_nav_menu_metaboxes' ) ), 10 );
 		$this->assertEquals( has_action('admin_head', array( $admin, 'register_custom_nav_menu_boxes' ) ), 10 );
 		$this->assertEquals( has_filter('nav_menu_meta_box_object', array( $admin, 'remove_pages_from_nav_menu' ) ), 10 );
@@ -149,7 +148,6 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 
 		$this->assertFalse( has_filter('FHEE__EE_Admin_Page_Loader___get_installed_pages__installed_refs', array( $admin, 'hide_admin_pages_except_maintenance_mode' ) ) );
 		$this->assertEquals( has_action('wp_ajax_dismiss_ee_nag_notice', array( $admin, 'dismiss_ee_nag_notice_callback' ) ), 10 );
-		$this->assertEquals( has_action('save_post', array( 'EE_Admin', 'parse_post_content_on_save' ) ), 100 );
 		$this->assertEquals( has_filter('content_save_pre', array( $admin, 'its_eSpresso' ) ), 10 );
 		$this->assertEquals( has_action('admin_notices', array( $admin, 'get_persistent_admin_notices' ) ), 9 );
 		$this->assertEquals( has_action('dashboard_glance_items', array( $admin, 'dashboard_glance_items' ) ), 10 );
@@ -235,7 +233,6 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 		$this->factory->registration->create_many(3);
 
 		//expected events dashboard items
-		EE_Registry::instance()->load_helper('URL');
 		$xpct_events_url = EEH_URL::add_query_args_and_nonce( array( 'page' => 'espresso_events'), admin_url('admin.php') );
 		$xpct_events_text = sprintf( _n( '%s Event', '%s Events', 10 ), number_format_i18n( 10 ) );
 		$xpct_events_title = __('Click to view all Events', 'event_espresso');
@@ -247,12 +244,16 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 		$xpct_registration_title = __('Click to view all registrations', 'event_espresso');
 		$xpct_registration_assembled = sprintf( '<a class="ee-dashboard-link-registrations" href="%s" title="%s">%s</a>', $xpct_registration_url, $xpct_registration_title, $xpct_registration_text );
 
-		$generated_items = EE_Admin::instance()->dashboard_glance_items( '' );
+		$generated_items = EE_Admin::instance()->dashboard_glance_items( array() );
 		//first assert the elements are an array.
 		$this->assertInternalType('array', $generated_items);
 
 		//assert the count for the array is two
-		$this->assertcount( 2, $generated_items);
+		$this->assertCount(
+		    2,
+            $generated_items,
+            sprintf('$generated_items should have 2 elements: ', print_r($generated_items, true))
+        );
 
 		//assert that the first item matches the xpctd event string.
 		$this->assertEquals( $xpct_event_assembled, $generated_items[0] );
@@ -298,10 +299,9 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 	function test_espresso_admin_footer() {
 		$actual = EE_Admin::instance()->espresso_admin_footer();
 		//assert contains powered by text.
-		$this->assertContains('Event Registration and Ticketing Powered by', $actual);
-
+		$this->assertContains('Online event registration and ticketing powered by ', $actual);
 		//assert contains eventespresso.com link
-		$this->assertContains('http://eventespresso.com/', $actual);
+		$this->assertContains('https://eventespresso.com/', $actual);
 	}
 
 
@@ -320,7 +320,6 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 
 		//dummy link for testing
 		$orig_link = 'http://testdummylink.com';
-		EE_Registry::instance()->load_helper('URL');
 		$expected_link = EEH_URL::add_query_args_and_nonce( array( 'action' => 'edit_attendee', 'post' => $id ), admin_url('admin.php?page=espresso_registrations' ) );
 
 		//first test that if the id given doesn't match our post type that the original link is returned.
@@ -334,3 +333,4 @@ class EE_Admin_Tests extends EE_UnitTestCase {
 	}
 
 }
+// Location: testcases/core/admin/EE_Admin_Tests.php

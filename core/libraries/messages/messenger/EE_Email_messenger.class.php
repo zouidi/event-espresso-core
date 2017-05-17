@@ -38,11 +38,13 @@ class EE_Email_messenger extends EE_messenger  {
 	protected $_from;
 	protected $_subject;
 	protected $_content;
+
+
+
 	/**
 	 * constructor
 	 *
 	 * @access public
-	 * @return void
 	 */
 	public function __construct() {
 		//set name and description properties
@@ -347,12 +349,24 @@ class EE_Email_messenger extends EE_messenger  {
 	 * @return bool | WP_Error  true if message delivered, false if it didn't deliver OR bubble up any error object if present.
 	 */
 	protected function _send_message() {
-		return wp_mail(
+		$success =  wp_mail(
 			html_entity_decode( $this->_to, ENT_QUOTES, "UTF-8" ),
 			stripslashes( html_entity_decode( $this->_subject, ENT_QUOTES, "UTF-8" )),
 			$this->_body(),
 			$this->_headers()
 		);
+		if ( ! $success ) {
+			EE_Error::add_error(
+				sprintf(
+					__( 'The email did not send successfully.%3$sThe WordPress wp_mail function is used for sending mails but does not give any useful information when an email fails to send.%3$sIt is possible the "to" address (%1$s) or "from" address (%2$s) is invalid.%3$s', 'event_espresso'),
+					$this->_to,
+					$this->_from,
+					'<br />'
+				),
+				__FILE__, __FUNCTION__, __LINE__
+			);
+		}
+		return $success;
 	}
 
 
@@ -363,7 +377,7 @@ class EE_Email_messenger extends EE_messenger  {
 	 * @return string html body of the message content and the related css.
 	 */
 	protected function _preview() {
-		return $this->_body( TRUE );
+		return $this->_body( true );
 	}
 
 
@@ -377,6 +391,7 @@ class EE_Email_messenger extends EE_messenger  {
 	 * @return string formatted header for email
 	 */
 	protected function _headers() {
+		$this->_ensure_has_from_email_address();
 		$from = stripslashes_deep( html_entity_decode($this->_from,  ENT_QUOTES,"UTF-8" ) );
 		$headers = array(
 			'MIME-Version: 1.0',
@@ -391,6 +406,16 @@ class EE_Email_messenger extends EE_messenger  {
 		return apply_filters( 'FHEE__EE_Email_messenger___headers', $headers, $this->_incoming_message_type, $this );
 	}
 
+
+	/**
+	 * This simply ensures that the from address is not empty.  If it is, then we use whatever is set as the site email
+	 * address for the from address to avoid problems with sending emails.
+	 */
+	protected function _ensure_has_from_email_address() {
+		if ( empty( $this->_from ) ) {
+			$this->_from = get_bloginfo('admin_email');
+		}
+	}
 
 
 
@@ -412,9 +437,11 @@ class EE_Email_messenger extends EE_messenger  {
 			$from_email = substr( $this->_from, strpos( $this->_from, '<' ) + 1 );
 			$from_email = str_replace( '>', '', $from_email );
 			$from_email = trim( $from_email );
-		} else {
+		} elseif ( trim( $this->_from ) !== '' ) {
 			$from_name = '';
 			$from_email = trim( $this->_from );
+		} else {
+			$from_name = $from_email = '';
 		}
 		return array( $from_name, $from_email );
 	}
@@ -431,7 +458,9 @@ class EE_Email_messenger extends EE_messenger  {
 	 */
 	public function set_from_address( $from_email ) {
 		$parsed_from = $this->_parse_from();
-		return $parsed_from[1];
+		//includes fallback if the parsing failed.
+		$from_email = is_array( $parsed_from ) && ! empty( $parsed_from[1] ) ? $parsed_from[1] : get_bloginfo( 'admin_email' );
+		return $from_email;
 	}
 
 
@@ -450,6 +479,9 @@ class EE_Email_messenger extends EE_messenger  {
 			$from_name =  $parsed_from[0];
 		}
 
+		//if from name is "WordPress" let's sub in the site name instead (more friendly!)
+		$from_name = $from_name == 'WordPress' ? get_bloginfo() : $from_name;
+
 		return stripslashes_deep( html_entity_decode($from_name,  ENT_QUOTES,"UTF-8" ) );
 	}
 
@@ -461,7 +493,7 @@ class EE_Email_messenger extends EE_messenger  {
 	 * @param bool $preview will determine whether this is preview template or not.
 	 * @return string formatted body for email.
 	 */
-	protected function _body( $preview = FALSE ) {
+	protected function _body( $preview = false ) {
 		//setup template args!
 		$this->_template_args = array(
 			'subject' => $this->_subject,

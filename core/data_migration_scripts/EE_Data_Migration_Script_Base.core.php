@@ -1,5 +1,8 @@
 <?php
-if ( ! defined('EVENT_ESPRESSO_VERSION')) {
+use EventEspresso\core\services\database\TableAnalysis;
+use EventEspresso\core\services\database\TableManager;
+
+if ( ! defined( 'EVENT_ESPRESSO_VERSION')) {
 	exit('No direct script access allowed');
 }
 
@@ -72,7 +75,7 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 	 * Eg, if this migration script can migrate from 3.1.26 or higher (but not anything after 4.0.0), and
 	 * it's passed a string like '3.1.38B', it should return true.
 	 * If this DMS is to migrate data from an EE3 addon, you will probably want to use
-	 * EEH_Activation::table_exists() to check for old EE3 tables, and
+	 * EventEspresso\core\services\database\TableAnalysis::tableExists() to check for old EE3 tables, and
 	 * EE_Data_Migration_Manager::get_migration_ran() to check that core was already
 	 * migrated from EE3 to EE4 (ie, this DMS probably relies on some migration data generated
 	 * during the Core 4.1.0 DMS. If core didn't run that DMS, you probably don't want
@@ -83,6 +86,7 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 	 * database state, just return FALSE (and core's activation process will take care
 	 * of calling its schema_changes_before_migration() and
 	 * schema_changes_after_migration() for you. )
+	 *
 	 * @param array $current_database_state_of keys are EE plugin slugs (eg 'Core', 'Calendar', 'Mailchimp', etc)
 	 * @return boolean
 	 */
@@ -114,16 +118,20 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 
 
 	/**
-	 * All children of this must call parent::__construct() at the end of their constructor or suffer the consequences!
+	 * All children of this must call parent::__construct()
+	 * at the end of their constructor or suffer the consequences!
+	 *
+	 * @param TableManager  $table_manager
+	 * @param TableAnalysis $table_analysis
 	 */
-	public function __construct() {
-		$this->_migration_stages = apply_filters('FHEE__'.get_class($this).'__construct__migration_stages',$this->_migration_stages);
+	public function __construct( TableManager $table_manager = null, TableAnalysis $table_analysis = null ) {
+		$this->_migration_stages = (array) apply_filters('FHEE__'.get_class($this).'__construct__migration_stages',$this->_migration_stages);
 		foreach($this->_migration_stages as $migration_stage){
 			if ( $migration_stage instanceof EE_Data_Migration_Script_Stage ) {
 				$migration_stage->_construct_finalize($this);
 			}
 		}
-		parent::__construct();
+		parent::__construct( $table_manager, $table_analysis );
 	}
 
 
@@ -373,7 +381,7 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 	private function _maybe_do_schema_changes($before = true){
 		//so this property will be either _schema_changes_after_migration_ran or _schema_changes_before_migration_ran
 		$property_name = '_schema_changes_'. ($before ? 'before' : 'after').'_migration_ran';
-		if ( ! $this->$property_name ){
+		if ( ! $this->{$property_name} ){
 			try{
 				ob_start();
 				if($before){
@@ -388,7 +396,7 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 				throw $e;
 			}
 			//record that we've done these schema changes
-			$this->$property_name = true;
+			$this->{$property_name} = true;
 			//if there were any warnings etc, record them as non-fatal errors
 			if( $output ){
 				//there were some warnings
@@ -447,8 +455,7 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 	 * @return boolean
 	 */
 	protected function _old_table_exists( $table_name ) {
-		EE_Registry::instance()->load_helper( 'Activation' );
-		return EEH_Activation::table_exists( $table_name );
+		return $this->_get_table_analysis()->tableExists( $table_name );
 	}
 
 
@@ -459,7 +466,6 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 	 * @return boolean
 	 */
 	protected function _delete_table_if_empty( $table_name ) {
-		EE_Registry::instance()->load_helper( 'Activation' );
 		return EEH_Activation::delete_db_table_if_empty( $table_name );
 	}
 
@@ -470,7 +476,7 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 	 * as these are significantly more efficient or explicit.
 	 * Please see description of _table_is_new_in_this_version. This function will only set
 	 * EEH_Activation::create_table's $drop_pre_existing_tables to TRUE if it's a brand
-	 * new activation. ie, a more accurate name for this method would be "_table_added_previously_by_this_plugin" because the table will be cleared out if this is a new activation (ie, if its a new activation, it actually should exisy previously).
+	 * new activation. ie, a more accurate name for this method would be "_table_added_previously_by_this_plugin" because the table will be cleared out if this is a new activation (ie, if its a new activation, it actually should exist previously).
 	 * Otherwise, we'll always set $drop_pre_existing_tables to FALSE
 	 * because the table should have existed. Note, if the table is being MODIFIED in this
 	 * version being activated or migrated to, then you want _table_is_changed_in_this_version NOT this one.
@@ -547,7 +553,6 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 	 * @param boolean $drop_pre_existing_tables
 	 */
 	private function _create_table_and_catch_errors( $table_name, $table_definition_sql, $engine_string = 'ENGINE=MyISAM', $drop_pre_existing_tables = FALSE ){
-		EE_Registry::instance()->load_helper('Activation');
 		try{
 			EEH_Activation::create_table($table_name,$table_definition_sql, $engine_string, $drop_pre_existing_tables);
 		}catch( EE_Error $e ) {
@@ -667,7 +672,7 @@ abstract class EE_Data_Migration_Script_Base extends EE_Data_Migration_Class_Bas
 		unset($array_of_properties['_migration_stages']);
 		unset($array_of_properties['class']);
 		foreach($array_of_properties as $property_name => $property_value){
-			$this->$property_name = $property_value;
+			$this->{$property_name} = $property_value;
 		}
 		//_migration_stages are already instantiated, but have only default data
 		foreach($this->_migration_stages as $stage){

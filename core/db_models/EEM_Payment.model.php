@@ -70,7 +70,7 @@ class EEM_Payment extends EEM_Base implements EEMI_Payment{
 				'PAY_ID'=>new EE_Primary_Key_Int_Field('PAY_ID', __('Payment ID','event_espresso')),
 				'TXN_ID'=>new EE_Foreign_Key_Int_Field('TXN_ID', __('Transaction ID','event_espresso'), false, 0, 'Transaction'),
 				'STS_ID'=>new EE_Foreign_Key_String_Field('STS_ID', __('Status ID','event_espresso'), false, EEM_Payment::status_id_failed, 'Status'),
-				'PAY_timestamp'=> new EE_Datetime_Field('PAY_timestamp', __('Timestamp of when payment was attempted','event_espresso'), false, time(), $timezone ),
+				'PAY_timestamp'=> new EE_Datetime_Field('PAY_timestamp', __('Timestamp of when payment was attempted','event_espresso'), false, EE_Datetime_Field::now, $timezone ),
 				'PAY_source'=>new EE_All_Caps_Text_Field('PAY_source', __('User-friendly description of payment','event_espresso'), false, 'CART'),
 				'PAY_amount'=>new EE_Money_Field('PAY_amount', __('Amount Payment should be for','event_espresso'), false, 0),
 				'PMD_ID'=>new EE_Foreign_Key_Int_Field('PMD_ID', __("Payment Method ID", 'event_espresso'), false, NULL, 'Payment_Method'),
@@ -161,7 +161,6 @@ class EEM_Payment extends EEM_Base implements EEMI_Payment{
 	 * @return EE_Payment[]
 	 */
 	public function get_payments_made_between_dates( $start_date = '', $end_date = '', $format = '', $timezone = '' ) {
-		EE_Registry::instance()->load_helper( 'DTT_Helper' );
 		$timezone = empty( $timezone ) ? EEH_DTT_Helper::get_timezone() : $timezone;
 		//if $start_date or $end date, verify $format is included.
 		if ( ( ! empty( $start_date ) || ! empty( $end_date ) ) && empty( $format ) ) {

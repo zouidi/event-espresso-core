@@ -1,19 +1,5 @@
 <?php if ( ! defined( 'EVENT_ESPRESSO_VERSION' )) { exit(); }
-/* ------------------------------------------------------------------------
- *
- * Event Espresso
- *
- * Event Registration and Management Plugin for WordPress
- *
- * @ package			Event Espresso
- * @ author				Event Espresso
- * @ copyright		(c) 2008-2011 Event Espresso  All Rights Reserved.
- * @ license			http://eventespresso.com/support/terms-conditions/   * see Plugin Licensing *
- * @ link					http://www.eventespresso.com
- * @ version		 	4.3
- *
- * ------------------------------------------------------------------------
- *
+/*
  * EEW_New_Addon
  * Displays a List of New_Addon in the Sidebar
  *
@@ -32,9 +18,9 @@ class EEW_New_Addon extends WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'ee-new_addon-widget',
-			__( 'Event Espresso New_Addon Widget', 'event_espresso' ),
+			__( 'Event Espresso New Addon Widget', 'event_espresso' ),
 			 array(
-			 	'description' => __( 'Displays Espresso New_Addon in a widget.', 'event_espresso' )
+			 	'description' => __( 'Displays Espresso New Addon in a widget.', 'event_espresso' )
 			 ),
 			array(
 				'width' => 300,
@@ -56,12 +42,11 @@ class EEW_New_Addon extends WP_Widget {
 	 */
 	public function form( $instance ) {
 
-		EE_Registry::instance()->load_helper( 'Form_Fields' );
 		EE_Registry::instance()->load_class( 'Question_Option', array(), FALSE, FALSE, TRUE );
 
 		// Set up some default widget settings.
 		$defaults = array(
-			'title' => 'New_Addon'
+			'title' => 'New Addon'
 		);
 
 		$instance = wp_parse_args((array) $instance, $defaults);

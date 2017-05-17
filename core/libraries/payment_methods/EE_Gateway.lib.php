@@ -1,34 +1,24 @@
 <?php
+
+use \EventEspresso\core\services\payment_methods\gateways\GatewayDataFormatterInterface;
+use \EventEspresso\core\exceptions\InvalidEntityException;
+use \EventEspresso\core\services\formatters\FormatterInterface;
+
 /**
- * Event Espresso
- *
- * Event Registration and Management Plugin for WordPress
- *
- * @ package			Event Espresso
- * @ author				Seth Shoultes
- * @ copyright		(c) 2008-2011 Event Espresso  All Rights Reserved.
- * @ license			http://eventespresso.com/support/terms-conditions/   * see Plugin Licensing *
- * @ link					http://www.eventespresso.com
- * @ version		 	4.2
- *
- * ------------------------------------------------------------------------
- *
  * EE_Gateway
+ * Abstract base class for all gateways for processing payments.
+ * This has been designed in a way so that other WP Plugins
+ * can use this class for processing payments, and theoretically any of its children,
+ * provided they implement the interfaces it uses.
+ * The necessary interfaces to be implemented are contained in:
+ * core/libraries/payment_methods/EEI_Payment_Method_Interfaces.php and EEI_Interfaces.
+ * After constructing a gateway object, you need to set all the properties which reference many of the
+ * needed helpers and models (see all the methods starting with "set_",
+ * eg seg_line_item_helper which should be passed an object which implements EEHI_Line_Item_Helper; etc).
  *
- * Abstract base class for all gateways
- *
- * @package			Event Espresso
+ * @package            Event Espresso
  * @subpackage		core/libraries/payment_methods
  * @author			Mike Nelson
- *
- * ------------------------------------------------------------------------
- * Class for processing payments. This has been designed in a way so that other WP Plugins
- * can use this class for processing payments, and theoreitcally any of its children, provided they implement the
- * interfaces it uses.
- * The necessary interfaces to be implemented are contained in core/libaries/payment_methods/EEI_Payment_Method_Interfaces.php and
- * EEI_Interfaces. After constructing a gateway object, you need to set all the properties which reference many of the
- * needed helpers and models (see all the methods starting with "set_", eg seg_line_item_helper which should be passed an object
- * which implements EEHI_Line_Item_Helper; etc).
  */
 abstract class EE_Gateway{
 	/**
@@ -58,31 +48,41 @@ abstract class EE_Gateway{
 	 * Model for querying for existing payments
 	 * @var EEMI_Payment
 	 */
-	protected $_pay_model = NULL;
+	protected $_pay_model;
 
 	/**
 	 * Model used for adding to the payments log
 	 * @var EEMI_Payment_Log
 	 */
-	protected $_pay_log = NULL;
+	protected $_pay_log;
 
 	/**
 	 * Used for formatting some input to gateways
 	 * @var EEHI_Template
 	 */
-	protected $_template = NULL;
+	protected $_template;
 
 	/**
 	 * Concrete class that implements EEHI_Money, used by most gateways
 	 * @var EEHI_Money
 	 */
-	protected $_money = NULL;
+	protected $_money;
 
 	/**
 	 * Concrete class that implements EEHI_Line_Item, used for manipulating the line item tree
 	 * @var EEHI_Line_Item
 	 */
 	protected $_line_item;
+
+    /**
+     * @var GatewayDataFormatterInterface
+     */
+    protected $_gateway_data_formatter;
+
+    /**
+     * @var FormatterInterface
+     */
+    protected $_unsupported_character_remover;
 
 	/**
 	 * The ID of the payment method using this gateway
@@ -93,17 +93,17 @@ abstract class EE_Gateway{
 	/**
 	 * @var $_debug_mode boolean whether to send requests to teh sandbox site or not
 	 */
-	protected $_debug_mode = NULL;
+	protected $_debug_mode;
 	/**
 	 *
 	 * @var string $_name name to show for this payment method
 	 */
-	protected $_name = NULL;
+	protected $_name;
 	/**
 	 *
 	 * @var string name to show fir this payment method to admin-type users
 	 */
-	protected $_admin_name = NULL;
+	protected $_admin_name;
 
 	/**
 	 * @return EE_Gateway
@@ -122,8 +122,7 @@ abstract class EE_Gateway{
 	 */
 	public function __sleep(){
 		$properties = get_object_vars($this);
-		unset( $properties[ '_pay_model' ] );
-		unset( $properties[ '_pay_log' ] );
+		unset( $properties[ '_pay_model' ], $properties[ '_pay_log' ] );
 		return array_keys($properties);
 	}
 	/**
@@ -168,7 +167,7 @@ abstract class EE_Gateway{
 	public function set_settings($settings_array){
 		foreach($settings_array as $name => $value){
 			$property_name = "_".$name;
-			$this->$property_name = $value;
+			$this->{$property_name} = $value;
 		}
 	}
 	/**
@@ -211,6 +210,78 @@ abstract class EE_Gateway{
 	}
 
 
+
+    /**
+     * Sets the gateway data formatter helper
+     * @param GatewayDataFormatterInterface $gateway_data_formatter
+     * @throws InvalidEntityException if it's not set properly
+     */
+	public function set_gateway_data_formatter( GatewayDataFormatterInterface $gateway_data_formatter){
+        if( ! $gateway_data_formatter instanceof GatewayDataFormatterInterface){
+            throw new InvalidEntityException(
+                is_object($gateway_data_formatter)
+                    ? get_class($gateway_data_formatter)
+                    : esc_html__('Not an object','event_espresso'),
+                '\\EventEspresso\\core\\services\\payment_methods\\gateways\\GatewayDataFormatterInterface'
+            );
+        }
+        $this->_gateway_data_formatter = $gateway_data_formatter;
+    }
+
+    /**
+     * Gets the gateway data formatter
+     * @return GatewayDataFormatterInterface
+     * @throws InvalidEntityException if it's not set properly
+     */
+    protected function _get_gateway_formatter(){
+        if( ! $this->_gateway_data_formatter instanceof GatewayDataFormatterInterface){
+            throw new InvalidEntityException(
+                is_object($this->_gateway_data_formatter)
+                    ? get_class($this->_gateway_data_formatter)
+                    : esc_html__('Not an object','event_espresso'),
+                '\\EventEspresso\\core\\services\\payment_methods\\gateways\\GatewayDataFormatterInterface'
+            );
+        }
+        return $this->_gateway_data_formatter;
+    }
+
+
+
+    /**
+     * Sets the helper which will remove unsupported characters for most gateways
+     * @param FormatterInterface $formatter
+     * @return FormatterInterface
+     * @throws InvalidEntityException
+     */
+    public function set_unsupported_character_remover( FormatterInterface $formatter){
+        if( ! $formatter instanceof FormatterInterface){
+            throw new InvalidEntityException(
+                is_object($formatter)
+                    ? get_class($formatter)
+                    : esc_html__('Not an object','event_espresso'),
+                '\\EventEspresso\\core\\services\\formatters\\FormatterInterface'
+            );
+        }
+       $this->_unsupported_character_remover = $formatter;
+    }
+    /**
+     * Gets the helper which removes characters which gateways might not support, like emojis etc.
+     * @return FormatterInterface
+     * @throws InvalidEntityException
+     */
+    protected function _get_unsupported_character_remover(){
+        if( ! $this->_unsupported_character_remover instanceof FormatterInterface){
+            throw new InvalidEntityException(
+                is_object($this->_unsupported_character_remover)
+                    ? get_class($this->_unsupported_character_remover)
+                    : esc_html__('Not an object','event_espresso'),
+                '\\EventEspresso\\core\\services\\formatters\\FormatterInterface'
+            );
+        }
+        return $this->_unsupported_character_remover;
+    }
+
+
 	/**
 	 * @param $message
 	 * @param $payment
@@ -229,10 +300,10 @@ abstract class EE_Gateway{
 	 * Formats the amount so it can generally be sent to gateways
 	 * @param float $amount
 	 * @return string
+     * @deprecated since 4.9.31 insetad use EventEspresso\core\services\payment_methods\gateways\GatewayDataFormatter::format_currency()
 	 */
 	public function format_currency($amount){
-		return number_format( $amount, 2, '.', '' );
-//		return $this->_template->format_currency($amount, true);
+		return $this->_get_gateway_formatter()->formatCurrency($amount);
 	}
 
 	/**
@@ -294,7 +365,74 @@ abstract class EE_Gateway{
 		//maybe update the transaction or line items or registrations
 		//but most gateways don't need to do this, because they only update the payment
 	}
-
-
-
+	
+	/**
+	 * Gets the first event for this payment (it's possible that it could be for multiple)
+	 * @param EEI_Payment $payment
+	 * @return EEI_Event|null
+     * @deprecated since 4.9.31 instead use EEI_Payment::get_first_event()
+	 */
+	protected function _get_first_event_for_payment( EEI_Payment $payment ) {
+		return $payment->get_first_event();
+	}
+	
+	/**
+	 * Gets the name of the first event for which is being paid
+	 * @param EEI_Payment $payment
+	 * @return string
+     * @deprecated since 4.9.31 instead use EEI_Payment::get_first_event_name()
+	 */
+	protected function _get_first_event_name_for_payment( EEI_Payment $payment ) {
+		return $payment->get_first_event_name();
+	}
+	/**
+	 * Gets the text to use for a gateway's line item name when this is a partial payment
+     * @deprecated since 4.9.31 instead use $this->_get_gateway_formatter()->formatPartialPaymentLineItemName($payment)
+	 * @param EE_Payment $payment
+	 * @return string
+	 */
+	protected function _format_partial_payment_line_item_name( EEI_Payment $payment ){
+		return $this->_get_gateway_formatter()->formatPartialPaymentLineItemName($payment);
+	}
+	/**
+	 * Gets the text to use for a gateway's line item description when this is a partial payment
+     * @deprecated since 4.9.31 instead use $this->_get_gateway_formatter()->formatPartialPaymentLineItemDesc()
+	 * @param EEI_Payment $payment
+	 * @return string
+	 */
+	protected function _format_partial_payment_line_item_desc( EEI_Payment $payment ) {
+		return $this->_get_gateway_formatter()->formatPartialPaymentLineItemDesc($payment);
+	}
+	
+	/**
+     * Gets the name to use for a line item when sending line items to the gateway
+     * @deprecated since 4.9.31 instead use $this->_get_gateway_formatter()->formatLineItemName($line_item,$payment)
+     * @param EEI_Line_Item $line_item
+	 * @param EEI_Payment $payment
+	 * @return string
+	 */
+	protected function _format_line_item_name( EEI_Line_Item $line_item, EEI_Payment $payment ) {
+		return $this->_get_gateway_formatter()->formatLineItemName($line_item,$payment);
+	}
+	
+	/**
+	 * Gets the description to use for a line item when sending line items to the gateway
+     * @deprecated since 4.9.31 instead use $this->_get_gateway_formatter()->formatLineItemDesc($line_item, $payment))
+	 * @param EEI_Line_Item $line_item
+	 * @param EEI_Payment $payment
+	 * @return string
+	 */
+	protected function _format_line_item_desc( EEI_Line_Item $line_item, EEI_Payment $payment ) {
+		return $this->_get_gateway_formatter()->formatLineItemDesc($line_item, $payment);
+	}
+	
+	/**
+	 * Gets the order description that should generlly be sent to gateways
+     * @deprecated since 4.9.31 instead use $this->_get_gateway_formatter()->formatOrderDescription($payment)
+	 * @param EEI_Payment $payment
+	 * @return type
+	 */
+	protected function _format_order_description( EEI_Payment $payment ) {
+		return $this->_get_gateway_formatter()->formatOrderDescription($payment);
+	}
 }

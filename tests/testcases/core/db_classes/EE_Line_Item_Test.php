@@ -46,7 +46,7 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 		$this->assertNotEquals( 0, $txn->tax_total() );
 		$this->assertEquals( $total_including_taxes, $total_line_item->total() );
 	}
-	
+
 	/**
 	 * @group 8964
 	 * Uses a particular number and quantity that has been shown to cause rounding problems
@@ -54,16 +54,15 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 	 * the total for both transactions was NOT the same as 1 transaction for 2 ticket purchases)
 	 */
 	function test_recalculate_pre_tax_total__rounding_issues() {
-		EE_Registry::instance()->load_helper( 'Line_Item' );
 		$flat_base_price_type_id = EEM_Price_Type::instance()->get_var( array( array( 'PRT_name' => 'Base Price' ) ) );
 		$percent_surcharge_price_type_id = EEM_Price_Type::instance()->get_var( array( array( 'PRT_name' => 'Percent Surcharge' ) ) );
-		$base_price = $this->new_model_obj_with_dependencies( 
-				'Price', 
+		$base_price = $this->new_model_obj_with_dependencies(
+				'Price',
 				array(
 					'PRT_ID' => $flat_base_price_type_id,
 					'PRC_amount' => 21.67
 				));
-		$percent_surcharge = $this->new_model_obj_with_dependencies( 
+		$percent_surcharge = $this->new_model_obj_with_dependencies(
 				'Price',
 				array(
 					'PRT_ID' => $percent_surcharge_price_type_id,
@@ -80,12 +79,12 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 		$event = $this->new_model_obj_with_dependencies( 'Event' );
 		$datetime = $this->new_model_obj_with_dependencies( 'Datetime' );
 		$ticket->_add_relation_to( $datetime, 'Datetime' );
-		
+
 		$quantity = 2;
 		$total_line_item = EEH_Line_Item::add_ticket_purchase( EEH_Line_Item::create_total_line_item(), $ticket, $quantity);
-		
+
 		$this->assertEquals( $ticket->price() * $quantity, $total_line_item->total() );
-		
+
 	}
 	/**
 	 * * also test that if you call this in order to get the taxable total, that it doesn't update
@@ -217,6 +216,156 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 		$this->assertEquals( 15, $line_item->total() );
 		$this->assertEquals( 7.5, $line_item->unit_price() );
 	}
+
+	/**
+	 * Create a line item tree which was originaly for 6 tickets and a discount,
+	 * but 2 got cancelled and so shouldn't count towards the grand total,
+	 * and so the ticket line item's quantity should be 4
+	 * @group 5580
+	 */
+	function test_recalculate_total_including_taxes__with_cancellations(){
+		$event_subtotal = EE_Line_Item::new_instance(
+				array(
+					'LIN_code'	=> 'event1',
+					'LIN_name' 	=> 'EventA',
+					'LIN_type'	=> EEM_Line_Item::type_sub_total,
+					'OBJ_type' 	=> 'Event',
+					'LIN_total' => 0,
+				));
+		$event_subtotal->save();
+		$normal_line_item = EE_Line_Item::new_instance(
+				array(
+					'LIN_code' => '12354',
+					'LIN_name' => 'ticketA',
+					'LIN_type' => EEM_Line_Item::type_line_item,
+					'OBJ_type' => 'Ticket',
+					'LIN_unit_price' => 10,
+					'LIN_quantity' => 4,
+					'LIN_order' => 1,
+					'LIN_parent' => $event_subtotal->ID()
+				));
+		$normal_line_item->save();
+		$cancellation_subitem = EE_Line_Item::new_instance(
+				array(
+					'LIN_code' => 'cancellationoruny',
+					'LIN_name' => 'cancellationOfA',
+					'LIN_type' => EEM_Line_Item::type_cancellation,
+					'OBJ_type' => '',//?
+					'LIN_unit_price' => 10,
+					'LIN_quantity' => 2,
+					'LIN_order' => 1,
+					'LIN_parent' => $normal_line_item->ID()
+				));
+		$percent_line_item = EE_Line_Item::new_instance(
+				array(
+					'LIN_code' => 'dscntfry',
+					'LIN_name' => 'Discounto',
+					'LIN_type' => EEM_Line_Item::type_line_item,
+					'OBJ_type' => '',
+					'LIN_unit_price' => null,
+					'LIN_quantity' => null,
+					'LIN_percent' => -25,
+					'LIN_order' => 1000,
+					'LIN_parent' => $event_subtotal->ID()
+				));
+		$percent_line_item->save();
+		$event_subtotal->recalculate_total_including_taxes();
+//		EEH_Line_Item::visualize( $event_subtotal );
+		$this->assertEquals( 40, $normal_line_item->total() );
+		$this->assertEquals( 30, $event_subtotal->total() );
+		$this->assertEquals( -10, $percent_line_item->total() );
+
+	}
+
+	/**
+	 * @group 9439
+	 */
+	function test_recalculate_total_including_taxes__incorrect_total_with_specific_numbers_and_promotion() {
+		$total_li = EE_Line_Item::new_instance(
+			array(
+				'LIN_name' => 'total',
+				'LIN_type' => EEM_Line_Item::type_total,
+			)
+		);
+		$total_li->save();
+
+		$pretax_subtotal = EE_Line_Item::new_instance(
+			array(
+				'LIN_name' => 'pretax',
+				'LIN_type' => EEM_Line_Item::type_sub_total,
+				'LIN_code' =>  'pre-tax-subtotal',
+				'LIN_parent' => $total_li->ID(),
+				'LIN_order' => 1
+			)
+		);
+		$pretax_subtotal->save();
+		$event_subtotal = EE_Line_Item::new_instance(
+			array(
+				'LIN_name' => 'subtotal',
+				'LIN_type' => EEM_Line_Item::type_sub_total,
+				'LIN_parent' => $pretax_subtotal->ID(),
+				'LIN_order' => 1
+
+			)
+		);
+		$event_subtotal->save();
+		$line_item = EE_Line_Item::new_instance(
+				array(
+					'LIN_name' => 'ticket',
+					'LIN_type' => EEM_Line_Item::type_line_item,
+					'LIN_quantity' => 1,
+					'LIN_is_taxable' => true,
+					'LIN_parent' => $event_subtotal->ID(),
+					'LIN_order' => 1,
+				));
+		$line_item->save();
+		$flat_sub_line_item = EE_Line_Item::new_instance(
+				array(
+					'LIN_name' => 'flat',
+					'LIN_type' => EEM_Line_Item::type_sub_line_item,
+					'LIN_unit_price' => 21.01,
+					'LIN_quantity' => 1,
+					'LIN_order' => 1,
+					'LIN_parent' => $line_item->ID(),
+				));
+		$flat_sub_line_item->save();
+		$percent_discount = EE_Line_Item::new_instance(
+				array(
+					'LIN_name' => 'flat',
+					'LIN_type' => EEM_Line_Item::type_line_item,
+					'LIN_percent' => -50,
+					'LIN_quantity' => 1,
+					'LIN_order' => 10,
+					'LIN_is_taxable' => true,
+					'LIN_parent' => $event_subtotal->ID(),
+				));
+		$percent_discount->save();
+		$tax_subtotal = EE_Line_Item::new_instance(
+			array(
+				'LIN_name' => 'tax-sub-total',
+				'LIN_code' => 'taxes',
+				'LIN_type' => EEM_Line_Item::type_tax_sub_total,
+				'LIN_order' => 100,
+				'LIN_parent' => $total_li->ID(),
+			)
+		);
+		$tax_subtotal->save();
+		$tax = EE_Line_Item::new_instance(
+			array(
+				'LIN_name' => 'tax',
+				'LIN_code' => 'a_tax',
+				'LIN_type' => EEM_Line_Item::type_tax,
+				'LIN_percent' => 19,
+				'LIN_parent' => $tax_subtotal->ID(),
+			)
+		);
+		$tax->save();
+		$total_li->recalculate_total_including_taxes();
+		$this->assertEquals( $line_item->total() + $percent_discount->total(), $event_subtotal->total() );
+		$this->assertEquals( 12.50, $total_li->total() );
+		$this->assertEquals( $pretax_subtotal->total(), $total_li->get_items_total() );
+	}
+
 	/**
 	 * @group 8464
 	 * Verifies that if the line item is for a relation that isn't currently defined
@@ -352,6 +501,31 @@ class EE_Line_Item_Test extends EE_UnitTestCase{
 		$this->assertNotEquals( 0, $li2->ID() );
 		$this->assertEquals( $li3, $li2->parent() );
 	}
-}
 
+
+
+	public function test_line_item_serialization() {
+		if ( version_compare( PHP_VERSION, '5.5', '<' ) ) {
+			$this->markTestSkipped();
+		}
+		$line_item = $this->new_model_obj_with_dependencies(
+			'Line_Item',
+			array( 'LIN_parent' => null ),
+			false
+		);
+		$line_item = serialize( $line_item );
+		$line_item = unserialize( $line_item );
+		$this->assertInstanceOf(
+			'EE_Line_Item',
+			$line_item
+		);
+		/** @var EE_Line_Item $line_item */
+		$datetime = $line_item->get_DateTime_object('LIN_timestamp');
+		$this->assertInstanceOf(
+			'Datetime',
+			$datetime
+		);
+	}
+}
 // End of file EE_Line_Item_Test.php
+// Location: testcases/core/db_classes/EE_Line_Item_Test.php

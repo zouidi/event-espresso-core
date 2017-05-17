@@ -171,7 +171,7 @@ class EE_SPCO_JSON_Response {
 		// filter final array
 		$JSON_response = apply_filters( 'FHEE__EE_SPCO_JSON_Response___toString__JSON_response', $JSON_response );
 		// return encoded array
-		return json_encode( $JSON_response );
+		return wp_json_encode( $JSON_response );
 	}
 
 
@@ -279,7 +279,6 @@ class EE_SPCO_JSON_Response {
 	 * @param float $payment_amount
 	 */
 	public function set_payment_amount( $payment_amount ) {
-		EE_Registry::instance()->load_helper( 'Money' );
 		$this->_payment_amount = EEH_Money::convert_to_float_from_localized_money( $payment_amount );
 	}
 
