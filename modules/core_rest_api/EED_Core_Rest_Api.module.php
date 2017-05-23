@@ -426,7 +426,12 @@ class EED_Core_Rest_Api extends \EED_Module
         foreach ($models_to_register as $model_name => $model_classname) {
             $model = \EE_Registry::instance()->load_model($model_name);
             //if this isn't a valid model then let's skip iterate to the next item in the loop.
-            if (! $model instanceof EEM_Base) {
+            if (! $model instanceof EEM_Base
+                || ( apply_filters(
+                    'FHEE__EED_Core_Rest_Api___get_model_route_data_for_version__exclude_wp_core_models',
+                    true
+                )
+                && $model->is_wp_core_model() ) ) {
                 continue;
             }
             //yes we could just register one route for ALL models, but then they wouldn't show up in the index
