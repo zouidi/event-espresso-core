@@ -44,9 +44,7 @@ class EEM_Currency extends EEM_Base{
 				'CUR_dec_plc' => new EE_Integer_Field('CUR_dec_plc', __('Currency Decimal Places','event_espresso'), false, 2),
 				'CUR_active'=>new EE_Boolean_Field('CUR_active', __('Active?', 'event_espresso'), false,true),
 			));
-		$this->_model_relations = array(
-			'Payment_Method'=>new EE_HABTM_Relation('Currency_Payment_Method'),
-		);
+		$this->_model_relations = array();
 		//this model is generally available for reading
 		$this->_cap_restriction_generators[ EEM_Base::caps_read ] = new EE_Restriction_Generator_Public();
 

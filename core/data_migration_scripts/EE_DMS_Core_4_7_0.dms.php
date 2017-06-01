@@ -149,13 +149,6 @@ class EE_DMS_Core_4_7_0 extends EE_Data_Migration_Script_Base
 				CUR_active TINYINT(1) DEFAULT '0',
 				PRIMARY KEY  (CUR_code)";
         $this->_table_has_not_changed_since_previous($table_name, $sql, 'ENGINE=InnoDB');
-        $table_name = 'esp_currency_payment_method';
-        $sql = "CPM_ID INT(11) NOT NULL AUTO_INCREMENT,
-				CUR_code  VARCHAR(6) COLLATE utf8_bin NOT NULL,
-				PMD_ID INT(11) NOT NULL,
-				PRIMARY KEY  (CPM_ID),
-				KEY PMD_ID (PMD_ID)";
-        $this->_table_is_changed_in_this_version($table_name, $sql, 'ENGINE=InnoDB ');
         $table_name = 'esp_datetime';
         $sql = "DTT_ID INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 				  EVT_ID BIGINT(20) UNSIGNED NOT NULL,
