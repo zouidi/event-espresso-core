@@ -1577,6 +1577,7 @@ class EEH_Activation
             'esp_promotion_object',
             'esp_promotion_rule',
             'esp_rule',
+            'esp_currency_payment_method',
         );
         foreach ($tables_without_models as $table) {
             $tables[] = $table;
