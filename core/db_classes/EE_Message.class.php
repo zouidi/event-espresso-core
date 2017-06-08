@@ -2,6 +2,7 @@
     exit('No direct script access allowed');
 }
 
+
 /**
  * EE_Message class
  *
@@ -42,55 +43,30 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     protected $_message_type = null;
 
 
+
     /**
-     * @param array  $props_n_values
-     * @param string $timezone
-     * @param array  $date_formats incoming date formats in an array.  First value is the date_format, second is time
-     *                             format.
-     * @return EE_Message
+     * @param array   $fieldValues  where each key is a field
+     *                              (ie, array key in the 2nd layer of the model's _fields array,
+     *                              (eg, EVT_ID, TXN_amount, QST_name, etc) and values are their values
+     * @param boolean $bydb         a flag for setting if the class is instantiated
+     *                              by the corresponding db model or not.
+     * @param string  $timezone     indicate what timezone you want any datetime fields
+     *                              to be in when instantiating a EE_Base_Class object.
+     * @param array   $date_formats An array of date formats to set on construct where first
+     *                              value is the date_format and second value is the time
+     *                              format.
+     * @throws EE_Error
      */
-    public static function new_instance($props_n_values = array(), $timezone = null, $date_formats = array())
+    public function __construct($fieldValues = array(), $bydb = false, $timezone = '', $date_formats = array())
     {
-        $has_object = parent::_check_for_object($props_n_values, __CLASS__);
-        //if object doesn't exist, let's generate a unique token on instantiation so that its available even before saving to db.
-        if ( ! $has_object) {
+        parent::__construct($fieldValues, $bydb, $timezone, $date_formats);
+        if (! $bydb && ! $this->MSG_token()) {
             EE_Registry::instance()->load_helper('URL');
-            $props_n_values['MSG_token'] = EEH_URL::generate_unique_token();
+            $this->set_MSG_token(EEH_URL::generate_unique_token());
         }
-        return $has_object ? $has_object : new self($props_n_values, false, $timezone, $date_formats);
     }
 
-	/**
-	 * @param array   $fieldValues  where each key is a field
-	 *                              (ie, array key in the 2nd layer of the model's _fields array,
-	 *                              (eg, EVT_ID, TXN_amount, QST_name, etc) and values are their values
-	 * @param boolean $bydb         a flag for setting if the class is instantiated
-	 *                              by the corresponding db model or not.
-	 * @param string $timezone      indicate what timezone you want any datetime fields
-	 *                              to be in when instantiating a EE_Base_Class object.
-	 * @param array   $date_formats An array of date formats to set on construct where first
-	 *                              value is the date_format and second value is the time
-	 *                              format.
-	 * @throws EE_Error
-	 * @return EE_Message
-	 */
-	public function __construct( $fieldValues = array(), $bydb = false, $timezone = '', $date_formats = array() ) {
-		parent::__construct( $fieldValues, $bydb, $timezone, $date_formats );
-		if ( ! $bydb && ! $this->MSG_token() ) {
-			EE_Registry::instance()->load_helper( 'URL' );
-			$this->set_MSG_token( EEH_URL::generate_unique_token() );
-		}
-	}
 
-    /**
-     * @param array  $props_n_values
-     * @param string $timezone
-     * @return EE_Message
-     */
-    public static function new_instance_from_db($props_n_values = array(), $timezone = null)
-    {
-        return new self($props_n_values, true, $timezone);
-    }
 
 
     /**
@@ -104,6 +80,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets MSG_token
      *
@@ -113,6 +90,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         $this->set('MSG_token', $MSG_token);
     }
+
 
 
     /**
@@ -126,6 +104,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets GRP_ID
      *
@@ -135,6 +114,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         $this->set('GRP_ID', $GRP_ID);
     }
+
 
 
     /**
@@ -148,6 +128,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets TXN_ID
      *
@@ -157,6 +138,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         $this->set('TXN_ID', $TXN_ID);
     }
+
 
 
     /**
@@ -170,6 +152,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets messenger
      *
@@ -179,6 +162,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         $this->set('MSG_messenger', $messenger);
     }
+
 
 
     /**
@@ -192,6 +176,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets messenger
      *
@@ -201,6 +186,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         $this->_messenger = $messenger;
     }
+
 
 
     /**
@@ -230,6 +216,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * This returns the set localized label for the messenger on this message.
      * Note, if unable to retrieve the EE_messenger object then will just return the messenger slug saved
@@ -240,10 +227,15 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      */
     public function messenger_label($plural = false)
     {
-        $label_type = $plural ? 'plural' : 'singular';
-        $messenger  = $this->messenger_object();
-        return $messenger instanceof EE_messenger ? $messenger->label[$label_type] : $this->messenger();
+        $label_type = $plural
+            ? 'plural'
+            : 'singular';
+        $messenger = $this->messenger_object();
+        return $messenger instanceof EE_messenger
+            ? $messenger->label[ $label_type ]
+            : $this->messenger();
     }
+
 
 
     /**
@@ -257,6 +249,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets message_type
      *
@@ -268,6 +261,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Returns the message type object for the set message type on this message
      *
@@ -277,6 +271,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         return $this->_message_type;
     }
+
 
 
     /**
@@ -293,6 +288,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
             $this->set_priority($this->_message_type->get_priority());
         }
     }
+
 
 
     /**
@@ -322,6 +318,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * validates messenger and message_type (that they are valid EE_messenger and EE_message_type objects).
      *
@@ -336,6 +333,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
         }
         return false;
     }
+
 
 
     /**
@@ -355,13 +353,17 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
         if ($this->is_valid($throw_exceptions)) {
             /** @var EE_Message_Resource_Manager $message_resource_manager */
             $message_resource_manager = EE_Registry::instance()->load_lib('Message_Resource_Manager');
-            $valid                    = $message_resource_manager->is_message_type_active_for_messenger($this->messenger(),
-                $this->message_type());
-            if ( ! $valid && $throw_exceptions) {
+            $valid = $message_resource_manager->is_message_type_active_for_messenger(
+                $this->messenger(),
+                $this->message_type()
+            );
+            if (! $valid && $throw_exceptions) {
                 throw new EE_Error(
                     sprintf(
-                        __('The %1$s message type is not a valid message type for the %2$s messenger so it will not be sent.',
-                            'event_espresso'),
+                        __(
+                            'The %1$s message type is not a valid message type for the %2$s messenger so it will not be sent.',
+                            'event_espresso'
+                        ),
                         $this->message_type(),
                         $this->messenger()
                     )
@@ -370,6 +372,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
         }
         return $valid;
     }
+
 
 
     /**
@@ -382,10 +385,15 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      */
     public function message_type_label($plural = false)
     {
-        $label_type   = $plural ? 'plural' : 'singular';
+        $label_type = $plural
+            ? 'plural'
+            : 'singular';
         $message_type = $this->message_type_object();
-        return $message_type instanceof EE_message_type ? $message_type->label[$label_type] : $this->message_type();
+        return $message_type instanceof EE_message_type
+            ? $message_type->label[ $label_type ]
+            : $this->message_type();
     }
+
 
 
     /**
@@ -399,6 +407,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * This returns the corresponding localized label for the given context slug, if possible from installed message
      * types. Otherwise, this will just return the set context slug on this object.
@@ -409,9 +418,12 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         /** @type EE_Message_Resource_Manager $message_resource_manager */
         $message_resource_manager = EE_Registry::instance()->load_lib('Message_Resource_Manager');
-        $contexts                 = $message_resource_manager->get_all_contexts();
-        return isset($contexts[$this->context()]) ? $contexts[$this->context()] : $this->context();
+        $contexts = $message_resource_manager->get_all_contexts();
+        return isset($contexts[ $this->context() ])
+            ? $contexts[ $this->context() ]
+            : $this->context();
     }
+
 
 
     /**
@@ -425,6 +437,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Gets recipient_ID
      *
@@ -434,6 +447,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         return $this->get('MSG_recipient_ID');
     }
+
 
 
     /**
@@ -447,6 +461,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Gets recipient_type
      *
@@ -458,6 +473,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Return the related object matching the recipient type and ID.
      *
@@ -465,12 +481,12 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      */
     public function recipient_object()
     {
-        if ( ! $this->recipient_type() || ! $this->recipient_ID()) {
+        if (! $this->recipient_type() || ! $this->recipient_ID()) {
             return null;
         }
-
         return $this->get_first_related($this->recipient_type());
     }
+
 
 
     /**
@@ -484,6 +500,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Gets content
      *
@@ -493,6 +510,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         return $this->get('MSG_content');
     }
+
 
 
     /**
@@ -506,6 +524,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Gets subject
      *
@@ -515,6 +534,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         return $this->get('MSG_subject');
     }
+
 
 
     /**
@@ -528,6 +548,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Gets to
      *
@@ -536,8 +557,11 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     public function to()
     {
         $to = $this->get('MSG_to');
-        return empty($to) ? __('No recipient', 'event_espresso') : $to;
+        return empty($to)
+            ? __('No recipient', 'event_espresso')
+            : $to;
     }
+
 
 
     /**
@@ -551,6 +575,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Gets from
      *
@@ -560,6 +585,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         return $this->get('MSG_from');
     }
+
 
 
     /**
@@ -573,6 +599,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Gets priority
      *
@@ -584,6 +611,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets priority
      * Note.  Send Now Messengers always override any priority that may be set on a Message.  So
@@ -593,9 +621,12 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      */
     public function set_priority($priority)
     {
-        $priority = $this->send_now() ? EEM_Message::priority_high : $priority;
+        $priority = $this->send_now()
+            ? EEM_Message::priority_high
+            : $priority;
         parent::set('MSG_priority', $priority);
     }
+
 
 
     /**
@@ -616,15 +647,21 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * @return bool
      * @throws \EE_Error
      */
     public function send_now()
     {
-        $send_now = $this->valid_messenger() && $this->messenger_object()->send_now() ? EEM_Message::priority_high : $this->priority();
-        return $send_now === EEM_Message::priority_high ? true : false;
+        $send_now = $this->valid_messenger() && $this->messenger_object()->send_now()
+            ? EEM_Message::priority_high
+            : $this->priority();
+        return $send_now === EEM_Message::priority_high
+            ? true
+            : false;
     }
+
 
 
     /**
@@ -638,6 +675,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets STS_ID
      *
@@ -647,6 +685,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         $this->set('STS_ID', $STS_ID);
     }
+
 
 
     /**
@@ -660,6 +699,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets created
      *
@@ -669,6 +709,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         $this->set('MSG_created', $created);
     }
+
 
 
     /**
@@ -682,6 +723,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Sets modified
      *
@@ -691,6 +733,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         $this->set('MSG_modified', $modified);
     }
+
 
 
     /**
@@ -704,6 +747,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Returns any set generation data for this message.
      *
@@ -715,6 +759,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * Gets any error message.
      *
@@ -724,6 +769,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         return $this->get_field_or_extra_meta('MSG_error');
     }
+
 
 
     /**
@@ -738,6 +784,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * This retrieves the associated template pack with this message.
      *
@@ -748,13 +795,13 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
         /**
          * This is deprecated functionality that will be removed eventually but included here now for backward compat.
          */
-        if ( ! empty($this->template_pack)) {
+        if (! empty($this->template_pack)) {
             return $this->template_pack;
         }
         /** @type EE_Message_Template_Group $grp */
         $grp = $this->get_first_related('Message_Template_Group');
         //if no group then let's try to get the first related group by internal messenger and message type (will use global grp).
-        if ( ! $grp instanceof EE_Message_Template_Group) {
+        if (! $grp instanceof EE_Message_Template_Group) {
             $grp = EEM_Message_Template_Group::instance()->get_one(
                 array(
                     array(
@@ -765,9 +812,11 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
                 )
             );
         }
-
-        return $grp instanceof EE_Message_Template_Group ? $grp->get_template_pack() : null;
+        return $grp instanceof EE_Message_Template_Group
+            ? $grp->get_template_pack()
+            : null;
     }
+
 
 
     /**
@@ -780,15 +829,13 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
         /**
          * This is deprecated functionality that will be removed eventually but included here now for backward compat.
          */
-        if ( ! empty($this->template_variation)) {
+        if (! empty($this->template_variation)) {
             return $this->template_variation;
         }
-
         /** @type EE_Message_Template_Group $grp */
         $grp = $this->get_first_related('Message_Template_Group');
-
         //if no group then let's try to get the first related group by internal messenger and message type (will use global grp).
-        if ( ! $grp instanceof EE_Message_Template_Group) {
+        if (! $grp instanceof EE_Message_Template_Group) {
             $grp = EEM_Message_Template_Group::instance()->get_one(
                 array(
                     array(
@@ -799,9 +846,12 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
                 )
             );
         }
-
-        return $grp instanceof EE_Message_Template_Group ? $grp->get_template_pack_variation() : '';
+        return $grp instanceof EE_Message_Template_Group
+            ? $grp->get_template_pack_variation()
+            : '';
     }
+
+
 
     /**
      * Return the link to the admin details for the object.
@@ -817,15 +867,15 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
             case EEM_Message::status_debug_only :
                 return EEH_MSG_Template::generate_error_display_trigger($this);
                 break;
-
             case EEM_Message::status_sent :
                 return EEH_MSG_Template::generate_browser_trigger($this);
                 break;
-
             default :
                 return '';
         }
     }
+
+
 
     /**
      * Returns the link to the editor for the object.  Sometimes this is the same as the details.
@@ -836,6 +886,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     {
         return $this->get_admin_details_link();
     }
+
+
 
     /**
      * Returns the link to a settings page for the object.
@@ -853,6 +905,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
             admin_url('admin.php')
         );
     }
+
+
 
     /**
      * Returns the link to the "overview" for the object (typically the "list table" view).
@@ -872,15 +926,17 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
     }
 
 
+
     /**
      * This sets the EEM_Message::status_messenger_executing class on the message and the appropriate error message for
      * it.
-     * Note this also SAVES the current message object to the db because it adds an error message to accompany the status.
+     * Note this also SAVES the current message object to the db because it adds an error message to accompany the
+     * status.
      *
      */
     public function set_messenger_is_executing()
     {
-        $this->set_STS_ID( EEM_Message::status_messenger_executing );
+        $this->set_STS_ID(EEM_Message::status_messenger_executing);
         $this->set_error_message(
             esc_html__(
                 'A message with this status indicates that there was a problem that occurred while the message was being
