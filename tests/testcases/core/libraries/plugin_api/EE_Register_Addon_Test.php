@@ -44,11 +44,20 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
             'version'               => '1.0.0',
             'min_core_version'      => '4.0.0',
             'main_file_path'        => $this->_mock_addon_path . 'eea-new-addon.php',
-            'dms_paths'             => $this->_mock_addon_path . 'core/data_migration_scripts',
-            'model_paths'           => $this->_mock_addon_path . 'core/db_models',
-            'class_paths'           => $this->_mock_addon_path . 'core/db_classes',
-            'class_extension_paths' => $this->_mock_addon_path . 'core/db_class_extensions',
-            'model_extension_paths' => $this->_mock_addon_path . 'core/db_model_extensions',
+            'dms_paths'             => $this->_mock_addon_path . 'domain' . DS . 'services' . DS
+                                       . 'database' . DS . 'data_migration_scripts' . DS,
+            'model_paths'           => array(
+                $this->_mock_addon_path . 'domain' . DS . 'entities' . DS . 'thing' . DS . 'model',
+            ),
+            'class_paths'           => array(
+                $this->_mock_addon_path . 'domain' . DS . 'entities' . DS . 'thing',
+            ),
+            'class_extension_paths' => array(
+                $this->_mock_addon_path . 'domain' . DS . 'entities' . DS . 'attendee' . DS . 'class_extension',
+            ),
+            'model_extension_paths' => array(
+                $this->_mock_addon_path . 'domain' . DS . 'entities' . DS . 'attendee' . DS . 'model_extension',
+            ),
         );
         $this->_addon_name = 'New_Addon';
         parent::__construct($name, $data, $dataName);
@@ -59,13 +68,17 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
     public function setUp()
     {
         parent::setUp();
-        add_filter('FHEE__EEH_Activation__create_table__short_circuit', array($this, 'dont_short_circuit_new_addon_table'), 20, 3);
+        add_filter(
+            'FHEE__EEH_Activation__create_table__short_circuit', array($this, 'dont_short_circuit_new_addon_table'), 20,
+            3
+        );
     }
 
 
 
     /**
-     * OK's the creation of the esp_new_addon table, because this hooks in AFTER EE_UNitTestCase's callback on this same hook
+     * OK's the creation of the esp_new_addon table, because this hooks in AFTER EE_UNitTestCase's callback on this
+     * same hook
      *
      * @param bool   $short_circuit
      * @param string $table_name
@@ -126,12 +139,18 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
             $this->assertTrue(false);
         }
         try {
-            EE_Register_Addon::register($this->_addon_name, array(
-                'version'          => '1.0.0',
-                'min_core_version' => '4.0.0',
-                'dms_paths'        => $this->_mock_addon_path . 'core/data_migration_scripts',
-            ));
-            $this->fail('We should have received a warning that the \'plugin_main_file\' is a required argument when registerign an addon');
+            EE_Register_Addon::register(
+                $this->_addon_name,
+                array(
+                    'version'          => '1.0.0',
+                    'min_core_version' => '4.0.0',
+                    'dms_paths'        => $this->_mock_addon_path . 'domain' . DS . 'services' . DS
+                                          . 'database' . DS . 'data_migration_scripts' . DS,
+                )
+            );
+            $this->fail(
+                'We should have received a warning that the \'plugin_main_file\' is a required argument when registering an addon'
+            );
         } catch (EE_Error $e) {
             $this->assertTrue(true);
         }
@@ -145,7 +164,7 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
         //check DMSs weren't setup either
         $DMSs_available = EE_Data_Migration_Manager::reset()->get_all_data_migration_scripts_available();
         $this->assertArrayNotHasKey('EE_DMS_New_Addon_1_0_0', $DMSs_available);
-        //check that we didn't register the addon's de-activaiton hook either
+        //check that we didn't register the addon's de-activation hook either
         $this->assertFalse(has_action('deactivate_' . plugin_basename($this->_reg_args['main_file_path'])));
     }
 
@@ -171,7 +190,9 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
         $DMSs_available = EE_Data_Migration_Manager::reset()->get_all_data_migration_scripts_available();
         $this->assertArrayHasKey('EE_DMS_New_Addon_1_0_0', $DMSs_available);
         //and check the deactivation hook was setup properly
-        $this->assertTrue(has_action('deactivate_' . EE_Registry::instance()->addons->EE_New_Addon->get_main_plugin_file_basename()));
+        $this->assertTrue(
+            has_action('deactivate_' . EE_Registry::instance()->addons->EE_New_Addon->get_main_plugin_file_basename())
+        );
         //check that the model was registered properly
         EE_System::instance()->load_core_configuration();
         $this->assertArrayContains('EEM_New_Addon_Thing', EE_Registry::instance()->non_abstract_db_models);
@@ -192,9 +213,14 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
         //give user administrator role for test!
         $current_user->add_role('administrator');
         $a_thing = $this->new_model_obj_with_dependencies('New_Addon_Thing', array('NEW_wp_user' => $current_user->ID));
-        $others_thing = $this->new_model_obj_with_dependencies('New_Addon_Thing', array('NEW_wp_user' => $other_user->ID));
-        $this->assertTrue(EE_Capabilities::instance()->user_can($current_user, 'edit_thing', 'testing_edit', $a_thing->ID()));
-        $this->assertTrue(EE_Capabilities::instance()->user_can($current_user, 'edit_thing', 'testing_edit', $others_thing->ID()));
+        $others_thing =
+            $this->new_model_obj_with_dependencies('New_Addon_Thing', array('NEW_wp_user' => $other_user->ID));
+        $this->assertTrue(
+            EE_Capabilities::instance()->user_can($current_user, 'edit_thing', 'testing_edit', $a_thing->ID())
+        );
+        $this->assertTrue(
+            EE_Capabilities::instance()->user_can($current_user, 'edit_thing', 'testing_edit', $others_thing->ID())
+        );
     }
 
 
@@ -216,7 +242,8 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
         $role = get_role('administrator');
         $this->assertContains(
             array('edit_thing', 'edit_things', 'edit_others_things', 'edit_private_things'),
-            $role->capabilities);
+            $role->capabilities
+        );
     }
 
     /**
@@ -272,7 +299,9 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
         $this->_pretend_after_plugin_activation();
         EE_Register_Addon::register($this->_addon_name, $this->_reg_args);
         $this->assertAttributeNotEmpty('EE_New_Addon', EE_Registry::instance()->addons);
-        $this->assertWPOptionExists(EE_Registry::instance()->addons->EE_New_Addon->get_activation_indicator_option_name());
+        $this->assertWPOptionExists(
+            EE_Registry::instance()->addons->EE_New_Addon->get_activation_indicator_option_name()
+        );
     }
 
 
@@ -305,7 +334,8 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
     public function tearDown()
     {
         if (isset($this->_addon_name, EE_Registry::instance()->addons->EE_New_Addon)) {
-            $main_file_path_before_deregistration = EE_Registry::instance()->addons->EE_New_Addon->get_main_plugin_file_basename();
+            $main_file_path_before_deregistration =
+                EE_Registry::instance()->addons->EE_New_Addon->get_main_plugin_file_basename();
             EE_Register_Addon::deregister($this->_addon_name);
             try {
                 EE_Registry::instance()->addons->EE_New_Addon;
@@ -413,15 +443,29 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
             $att = EE_Registry::instance()->reset_model('Attendee');
             if (! $att->has_field('ATT_foobar')) {
                 if ($throw_error) {
-                    throw new EE_Error(sprintf(__('The field ATT_foobar is not on EEM_Attendee, but the extension should have added it. fields are: %s', 'event_espresso'),
-                        implode(",", array_keys(EEM_Attendee::instance()->field_settings()))));
+                    throw new EE_Error(
+                        sprintf(
+                            __(
+                                'The field ATT_foobar is not on EEM_Attendee, but the extension should have added it. fields are: %s',
+                                'event_espresso'
+                            ),
+                            implode(",", array_keys(EEM_Attendee::instance()->field_settings()))
+                        )
+                    );
                 }
                 return false;
             }
             if (! $att->has_relation('New_Addon_Thing')) {
                 if ($throw_error) {
-                    throw new EE_Error(sprintf(__('The relation of type New_Addon_Thing on EEM_Attendee, but the extension should have added it. fields are: %s', 'event_espresso'),
-                        implode(",", array_keys(EEM_Attendee::instance()->field_settings()))));
+                    throw new EE_Error(
+                        sprintf(
+                            __(
+                                'The relation of type New_Addon_Thing on EEM_Attendee, but the extension should have added it. fields are: %s',
+                                'event_espresso'
+                            ),
+                            implode(",", array_keys(EEM_Attendee::instance()->field_settings()))
+                        )
+                    );
                 }
                 return false;
             }
@@ -467,4 +511,4 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
 }
 
 // End of file EE_Register_Addon_Test.php
-// Location: \tests\testcases\core\libraries\plugin_api\EE_Register_Addon_Test.php
+// Location: testcases/core/libraries/plugin_api/EE_Register_Addon_Test.php
