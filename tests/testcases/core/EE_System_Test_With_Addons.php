@@ -1,4 +1,7 @@
 <?php
+use EventEspresso\core\services\database\TableAnalysis;
+use EventEspresso\core\services\database\TableManager;
+
 defined('EVENT_ESPRESSO_VERSION') || exit('No direct access allowed.');
 
 /**
@@ -18,16 +21,15 @@ defined('EVENT_ESPRESSO_VERSION') || exit('No direct access allowed.');
 class EE_System_Test_With_Addons extends EE_UnitTestCase
 {
 
+    /**
+     * @var TableAnalysis $_table_analysis
+     */
     protected $_table_analysis;
-    protected $_table_manager;
 
-    public function __construct($name = null, array $data = array(), $dataName = '')
-    {
-        $this->_main_file_path = EE_TESTS_DIR . 'mocks/addons/eea-new-addon/eea-new-addon.php';
-        $this->_table_analysis = new \EventEspresso\core\services\database\TableAnalysis();
-        $this->_table_manager  = new \EventEspresso\core\services\database\TableManager($this->_table_analysis);
-        parent::__construct($name, $data, $dataName);
-    }
+    /**
+     * @var TableManager $_table_manager
+     */
+    protected $_table_manager;
 
     /**
      * The mock addon registered
@@ -79,6 +81,18 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase
      */
     protected $_temp_tables_added_by_addon = array('esp_new_addon_thing', 'esp_new_addon_attendee_meta');
 
+
+
+    public function __construct($name = null, array $data = array(), $dataName = '')
+    {
+        $this->_main_file_path = EE_TESTS_DIR . 'mocks/addons/eea-new-addon/eea-new-addon.php';
+        $this->_table_analysis = new TableAnalysis();
+        $this->_table_manager = new TableManager($this->_table_analysis);
+        parent::__construct($name, $data, $dataName);
+    }
+
+
+
     /**
      * tests that we're correctly detecting activation or upgrades in registered
      * addons.
@@ -86,7 +100,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase
      * @group agg
      * @group 8328
      */
-    function test_detect_activations_or_upgrades__new_install()
+    public function test_detect_activations_or_upgrades__new_install()
     {
         global $wp_actions;
 
@@ -119,7 +133,7 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase
      *
      * @group agg
      */
-    function test_detect_activations_or_upgrades__new_install_on_core_and_addon_simultaneously()
+    public function test_detect_activations_or_upgrades__new_install_on_core_and_addon_simultaneously()
     {
 
         global $wp_actions, $wpdb;
@@ -388,20 +402,28 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase
         $this->assertWPOptionDoesNotExist($this->_addon->get_activation_indicator_option_name());
     }
 
+
+
     /**
      * Registers the mock addon so it can be used for testing
+     *
+     * @throws \EE_Error
      */
     public function setUp()
     {
         parent::setUp();
         $this->_pretend_addon_hook_time();
         $mock_addon_path = EE_TESTS_DIR . 'mocks/addons/eea-new-addon/';
-        EE_Register_Addon::register($this->_addon_name, array(
-            'version'          => '1.0.0.dev.000',
-            'min_core_version' => '4.0.0',
-            'main_file_path'   => $mock_addon_path . 'eea-new-addon.php',
-            'dms_paths'        => $mock_addon_path . 'core/data_migration_scripts',
-        ));
+        EE_Register_Addon::register(
+            $this->_addon_name,
+            array(
+                'version'          => '1.0.0.dev.000',
+                'min_core_version' => '4.0.0',
+                'main_file_path'   => $mock_addon_path . 'eea-new-addon.php',
+                'dms_paths'        => $mock_addon_path . 'domain' . DS . 'services' . DS
+                                      . 'database' . DS . 'data_migration_scripts' . DS,
+            )
+        );
         //double-check that worked fine
         $this->assertAttributeNotEmpty('EE_New_Addon', EE_Registry::instance()->addons);
         $DMSs_available = EE_Data_Migration_Manager::reset()->get_all_data_migration_scripts_available();
@@ -487,5 +509,5 @@ class EE_System_Test_With_Addons extends EE_UnitTestCase
         return $dms_folders;
     }
 }
-
 // End of file EE_System_Test_With_Addons.php
+// Location: testcases/core/EE_System_Test_With_Addons.php
