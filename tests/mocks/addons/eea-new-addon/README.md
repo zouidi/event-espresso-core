@@ -58,3 +58,28 @@ Here's how we deal with pull requests for our repo:
 
 
 You may find [our post on contributing to open source software](https://eventespresso.com/2017/02/5-tips-for-contributing-to-open-source-software-like-event-espresso/) helpful.
+
+
+###Add-on File Structure / Architecture
+
+
+Event Espresso is currently in the early stages of converting over to a "Domain Driven Design" / "Hexagonal Architecture" inspired approach to our application design and file structure, which organizes our code into several layers. We have refactored the file structure for our Add-on Starter Template to reflect this.
+
+The following main layers / folders are typically used:
+
+Layer | Description
+--- | ---
+Domain | All of the business logic pertaining to what the add-on actually does. So the domain layer for a coupon application would contain all of the logic specific to defining coupons and what they do.
+Application | Generic functionality that coordinates the actions to be performed on the domain. Basically the logic for connecting things together.
+Infrastructure | Logic that connects the application directly to the server and/or outside world, such as databases, email services, external APIs, etc
+User&nbsp;Interface | The UI layer displays information to the user and receives their input for use by the Application layer
+ 
+ As well, more advanced add-ons may also utilize the following layers:
+ 
+ Layer | Description
+ --- | ---
+ API | for processing requests via the Event Espresso REST API
+ CLI | for processing requests via the command line interface
+Acceptance Tests | for running tests via Codeception
+Tests | for running unit tests via PhpUnit
+
