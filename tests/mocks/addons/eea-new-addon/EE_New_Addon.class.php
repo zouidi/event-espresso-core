@@ -114,20 +114,16 @@ Class  EE_New_Addon extends EE_Addon
                     ),
                 ),
                 'class_paths'           => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'attendee',
                     EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'thing',
                 ),
                 'model_paths'           => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'attendee' . DS . 'model',
                     EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'thing' . DS . 'model',
                 ),
                 'class_extension_paths' => array(
                     EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'attendee' . DS . 'class_extension',
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'thing' . DS . 'class_extension',
                 ),
                 'model_extension_paths' => array(
                     EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'attendee' . DS . 'model_extension',
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'thing' . DS . 'model_extension',
                 ),
                 //note for the mock we're not actually adding any custom cpt stuff yet.
                 'custom_post_types'     => array(),
