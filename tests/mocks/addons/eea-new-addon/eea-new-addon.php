@@ -67,10 +67,7 @@ add_action('activated_plugin', 'espresso_new_addon_plugin_activation_errors');
 function load_espresso_new_addon_domain()
 {
     if (class_exists('EventEspresso\core\domain\DomainBase')) {
-        espresso_load_required(
-            'EventEspresso\NewAddon\domain\Domain',
-            plugin_dir_path(__FILE__) . 'domain/Domain.php'
-        );
+        EE_Psr4AutoloaderInit::psr4_loader()->addNamespace('EventEspresso\NewAddon',__DIR__);
         EventEspresso\NewAddon\domain\Domain::init(EE_NEW_ADDON_PLUGIN_FILE, EE_NEW_ADDON_VERSION);
         return true;
     }
