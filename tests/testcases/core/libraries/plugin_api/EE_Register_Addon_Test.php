@@ -183,8 +183,7 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
         //just to make this test truly test the "eea-new-addon", use its own addon params
         //this way we're more likely to keep the EE_New_Addon up-to-date
         require_once(EE_TESTS_DIR . 'mocks/addons/eea-new-addon/eea-new-addon.php');
-        require_once(EE_TESTS_DIR . 'mocks/addons/eea-new-addon/EE_New_Addon.class.php');
-        EE_New_Addon::register_addon();
+        load_espresso_new_addon();
         $this->assertAttributeNotEmpty('EE_New_Addon', EE_Registry::instance()->addons);
         //check DMSs were setup properly too
         $DMSs_available = EE_Data_Migration_Manager::reset()->get_all_data_migration_scripts_available();
