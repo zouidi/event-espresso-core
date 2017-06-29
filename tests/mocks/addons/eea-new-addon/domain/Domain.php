@@ -54,7 +54,7 @@ class Domain extends DomainBase
      */
     public static function adminPath()
     {
-        return self::pluginPath() . 'domain' . DS . 'services' . DS . 'admin' . DS;
+        return self::pluginPath() . 'domain' . DS . 'services' . DS . 'admin' . DS . 'new_addon' . DS;
     }
 
 
