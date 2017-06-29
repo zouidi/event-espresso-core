@@ -10,6 +10,7 @@ defined('EVENT_ESPRESSO_VERSION') || exit;
 
 /**
  * Domain Class
+ * A container for all domain data related to New Addon
  *
  * @package     Event Espresso
  * @subpackage  New Addon
