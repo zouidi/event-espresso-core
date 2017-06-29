@@ -1,11 +1,11 @@
-<?php if (! defined('EVENT_ESPRESSO_VERSION')) {
-    exit();
-}
-// define the plugin directory path and URL
-define('EE_NEW_ADDON_BASENAME', plugin_basename(EE_NEW_ADDON_PLUGIN_FILE));
-define('EE_NEW_ADDON_PATH', plugin_dir_path(__FILE__));
-define('EE_NEW_ADDON_URL', plugin_dir_url(__FILE__));
-define('EE_NEW_ADDON_ADMIN', EE_NEW_ADDON_PATH . 'domain' . DS . 'services' . DS . 'admin' . DS . 'new_addon' . DS);
+<?php
+use EventEspresso\core\exceptions\InvalidDataTypeException;
+use EventEspresso\core\exceptions\InvalidInterfaceException;
+use EventEspresso\core\services\loaders\Loader;
+use EventEspresso\core\services\loaders\LoaderInterface;
+use EventEspresso\NewAddon\domain\Domain;
+
+defined('EVENT_ESPRESSO_VERSION') || exit();
 
 
 /**
@@ -19,9 +19,16 @@ Class  EE_New_Addon extends EE_Addon
 {
 
     /**
+     * @var LoaderInterface $loader ;
+     */
+    private static $loader;
+
+
+
+    /**
      * EE_New_Addon constructor.
      * !!! IMPORTANT !!!
-     * you should NOT run any logic in the constructor for addons
+     * you should NOT run any additional logic in the constructor for addons
      * because addon construction should NOT result in code execution.
      * Successfully registering the addon via the EE_Register_Addon API
      * should be the ONLY way that code should execute.
@@ -31,14 +38,17 @@ Class  EE_New_Addon extends EE_Addon
      * other classes that do not exist because they have not been loaded.
      * That said, it's a better idea to add any extra code required
      * in the after_registration() method below.
+     *
+     * @param LoaderInterface $loader
      */
-    // public function __construct()
-    // {
-    //     // if for some reason you absolutely, positively NEEEED a constructor...
-    //     // then at least make sure to call the parent class constructor,
-    //     // or things may not operate as expected.
-    //     parent::__construct();
-    // }
+    public function __construct(LoaderInterface $loader = null)
+    {
+        EE_New_Addon::$loader = $loader;
+        parent::__construct();
+    }
+
+
+
     /**
      * !!! IMPORTANT !!!
      * this is not the place to perform any logic or add any other filter or action callbacks
@@ -50,7 +60,8 @@ Class  EE_New_Addon extends EE_Addon
      * that needs to run earlier than when the modules load,
      * then please see the after_registration() method below.
      *
-     * @throws \EE_Error
+     * @throws EE_Error
+     * @throws \DomainException
      */
     public static function register_addon()
     {
@@ -58,44 +69,40 @@ Class  EE_New_Addon extends EE_Addon
         EE_Register_Addon::register(
             'New_Addon',
             array(
-                'version'               => EE_NEW_ADDON_VERSION,
+                'version'               => Domain::version(),
                 'plugin_slug'           => 'espresso_new_addon',
-                'min_core_version'      => EE_NEW_ADDON_CORE_VERSION_REQUIRED,
-                'main_file_path'        => EE_NEW_ADDON_PLUGIN_FILE,
+                'min_core_version'      => Domain::CORE_VERSION_REQUIRED,
+                'main_file_path'        => Domain::pluginFile(),
                 'namespace'             => array(
                     'FQNS' => 'EventEspresso\NewAddon',
                     'DIR'  => __DIR__,
                 ),
-                'admin_path'            => EE_NEW_ADDON_ADMIN,
+                'admin_path'            => Domain::adminPath(),
                 'admin_callback'        => '',
                 'config_class'          => 'EE_New_Addon_Config',
                 'config_name'           => 'EE_New_Addon',
                 'autoloader_paths'      => array(
-                    'EE_New_Addon_Config'       => EE_NEW_ADDON_PATH . 'domain' . DS . 'services' . DS
+                    'EE_New_Addon_Config'       => Domain::servicesPath()
                                                    . 'config' . DS . 'EE_New_Addon_Config.php',
-                    'New_Addon_Admin_Page'      => EE_NEW_ADDON_ADMIN . 'New_Addon_Admin_Page.core.php',
-                    'New_Addon_Admin_Page_Init' => EE_NEW_ADDON_ADMIN . 'New_Addon_Admin_Page_Init.core.php',
+                    'New_Addon_Admin_Page'      => Domain::adminPath() . 'New_Addon_Admin_Page.core.php',
+                    'New_Addon_Admin_Page_Init' => Domain::adminPath() . 'New_Addon_Admin_Page_Init.core.php',
                 ),
                 'dms_paths'             => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'services' . DS
-                    . 'database' . DS . 'data_migration_scripts' . DS,
+                    Domain::servicesPath() . 'database' . DS . 'data_migration_scripts' . DS,
                 ),
                 'module_paths'          => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'services' . DS
-                    . 'modules' . DS . 'EED_New_Addon.module.php',
+                    Domain::servicesPath() . 'modules' . DS . 'EED_New_Addon.module.php',
                 ),
                 'shortcode_paths'       => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'services' . DS
-                    . 'shortcodes' . DS . 'EES_New_Addon.shortcode.php',
+                    Domain::servicesPath() . 'shortcodes' . DS . 'EES_New_Addon.shortcode.php',
                 ),
                 'widget_paths'          => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'services' . DS
-                    . 'widgets' . DS . 'EEW_New_Addon.widget.php',
+                    Domain::servicesPath() . 'widgets' . DS . 'EEW_New_Addon.widget.php',
                 ),
                 // if plugin update engine is being used for auto-updates. not needed if PUE is not being used.
                 'pue_options'           => array(
                     'pue_plugin_slug' => 'eea-new-addon',
-                    'plugin_basename' => EE_NEW_ADDON_BASENAME,
+                    'plugin_basename' => Domain::pluginBasename(),
                     'checkPeriod'     => '24',
                     'use_wp_update'   => false,
                 ),
@@ -114,16 +121,16 @@ Class  EE_New_Addon extends EE_Addon
                     ),
                 ),
                 'class_paths'           => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'thing',
+                    Domain::entitiesPath() . 'thing',
                 ),
                 'model_paths'           => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'thing' . DS . 'model',
+                    Domain::entitiesPath() . 'thing' . DS . 'model',
                 ),
                 'class_extension_paths' => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'attendee' . DS . 'class_extension',
+                    Domain::entitiesPath() . 'attendee' . DS . 'class_extension',
                 ),
                 'model_extension_paths' => array(
-                    EE_NEW_ADDON_PATH . 'domain' . DS . 'entities' . DS . 'attendee' . DS . 'model_extension',
+                    Domain::entitiesPath() . 'attendee' . DS . 'model_extension',
                 ),
                 //note for the mock we're not actually adding any custom cpt stuff yet.
                 'custom_post_types'     => array(),
@@ -131,6 +138,22 @@ Class  EE_New_Addon extends EE_Addon
                 'default_terms'         => array(),
             )
         );
+    }
+
+
+
+    /**
+     * @return LoaderInterface
+     * @throws InvalidArgumentException
+     * @throws InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     */
+    public static function loader()
+    {
+        if (! EE_New_Addon::$loader instanceof LoaderInterface) {
+            EE_New_Addon::$loader = new Loader;
+        }
+        return EE_New_Addon::$loader;
     }
 
 
