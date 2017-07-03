@@ -1151,9 +1151,7 @@ class EE_Registry
             $this->addons->{$class_name} = $class_obj;
             return;
         }
-        if ( ! $from_db) {
-            $this->LIB->{$class_name} = $class_obj;
-        }
+        $this->LIB->{$class_name} = $class_obj;
     }
 
 
