@@ -21,9 +21,9 @@ class New_Addon_Admin_Page extends EE_Admin_Page
      */
     protected function _init_page_props()
     {
-        $this->page_slug = NEW_ADDON_PG_SLUG;
-        $this->page_label = NEW_ADDON_LABEL;
-        $this->_admin_base_url = EE_NEW_ADDON_ADMIN_URL;
+        $this->page_slug = Domain::adminPageSlug();
+        $this->page_label = Domain::adminPageLabel();
+        $this->_admin_base_url = Domain::adminPageUrl();
         $this->_admin_base_path = Domain::adminPath();
     }
 
@@ -43,7 +43,7 @@ class New_Addon_Admin_Page extends EE_Admin_Page
      */
     protected function _define_page_props()
     {
-        $this->_admin_page_title = NEW_ADDON_LABEL;
+        $this->_admin_page_title = Domain::adminPageLabel();
         $this->_labels = array(
             'publishbox' => __('Update Settings', 'event_espresso'),
         );
@@ -126,12 +126,16 @@ class New_Addon_Admin_Page extends EE_Admin_Page
 
     /**
      * @return void
+     * @throws DomainException
      */
     public function load_scripts_styles()
     {
         wp_register_script(
-            'espresso_new_addon_admin', EE_NEW_ADDON_ADMIN_ASSETS_URL . 'espresso_new_addon_admin.js',
-            array('espresso_core'), EE_NEW_ADDON_VERSION, true
+            'espresso_new_addon_admin',
+            Domain::adminAssetsUrl() . 'espresso_new_addon_admin.js',
+            array('espresso_core'),
+            EE_NEW_ADDON_VERSION,
+            true
         );
         wp_enqueue_script('espresso_new_addon_admin');
     }
@@ -200,13 +204,13 @@ class New_Addon_Admin_Page extends EE_Admin_Page
         );
         $this->_template_args['return_action'] = $this->_req_action;
         $this->_template_args['reset_url'] = EE_Admin_Page::add_query_args_and_nonce(
-            array('action' => 'reset_settings', 'return_action' => $this->_req_action), EE_NEW_ADDON_ADMIN_URL
+            array('action' => 'reset_settings', 'return_action' => $this->_req_action), Domain::adminPageUrl()
         );
         $this->_set_add_edit_form_tags('update_settings');
         $this->_set_publish_post_box_vars(null, false, false, null, false);
         $this->_template_args['admin_page_content'] =
             EEH_Template::display_template(
-                EE_NEW_ADDON_ADMIN_TEMPLATE_PATH . $template,
+                Domain::adminTemplatePath() . $template,
                 $this->_template_args,
                 true
             );
@@ -222,7 +226,7 @@ class New_Addon_Admin_Page extends EE_Admin_Page
     protected function _usage()
     {
         $this->_template_args['admin_page_content'] = EEH_Template::display_template(
-            EE_NEW_ADDON_ADMIN_TEMPLATE_PATH . 'new_addon_usage_info.template.php',
+            Domain::adminTemplatePath() . 'new_addon_usage_info.template.php',
             array(),
             true
         );

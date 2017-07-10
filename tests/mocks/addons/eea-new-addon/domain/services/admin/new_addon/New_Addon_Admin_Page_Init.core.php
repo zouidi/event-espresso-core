@@ -1,12 +1,12 @@
-<?php use EventEspresso\NewAddon\domain\Domain;
+<?php
 
-if (! defined('EVENT_ESPRESSO_VERSION')) {
-    exit('No direct script access allowed');
-}
+use EventEspresso\NewAddon\domain\Domain;
+
+defined('EVENT_ESPRESSO_VERSION')|| exit('No direct script access allowed');
+
 
 
 /**
- *
  * New_Addon_Admin_Page_Init class
  *
  * This is the init for the New_Addon Addon Admin Pages.  See EE_Admin_Page_Init for method inline docs.
@@ -14,8 +14,6 @@ if (! defined('EVENT_ESPRESSO_VERSION')) {
  * @package     Event Espresso (new_addon addon)
  * @subpackage  admin/New_Addon_Admin_Page_Init.core.php
  * @author      Darren Ethier
- *
- * ------------------------------------------------------------------------
  */
 class New_Addon_Admin_Page_Init extends EE_Admin_Page_Init
 {
@@ -26,15 +24,6 @@ class New_Addon_Admin_Page_Init extends EE_Admin_Page_Init
     public function __construct()
     {
         do_action('AHEE_log', __FILE__, __FUNCTION__, '');
-        define('NEW_ADDON_PG_SLUG', 'espresso_new_addon');
-        define('NEW_ADDON_LABEL', __('New Addon', 'event_espresso'));
-        define('EE_NEW_ADDON_ADMIN_URL', admin_url('admin.php?page=' . NEW_ADDON_PG_SLUG));
-        define('EE_NEW_ADDON_ADMIN_ASSETS_PATH', Domain::adminPath() . 'assets' . DS);
-        define('EE_NEW_ADDON_ADMIN_ASSETS_URL', Domain::pluginUrl() . 'admin' . DS . 'new_addon' . DS . 'assets' . DS);
-        define('EE_NEW_ADDON_ADMIN_TEMPLATE_PATH', Domain::adminPath() . 'templates' . DS);
-        define(
-            'EE_NEW_ADDON_ADMIN_TEMPLATE_URL', Domain::pluginUrl() . 'admin' . DS . 'new_addon' . DS . 'templates' . DS
-        );
         parent::__construct();
         $this->_folder_path = Domain::adminPath();
     }
@@ -46,7 +35,7 @@ class New_Addon_Admin_Page_Init extends EE_Admin_Page_Init
      */
     protected function _set_init_properties()
     {
-        $this->label = NEW_ADDON_LABEL;
+        $this->label = Domain::adminPageLabel();
     }
 
 
@@ -64,8 +53,8 @@ class New_Addon_Admin_Page_Init extends EE_Admin_Page_Init
                 'menu_order'      => 25,
                 'show_on_menu'    => EE_Admin_Page_Menu_Map::BLOG_ADMIN_ONLY,
                 'parent_slug'     => 'espresso_events',
-                'menu_slug'       => NEW_ADDON_PG_SLUG,
-                'menu_label'      => NEW_ADDON_LABEL,
+                'menu_slug'       => Domain::adminPageSlug(),
+                'menu_label'      => Domain::adminPageLabel(),
                 'capability'      => 'administrator',
                 'admin_init_page' => $this,
             )
