@@ -32,7 +32,7 @@ class Domain extends DomainBase
      */
     public static function entitiesPath()
     {
-        return self::pluginPath() . 'domain' . DS . 'entities' . DS;
+        return self::pluginPath() . 'domain/entities/';
     }
 
 
@@ -43,7 +43,7 @@ class Domain extends DomainBase
      */
     public static function servicesPath()
     {
-        return self::pluginPath() . 'domain' . DS . 'services' . DS;
+        return self::pluginPath() . 'domain/services/';
     }
 
 
@@ -54,7 +54,80 @@ class Domain extends DomainBase
      */
     public static function adminPath()
     {
-        return self::pluginPath() . 'domain' . DS . 'services' . DS . 'admin' . DS . 'new_addon' . DS;
+        return self::pluginPath() . 'domain/services/admin/new_addon/';
+    }
+
+
+
+    /**
+     * @return string
+     */
+    public static function adminPageSlug()
+    {
+        return 'espresso_new_addon';
+    }
+
+
+
+    /**
+     * @return string
+     */
+    public static function adminPageLabel()
+    {
+        return esc_html__('New Addon', 'event_espresso');
+    }
+
+
+
+    /**
+     * @return string
+     */
+    public static function adminPageUrl()
+    {
+        return admin_url('admin.php?page=' . Domain::adminPageSlug());
+    }
+
+
+
+    /**
+     * @return string
+     * @throws DomainException
+     */
+    public static function adminAssetsPath()
+    {
+        return Domain::adminPath() . 'assets/';
+    }
+
+
+
+    /**
+     * @return string
+     * @throws DomainException
+     */
+    public static function adminTemplatePath()
+    {
+        return Domain::adminPath() . 'templates/';
+    }
+
+
+
+    /**
+     * @return string
+     * @throws DomainException
+     */
+    public static function adminAssetsUrl()
+    {
+        return Domain::pluginUrl() . 'admin/new_addon/assets/';
+    }
+
+
+    /**
+     * @return string
+     * @throws DomainException
+     */
+    public static function adminTemplateUrl()
+    {
+        return Domain::pluginUrl() . 'admin/new_addon/templates/';
     }
 
 
