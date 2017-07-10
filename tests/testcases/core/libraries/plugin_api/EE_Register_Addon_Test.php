@@ -44,19 +44,18 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
             'version'               => '1.0.0',
             'min_core_version'      => '4.0.0',
             'main_file_path'        => $this->_mock_addon_path . 'eea-new-addon.php',
-            'dms_paths'             => $this->_mock_addon_path . 'domain' . DS . 'services' . DS
-                                       . 'database' . DS . 'data_migration_scripts' . DS,
+            'dms_paths'             => $this->_mock_addon_path . 'domain/services/database/data_migration_scripts/',
             'model_paths'           => array(
-                $this->_mock_addon_path . 'domain' . DS . 'entities' . DS . 'thing' . DS . 'model',
+                $this->_mock_addon_path . 'domain/entities/thing/model',
             ),
             'class_paths'           => array(
-                $this->_mock_addon_path . 'domain' . DS . 'entities' . DS . 'thing',
+                $this->_mock_addon_path . 'domain/entities/thing',
             ),
             'class_extension_paths' => array(
-                $this->_mock_addon_path . 'domain' . DS . 'entities' . DS . 'attendee' . DS . 'class_extension',
+                $this->_mock_addon_path . 'domain/entities/attendee/class_extension',
             ),
             'model_extension_paths' => array(
-                $this->_mock_addon_path . 'domain' . DS . 'entities' . DS . 'attendee' . DS . 'model_extension',
+                $this->_mock_addon_path . 'domain/entities/attendee/model_extension',
             ),
         );
         $this->_addon_name = 'New_Addon';
@@ -69,7 +68,9 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
     {
         parent::setUp();
         add_filter(
-            'FHEE__EEH_Activation__create_table__short_circuit', array($this, 'dont_short_circuit_new_addon_table'), 20,
+            'FHEE__EEH_Activation__create_table__short_circuit',
+            array($this, 'dont_short_circuit_new_addon_table'),
+            20,
             3
         );
     }
@@ -92,13 +93,10 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
             in_array($table_name, array('esp_new_addon_thing', 'esp_new_addon_attendee_meta'))
             && ! $table_analysis->tableExists($table_name)
         ) {
-            //			echo "\r\n\r\nDONT short circuit $sql";
-            //it's not altering. it's ok to allow this
+            // it's not altering. it's ok to allow this
             return false;
-        } else {
-            //			echo "3\r\n\r\n short circuit:$sql";
-            return $short_circuit;
         }
+        return $short_circuit;
     }
 
 
@@ -106,7 +104,6 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
     //test registering a bare minimum addon, and then de-registering it
     public function test_register_mock_addon_fail()
     {
-        // echo "\n\n " . __LINE__ . ") " . __METHOD__ . "()";
         //we're registering the addon WAAAY after EE_System has set thing up, so
         //registering this first time should throw an E_USER_NOTICE
         try {
@@ -144,8 +141,7 @@ class EE_Register_Addon_Test extends EE_UnitTestCase
                 array(
                     'version'          => '1.0.0',
                     'min_core_version' => '4.0.0',
-                    'dms_paths'        => $this->_mock_addon_path . 'domain' . DS . 'services' . DS
-                                          . 'database' . DS . 'data_migration_scripts' . DS,
+                    'dms_paths'        => $this->_mock_addon_path . 'domain/services/database/data_migration_scripts/',
                 )
             );
             $this->fail(
