@@ -134,7 +134,7 @@ class New_Addon_Admin_Page extends EE_Admin_Page
             'espresso_new_addon_admin',
             Domain::adminAssetsUrl() . 'espresso_new_addon_admin.js',
             array('espresso_core'),
-            EE_NEW_ADDON_VERSION,
+            Domain::version(),
             true
         );
         wp_enqueue_script('espresso_new_addon_admin');

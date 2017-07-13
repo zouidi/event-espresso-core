@@ -127,7 +127,7 @@ class EED_New_Addon extends EED_Module
             'espresso_new_addon',
             Domain::pluginUrl() . 'scripts/espresso_new_addon.js',
             array('jquery'),
-            EE_NEW_ADDON_VERSION,
+            Domain::version(),
             true
         );
         // is the shortcode or widget in play?
