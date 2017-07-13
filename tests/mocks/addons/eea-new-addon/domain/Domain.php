@@ -115,9 +115,20 @@ class Domain extends DomainBase
      * @return string
      * @throws DomainException
      */
+    public static function adminBaseUrl()
+    {
+        return Domain::pluginUrl() . 'admin/new_addon/';
+    }
+
+
+
+    /**
+     * @return string
+     * @throws DomainException
+     */
     public static function adminAssetsUrl()
     {
-        return Domain::pluginUrl() . 'admin/new_addon/assets/';
+        return Domain::adminBaseUrl() . 'assets/';
     }
 
 
@@ -127,7 +138,7 @@ class Domain extends DomainBase
      */
     public static function adminTemplateUrl()
     {
-        return Domain::pluginUrl() . 'admin/new_addon/templates/';
+        return Domain::adminBaseUrl() . 'templates/';
     }
 
 
