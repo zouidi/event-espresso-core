@@ -4843,6 +4843,7 @@ abstract class EEM_Base extends EE_Base implements EventEspresso\core\interfaces
      * object (as set in the model_field!).
      *
      * @return EE_Base_Class single EE_Base_Class object with default values for the properties.
+     * @throws Exception
      */
     public function create_default_object()
     {
@@ -4851,9 +4852,10 @@ abstract class EEM_Base extends EE_Base implements EventEspresso\core\interfaces
         foreach ($this->field_settings() as $field_name => $field_obj) {
             $this_model_fields_and_values[$field_name] = $field_obj->get_default_value();
         }
-        $className = $this->_get_class_name();
-        $classInstance = EE_Registry::instance()
-                                    ->load_class($className, array($this_model_fields_and_values), false, false);
+        $classInstance = $this->_instantiate_new_instance_from_db(
+            $this->_get_class_name(),
+            $this_model_fields_and_values
+        );
         return $classInstance;
     }
 
@@ -4863,6 +4865,7 @@ abstract class EEM_Base extends EE_Base implements EventEspresso\core\interfaces
      * @param mixed $cols_n_values either an array of where each key is the name of a field, and the value is its value
      *                             or an stdClass where each property is the name of a column,
      * @return EE_Base_Class
+     * @throws Exception
      * @throws \EE_Error
      */
     public function instantiate_class_from_array_or_object($cols_n_values)
@@ -4876,7 +4879,6 @@ abstract class EEM_Base extends EE_Base implements EventEspresso\core\interfaces
         if ($this->has_primary_key_field() && isset($this_model_fields_n_values[$this->primary_key_name()])) {
             $primary_key = $this_model_fields_n_values[$this->primary_key_name()];
         }
-        $className = $this->_get_class_name();
         //check we actually found results that we can use to build our model object
         //if not, return null
         if ($this->has_primary_key_field()) {
@@ -4893,18 +4895,25 @@ abstract class EEM_Base extends EE_Base implements EventEspresso\core\interfaces
         if ($primary_key) {
             $classInstance = $this->get_from_entity_map($primary_key);
             if (! $classInstance) {
-                $classInstance = EE_Registry::instance()
-                                            ->load_class($className,
-                                                array($this_model_fields_n_values, $this->_timezone), true, false);
+                $classInstance = $this->_instantiate_new_instance_from_db(
+                    $this->_get_class_name(),
+                    $this_model_fields_n_values
+                );
                 // add this new object to the entity map
                 $classInstance = $this->add_to_entity_map($classInstance);
             }
         } else {
-            $classInstance = EE_Registry::instance()
-                                        ->load_class($className, array($this_model_fields_n_values, $this->_timezone),
-                                            true, false);
+            $classInstance = $this->_instantiate_new_instance_from_db(
+                $this->_get_class_name(),
+                $this_model_fields_n_values
+            );
         }
-        //it is entirely possible that the instantiated class object has a set timezone_string db field and has set it's internal _timezone property accordingly (see new_instance_from_db in model objects particularly EE_Event for example).  In this case, we want to make sure the model object doesn't have its timezone string overwritten by any timezone property currently set here on the model so, we intentionally override the model _timezone property with the model_object timezone property.
+        // it is entirely possible that the instantiated class object has a set
+        // timezone_string db field and has set it's internal _timezone property accordingly
+        // (see new_instance_from_db in model objects particularly EE_Event for example).
+        // In this case, we want to make sure the model object doesn't have its timezone string
+        // overwritten by any timezone property currently set here on the model so,
+        // we intentionally override the model _timezone property with the model_object timezone property.
         $this->set_timezone($classInstance->get_timezone());
         return $classInstance;
     }
@@ -5827,7 +5836,7 @@ abstract class EEM_Base extends EE_Base implements EventEspresso\core\interfaces
      * @param string $class_name
      * @param array  $arguments
      * @return \EE_Base_Class
-     * @throws \Exception
+     * @throws Exception
      */
     public function _instantiate_new_instance_from_db($class_name, $arguments)
     {
