@@ -3,17 +3,15 @@ if (! defined('EVENT_ESPRESSO_VERSION')) {
     exit('No direct script access allowed');
 }
 /**
- *
  * EE_Base_Class_Test
- *
  * Cannot be used until models and model objects are allowed to be located elsewhere besides
  * just in the core directories core/db_models and core/db_classes, respectively
  *
  * @package               Event Espresso
  * @subpackage
  * @author                Mike Nelson
- *
  */
+
 
 
 /**
@@ -24,11 +22,11 @@ class EE_Base_Class_Test extends EE_UnitTestCase
 
     static function setUpBeforeClass()
     {
-//		EEH_Activation::create_table('esp_mock',
-//				"MCK_ID int(11) NOT NULL,
-//				PRIMARY KEY  (MCK_ID)");
-//		require_once(EE_TESTS_DIR.'mocks/core/db_models/EEM_Mock.model.php');
-//		require_once(EE_TESTS_DIR.'mocks/core/db_classes/EE_Mock.class.php');
+        //		EEH_Activation::create_table('esp_mock',
+        //				"MCK_ID int(11) NOT NULL,
+        //				PRIMARY KEY  (MCK_ID)");
+        //		require_once(EE_TESTS_DIR.'mocks/core/db_models/EEM_Mock.model.php');
+        //		require_once(EE_TESTS_DIR.'mocks/core/db_classes/EE_Mock.class.php');
         parent::setUpBeforeClass();
     }
 
