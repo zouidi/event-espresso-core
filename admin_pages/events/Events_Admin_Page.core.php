@@ -1609,6 +1609,20 @@ class Events_Admin_Page extends EE_Admin_Page_CPT
             EE_Registry::instance()->load_model('Ticket')->create_default_object(),
             true
         );
+        $template_args['upsell_notice'] = sprintf(
+            esc_html__(
+                '%sCreate multiple occurrences of this event; required tickets and more with %sEvent Espresso 4 Caffienated%s.%s',
+                'event_espresso'
+            ),
+            '<div class="notice inline notice-info "><p>',
+            '<a href="#">',
+            '</a>',
+            '</p></div>'
+        );
+        $template_args = apply_filters(
+            'FHEE__Events_Admin_Page__ticket_metabox__template_args__decaf',
+            $template_args
+        );
         $template = apply_filters(
             'FHEE__Events_Admin_Page__ticket_metabox__template',
             EVENTS_TEMPLATE_PATH . 'event_tickets_metabox_main.template.php'

@@ -1,4 +1,5 @@
 <?php do_action( 'AHEE__event_tickets_metabox_main__before_content' ); ?>
+<?php echo $upsell_notice; ?>
 <div id="event-and-ticket-form-content">
 	<h4 class="event-tickets-datetimes-title"><?php _e('Event Datetime', 'event_espresso'); ?></h4><?php echo $event_datetime_help_link; ?>
 	<div class="event-datetimes-container">
