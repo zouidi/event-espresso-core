@@ -616,6 +616,55 @@ final class EE_Capabilities extends EE_Base
                     'ee_manage_event_types',
                     'ee_edit_event_type',
                     'ee_delete_event_type',
+                    //answers
+                    'ee_read_answers',
+                    'ee_edit_answers',
+                    'ee_delete_answers',
+                    //change log entries
+                    'ee_read_change_log',
+                    'ee_read_others_change_log',
+                    'ee_edit_change_log',
+                    'ee_edit_others_change_log',
+                    'ee_delete_change_log',
+                    'ee_delete_others_change_log',
+                    //country
+                    'ee_read_countries',
+                    'ee_edit_countries',
+                    'ee_delete_countries',
+                    //currency
+                    'ee_read_currencies',
+                    'ee_edit_currencies',
+                    'ee_delete_currencies',
+                    //datetimes
+                    'ee_read_datetimes',
+                    'ee_edit_datetimes',
+                    'ee_delete_datetimes',
+                    //line items
+                    'ee_read_line_items',
+                    'ee_edit_line_items',
+                    'ee_delete_line_items',
+                    //prices
+                    'ee_read_prices',
+                    'ee_edit_prices',
+                    'ee_delete_prices',
+                    //question options
+                    'ee_read_question_options',
+                    'ee_read_system_question_options',
+                    'ee_edit_question_options',
+                    'ee_edit_system_question_options',
+                    'ee_delete_question_options',
+                    'ee_delete_system_question_options',
+                    //states
+                    'ee_read_states',
+                    'ee_edit_states',
+                    'ee_delete_states',
+                    //tickets
+                    'ee_read_tickets',
+                    'ee_read_others_tickets',
+                    'ee_edit_tickets',
+                    'ee_edit_others_tickets',
+                    'ee_delete_tickets',
+                    'ee_delete_others_tickets',
                 )
             )
         );
