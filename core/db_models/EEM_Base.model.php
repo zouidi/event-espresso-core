@@ -5990,8 +5990,8 @@ abstract class EEM_Base extends EE_Base implements ResettableInterface
             );
         }
         return call_user_func_array(
-            array($class_name, 'new_instance'),
-            array((array)$arguments, $this->_timezone, array(), true)
+            array($class_name, 'static_constructor'),
+            array((array)$arguments, true, $this->_timezone)
         );
     }
 
