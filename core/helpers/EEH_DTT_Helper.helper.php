@@ -926,4 +926,185 @@ class EEH_DTT_Helper
     }
 
 
+
+    /**
+     * So PHP does this awesome thing where if you are trying to get a timestamp
+     * for a month using a string like "February" or "February 2017",
+     * and you don't specify a day as part of your string,
+     * then PHP will use whatever the current day of the month is.
+     * IF the current day of the month happens to be the 30th or 31st,
+     * then PHP gets really confused by a date like February 30,
+     * so instead of saying
+     *      "Hey February only has 28 days (this year)...
+     *      ...you must have meant the last day of the month!"
+     * PHP does the next most logical thing, and bumps the date up to March 2nd,
+     * because someone requesting February 30th obviously meant March 1st!
+     * The way around this is to always set the day to the first,
+     * so that the month will stay on the month you wanted.
+     * this method will add that "1" into your date regardless of the format.
+     *
+     * @param string $month
+     * @return string
+     */
+    public static function first_of_month_timestamp($month = '')
+    {
+        $month = (string)$month;
+        $year = '';
+        // check if the incoming string has a year in it or not
+       if (preg_match('/\b\d{4}\b/', $month, $matches)) {
+           $year = $matches[0];
+           // ten remove that from the month string as well as any spaces
+           $month = trim(str_replace($year, '', $month));
+           // add a space before the year
+           $year = " {$year}";
+        }
+        // return timestamp for something like "February 1 2017"
+        return strtotime("{$month} 1{$year}");
+    }
+
+	/**
+     * This simply returns the timestamp for tomorrow (midnight next day) in this sites timezone.  So it may be midnight
+	* for this sites timezone, but the timestamp could be some other time GMT.
+    */
+    public static function tomorrow()
+	{
+		//The multiplication of -1 ensures that we switch positive offsets to negative and negative offsets to positive
+		//before adding to the timestamp.  Why? Because we want tomorrow to be for midnight the next day in THIS timezone
+		//not an offset from midnight in UTC.  So if we're starting with UTC 00:00:00, then we want to make sure the
+		//final timestamp is equivalent to midnight in this timezone as represented in GMT.
+		return strtotime('tomorrow') + (self::get_site_timezone_gmt_offset()*-1);
+	}
+
+
+    /**
+     * **
+     * Gives a nicely-formatted list of timezone strings.
+     * Copied from the core wp function by the same name so we could customize to remove UTC offsets.
+     *
+     * @since     4.9.40.rc.008
+     * @staticvar bool $mo_loaded
+     * @staticvar string $locale_loaded
+     * @param string $selected_zone Selected timezone.
+     * @param string $locale        Optional. Locale to load the timezones in. Default current site locale.
+     * @return string
+     */
+    public static function wp_timezone_choice($selected_zone, $locale = null)
+    {
+        static $mo_loaded = false, $locale_loaded = null;
+
+        $continents = array(
+            'Africa',
+            'America',
+            'Antarctica',
+            'Arctic',
+            'Asia',
+            'Atlantic',
+            'Australia',
+            'Europe',
+            'Indian',
+            'Pacific',
+        );
+
+        // Load translations for continents and cities.
+        if (! $mo_loaded || $locale !== $locale_loaded) {
+            $locale_loaded = $locale ? $locale : get_locale();
+            $mofile        = WP_LANG_DIR . '/continents-cities-' . $locale_loaded . '.mo';
+            unload_textdomain('continents-cities');
+            load_textdomain('continents-cities', $mofile);
+            $mo_loaded = true;
+        }
+
+        $zonen = array();
+        foreach (timezone_identifiers_list() as $zone) {
+            $zone = explode('/', $zone);
+            if (! in_array($zone[0], $continents)) {
+                continue;
+            }
+
+            // This determines what gets set and translated - we don't translate Etc/* strings here, they are done later
+            $exists    = array(
+                0 => (isset($zone[0]) && $zone[0]),
+                1 => (isset($zone[1]) && $zone[1]),
+                2 => (isset($zone[2]) && $zone[2]),
+            );
+            $exists[3] = ($exists[0] && 'Etc' !== $zone[0]);
+            $exists[4] = ($exists[1] && $exists[3]);
+            $exists[5] = ($exists[2] && $exists[3]);
+
+            $zonen[] = array(
+                'continent'   => ($exists[0] ? $zone[0] : ''),
+                'city'        => ($exists[1] ? $zone[1] : ''),
+                'subcity'     => ($exists[2] ? $zone[2] : ''),
+                't_continent' => ($exists[3] ? translate(str_replace('_', ' ', $zone[0]), 'continents-cities') : ''),
+                't_city'      => ($exists[4] ? translate(str_replace('_', ' ', $zone[1]), 'continents-cities') : ''),
+                't_subcity'   => ($exists[5] ? translate(str_replace('_', ' ', $zone[2]), 'continents-cities') : ''),
+            );
+        }
+        usort($zonen, '_wp_timezone_choice_usort_callback');
+
+        $structure = array();
+
+        if (empty($selected_zone)) {
+            $structure[] = '<option selected="selected" value="">' . __('Select a city') . '</option>';
+        }
+
+        foreach ($zonen as $key => $zone) {
+            // Build value in an array to join later
+            $value = array($zone['continent']);
+
+            if (empty($zone['city'])) {
+                // It's at the continent level (generally won't happen)
+                $display = $zone['t_continent'];
+            } else {
+                // It's inside a continent group
+
+                // Continent optgroup
+                if (! isset($zonen[$key - 1]) || $zonen[$key - 1]['continent'] !== $zone['continent']) {
+                    $label       = $zone['t_continent'];
+                    $structure[] = '<optgroup label="' . esc_attr($label) . '">';
+                }
+
+                // Add the city to the value
+                $value[] = $zone['city'];
+
+                $display = $zone['t_city'];
+                if (! empty($zone['subcity'])) {
+                    // Add the subcity to the value
+                    $value[] = $zone['subcity'];
+                    $display .= ' - ' . $zone['t_subcity'];
+                }
+            }
+
+            // Build the value
+            $value    = join('/', $value);
+            $selected = '';
+            if ($value === $selected_zone) {
+                $selected = 'selected="selected" ';
+            }
+            $structure[] = '<option ' . $selected . 'value="' . esc_attr($value) . '">' . esc_html($display) . "</option>";
+
+            // Close continent optgroup
+            if (! empty($zone['city']) && (! isset($zonen[$key + 1]) || (isset($zonen[$key + 1]) && $zonen[$key + 1]['continent'] !== $zone['continent']))) {
+                $structure[] = '</optgroup>';
+            }
+        }
+
+        return join("\n", $structure);
+    }
+
+
+    /**
+     * Shim for the WP function `get_user_locale` that was added in WordPress 4.7.0
+     *
+     * @param int|WP_User $user_id
+     * @return string
+     */
+    public static function get_user_locale($user_id = 0)
+    {
+        if (function_exists('get_user_locale')) {
+            return get_user_locale($user_id);
+        }
+        return get_locale();
+    }
+
 }// end class EEH_DTT_Helper

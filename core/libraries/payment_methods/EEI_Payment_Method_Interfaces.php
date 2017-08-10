@@ -1,4 +1,8 @@
-<?php if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
+<?php
+
+use EventEspresso\core\services\orm\ModelFieldFactory;
+
+if ( ! defined('EVENT_ESPRESSO_VERSION')) { exit('No direct script access allowed'); }
 
 /**
  * Interface EEI_Payment
@@ -95,6 +99,34 @@ interface EEI_Payment extends EEI_Base{
 	 */
 	public function set_extra_accntng($extra_accounting_info);
 
+    /**
+     * Gets the first event for this payment (it's possible that it could be for multiple)
+     *
+     * @param EE_Payment $payment
+     * @return EE_Event|null
+     */
+    public function get_first_event();
+
+    /**
+     * Gets the name of the first event for which is being paid
+     *
+     * @param EE_Payment $payment
+     * @return string
+     */
+    public function get_first_event_name();
+
+    /**
+     * Returns the payment's transaction's primary registration
+     *
+     * @return EE_Registration|null
+     */
+    public function get_primary_registration();
+
+    /**
+     * Gets the payment's transaction's primary registration's attendee, or null
+     * @return EE_Attendee|null
+     */
+    public function get_primary_attendee();
 }
 
 
@@ -131,11 +163,15 @@ interface EEMI_Payment {
 	public function declined_status();
 
 
-	/**
-	 * Function that returns an instance of this class.
-	 * @return EEMI_Payment
-	 */
-	public static function instance();
+
+    /**
+     * Function that returns an instance of this class.
+     *
+     * @param null              $timezone
+     * @param ModelFieldFactory $model_field_factory If not provided, this class needs to find it itself
+     * @return EEMI_Payment
+     */
+	public static function instance($timezone = null, ModelFieldFactory $model_field_factory = null);
 
 	/**
 	 * Gets a payment by the transaction ID or cheque number

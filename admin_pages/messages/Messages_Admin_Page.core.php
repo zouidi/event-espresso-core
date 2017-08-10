@@ -471,7 +471,7 @@ class Messages_Admin_Page extends EE_Admin_Page
             ),
             'delete_ee_message'                => array(
                 'func'       => '_delete_ee_messages',
-                'capability' => 'ee_delete_message',
+                'capability' => 'ee_delete_messages',
                 'noheader'   => true
             ),
             'delete_ee_messages'               => array(
@@ -527,10 +527,6 @@ class Messages_Admin_Page extends EE_Admin_Page
                         'title'    => __('Messengers', 'event_espresso'),
                         'filename' => 'messages_overview_messengers',
                     ),
-                    'messages_overview_other_help_tab'                          => array(
-                        'title'    => __('Messages Other', 'event_espresso'),
-                        'filename' => 'messages_overview_other',
-                    ),
                 ),
                 'help_tour'     => array('Messages_Overview_Help_Tour'),
                 'require_nonce' => false
@@ -584,6 +580,10 @@ class Messages_Admin_Page extends EE_Admin_Page
                     'message_preview_help_tab'    => array(
                         'title'    => __('Message Preview', 'event_espresso'),
                         'filename' => 'messages_preview'
+                    ),
+                    'messages_overview_other_help_tab'                          => array(
+                        'title'    => __('Messages Other', 'event_espresso'),
+                        'filename' => 'messages_overview_other',
                     ),
                 ),
                 'require_nonce' => false
@@ -846,10 +846,19 @@ class Messages_Admin_Page extends EE_Admin_Page
                 'slug'        => 'in_use',
                 'label'       => __('In Use', 'event_espresso'),
                 'count'       => 0,
-                'bulk_action' => array(
-                    'trash_message_template' => __('Move to Trash', 'event_espresso')
-                )
             )
+        );
+    }
+
+
+    /**
+     * Set views array for the Custom Template List Table
+     */
+    public function _set_list_table_views_custom_mtps()
+    {
+        $this->_set_list_table_views_global_mtps();
+        $this->_views['in_use']['bulk_action'] = array(
+                'trash_message_template' => esc_html__('Move to Trash', 'event_espresso')
         );
     }
     
@@ -3006,19 +3015,36 @@ class Messages_Admin_Page extends EE_Admin_Page
                     array(
                         'do_messages_on_same_request' => new EE_Select_Input(
                             array(
-                                true  => __("On the same request", "event_espresso"),
-                                false => __("On a separate request", "event_espresso")
+                                true  => esc_html__("On the same request", "event_espresso"),
+                                false => esc_html__("On a separate request", "event_espresso")
                             ),
                             array(
                                 'default'         => $network_config->do_messages_on_same_request,
-                                'html_label_text' => __('Generate and send all messages:', 'event_espresso'),
-                                'html_help_text'  => __('By default the messages system uses a more efficient means of processing messages on separate requests and utilizes the wp-cron scheduling system.  This makes things execute faster for people registering for your events.  However, if the wp-cron system is disabled on your site and there is no alternative in place, then you can change this so messages are always executed on the same request.',
+                                'html_label_text' => esc_html__('Generate and send all messages:', 'event_espresso'),
+                                'html_help_text'  => esc_html__('By default the messages system uses a more efficient means of processing messages on separate requests and utilizes the wp-cron scheduling system.  This makes things execute faster for people registering for your events.  However, if the wp-cron system is disabled on your site and there is no alternative in place, then you can change this so messages are always executed on the same request.',
                                     'event_espresso'),
+                            )
+                        ),
+                        'delete_threshold' => new EE_Select_Input(
+                            array(
+                                0 => esc_html__('Forever', 'event_espresso'),
+                                3 => esc_html__('3 Months', 'event_espresso'),
+                                6 => esc_html__('6 Months', 'event_espresso'),
+                                9 => esc_html__('9 Months', 'event_espresso'),
+                                12 => esc_html__('12 Months', 'event_espresso'),
+                                24 => esc_html__('24 Months', 'event_espresso'),
+                                36 => esc_html__('36 Months', 'event_espresso')
+                            ),
+                            array(
+                                'default' => EE_Registry::instance()->CFG->messages->delete_threshold,
+                                'html_label_text' => esc_html__('Cleanup of old messages:', 'event_espresso'),
+                                'html_help_text' => esc_html__('You can control how long a record of processed messages is kept 
+                                                    via this option.', 'event_espresso'),
                             )
                         ),
                         'update_settings'             => new EE_Submit_Input(
                             array(
-                                'default'         => __('Update', 'event_espresso'),
+                                'default'         => esc_html__('Update', 'event_espresso'),
                                 'html_label_text' => '&nbsp'
                             )
                         )
@@ -3037,6 +3063,7 @@ class Messages_Admin_Page extends EE_Admin_Page
     {
         /** @var EE_Network_Core_Config $network_config */
         $network_config = EE_Registry::instance()->NET_CFG->core;
+        $messages_config = EE_Registry::instance()->CFG->messages;
         $form           = $this->_generate_global_settings_form();
         if ($form->was_submitted()) {
             $form->receive_form_submission();
@@ -3051,10 +3078,16 @@ class Messages_Admin_Page extends EE_Admin_Page
                         && $network_config->{$property} !== $value
                     ) {
                         $network_config->{$property} = $value;
+                    } else if (
+                        property_exists($messages_config, $property)
+                        && $messages_config->{$property} !== $value
+                    ) {
+                        $messages_config->{$property} = $value;
                     }
                 }
                 //only update if the form submission was valid!
                 EE_Registry::instance()->NET_CFG->update_config(true, false);
+                EE_Registry::instance()->CFG->update_espresso_config();
                 EE_Error::overwrite_success();
                 EE_Error::add_success(__('Global message settings were updated', 'event_espresso'));
             }

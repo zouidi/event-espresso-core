@@ -86,11 +86,12 @@ class Read extends Base
     }
 
 
+
     /**
      * Prepares and returns schema for any OPTIONS request.
      *
-     * @param string $model_name  Something like `Event` or `Registration`
-     * @param string $version     The API endpoint version being used.
+     * @param string $model_name Something like `Event` or `Registration`
+     * @param string $version    The API endpoint version being used.
      * @return array
      */
     public static function handle_schema_request($model_name, $version)
@@ -106,7 +107,7 @@ class Read extends Base
             $model_schema = new JsonModelSchema($model);
             return $model_schema->getModelSchemaForRelations(
                 $controller->get_model_version_info()->relation_settings($model),
-                $controller->_add_extra_fields_to_schema(
+                $controller->_customize_schema_for_rest_response(
                     $model,
                     $model_schema->getModelSchemaForFields(
                         $controller->get_model_version_info()->fields_on_model_in_this_version($model),
@@ -120,23 +121,57 @@ class Read extends Base
     }
 
 
+
     /**
-     * Adds additional fields to the schema
-     * The REST API returns a GMT value field for each datetime field in the resource.  Thus the description about this
-     * needs to be added to the schema.
+     * This loops through each field in the given schema for the model and does the following:
+     * - add any extra fields that are REST API specific and related to existing fields.
+     * - transform default values into the correct format for a REST API response.
      *
      * @param \EEM_Base $model
-     * @param string    $schema
+     * @param array     $schema
+     * @return array  The final schema.
      */
-    protected function _add_extra_fields_to_schema(\EEM_Base $model, $schema)
+    protected function _customize_schema_for_rest_response(\EEM_Base $model, array $schema)
     {
         foreach ($this->get_model_version_info()->fields_on_model_in_this_version($model) as $field_name => $field) {
-            if ($field instanceof EE_Datetime_Field) {
-                $schema['properties'][$field_name . '_gmt'] = $field->getSchema();
-                //modify the description
-                $schema['properties'][$field_name . '_gmt']['description'] = sprintf(
-                    esc_html__('%s - the value for this field is in GMT.', 'event_espresso'),
-                    $field->get_nicename()
+            $schema = $this->_translate_defaults_for_rest_response(
+                $field_name,
+                $field,
+                $this->_maybe_add_extra_fields_to_schema($field_name, $field, $schema)
+            );
+        }
+        return $schema;
+    }
+
+
+
+    /**
+     * This is used to ensure that the 'default' value set in the schema response is formatted correctly for the REST
+     * response.
+     *
+     * @param                      $field_name
+     * @param \EE_Model_Field_Base $field
+     * @param array                $schema
+     * @return array
+     */
+    protected function _translate_defaults_for_rest_response($field_name, \EE_Model_Field_Base $field, array $schema)
+    {
+        if (isset($schema['properties'][$field_name]['default'])) {
+            if (is_array($schema['properties'][$field_name]['default'])) {
+                foreach ($schema['properties'][$field_name]['default'] as $default_key => $default_value) {
+                    if ($default_key === 'raw') {
+                        $schema['properties'][$field_name]['default'][$default_key] = Model_Data_Translator::prepare_field_value_for_json(
+                            $field,
+                            $default_value,
+                            $this->get_model_version_info()->requested_version()
+                        );
+                    }
+                }
+            } else {
+                $schema['properties'][$field_name]['default'] = Model_Data_Translator::prepare_field_value_for_json(
+                    $field,
+                    $schema['properties'][$field_name]['default'],
+                    $this->get_model_version_info()->requested_version()
                 );
             }
         }
@@ -145,15 +180,41 @@ class Read extends Base
 
 
 
+    /**
+     * Adds additional fields to the schema
+     * The REST API returns a GMT value field for each datetime field in the resource.  Thus the description about this
+     * needs to be added to the schema.
+     *
+     * @param                      $field_name
+     * @param \EE_Model_Field_Base $field
+     * @param array                $schema
+     * @return array
+     */
+    protected function _maybe_add_extra_fields_to_schema($field_name, \EE_Model_Field_Base $field, array $schema)
+    {
+        if ($field instanceof EE_Datetime_Field) {
+            $schema['properties'][$field_name . '_gmt'] = $field->getSchema();
+            //modify the description
+            $schema['properties'][$field_name . '_gmt']['description'] = sprintf(
+                esc_html__('%s - the value for this field is in GMT.', 'event_espresso'),
+                $field->get_nicename()
+            );
+        }
+        return $schema;
+    }
+
+
 
     /**
      * Used to figure out the route from the request when a `WP_REST_Request` object is not available
+     *
      * @return string
      */
-    protected function get_route_from_request() {
+    protected function get_route_from_request()
+    {
         if (isset($GLOBALS['wp'])
             && $GLOBALS['wp'] instanceof \WP
-            && isset($GLOBALS['wp']->query_vars['rest_route'] )
+            && isset($GLOBALS['wp']->query_vars['rest_route'])
         ) {
             return $GLOBALS['wp']->query_vars['rest_route'];
         } else {
@@ -509,6 +570,8 @@ class Read extends Base
         $entity_array = $this->_add_extra_fields($model, $db_row, $entity_array);
         $entity_array['_links'] = $this->_get_entity_links($model, $db_row, $entity_array);
         $entity_array['_calculated_fields'] = $this->_get_entity_calculations($model, $db_row, $rest_request);
+        $entity_array = apply_filters('FHEE__Read__create_entity_from_wpdb_results__entity_before_including_requested_models',
+            $entity_array, $model, $rest_request->get_param('caps'), $rest_request, $this);
         $entity_array = $this->_include_requested_models($model, $rest_request, $entity_array, $db_row);
         $entity_array = apply_filters(
             'FHEE__Read__create_entity_from_wpdb_results__entity_before_inaccessible_field_removal',
@@ -555,6 +618,35 @@ class Read extends Base
         $result = $model->deduce_fields_n_values_from_cols_n_values($db_row);
         $result = array_intersect_key($result,
             $this->get_model_version_info()->fields_on_model_in_this_version($model));
+        //if this is a CPT, we need to set the global $post to it,
+        //otherwise shortcodes etc won't work properly while rendering it
+        if ($model instanceof \EEM_CPT_Base) {
+            $do_chevy_shuffle = true;
+        } else {
+            $do_chevy_shuffle = false;
+        }
+        if ($do_chevy_shuffle) {
+            global $post;
+            $old_post = $post;
+            $post = get_post($result[$model->primary_key_name()]);
+            if (! $post instanceof \WP_Post) {
+                //well that's weird, because $result is what we JUST fetched from the database
+                throw new Rest_Exception(
+                    'error_fetching_post_from_database_results',
+                    esc_html__(
+                        'An item was retrieved from the database but it\'s not a WP_Post like it should be.',
+                        'event_espresso'
+                    )
+                );
+            }
+            $model_object_classname = 'EE_' . $model->get_this_model_name();
+            $post->{$model_object_classname} = \EE_Registry::instance()->load_class(
+                $model_object_classname,
+                $result,
+                false,
+                false
+                );
+        }
         foreach ($result as $field_name => $raw_field_value) {
             $field_obj = $model->field_settings_for($field_name);
             $field_value = $field_obj->prepare_for_set_from_db($raw_field_value);
@@ -597,6 +689,9 @@ class Read extends Base
                     $this->get_model_version_info()->requested_version()
                 );
             }
+        }
+        if ($do_chevy_shuffle) {
+            $post = $old_post;
         }
         return $result;
     }

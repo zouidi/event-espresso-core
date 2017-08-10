@@ -15,15 +15,10 @@ if ( !defined( 'EVENT_ESPRESSO_VERSION' ) ) {
  * @group rest_api
  *
  */
-class Read_Test extends \EE_UnitTestCase{
+class Read_Test extends \EE_REST_TestCase{
 
 	public function setUp() {
 		parent::setUp();
-		if ( ! class_exists( 'WP_Rest_Request' ) ) {
-			$this->markTestSkipped(
-				'Test being run on a version of WP that does not have the REST framework installed'
-			);
-		}
 	}
 
 	public function test_explode_and_get_items_prefixed_with__basic(){
@@ -79,9 +74,14 @@ class Read_Test extends \EE_UnitTestCase{
 		);
 	}
 
+
+
+    /**
+     * @group 10526
+     */
 	public function test_handle_request_get_one__event_includes() {
 		$event = $this->new_model_obj_with_dependencies( 'Event', array( 'status' => 'publish' ) );
-		$req = new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.29/events/' . $event->ID() );
+		$req = new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.36/events/' . $event->ID() );
 		$req->set_url_params(
 				array(
 					'id' => $event->ID()
@@ -102,6 +102,35 @@ class Read_Test extends \EE_UnitTestCase{
 			$result
 		);
 	}
+
+    /**
+     * Verifies 'featured_image_url' isn't added to all 4.8.29 requests. We had a bug introduced in 4.8.36
+     * where requests to 4.8.29 added 'featured_image_url' all the time
+     * @group 10526
+     */
+    public function test_handle_request_get_one_4_8_29__event_includes() {
+        $event = $this->new_model_obj_with_dependencies( 'Event', array( 'status' => 'publish' ) );
+        $req = new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.29/events/' . $event->ID() );
+        $req->set_url_params(
+            array(
+                'id' => $event->ID()
+            )
+        );
+        $req->set_query_params(
+            array(
+                'include' =>  'EVT_ID,EVT_name'
+            )
+        );
+        $response = Read::handle_request_get_one( $req );
+        $result = $response->get_data();
+        $this->assertEquals(
+            array (
+                'EVT_ID' => $event->ID(),
+                'EVT_name' => $event->name(),
+            ),
+            $result
+        );
+    }
 
 	public function test_handle_request_get_one__event_includes_two_related_models() {
 		$event = $this->new_model_obj_with_dependencies( 'Event', array( 'status' => 'publish' ) );
@@ -133,10 +162,15 @@ class Read_Test extends \EE_UnitTestCase{
 		);
 	}
 
+
+
+    /**
+     * @group 10526
+     */
 	public function test_handle_request_get_one__event_include_non_model_field() {
 		$this->set_current_user_to_new();
 		$event = $this->new_model_obj_with_dependencies( 'Event' );
-		$req = new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.29/events/' . $event->ID() );
+		$req = new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.36/events/' . $event->ID() );
 		$req->set_url_params(
 				array(
 					'id' => $event->ID()
@@ -303,7 +337,6 @@ class Read_Test extends \EE_UnitTestCase{
 			unset( $result[ $property_name ] );
 		}
 		$event_id = $event->ID();
-		$site_url = site_url();
 		$this->assertEquals(
 			array(
 				'EVT_ID'                          => $event->get( 'EVT_ID' ),
@@ -342,24 +375,25 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href' => $site_url . '/?rest_route=/ee/v4.8.29/events/' . $event_id,
+									'href' => rest_url('ee/v4.8.29/events/' . $event_id),
 								),
 						),
 					'collection'                                            =>
 						array(
 							0 =>
 								array(
-									'href' => $site_url . '/?rest_route=/ee/v4.8.29/events',
+									'href' => rest_url('ee/v4.8.29/events'),
 								),
 						),
 					'https://api.eventespresso.com/registrations'           =>
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
-									            . $event_id
-									            . '/registrations',
+									'href'   => rest_url(
+									    'ee/v4.8.29/events/'
+                                            . $event_id
+                                            . '/registrations'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -367,10 +401,11 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
+									'href'   => rest_url(
+									            '/ee/v4.8.29/events/'
 									            . $event_id
-									            . '/datetimes',
+									            . '/datetimes'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -378,10 +413,11 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
-									            . $event_id
-									            . '/question_groups',
+									'href'   => rest_url(
+                                         '/ee/v4.8.29/events/'
+                                            . $event_id
+                                            . '/question_groups'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -389,7 +425,7 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url . '/?rest_route=/ee/v4.8.29/events/' . $event_id . '/venues',
+									'href'   => rest_url('/ee/v4.8.29/events/' . $event_id . '/venues'),
 									'single' => false,
 								),
 						),
@@ -397,10 +433,11 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
-									            . $event_id
-									            . '/term_taxonomies',
+									'href'   => rest_url(
+                                        '/ee/v4.8.29/events/'
+                                            . $event_id
+                                            . '/term_taxonomies'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -408,10 +445,11 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
-									            . $event_id
-									            . '/message_template_groups',
+									'href'   => rest_url(
+                                        '/ee/v4.8.29/events/'
+                                            . $event_id
+                                            . '/message_template_groups'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -419,10 +457,11 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
-									            . $event_id
-									            . '/attendees',
+									'href'   => rest_url(
+                                        '/ee/v4.8.29/events/'
+                                            . $event_id
+                                            . '/attendees'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -430,7 +469,7 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url . '/?rest_route=/ee/v4.8.29/events/' . $event_id . '/wp_user',
+									'href'   => rest_url('/ee/v4.8.29/events/' . $event_id . '/wp_user'),
 									'single' => true,
 								),
 						),
@@ -438,10 +477,11 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
-									            . $event_id
-									            . '/post_metas',
+									'href'   => rest_url(
+                                        '/ee/v4.8.29/events/'
+                                            . $event_id
+                                            . '/post_metas'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -449,10 +489,11 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
-									            . $event_id
-									            . '/extra_metas',
+									'href'   => rest_url(
+                                        '/ee/v4.8.29/events/'
+                                            . $event_id
+                                            . '/extra_metas'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -460,10 +501,11 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
-									            . $event_id
-									            . '/change_logs',
+									'href'   => rest_url(
+                                        'ee/v4.8.29/events/'
+                                            . $event_id
+                                            . '/change_logs'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -471,10 +513,11 @@ class Read_Test extends \EE_UnitTestCase{
 						array(
 							0 =>
 								array(
-									'href'   => $site_url
-									            . '/?rest_route=/ee/v4.8.29/events/'
-									            . $event_id
-									            . '/term_relationships',
+									'href'   => rest_url(
+                                        'ee/v4.8.29/events/'
+                                            . $event_id
+                                            . '/term_relationships'
+                                    ),
 									'single' => false,
 								),
 						),
@@ -620,6 +663,7 @@ class Read_Test extends \EE_UnitTestCase{
 
 	/**
 	 * @group 9406
+     * @group 10526
 	 */
 	public function test_handle_request_get_all__set_headers(){
 		$datetimes_created = 65;
@@ -628,9 +672,9 @@ class Read_Test extends \EE_UnitTestCase{
 			$this->new_model_obj_with_dependencies( 'Datetime', array( 'EVT_ID' => $event->ID() ) );
 		}
    		$this->assertEquals( $datetimes_created, \EEM_Datetime::instance()->count( array( 'caps' => \EEM_Base::caps_read ) ) );
-		//request all datetimes
+		//request all datetimes from 4.8.36 (where the headers got added)
 		$response = Read::handle_request_get_all(
-			new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.34/datetimes' )
+			new \WP_REST_Request( 'GET', \EED_Core_Rest_Api::ee_api_namespace . '4.8.36/datetimes' )
 		);
 		$this->assertInstanceOf( 'WP_REST_Response', $response );
 		$headers = $response->get_headers();
@@ -839,6 +883,63 @@ class Read_Test extends \EE_UnitTestCase{
         $this->assertEquals('EE_Has_Many_Relation',$datetimes_array['relation_type']);
         $this->assertArrayHasKey('readonly', $datetimes_array);
         $this->assertTrue($datetimes_array['readonly']);
+    }
+
+
+    /**
+     * @group rest_schema_request
+     */
+    public function test_handle_schema_request_returning_defaults() {
+        $request = new \WP_REST_Request( 'OPTIONS', '/' . \EED_Core_Rest_Api::ee_api_namespace . '4.8.36/prices');
+        $response = rest_do_request($request);
+        $data = $response->get_data();
+        //verify that defaults are in the schema and in the correct format.
+        $PRC_amount_defaults = $data['schema']['properties']['PRC_amount']['default'];
+
+        $this->assertTrue(is_array($PRC_amount_defaults));
+        $this->assertArrayHasKey('raw', $PRC_amount_defaults);
+        $this->assertArrayHasKey('pretty', $PRC_amount_defaults);
+        $this->assertEquals((float) 0, $PRC_amount_defaults['raw']);
+        $this->assertEquals('$0.00 <span class="currency-code">(USD)</span>', $PRC_amount_defaults['pretty']);
+    }
+
+
+    /**
+     * Creates two events: one with registrations, the other without.
+     * Verify that if we loop over them and render their pretty content (which renders shortcodes)
+     * we don't accidentally cache the shortcode from one event to the other
+     * @group 10851
+     */
+    public function testShortcodesNotCachedForDifferentEvents()
+    {
+        $transaction = $this->new_typical_transaction();
+        $event_with_registrations = $transaction->primary_registration()->event();
+        $event_with_registrations->set_description('[ESPRESSO_EVENT_ATTENDEES]');
+        $event_with_registrations->set('status','publish');
+        $event_with_registrations->save();
+
+        $other_event = $this->new_model_obj_with_dependencies(
+            'Event',
+            array(
+                'EVT_desc' => '[ESPRESSO_EVENT_ATTENDEES]',
+                'status' => 'publish'
+            )
+        );
+        $dtt = $this->new_model_obj_with_dependencies('Datetime');
+        $other_event->_add_relation_to( $dtt, 'Datetime' );
+        $dtt->_add_relation_to(
+            $this->new_model_obj_with_dependencies('Ticket'),
+            'Ticket'
+        );
+
+        $request = new \WP_REST_Request( 'GET', '/' . \EED_Core_Rest_Api::ee_api_namespace . '4.8.36/events');
+        $response = rest_do_request($request);
+        $data = $response->get_data();
+        $this->assertEquals( 2, count($data));
+        $this->assertNotEquals(
+            $data[0]['EVT_desc']['rendered'],
+            $data[1]['EVT_desc']['rendered']
+        );
     }
 
 }
