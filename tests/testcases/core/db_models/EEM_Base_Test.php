@@ -191,14 +191,6 @@ class EEM_Base_Test extends EE_UnitTestCase
         $registration_joined_with_event = $this->factory->registration->create();
         $registration_joined_with_event->_add_relation_to($event_joined_with, 'Event');
 
-        //create an Answer and add it to the registration.  This is to test the answer blocking the permanent
-        //delete of the registration in our test.
-        /** @var EE_Answer $answer_joined_with_registration */
-        $answer_joined_with_registration = EE_Answer::new_instance();
-        $answer_joined_with_registration->save();
-        $answer_joined_with_registration->_add_relation_to($registration_joined_with_event, 'Registration');
-        $answer_joined_with_registration->save();
-
         //k now we should have a join table entry for this relationship... let's get it so we have the ID to check for
         //after the perm delete.
         $event_message_template = EEM_Event_Message_Template::instance()->get_one(array(
@@ -244,6 +236,9 @@ class EEM_Base_Test extends EE_UnitTestCase
         //reset notices so we don't trigger the notice check on tearDown
         EE_Error::reset_notices();
     }
+
+
+
 
 
 

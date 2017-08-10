@@ -1979,8 +1979,17 @@ abstract class EEM_Base extends EE_Base implements EventEspresso\core\interfaces
             // Note: We're only deleting join table entries not the relations.
             // Note: The only entity ids that would have made it here are non blocked ids.  So only join table entries
             // for non blocked relations are being deleted.
-            foreach ($this->relation_settings() as $relation) {
-                if ($relation instanceof EE_HABTM_Relation) {
+            $relation_settings = $this->relation_settings();
+            foreach ($relation_settings as $relation) {
+                //only seek and destroy across a HABTM relation provided there is no
+                //other relation from this model to the HABTM join model. E.g., when deleting an event,
+                //even though registrations is being used as a join table to the attendee model, and so
+                //would be deleted, make an exception because the event also has-many registrations.
+                //So the fact events have many registrations trumps the fact that the registration
+                //table acts as a join table between events and attendees
+                if ($relation instanceof EE_HABTM_Relation
+                    && ! array_key_exists( $relation->get_join_model()->get_this_model_name(), $relation_settings)
+                ) {
                     $relation_join_model = $relation->get_join_model();
                     //now we need to find out what field on the join model corresponds with the id from this model.
                     $foreign_key_field = $relation_join_model->get_foreign_key_to($this->get_this_model_name());
