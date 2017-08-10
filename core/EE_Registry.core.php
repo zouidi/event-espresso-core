@@ -698,7 +698,7 @@ class EE_Registry implements ResettableInterface
         } else if ($loader && method_exists($this, $loader)) {
             $class_obj = $this->{$loader}($class_name, $arguments);
         } else {
-            $class_obj = $this->_create_object($class_name, $arguments, $addon, $from_db);
+            $class_obj = $this->_create_object($class_name, $arguments, $addon);
         }
         if (($this->_cache_on && $cache) || $this->get_class_abbreviation($class_name, '')) {
             // save it for later... kinda like gum  { : $
