@@ -229,8 +229,8 @@ class EEM_Base_Test extends EE_UnitTestCase
         $this->assertNotInstanceOf('EE_Event_Message_Template', $join_table_entity);
 
         //assert the registration is still present in the db - although it would fall under the criteria of the join
-        // table delete (because its a HABTM join table between Attendee and Event), the registration delete should be
-        // blocked by it's relation to the answer we setup earlier.
+        // table delete (because its a HABTM join table between Attendee and Event), there's also a has-many
+        //relationship to it from Events, and we don't automatically delete across has-many relationships yet
         $registration_from_db = EEM_Registration::instance()->get_one_by_ID($registration_joined_with_event->ID());
         $this->assertInstanceOf('EE_Registration', $registration_from_db);
         //reset notices so we don't trigger the notice check on tearDown
