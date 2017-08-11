@@ -2020,8 +2020,8 @@ abstract class EEM_Base extends EE_Base implements ResettableInterface
                             $ids_for_removal
                         )
                     )
-                )
-            ));
+                ));
+            }
 
             // delete any join table relations to the deleted entities.
             // Note: We're only deleting join table entries not the relations.
