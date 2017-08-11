@@ -124,8 +124,8 @@ abstract class EE_Base_Class
      * @return EE_Base_Class
      * @throws EE_Error
      */
-    public static function new_instance(array $fieldValues = array(), $timezone = '', array $date_formats = array() ) {
-        return self::static_constructor($fieldValues, false, $timezone,  $date_formats);
+    public static function new_instance($fieldValues = array(), $timezone = '', $date_formats = array() ) {
+        return self::static_constructor((array) $fieldValues, false, $timezone,  $date_formats);
     }
 
 
@@ -137,8 +137,8 @@ abstract class EE_Base_Class
      * @return EE_Base_Class
      * @throws EE_Error
      */
-    public static function new_instance_from_db(array $fieldValues = array(), $timezone = '') {
-        return self::static_constructor($fieldValues, true, $timezone);
+    public static function new_instance_from_db($fieldValues = array(), $timezone = '') {
+        return self::static_constructor((array) $fieldValues, true, $timezone);
     }
 
 
