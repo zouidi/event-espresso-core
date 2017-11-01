@@ -259,18 +259,7 @@ class LegacyShortcodesManager
         }
         // in case $current_post is hierarchical like: /parent-page/current-page
         $current_post = basename($current_post);
-        if (
-            // is current page/post the "blog" page ?
-            $current_post === EE_Config::get_page_for_posts()
-            // or are we on a category page?
-            || (
-                is_array(term_exists($current_post, 'category'))
-                || array_key_exists('category_name', $wp->query_vars)
-            )
-        ) {
-            // initialize all legacy shortcodes
-            $load_assets = $this->parseContentForShortcodes('', true);
-        } else {
+        if ($current_post && is_singular()) {
             global $wpdb;
             $post_content = $wpdb->get_var(
                 $wpdb->prepare(
@@ -278,7 +267,10 @@ class LegacyShortcodesManager
                     $current_post
                 )
             );
-            $load_assets = $this->parseContentForShortcodes($post_content);
+            $load_assets  = $this->parseContentForShortcodes($post_content);
+        } else {
+            // initialize all legacy shortcodes
+            $load_assets = $this->parseContentForShortcodes('', true);
         }
         if ($load_assets) {
             $this->registry->REQ->set_espresso_page(true);
