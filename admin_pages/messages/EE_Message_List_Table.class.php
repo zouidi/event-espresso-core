@@ -1,5 +1,7 @@
 <?php
 
+use EventEspresso\core\domain\CapabilitiesActionRestrictionInterface;
+use EventEspresso\core\domain\entities\Context;
 use EventEspresso\core\exceptions\InvalidDataTypeException;
 use EventEspresso\core\exceptions\InvalidInterfaceException;
 
@@ -182,6 +184,30 @@ class EE_Message_List_Table extends EE_Admin_List_Table
                 admin_url('admin.php')
             )
             . '">' . esc_html__('Delete', 'event_espresso') . '</a>';
+        $recipient_object = $message->recipient_object();
+        if ($recipient_object instanceof CapabilitiesActionRestrictionInterface
+            && $recipient_object->canRead(
+                new Context(
+                    'view_link_from_message_list_table',
+                    esc_html__(
+                        'View link for recipient displayed in the to column in the message list table.',
+                        'event_espresso'
+                    )
+                )
+            )
+        ) {
+            $view_details_link = $recipient_object instanceof EEI_Admin_Links
+                ? $recipient_object->get_admin_details_link()
+                : '';
+            if (! empty($view_details_link)) {
+                $actions['view'] = '<a href="' . $view_details_link . '">'
+                    . esc_html__(
+                        'View Recipient Details',
+                        'event_espresso'
+                    )
+                    . '</a>';
+            }
+        }
         return esc_html($message->to()) . $this->row_actions($actions);
     }
 
