@@ -783,7 +783,7 @@ class EE_Attendee extends EE_CPT_Base implements
      */
     public function canRead(Context $context)
     {
-        return EE_Registry::instance()->CAP->current_user_can('ee_read_contacts', $context->slug());
+        return EE_Registry::instance()->CAP->current_user_can('ee_edit_contacts', $context->slug());
     }
 
     /**
