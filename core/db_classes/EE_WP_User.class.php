@@ -1,6 +1,6 @@
-<?php if (! defined('EVENT_ESPRESSO_VERSION')) {
-    exit('No direct script access allowed');
-}
+<?php
+
+defined('EVENT_ESPRESSO_VERSION') || exit('No direct access allowed.');
 
 /**
  * EE_WP_User class
@@ -21,6 +21,7 @@ class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links
     /**
      * @param array $props_n_values
      * @return EE_WP_User|mixed
+     * @throws EE_Error
      */
     public static function new_instance($props_n_values = array())
     {
@@ -32,6 +33,7 @@ class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links
     /**
      * @param array $props_n_values
      * @return EE_WP_User
+     * @throws EE_Error
      */
     public static function new_instance_from_db($props_n_values = array())
     {
@@ -42,6 +44,7 @@ class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links
      * Return a normal WP_User object (caches the object for future calls)
      *
      * @return WP_User
+     * @throws EE_Error
      */
     public function wp_user_obj()
     {
@@ -55,6 +58,7 @@ class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links
      * Return the link to the admin details for the object.
      *
      * @return string
+     * @throws EE_Error
      */
     public function get_admin_details_link()
     {
@@ -65,6 +69,7 @@ class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links
      * Returns the link to the editor for the object.  Sometimes this is the same as the details.
      *
      * @return string
+     * @throws EE_Error
      */
     public function get_admin_edit_link()
     {
@@ -85,6 +90,7 @@ class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links
      * Returns the link to a settings page for the object.
      *
      * @return string
+     * @throws EE_Error
      */
     public function get_admin_settings_link()
     {
@@ -100,9 +106,4 @@ class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links
     {
         return admin_url('users.php');
     }
-
-
 }
-
-/* End of file EE_WP_User.class.php */
-/* Location: /core/db_classes/EE_WP_User.class.php */
