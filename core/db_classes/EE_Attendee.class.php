@@ -1,5 +1,7 @@
 <?php
 
+use EventEspresso\core\domain\CapabilitiesActionRestrictionInterface;
+use EventEspresso\core\domain\entities\Context;
 use EventEspresso\core\exceptions\InvalidDataTypeException;
 use EventEspresso\core\exceptions\InvalidInterfaceException;
 
@@ -13,7 +15,12 @@ defined('EVENT_ESPRESSO_VERSION') || exit('No direct access allowed.');
  * @subpackage            includes/classes/EE_Transaction.class.php
  * @author                Mike Nelson
  */
-class EE_Attendee extends EE_CPT_Base implements EEI_Contact, EEI_Address, EEI_Admin_Links, EEI_Attendee
+class EE_Attendee extends EE_CPT_Base implements
+    EEI_Contact,
+    EEI_Address,
+    EEI_Admin_Links,
+    EEI_Attendee,
+    CapabilitiesActionRestrictionInterface
 {
 
     /**
@@ -750,4 +757,62 @@ class EE_Attendee extends EE_CPT_Base implements EEI_Contact, EEI_Address, EEI_A
             admin_url('admin.php')
         );
     }
+
+    /**
+     * Return whether this attendee can be edited by the current user.
+     *
+     * @param Context $context
+     * @return bool
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     */
+    public function canEdit(Context $context)
+    {
+        return EE_Registry::instance()->CAP->current_user_can('ee_edit_contacts', $context->slug());
+    }
+
+    /**
+     * Return whether this attendee can be read for the given context.
+     *
+     * @param Context $context
+     * @return bool
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     */
+    public function canRead(Context $context)
+    {
+        return EE_Registry::instance()->CAP->current_user_can('ee_read_contacts', $context->slug());
+    }
+
+    /**
+     * Return whether this attendee can be deleted for the given context.
+     *
+     * @param Context $context
+     * @return bool
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     */
+    public function canDelete(Context $context)
+    {
+        return EE_Registry::instance()->CAP->current_user_can('ee_delete_contacts', $context->slug());
+    }
+
+    /**
+     * Return whether this attendee can be created for the given context
+     *
+     * @param Context $context
+     * @return bool
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     */
+    public function canCreate(Context $context)
+    {
+        return EE_Registry::instance()->CAP->current_user_can('ee_edit_contacts', $context->slug());
+    }
+
+
 }

@@ -1,5 +1,8 @@
 <?php
 
+use EventEspresso\core\domain\CapabilitiesActionRestrictionInterface;
+use EventEspresso\core\domain\entities\Context;
+
 defined('EVENT_ESPRESSO_VERSION') || exit('No direct access allowed.');
 
 /**
@@ -10,7 +13,7 @@ defined('EVENT_ESPRESSO_VERSION') || exit('No direct access allowed.');
  * @author                Mike Nelson
  * ------------------------------------------------------------------------
  */
-class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links
+class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links, CapabilitiesActionRestrictionInterface
 {
 
     /**
@@ -106,4 +109,59 @@ class EE_WP_User extends EE_Base_Class implements EEI_Admin_Links
     {
         return admin_url('users.php');
     }
+
+    /**
+     * Return whether the current user can edit this WP_User object.
+     *
+     * @param Context $context
+     * @return bool
+     * @throws EE_Error
+     */
+    public function canEdit(Context $context)
+    {
+        //for now the ability to edit WP_User is not dependent on context. So regardless of what it is, we do the check
+        //based on the below cap.
+        return current_user_can('edit_user', $this->ID());
+    }
+
+    /**
+     * Return whether the current user can view this object details.
+     *
+     * @param Context $context
+     * @return bool
+     * @throws EE_Error
+     */
+    public function canRead(Context $context)
+    {
+        //for now the ability to view WP_User details is not dependent on any context (all or nothing). So regardless
+        //of what it is we do the check based on the below cap.
+        return get_current_user_id() === $this->ID()
+                || current_user_can('edit_users')
+                || current_user_can('manage_network_users');
+    }
+
+    /**
+     * Return whether the item can be deleted for the given context.
+     *
+     * @param Context $context
+     * @return bool
+     * @throws EE_Error
+     */
+    public function canDelete(Context $context)
+    {
+        return current_user_can('delete_user', $this->ID());
+    }
+
+    /**
+     * Return whether the item can be created for the given context
+     *
+     * @param Context $context
+     * @return bool
+     */
+    public function canCreate(Context $context)
+    {
+        return current_user_can('create_user');
+    }
+
+
 }
