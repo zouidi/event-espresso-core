@@ -101,6 +101,9 @@ class EE_Message_List_Table extends EE_Admin_List_Table
      * @access protected
      * @return array
      * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     protected function _get_table_filters()
     {
@@ -170,7 +173,7 @@ class EE_Message_List_Table extends EE_Admin_List_Table
         EE_Registry::instance()->load_helper('URL');
         $actions           = array();
         $actions['delete'] = '<a href="'
-                             . EEH_URL::add_query_args_and_nonce(
+            . EEH_URL::add_query_args_and_nonce(
                 array(
                     'page'   => 'espresso_messages',
                     'action' => 'delete_ee_message',
@@ -178,7 +181,7 @@ class EE_Message_List_Table extends EE_Admin_List_Table
                 ),
                 admin_url('admin.php')
             )
-                             . '">' . esc_html__('Delete', 'event_espresso') . '</a>';
+            . '">' . esc_html__('Delete', 'event_espresso') . '</a>';
         return esc_html($message->to()) . $this->row_actions($actions);
     }
 
