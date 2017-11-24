@@ -1,7 +1,9 @@
 <?php
-if (! defined('EVENT_ESPRESSO_VERSION')) {
-    exit('NO direct script access allowed');
-}
+
+use EventEspresso\core\exceptions\InvalidDataTypeException;
+use EventEspresso\core\exceptions\InvalidInterfaceException;
+
+defined('EVENT_ESPRESSO_VERSION') || exit('No direct access allowed.');
 
 /**
  * EE_Message_List_Table
@@ -74,8 +76,9 @@ class EE_Message_List_Table extends EE_Admin_List_Table
      * This simply sets up the row class for the table rows.
      * Allows for easier overriding of child methods for setting up sorting.
      *
-     * @param  object $item the current item
+     * @param  EE_Message $item the current item
      * @return string
+     * @throws EE_Error
      */
     protected function _get_row_class($item)
     {
@@ -96,8 +99,8 @@ class EE_Message_List_Table extends EE_Admin_List_Table
      *
      * @abstract
      * @access protected
-     * @return string
-     * @throws \EE_Error
+     * @return array
+     * @throws EE_Error
      */
     protected function _get_table_filters()
     {
@@ -120,6 +123,9 @@ class EE_Message_List_Table extends EE_Admin_List_Table
     }
 
 
+    /**
+     * @throws EE_Error
+     */
     protected function _add_view_counts()
     {
         foreach ($this->_views as $view => $args) {
@@ -131,7 +137,7 @@ class EE_Message_List_Table extends EE_Admin_List_Table
     /**
      * @param EE_Message $message
      * @return string   checkbox
-     * @throws \EE_Error
+     * @throws EE_Error
      */
     public function column_cb($message)
     {
@@ -142,7 +148,7 @@ class EE_Message_List_Table extends EE_Admin_List_Table
     /**
      * @param EE_Message $message
      * @return string
-     * @throws \EE_Error
+     * @throws EE_Error
      */
     public function column_msg_id(EE_Message $message)
     {
@@ -152,8 +158,12 @@ class EE_Message_List_Table extends EE_Admin_List_Table
 
     /**
      * @param EE_Message $message
-     * @return string    The recipient of the message
-     * @throws \EE_Error
+     * @return string The recipient of the message
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws ReflectionException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public function column_to(EE_Message $message)
     {
@@ -175,7 +185,8 @@ class EE_Message_List_Table extends EE_Admin_List_Table
 
     /**
      * @param EE_Message $message
-     * @return string   The sender of the message
+     * @return string The sender of the message
+     * @throws EE_Error
      */
     public function column_from(EE_Message $message)
     {
@@ -185,7 +196,8 @@ class EE_Message_List_Table extends EE_Admin_List_Table
 
     /**
      * @param EE_Message $message
-     * @return string  The messenger used to send the message.
+     * @return string The messenger used to send the message.
+     * @throws EE_Error
      */
     public function column_messenger(EE_Message $message)
     {
@@ -195,7 +207,8 @@ class EE_Message_List_Table extends EE_Admin_List_Table
 
     /**
      * @param EE_Message $message
-     * @return string  The message type used to generate the message.
+     * @return string The message type used to generate the message.
+     * @throws EE_Error
      */
     public function column_message_type(EE_Message $message)
     {
@@ -205,7 +218,12 @@ class EE_Message_List_Table extends EE_Admin_List_Table
 
     /**
      * @param EE_Message $message
-     * @return string  The context the message was generated for.
+     * @return string The context the message was generated for.
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @throws ReflectionException
      */
     public function column_context(EE_Message $message)
     {
@@ -215,7 +233,8 @@ class EE_Message_List_Table extends EE_Admin_List_Table
 
     /**
      * @param EE_Message $message
-     * @return string    The timestamp when this message was last modified.
+     * @return string The timestamp when this message was last modified.
+     * @throws EE_Error
      */
     public function column_modified(EE_Message $message)
     {
@@ -225,7 +244,12 @@ class EE_Message_List_Table extends EE_Admin_List_Table
 
     /**
      * @param EE_Message $message
-     * @return string   Actions that can be done on the current message.
+     * @return string Actions that can be done on the current message.
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     * @throws ReflectionException
      */
     public function column_action(EE_Message $message)
     {
@@ -240,23 +264,28 @@ class EE_Message_List_Table extends EE_Admin_List_Table
         );
         $content      = '';
         switch ($message->STS_ID()) {
-            case EEM_Message::status_sent :
-                $content = $action_links['view'] . $action_links['queue_for_resending'] . $action_links['view_transaction'];
+            case EEM_Message::status_sent:
+                $content = $action_links['view']
+                           . $action_links['queue_for_resending']
+                           . $action_links['view_transaction'];
                 break;
-            case EEM_Message::status_resend :
+            case EEM_Message::status_resend:
                 $content = $action_links['view'] . $action_links['send_now'] . $action_links['view_transaction'];
                 break;
-            case EEM_Message::status_retry :
-                $content = $action_links['view'] . $action_links['send_now'] . $action_links['error'] . $action_links['view_transaction'];
+            case EEM_Message::status_retry:
+                $content = $action_links['view']
+                           . $action_links['send_now']
+                           . $action_links['error']
+                           . $action_links['view_transaction'];
                 break;
-            case EEM_Message::status_failed :
-            case EEM_Message::status_debug_only :
+            case EEM_Message::status_failed:
+            case EEM_Message::status_debug_only:
                 $content = $action_links['error'] . $action_links['view_transaction'];
                 break;
-            case EEM_Message::status_idle :
+            case EEM_Message::status_idle:
                 $content = $action_links['view'] . $action_links['send_now'] . $action_links['view_transaction'];
                 break;
-            case EEM_Message::status_incomplete;
+            case EEM_Message::status_incomplete:
                 $content = $action_links['generate_now'] . $action_links['view_transaction'];
                 break;
         }
@@ -271,8 +300,11 @@ class EE_Message_List_Table extends EE_Admin_List_Table
      * @param string $view    The view items are being retrieved for
      * @param bool   $count   Whether to just return a count or not.
      * @param bool   $all     Disregard any paging info (no limit on data returned).
-     * @return int|EE_Message[]
-     * @throws \EE_Error
+     * @return EE_Message[]|int
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     protected function _get_messages($perpage = 10, $view = 'all', $count = false, $all = false)
     {
@@ -298,7 +330,7 @@ class EE_Message_List_Table extends EE_Admin_List_Table
          */
         if (isset($this->_req_data['filterby'])) {
             $query_params = array_merge($query_params, EEM_Message::instance()->filter_by_query_params());
-            if ( ! $count) {
+            if (! $count) {
                 $query_params['group_by'] = 'MSG_ID';
             }
         }
@@ -315,10 +347,10 @@ class EE_Message_List_Table extends EE_Admin_List_Table
                 ? array(
                     'STS_ID' => array(
                         'IN',
-                        array(EEM_Message::status_failed, EEM_Message::status_messenger_executing)
-                    )
+                        array(EEM_Message::status_failed, EEM_Message::status_messenger_executing),
+                    ),
                 )
-                : array( 'STS_ID' => strtoupper($this->_req_data['status']) );
+                : array('STS_ID' => strtoupper($this->_req_data['status']));
         }
 
         if (! $all && ! empty($this->_req_data['s'])) {
@@ -333,7 +365,8 @@ class EE_Message_List_Table extends EE_Admin_List_Table
 
         //account for debug only status.  We don't show Messages with the EEM_Message::status_debug_only to clients when
         //the messages system is in debug mode.
-        //Note: for backward compat with previous iterations, this is necessary because there may be EEM_Message::status_debug_only
+        //Note: for backward compat with previous iterations, this is necessary because there may be
+        // EEM_Message::status_debug_only
         //messages in the database.
         if (! EEM_Message::debug()) {
             $query_params[0]['AND*debug_only_conditional'] = array(
@@ -380,6 +413,10 @@ class EE_Message_List_Table extends EE_Admin_List_Table
      * Generate dropdown filter select input for messengers.
      *
      * @return string
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     protected function _get_messengers_dropdown_filter()
     {
@@ -400,11 +437,17 @@ class EE_Message_List_Table extends EE_Admin_List_Table
      * Generate dropdown filter select input for message types
      *
      * @return string
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     protected function _get_message_types_dropdown_filter()
     {
         $message_type_options                    = array();
-        $active_messages_grouped_by_message_type = EEM_Message::instance()->get_all(array('group_by' => 'MSG_message_type'));
+        $active_messages_grouped_by_message_type = EEM_Message::instance()->get_all(
+            array('group_by' => 'MSG_message_type')
+        );
 
         //setup array of message type options
         foreach ($active_messages_grouped_by_message_type as $active_message) {
@@ -420,6 +463,10 @@ class EE_Message_List_Table extends EE_Admin_List_Table
      * Generate dropdown filter select input for message type contexts
      *
      * @return string
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     protected function _get_contexts_for_message_types_dropdown_filter()
     {
@@ -441,4 +488,4 @@ class EE_Message_List_Table extends EE_Admin_List_Table
         }
         return $this->get_admin_page()->get_contexts_for_message_types_select_input($context_options);
     }
-} //end EE_Message_List_Table class
+}
