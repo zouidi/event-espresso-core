@@ -28,6 +28,12 @@ class EE_Message_List_Table extends EE_Admin_List_Table
     }
 
 
+    /**
+     * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
+     */
     protected function _setup_data()
     {
         $this->_data           = $this->_get_messages($this->_per_page, $this->_view);
@@ -130,6 +136,9 @@ class EE_Message_List_Table extends EE_Admin_List_Table
 
     /**
      * @throws EE_Error
+     * @throws InvalidArgumentException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     protected function _add_view_counts()
     {
@@ -190,7 +199,7 @@ class EE_Message_List_Table extends EE_Admin_List_Table
                 new Context(
                     'view_link_from_message_list_table',
                     esc_html__(
-                        'View link for recipient displayed in the to column in the message list table.',
+                        'View link for recipient displayed in the "To" column in the message list table.',
                         'event_espresso'
                     )
                 )
