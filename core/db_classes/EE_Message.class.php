@@ -1,6 +1,9 @@
-<?php if (! defined('EVENT_ESPRESSO_VERSION')) {
-    exit('No direct script access allowed');
-}
+<?php
+
+use EventEspresso\core\exceptions\InvalidDataTypeException;
+use EventEspresso\core\exceptions\InvalidInterfaceException;
+
+defined('EVENT_ESPRESSO_VERSION') || exit;
 
 /**
  * EE_Message class
@@ -51,8 +54,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @throws EE_Error
      * @throws InvalidArgumentException
      * @throws ReflectionException
-     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
-     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public static function new_instance($props_n_values = array(), $timezone = null, $date_formats = array())
     {
@@ -71,7 +74,6 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @param array  $props_n_values
      * @param string $timezone
      * @return EE_Message
-     * @throws EE_Error
      */
     public static function new_instance_from_db($props_n_values = array(), $timezone = null)
     {
@@ -202,7 +204,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      *
      * @param bool $throw_exceptions
      * @return bool
-     * @throws \EE_Error
+     * @throws EE_Error
      */
     public function valid_messenger($throw_exceptions = false)
     {
@@ -299,6 +301,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @param bool $throw_exceptions
      * @return bool
      * @throws \EE_Error
+     * @throws EE_Error
      */
     public function valid_message_type($throw_exceptions = false)
     {
@@ -325,7 +328,7 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      *
      * @param bool $throw_exceptions
      * @return bool
-     * @throws \EE_Error
+     * @throws EE_Error
      */
     public function is_valid($throw_exceptions = false)
     {
@@ -348,8 +351,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @throws EE_Error But only if $throw_exceptions is set to true.
      * @throws InvalidArgumentException
      * @throws ReflectionException
-     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
-     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public function is_valid_for_sending_or_generation($throw_exceptions = false)
     {
@@ -421,8 +424,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @throws EE_Error
      * @throws InvalidArgumentException
      * @throws ReflectionException
-     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
-     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public function context_label()
     {
@@ -792,8 +795,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @throws EE_Error
      * @throws InvalidArgumentException
      * @throws ReflectionException
-     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
-     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public function get_template_pack()
     {
@@ -829,8 +832,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @return string
      * @throws EE_Error
      * @throws InvalidArgumentException
-     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
-     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public function get_template_pack_variation()
     {
@@ -868,8 +871,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @throws EE_Error
      * @throws InvalidArgumentException
      * @throws ReflectionException
-     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
-     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public function get_admin_details_link()
     {
@@ -897,8 +900,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @throws EE_Error
      * @throws InvalidArgumentException
      * @throws ReflectionException
-     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
-     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public function get_admin_edit_link()
     {
@@ -912,8 +915,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @throws EE_Error
      * @throws InvalidArgumentException
      * @throws ReflectionException
-     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
-     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public function get_admin_settings_link()
     {
@@ -934,8 +937,8 @@ class EE_Message extends EE_Base_Class implements EEI_Admin_Links
      * @throws EE_Error
      * @throws InvalidArgumentException
      * @throws ReflectionException
-     * @throws \EventEspresso\core\exceptions\InvalidDataTypeException
-     * @throws \EventEspresso\core\exceptions\InvalidInterfaceException
+     * @throws InvalidDataTypeException
+     * @throws InvalidInterfaceException
      */
     public function get_admin_overview_link()
     {
