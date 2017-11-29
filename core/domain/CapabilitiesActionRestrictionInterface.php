@@ -10,7 +10,7 @@ use EventEspresso\core\domain\entities\Context;
  * @package EventEspresso\core\domain
  * @subpackage
  * @author  Darren Ethier
- * @since   1.0.0
+ * @since   4.9.53.p
  */
 interface CapabilitiesActionRestrictionInterface
 {
