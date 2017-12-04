@@ -112,6 +112,8 @@ class EE_Request implements InterminableInterface
 
 
     /**
+     * Important gotcha: these values usually do NOT have slashes added onto them because slashes are only added onto
+     * $_POST by WordPress after plugins_loaded, and this object is created before then
      * @return array
      */
     public function post_params()
